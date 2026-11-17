@@ -20,6 +20,7 @@ const repo = 'https://github.com/QAInsights/p95-bench';
 const maxBudget = Math.ceil(Math.max(...models.map((m) => m.cost)) * 100) / 100;
 const x = (cost) => 48 + cost / maxBudget * 440;
 const y = (value) => 260 - value / 100 * 210;
+const chartLabelY = (index) => 40 + index * 200 / Math.max(models.length - 1, 1);
 const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScore(a, 'jmeter'));
 ---
 <!doctype html>
@@ -100,7 +101,8 @@ const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScor
               <polyline points={costFrontier(models).map((m) => `${x(m.cost)},${y(m.overall_score)}`).join(' ')} class="frontier-line" />
               {models.map((m, index) => <g class="chart-model" data-model={m.model}>
                 <circle cx={x(m.cost)} cy={y(m.overall_score)} r="7" />
-                <text x={x(m.cost) + (index === 0 ? -12 : 12)} y={y(m.overall_score) + (index === 0 ? -17 : 18 + (index - 1) * 20)} text-anchor={index === 0 ? 'end' : 'start'}>{name(m.model)}</text>
+                <line x1={x(m.cost)} y1={y(m.overall_score)} x2={x(m.cost) + (m.cost > maxBudget / 2 ? -8 : 8)} y2={chartLabelY(index) - 4} class="grid-line" />
+                <text x={x(m.cost) + (m.cost > maxBudget / 2 ? -12 : 12)} y={chartLabelY(index)} text-anchor={m.cost > maxBudget / 2 ? 'end' : 'start'}>{name(m.model)}</text>
               </g>)}
             </svg>
           </div>

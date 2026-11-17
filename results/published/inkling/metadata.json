@@ -1,0 +1,11 @@
+{
+  "run_date": "2026-11-17T20:52:43Z",
+  "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
+  "provider": "thinkingmachines",
+  "model": "thinkingmachines/Inkling",
+  "temperature": 0,
+  "reasoning_effort": "provider default (not specified)",
+  "cost_limit_usd": 0.5,
+  "max_tokens": 8192,
+  "output_cap_note": "The completion cap includes reasoning tokens; null content is treated as empty answer text."
+}

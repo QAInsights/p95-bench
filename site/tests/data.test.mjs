@@ -4,9 +4,10 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { buildData } from '../scripts/build-data.mjs';
-import { contributions, bestWithin, toolScore, toolScoreLabel, taskResult, costFrontier } from '../src/lib/scores.mjs';
+import { contributions, bestWithin, toolScore, toolScoreLabel, taskResult, costFrontier, modelSlug } from '../src/lib/scores.mjs';
 
-const runs = ['deepseek-flash', 'deepseek-v4-pro', 'claude-sonnet-5-5', 'claude-opus-5-5'].map((m) =>
+const runs = ['deepseek-flash', 'deepseek-v4-pro', 'claude-sonnet-5-5', 'claude-opus-5-5',
+  'inkling', 'inkling-small', 'inkling-2-small', 'gpt-6-2-sol', 'gpt-6-2-astra'].map((m) =>
   new URL(`../../results/published/${m}/`, import.meta.url).pathname);
 
 test('tool card labels distinguish unrun tools from failed and passing runs', () => {
@@ -51,7 +52,8 @@ test('published data is reproducible, redacted and matches weighted scores', asy
   const result = await buildData(runs);
   const committed = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
   assert.deepEqual(result, committed);
-  assert.equal(result.models.length, 4);
+  assert.deepEqual(await buildData(runs.toReversed()), result);
+  assert.equal(result.models.length, 9);
   for (const model of result.models) {
     const sum = contributions(model, result.weights).reduce((n, c) => n + c.points, 0);
     assert.ok(Math.abs(sum - model.overall_score) < 1e-10);
@@ -61,7 +63,8 @@ test('published data is reproducible, redacted and matches weighted scores', asy
     assert.ok(model.run_date);
     assert.match(model.harness_commit, /^[a-f0-9]{40}$/);
     assert.equal(toolScore(model, 'k6'), null);
-    const expectedToolScore = model.provider === 'anthropic' ? 100 : 200 / 3;
+    const expectedToolScore = model.provider === 'thinkingmachines' ? 0
+      : model.provider === 'deepseek' ? 200 / 3 : 100;
     assert.ok(Math.abs(toolScore(model, 'jmeter') - expectedToolScore) < 1e-10);
     for (const task of model.per_task_results) {
       assert.deepEqual(Object.keys(task), ['task_id', 'category', 'tool', 'passed', 'detail']);
@@ -76,13 +79,13 @@ test('budget picker covers no budget, Flash and Pro thresholds', async () => {
   assert.equal(bestWithin([], 1), null);
   assert.equal(bestWithin(models, .02).model, 'deepseek-flash');
   assert.equal(bestWithin(models, .04).model, 'deepseek-v4-pro');
-  assert.equal(bestWithin(models, 1).model, 'claude-opus-5-5');
+  assert.equal(bestWithin(models, 1).model, 'gpt-6.2-sol');
 });
 
 test('frontier excludes dominated runs and handles empty data and equal costs', async () => {
   const { models } = await buildData(runs);
   assert.deepEqual(costFrontier(models).map((m) => m.model),
-    ['deepseek-flash', 'deepseek-v4-pro', 'claude-opus-5-5']);
+    ['deepseek-flash', 'deepseek-v4-pro', 'gpt-6.2-sol']);
   assert.deepEqual(costFrontier([]), []);
   const best = { cost: 1, overall_score: 90 };
   assert.deepEqual(costFrontier([{ cost: 1, overall_score: 80 }, best,
@@ -90,11 +93,28 @@ test('frontier excludes dominated runs and handles empty data and equal costs', 
 });
 
 test('Anthropic run metadata records the temperature exception', async () => {
-  for (const directory of runs.slice(2)) {
+  for (const directory of runs.slice(2, 4)) {
     const metadata = JSON.parse(await readFile(path.join(directory, 'metadata.json')));
     assert.equal(metadata.temperature, null);
     assert.match(metadata.temperature_note, /deprecated/);
     assert.equal(metadata.max_tokens, 8192);
+  }
+});
+
+test('namespaced models resolve to published directories and preserve API identity', async () => {
+  const { models } = await buildData(runs);
+  for (const model of models) {
+    const directory = new URL(`../../results/published/${modelSlug(model.model)}/`, import.meta.url);
+    const first = JSON.parse((await readFile(new URL('attempts.jsonl', directory), 'utf8'))
+      .split('\n')[0]);
+    assert.equal(first.model, model.model);
+    if (model.provider === 'openai') {
+      const metadata = JSON.parse(await readFile(new URL('metadata.json', directory)));
+      assert.equal(metadata.temperature, null);
+      assert.match(metadata.temperature_note, /default temperature/);
+      assert.equal(metadata.max_completion_tokens, 8192);
+      assert.match(metadata.output_cap_note, /rejects max_tokens/);
+    }
   }
 });
 
