@@ -8,6 +8,7 @@ import re
 import signal
 import subprocess
 import urllib.request
+from urllib.parse import urlsplit
 import xml.etree.ElementTree as ET
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -86,6 +87,8 @@ def jmeter_exec(text, params, workdir):
                    "-j", str(workdir / "jmeter.log"), "-Jhost=127.0.0.1", f"-Jport={port}",
                    "-Jjmeter.save.saveservice.output_format=csv",
                    "-Jjmeter.save.saveservice.print_field_names=true",
+                   "-Jjmeter.save.saveservice.url=true",
+                   "-Jjmeter.save.saveservice.thread_name=true",
                    "-Jjmeter.save.saveservice.successful=true"]
         try:
             with (workdir / "stdout.log").open("w") as log:
@@ -96,6 +99,13 @@ def jmeter_exec(text, params, workdir):
                 rows = list(csv.DictReader(stream))
             if not rows or any(row.get("success") != "true" for row in rows):
                 return Grade(False, "Empty run or failed samples")
+            minimum_threads = params.get("min_checkout_threads", 1)
+            if minimum_threads > 1:
+                checkout_threads = {row["threadName"] for row in rows
+                                    if row.get("threadName")
+                                    and urlsplit(row.get("URL", "")).path == "/checkout"}
+                if len(checkout_threads) < minimum_threads:
+                    return Grade(False, f"Checkout threads: {len(checkout_threads)}/{minimum_threads}")
             request = urllib.request.Request(url + "/internal/stats", headers={"X-Admin-Key": admin})
             with urllib.request.urlopen(request, timeout=5) as response:
                 completed = json.load(response)["completions"]

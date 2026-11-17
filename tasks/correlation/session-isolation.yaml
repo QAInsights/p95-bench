@@ -5,4 +5,5 @@ prompt: "Create a complete JMeter 5.6.3 JMX using standard built-in components o
 grader: jmeter_exec
 params:
   completions: 2
+  min_checkout_threads: 2
   timeout: 60

@@ -251,3 +251,25 @@ def test_timeout_kills_launcher_and_child(tmp_path):
         time.sleep(.01)
     else:
         pytest.fail("Child survived launcher timeout")
+
+
+@pytest.mark.parametrize("threads,passed", [([], False), (["thread-1", "thread-1"], False),
+                                            (["thread-1", "thread-2"], True)])
+def test_isolation_requires_distinct_checkout_threads(tmp_path, threads, passed):
+    def execute(command, *args):
+        result = Path(command[command.index("-l") + 1])
+        result.write_text("success,threadName,URL\ntrue,other,http://localhost/products\n" +
+                          "".join(f"true,{thread},http://localhost/checkout\n" for thread in threads))
+        return subprocess.CompletedProcess(command, 0)
+
+    with patch("p95bench.graders.jmeter_executable", return_value=Path("jmeter")), \
+            patch("p95bench.graders.run_jmeter", execute), \
+            patch("json.load", return_value={"completions": 2}):
+        assert jmeter_exec("<jmeterTestPlan></jmeterTestPlan>",
+                           {"completions": 2, "min_checkout_threads": 2}, tmp_path).passed is passed
+
+
+def test_isolation_and_refresh_have_distinct_requirements():
+    tasks = {t.id: t for t in load_tasks(ROOT / "tasks")}
+    assert tasks["session-isolation"].params["min_checkout_threads"] == 2
+    assert "min_checkout_threads" not in tasks["token-refresh"].params

@@ -98,6 +98,11 @@ stats API. `params.timeout` defaults to 60 seconds. A zero process exit code
 alone does not pass. Add future execution graders to `graders.GRADERS`; the
 runner and task schema do not need tool-specific changes.
 
+`min_checkout_threads` optionally requires successful checkout samples from that
+many distinct JMeter threads, in addition to the app's verified session completions.
+The isolation seed requires two checkout threads; the refresh seed permits one
+thread to complete two iterations with fresh sessions and tokens.
+
 The shop contract is in each execution prompt: login returns a fresh CSRF token
 and session cookie, products must be listed, cart requires the session token,
 and checkout requires that same token and populated cart. A session can complete
