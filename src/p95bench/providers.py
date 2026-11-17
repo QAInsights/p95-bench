@@ -57,6 +57,13 @@ PROVIDERS = {
         temperature=None,
         extra={"max_tokens": 8192},
     ),
+    "thinkingmachines": ProviderConfig(
+        "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1", "TINKER_API_KEY",
+        {"thinkingmachines/Inkling": Price(1.87, 0.374, 4.68),
+         "thinkingmachines/Inkling-Small": Price(0.58, 0.116, 1.44),
+         "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00)},
+        extra={"max_tokens": 8192},
+    ),
 }
 
 
