@@ -7,7 +7,7 @@ import '@fontsource/jetbrains-mono/latin-700.css';
 import '../styles/global.css';
 import data from '../data/leaderboard.json';
 import Hint from '../components/Hint.astro';
-import { contributions, name, score, money, toolScore, toolScoreLabel, taskResult, costFrontier } from '../lib/scores.mjs';
+import { contributions, name, score, money, toolScore, toolScoreLabel, taskResult, costFrontier, modelSlug } from '../lib/scores.mjs';
 
 const { models, weights } = data;
 const leader = models[0];
@@ -154,7 +154,7 @@ const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScor
         <section class="sec methodology" id="method">
           <div><p class="eyebrow">05 / SHOW YOUR WORK</p><h2>A benchmark.<br />Not a black box.</h2><a class="repo-link mono" href={repo}>Explore the harness on GitHub ↗</a></div>
           <div class="method-copy">
-            <p>Direct provider APIs. Temperature 0 where supported; omitted for Claude Sonnet 5.5 and Opus 5.5 because their API rejects it. One fixed system prompt and identical task prompts for every model. No routing layer.</p>
+            <p>Direct provider APIs. Temperature 0 where supported; omitted for Claude Sonnet 5.5, Opus 5.5, GPT-6.2 Sol and Astra because their APIs reject it. OpenAI uses max_completion_tokens instead of max_tokens. One fixed system prompt and identical task prompts for every model. No routing layer.</p>
             <p>Generated JMeter plans run against a loopback demo shop. Passing requires zero sample errors and verified session-aware checkouts. Numeric and choice tasks use deterministic answer keys.</p>
             <p>Category means are weighted, then renormalized over categories with tasks. Unmeasured categories stay unmeasured, never zero.</p>
             <div class="weight-list mono">{categories.map((c, i) => <span><i style={`background:var(--h${i + 1})`}></i>{c}<b>{weights[c]}</b></span>)}</div>
@@ -164,7 +164,7 @@ const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScor
         </section>
         <section class="provenance card">
           <h2 class="eyebrow">THE PAPER TRAIL</h2>
-          {models.map((m) => <div><strong>{name(m.model)}</strong><span class="mono">{m.run_date ? new Date(m.run_date).toISOString().replace('T', ' / ').replace('.000Z', ' UTC') : 'Date not recorded'}</span><span class="mono">{(m.tokens.input + m.tokens.output).toLocaleString('en-US')} tokens · {m.latency.toFixed(2)}s API latency</span><a class="mono" href={`${repo}/tree/main/results/published/${m.model}`}>Run artifacts ↗</a><span class="mono">Harness {m.harness_commit ? <a href={`${repo}/commit/${m.harness_commit}`}>{m.harness_commit.slice(0, 7)}</a> : 'not recorded'}</span></div>)}
+          {models.map((m) => <div><strong>{name(m.model)}</strong><span class="mono">{m.run_date ? new Date(m.run_date).toISOString().replace('T', ' / ').replace('.000Z', ' UTC') : 'Date not recorded'}</span><span class="mono">{(m.tokens.input + m.tokens.output).toLocaleString('en-US')} tokens · {m.latency.toFixed(2)}s API latency</span><a class="mono" href={`${repo}/tree/main/results/published/${modelSlug(m.model)}`}>Run artifacts ↗</a><span class="mono">Harness {m.harness_commit ? <a href={`${repo}/commit/${m.harness_commit}`}>{m.harness_commit.slice(0, 7)}</a> : 'not recorded'}</span></div>)}
         </section>
       </main>
       <footer><span>Open source · MIT · P95 Bench</span><span>© 2026 NaveenKumar Namachivayam</span></footer>
