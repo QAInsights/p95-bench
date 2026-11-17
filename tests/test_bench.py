@@ -240,9 +240,8 @@ def test_timeout_kills_launcher_and_child(tmp_path):
     code = ("import subprocess,sys,time; "
             "p=subprocess.Popen([sys.executable,'-c','import time; time.sleep(90)']); "
             "open(sys.argv[1],'w').write(str(p.pid)); time.sleep(90)")
-    with (tmp_path / "stdout").open("w") as log:
-        with pytest.raises(subprocess.TimeoutExpired):
-            run_jmeter([sys.executable, "-c", code, str(pidfile)], log, 1)
+    with (tmp_path / "stdout").open("w") as log, pytest.raises(subprocess.TimeoutExpired):
+        run_jmeter([sys.executable, "-c", code, str(pidfile)], log, 1)
     child = int(pidfile.read_text())
     for _ in range(100):
         stat = Path(f"/proc/{child}/stat")

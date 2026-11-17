@@ -8,10 +8,10 @@ import re
 import signal
 import subprocess
 import urllib.request
-from urllib.parse import urlsplit
 import xml.etree.ElementTree as ET
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from p95bench.demo import demo_app
 
