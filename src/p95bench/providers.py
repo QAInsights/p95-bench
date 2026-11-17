@@ -57,6 +57,20 @@ PROVIDERS = {
         temperature=None,
         extra={"max_tokens": 8192},
     ),
+    "thinkingmachines": ProviderConfig(
+        "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1", "TINKER_API_KEY",
+        {"thinkingmachines/Inkling": Price(1.87, 0.374, 4.68),
+         "thinkingmachines/Inkling-Small": Price(0.58, 0.116, 1.44),
+         "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00)},
+        extra={"max_tokens": 8192},
+    ),
+    "openai": ProviderConfig(
+        "https://api.openai.com/v1", "OPENAI_API_KEY",
+        {"gpt-6.2-sol": Price(2, 2, 10),
+         "gpt-6.2-astra": Price(8, 8, 40)},
+        temperature=None,
+        extra={"max_completion_tokens": 8192},
+    ),
 }
 
 
@@ -65,7 +79,8 @@ class OpenAICompatible:
         self.config = config
 
     def _headers(self, key: str) -> dict[str, str]:
-        return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        return {"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                "User-Agent": "p95bench/0.1.0"}
 
     def _request(self, path: str, body: dict | None = None) -> dict:
         key = os.environ.get(self.config.key_env)

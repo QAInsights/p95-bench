@@ -56,7 +56,8 @@ export async function buildData(directories) {
   if (new Set(models.map((m) => `${m.provider}/${m.model}`)).size !== models.length) {
     throw new Error('Duplicate model runs; select one run per model');
   }
-  return { weights, models: models.sort((a, b) => b.overall_score - a.overall_score) };
+  return { weights, models: models.sort((a, b) => b.overall_score - a.overall_score
+    || a.cost - b.cost || a.model.localeCompare(b.model) || a.provider.localeCompare(b.provider)) };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

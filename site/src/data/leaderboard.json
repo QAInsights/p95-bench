@@ -10,6 +10,218 @@
   },
   "models": [
     {
+      "provider": "openai",
+      "model": "gpt-6.2-sol",
+      "overall_score": 100,
+      "category_scores": {
+        "analysis": 100,
+        "authoring": 100,
+        "concepts": 100,
+        "correlation": 100,
+        "workload": 100
+      },
+      "cost": 0.066556,
+      "tokens": {
+        "input": 1738,
+        "output": 6308
+      },
+      "latency": 82.73980524601939,
+      "run_date": "2026-11-17T20:53:56Z",
+      "harness_commit": "572a8d133f181ee61de2d4dd74c1ad1ecd67d612",
+      "per_task_results": [
+        {
+          "task_id": "errors",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "mean",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "shop-flow",
+          "category": "authoring",
+          "tool": "jmeter",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "closed",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "correlation",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "percentile",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "session-isolation",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "token-refresh",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "arrival",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "concurrency",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "little-law",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "pacing",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        }
+      ]
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-6.2-astra",
+      "overall_score": 100,
+      "category_scores": {
+        "analysis": 100,
+        "authoring": 100,
+        "concepts": 100,
+        "correlation": 100,
+        "workload": 100
+      },
+      "cost": 0.222904,
+      "tokens": {
+        "input": 1738,
+        "output": 5225
+      },
+      "latency": 79.91179368999292,
+      "run_date": "2026-11-17T20:53:56Z",
+      "harness_commit": "572a8d133f181ee61de2d4dd74c1ad1ecd67d612",
+      "per_task_results": [
+        {
+          "task_id": "errors",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "mean",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "shop-flow",
+          "category": "authoring",
+          "tool": "jmeter",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "closed",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "correlation",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "percentile",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "session-isolation",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "token-refresh",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "arrival",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "concurrency",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "little-law",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "pacing",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        }
+      ]
+    },
+    {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "overall_score": 100,
@@ -430,6 +642,324 @@
           "tool": "none",
           "passed": false,
           "detail": "Expected only a number"
+        }
+      ]
+    },
+    {
+      "provider": "thinkingmachines",
+      "model": "thinkingmachines/Inkling-2-Small",
+      "overall_score": 46.666666666666664,
+      "category_scores": {
+        "analysis": 100,
+        "authoring": 0,
+        "concepts": 100,
+        "correlation": 0,
+        "workload": 100
+      },
+      "cost": 0.025909460000000002,
+      "tokens": {
+        "input": 1989,
+        "output": 25451
+      },
+      "latency": 200.0585385489976,
+      "run_date": "2026-11-17T20:53:03Z",
+      "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
+      "per_task_results": [
+        {
+          "task_id": "errors",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "mean",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "shop-flow",
+          "category": "authoring",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "No complete jmeterTestPlan found"
+        },
+        {
+          "task_id": "closed",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "correlation",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "percentile",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "session-isolation",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "No complete jmeterTestPlan found"
+        },
+        {
+          "task_id": "token-refresh",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "No complete jmeterTestPlan found"
+        },
+        {
+          "task_id": "arrival",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "concurrency",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "little-law",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "pacing",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        }
+      ]
+    },
+    {
+      "provider": "thinkingmachines",
+      "model": "thinkingmachines/Inkling-Small",
+      "overall_score": 46.666666666666664,
+      "category_scores": {
+        "analysis": 100,
+        "authoring": 0,
+        "concepts": 100,
+        "correlation": 0,
+        "workload": 100
+      },
+      "cost": 0.036744312,
+      "tokens": {
+        "input": 1822,
+        "output": 24948
+      },
+      "latency": 357.1809215930116,
+      "run_date": "2026-11-17T20:53:03Z",
+      "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
+      "per_task_results": [
+        {
+          "task_id": "errors",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "mean",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "shop-flow",
+          "category": "authoring",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "JMeter exit code 1"
+        },
+        {
+          "task_id": "closed",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "correlation",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "percentile",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "session-isolation",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "No complete jmeterTestPlan found"
+        },
+        {
+          "task_id": "token-refresh",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "No complete jmeterTestPlan found"
+        },
+        {
+          "task_id": "arrival",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "concurrency",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "little-law",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "pacing",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        }
+      ]
+    },
+    {
+      "provider": "thinkingmachines",
+      "model": "thinkingmachines/Inkling",
+      "overall_score": 46.666666666666664,
+      "category_scores": {
+        "analysis": 100,
+        "authoring": 0,
+        "concepts": 100,
+        "correlation": 0,
+        "workload": 100
+      },
+      "cost": 0.115424508,
+      "tokens": {
+        "input": 1822,
+        "output": 24099
+      },
+      "latency": 103.44006397798512,
+      "run_date": "2026-11-17T20:52:43Z",
+      "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
+      "per_task_results": [
+        {
+          "task_id": "errors",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "mean",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "shop-flow",
+          "category": "authoring",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "JMeter exit code 1"
+        },
+        {
+          "task_id": "closed",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "correlation",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "percentile",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "session-isolation",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "Empty run or failed samples"
+        },
+        {
+          "task_id": "token-refresh",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "Empty run or failed samples"
+        },
+        {
+          "task_id": "arrival",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "concurrency",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "little-law",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "pacing",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
         }
       ]
     }

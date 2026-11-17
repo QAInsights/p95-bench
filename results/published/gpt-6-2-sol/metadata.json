@@ -1,0 +1,12 @@
+{
+  "run_date": "2026-11-17T20:53:56Z",
+  "harness_commit": "572a8d133f181ee61de2d4dd74c1ad1ecd67d612",
+  "provider": "openai",
+  "model": "gpt-6.2-sol",
+  "temperature": null,
+  "reasoning_effort": "provider default (not specified)",
+  "cost_limit_usd": 1.5,
+  "temperature_note": "Omitted: the API only accepts its default temperature, not 0, for this model.",
+  "max_completion_tokens": 8192,
+  "output_cap_note": "Uses max_completion_tokens because the API rejects max_tokens for this model."
+}

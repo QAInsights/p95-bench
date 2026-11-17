@@ -3,7 +3,14 @@ export const money = (value) => `$${value.toFixed(4)}`;
 export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'deepseek-flash' ? 'DeepSeek Flash'
   : model === 'claude-sonnet-5-5' ? 'Claude Sonnet 5.5'
-  : model === 'claude-opus-5-5' ? 'Claude Opus 5.5' : model;
+  : model === 'claude-opus-5-5' ? 'Claude Opus 5.5'
+  : model === 'thinkingmachines/Inkling' ? 'Inkling'
+  : model === 'thinkingmachines/Inkling-Small' ? 'Inkling-Small'
+  : model === 'thinkingmachines/Inkling-2-Small' ? 'Inkling 2 Small'
+  : model === 'gpt-6.2-sol' ? 'GPT-6.2 Sol'
+  : model === 'gpt-6.2-astra' ? 'GPT-6.2 Astra' : model;
+export const modelSlug = (model) => model.replace(/^thinkingmachines\//, '').toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 export function costFrontier(models) {
   const sorted = [...models].sort((a, b) => a.cost - b.cost || b.overall_score - a.overall_score);
   return sorted.filter((model, index) => index === 0
