@@ -33,7 +33,7 @@ def test_messages_transport(monkeypatch, content, expected):
         assert timeout == 180
         assert json.loads(req.data) == {
             'model': 'claude-sonnet-5-5', 'system': SYSTEM_PROMPT,
-            'messages': messages[1:], 'max_tokens': 8192, 'temperature': 0,
+            'messages': messages[1:], 'max_tokens': 8192,
         }
         return io.BytesIO(json.dumps({'content': content, 'usage': {
             'input_tokens': 20, 'output_tokens': 3}}).encode())

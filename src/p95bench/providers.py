@@ -54,6 +54,7 @@ PROVIDERS = {
         "https://api.anthropic.com/v1", "ANTHROPIC_API_KEY",
         {"claude-sonnet-5-5": Price(2, 2, 10),
          "claude-opus-5-5": Price(4, 4, 20)},
+        temperature=None,
         extra={"max_tokens": 8192},
     ),
 }

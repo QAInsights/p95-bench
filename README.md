@@ -53,8 +53,10 @@ The runner supports dependency injection for testing and custom adapters.
 
 For Anthropic, set `ANTHROPIC_API_KEY` and use `--provider anthropic` with
 `--model claude-sonnet-5-5` or `--model claude-opus-5-5`. The adapter sends the
-fixed prompt through the top-level `system` field, with temperature 0 and the
-same 8192-token output cap. It uses `x-api-key` authentication and API version
+fixed prompt through the top-level `system` field with the same 8192-token output
+cap. Temperature is omitted for Sonnet 5.5 and Opus 5.5 because their API rejects
+the parameter as deprecated; published run metadata records this exception.
+It uses `x-api-key` authentication and API version
 `2023-06-01`, without an SDK. Discover IDs in Python with
 `get_provider('anthropic').models()` from `p95bench.providers` (there is no
 discovery CLI). Verified list input/output prices per million tokens are
@@ -75,7 +77,7 @@ rates: Flash input $0.30, cached input $0.006, output $1.20; Pro input $1.32,
 cached input $0.044, output $3.96. DeepSeek advertises half-price off-peak rates;
 reported costs are conservative estimates, not invoices. Cache-hit input tokens
 are not charged twice. Each attempt records its price snapshot. Calls use
-temperature 0, a fixed system prompt and identical task/fixture messages across
+temperature 0 where supported, a fixed system prompt and identical task/fixture messages across
 models. DeepSeek thinking is disabled for this initial chat benchmark, with an
 8192-token output cap. Provider failures abort the run rather than count as
 incorrect answers; already-written attempt lines remain available to score.
