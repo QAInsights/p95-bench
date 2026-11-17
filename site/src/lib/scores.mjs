@@ -1,7 +1,14 @@
 export const score = (value) => value.toFixed(1);
 export const money = (value) => `$${value.toFixed(4)}`;
 export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
-  : model === 'deepseek-flash' ? 'DeepSeek Flash' : model;
+  : model === 'deepseek-flash' ? 'DeepSeek Flash'
+  : model === 'claude-sonnet-5-5' ? 'Claude Sonnet 5.5'
+  : model === 'claude-opus-5-5' ? 'Claude Opus 5.5' : model;
+export function costFrontier(models) {
+  const sorted = [...models].sort((a, b) => a.cost - b.cost || b.overall_score - a.overall_score);
+  return sorted.filter((model, index) => index === 0
+    || model.overall_score > Math.max(...sorted.slice(0, index).map((m) => m.overall_score)));
+}
 export function contributions(model, weights) {
   const present = Object.keys(model.category_scores);
   const total = present.reduce((sum, category) => sum + weights[category], 0);

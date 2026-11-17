@@ -4,9 +4,9 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { buildData } from '../scripts/build-data.mjs';
-import { contributions, bestWithin, toolScore, toolScoreLabel, taskResult } from '../src/lib/scores.mjs';
+import { contributions, bestWithin, toolScore, toolScoreLabel, taskResult, costFrontier } from '../src/lib/scores.mjs';
 
-const runs = ['deepseek-flash', 'deepseek-v4-pro'].map((m) =>
+const runs = ['deepseek-flash', 'deepseek-v4-pro', 'claude-sonnet-5-5', 'claude-opus-5-5'].map((m) =>
   new URL(`../../results/published/${m}/`, import.meta.url).pathname);
 
 test('tool card labels distinguish unrun tools from failed and passing runs', () => {
@@ -51,7 +51,7 @@ test('published data is reproducible, redacted and matches weighted scores', asy
   const result = await buildData(runs);
   const committed = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
   assert.deepEqual(result, committed);
-  assert.equal(result.models.length, 2);
+  assert.equal(result.models.length, 4);
   for (const model of result.models) {
     const sum = contributions(model, result.weights).reduce((n, c) => n + c.points, 0);
     assert.ok(Math.abs(sum - model.overall_score) < 1e-10);
@@ -61,7 +61,8 @@ test('published data is reproducible, redacted and matches weighted scores', asy
     assert.ok(model.run_date);
     assert.match(model.harness_commit, /^[a-f0-9]{40}$/);
     assert.equal(toolScore(model, 'k6'), null);
-    assert.ok(Math.abs(toolScore(model, 'jmeter') - 200 / 3) < 1e-10);
+    const expectedToolScore = model.provider === 'anthropic' ? 100 : 200 / 3;
+    assert.ok(Math.abs(toolScore(model, 'jmeter') - expectedToolScore) < 1e-10);
     for (const task of model.per_task_results) {
       assert.deepEqual(Object.keys(task), ['task_id', 'category', 'tool', 'passed', 'detail']);
     }
@@ -75,6 +76,26 @@ test('budget picker covers no budget, Flash and Pro thresholds', async () => {
   assert.equal(bestWithin([], 1), null);
   assert.equal(bestWithin(models, .02).model, 'deepseek-flash');
   assert.equal(bestWithin(models, .04).model, 'deepseek-v4-pro');
+  assert.equal(bestWithin(models, 1).model, 'claude-opus-5-5');
+});
+
+test('frontier excludes dominated runs and handles empty data and equal costs', async () => {
+  const { models } = await buildData(runs);
+  assert.deepEqual(costFrontier(models).map((m) => m.model),
+    ['deepseek-flash', 'deepseek-v4-pro', 'claude-opus-5-5']);
+  assert.deepEqual(costFrontier([]), []);
+  const best = { cost: 1, overall_score: 90 };
+  assert.deepEqual(costFrontier([{ cost: 1, overall_score: 80 }, best,
+    { cost: 2, overall_score: 90 }]), [best]);
+});
+
+test('Anthropic run metadata records the temperature exception', async () => {
+  for (const directory of runs.slice(2)) {
+    const metadata = JSON.parse(await readFile(path.join(directory, 'metadata.json')));
+    assert.equal(metadata.temperature, null);
+    assert.match(metadata.temperature_note, /deprecated/);
+    assert.equal(metadata.max_tokens, 8192);
+  }
 });
 
 test('generator rejects empty, duplicate and mismatched runs', async () => {

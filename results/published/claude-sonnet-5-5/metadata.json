@@ -1,0 +1,7 @@
+{
+  "run_date": "2026-11-17T18:21:01Z",
+  "harness_commit": "5c81ef803dbbcf39c3955b345eb3cbfbf24f6191",
+  "temperature": null,
+  "temperature_note": "Omitted: the API rejects temperature as deprecated for this model.",
+  "max_tokens": 8192
+}

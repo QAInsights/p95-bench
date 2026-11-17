@@ -157,7 +157,7 @@ Fonts are self-hosted. To regenerate the leaderboard and build:
 ```sh
 cd site
 npm ci
-npm run data -- ../results/published/deepseek-flash ../results/published/deepseek-v4-pro
+npm run data -- ../results/published/*/
 npm test
 npm run build
 npm run preview
@@ -167,8 +167,8 @@ The data command also accepts original run directories containing `summary.json`
 and `attempts.jsonl`. It reads task metadata and category weights from the harness
 and emits only public scoring fields, never prompts or raw responses, into
 `site/src/data/leaderboard.json`. Optional `metadata.json` records the run date
-and harness commit when known. The two published metadata sidecars document the
-verified execution timestamps and commit for these runs. The published JSONL
+and harness commit when known. Published metadata sidecars document the
+execution timestamps, harness commits and any temperature exception. The published JSONL
 files are full reproduction artifacts and were checked for credentials before
 publication. Do not add secrets to prompts or fixtures.
 

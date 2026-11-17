@@ -7,7 +7,7 @@ import '@fontsource/jetbrains-mono/latin-700.css';
 import '../styles/global.css';
 import data from '../data/leaderboard.json';
 import Hint from '../components/Hint.astro';
-import { contributions, name, score, money, toolScore, toolScoreLabel, taskResult } from '../lib/scores.mjs';
+import { contributions, name, score, money, toolScore, toolScoreLabel, taskResult, costFrontier } from '../lib/scores.mjs';
 
 const { models, weights } = data;
 const leader = models[0];
@@ -89,15 +89,15 @@ const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScor
             <p class="sub">A full seed run, priced in dollars. Up and left wins.</p>
             <svg viewBox="0 0 540 310" role="img" aria-labelledby="chart-title chart-desc">
               <title id="chart-title">Score versus estimated run cost</title>
-              <desc id="chart-desc">{models.map((m) => `${name(m.model)}: ${score(m.overall_score)} points at ${money(m.cost)}.`).join(' ')} Both models are on the cost frontier.</desc>
+              <desc id="chart-desc">{models.map((m) => `${name(m.model)}: ${score(m.overall_score)} points at ${money(m.cost)}.`).join(' ')} The dotted line connects the best scores at increasing budgets.</desc>
               {[0, 25, 50, 75, 100].map((v) => <g><line x1="48" x2="505" y1={y(v)} y2={y(v)} class="grid-line" /><text x="35" y={y(v) + 4} text-anchor="end">{v}</text></g>)}
               {[0, maxBudget / 2, maxBudget].map((c) => <text x={x(c)} y="287" text-anchor="middle">${c.toFixed(2)}</text>)}
               <text x="48" y="20" class="axis-label">SCORE / 100</text>
               <text x="505" y="307" text-anchor="end" class="axis-label">ESTIMATED USD / RUN</text>
-              <polyline points={[...models].sort((a, b) => a.cost - b.cost).map((m) => `${x(m.cost)},${y(m.overall_score)}`).join(' ')} class="frontier-line" />
+              <polyline points={costFrontier(models).map((m) => `${x(m.cost)},${y(m.overall_score)}`).join(' ')} class="frontier-line" />
               {models.map((m, index) => <g class="chart-model" data-model={m.model}>
                 <circle cx={x(m.cost)} cy={y(m.overall_score)} r="7" />
-                <text x={x(m.cost) + (index === 0 ? -12 : 12)} y={y(m.overall_score) + (index === 0 ? -17 : 25)} text-anchor={index === 0 ? 'end' : 'start'}>{name(m.model)}</text>
+                <text x={x(m.cost) + (index === 0 ? -12 : 12)} y={y(m.overall_score) + (index === 0 ? -17 : 18 + (index - 1) * 20)} text-anchor={index === 0 ? 'end' : 'start'}>{name(m.model)}</text>
               </g>)}
             </svg>
           </div>
@@ -107,7 +107,7 @@ const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScor
             <label class="mono" for="budget">Estimated run budget <output id="budget-value" for="budget">{money(maxBudget)}</output></label>
             <input id="budget" type="range" min="0" max={maxBudget} step="0.0001" value={maxBudget} aria-describedby="budget-help" />
             <div id="budget-result" role="status" aria-live="polite"><p class="pick-name">{name(leader.model)}</p><p class="mono pick-detail">{score(leader.overall_score)} points · {money(leader.cost)} / run</p></div>
-            <p class="budget-caveat">Two models. One run each. A starting signal, not a final verdict.</p>
+            <p class="budget-caveat">{models.length} models. One run each. A starting signal, not a final verdict.</p>
             <noscript><p>Enable JavaScript to adjust the budget. All scores and costs remain visible.</p></noscript>
           </div>
         </section>
@@ -151,7 +151,7 @@ const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScor
         <section class="sec methodology" id="method">
           <div><p class="eyebrow">05 / SHOW YOUR WORK</p><h2>A benchmark.<br />Not a black box.</h2><a class="repo-link mono" href={repo}>Explore the harness on GitHub ↗</a></div>
           <div class="method-copy">
-            <p>Direct provider APIs. Temperature 0. One fixed system prompt and identical task prompts for every model. No routing layer.</p>
+            <p>Direct provider APIs. Temperature 0 where supported; omitted for Claude Sonnet 5.5 and Opus 5.5 because their API rejects it. One fixed system prompt and identical task prompts for every model. No routing layer.</p>
             <p>Generated JMeter plans run against a loopback demo shop. Passing requires zero sample errors and verified session-aware checkouts. Numeric and choice tasks use deterministic answer keys.</p>
             <p>Category means are weighted, then renormalized over categories with tasks. Unmeasured categories stay unmeasured, never zero.</p>
             <div class="weight-list mono">{categories.map((c, i) => <span><i style={`background:var(--h${i + 1})`}></i>{c}<b>{weights[c]}</b></span>)}</div>
