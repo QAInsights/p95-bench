@@ -1,0 +1,7 @@
+id: percentile
+category: concepts
+tool: none
+prompt: "Which describes p95 latency? A: arithmetic mean. B: 95% of observations are at or below this latency. C: maximum latency. Return one letter."
+grader: choice
+params:
+  answer: "B"

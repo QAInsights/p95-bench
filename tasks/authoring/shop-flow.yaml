@@ -1,0 +1,8 @@
+id: shop-flow
+category: authoring
+tool: jmeter
+prompt: "Create a complete JMeter 5.6.3 JMX using standard built-in components only. Use HTTP Request Defaults: protocol http, host ${__P(host,127.0.0.1)}, port ${__P(port,8080)}. The grader supplies host and port. No external network, scripts, file access, plugins, or OS commands. Use an HTTP Cookie Manager. Each iteration must POST /login with JSON {\"username\":\"bench\",\"password\":\"bench\"}, extract the JSON field csrf from its response (fresh random token each login), GET /products, POST /cart with JSON {\"product_id\":\"sku-1\"}, then POST /checkout with JSON {}. Send Content-Type: application/json for POSTs. For /cart and /checkout send X-CSRF-Token containing the extracted token. Login sets a session cookie and all later requests need it. Tokens and carts are session-specific. Product listing is required before cart and cart before checkout. Each session can checkout only once. Do not access /internal/stats. All requests must succeed. Use one thread and one iteration, completing exactly one checkout."
+grader: jmeter_exec
+params:
+  completions: 1
+  timeout: 60

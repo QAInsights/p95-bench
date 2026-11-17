@@ -1,0 +1,8 @@
+id: pacing
+category: workload
+tool: none
+prompt: "100 users each execute one transaction per cycle. Mean transaction time is 2 seconds. Target throughput is 20 transactions/second. How many seconds of wait after each transaction are needed?"
+grader: numeric
+params:
+  answer: 3
+  tolerance: 0.001

@@ -1,0 +1,10 @@
+id: mean
+category: analysis
+tool: none
+prompt: "From the attached samples.csv, compute arithmetic mean elapsed milliseconds across ALL rows, including failures. Return only a number."
+grader: numeric
+params:
+  answer: 250
+  tolerance: 0.001
+fixtures:
+  - samples.csv

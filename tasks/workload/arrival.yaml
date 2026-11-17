@@ -1,0 +1,8 @@
+id: arrival
+category: workload
+tool: none
+prompt: "An open workload schedules 18000 arrivals uniformly over 300 seconds. What is the arrival rate per second?"
+grader: numeric
+params:
+  answer: 60
+  tolerance: 0.001

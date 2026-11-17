@@ -1,0 +1,10 @@
+id: errors
+category: analysis
+tool: none
+prompt: "From samples.csv, compute percentage of rows where success is false. Return only the percentage number."
+grader: numeric
+params:
+  answer: 25
+  tolerance: 0.001
+fixtures:
+  - samples.csv

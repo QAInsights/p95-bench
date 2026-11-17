@@ -1,0 +1,5 @@
+timeStamp,elapsed,label,success
+1000,100,search,true
+2000,200,search,true
+3000,300,checkout,false
+4000,400,checkout,true
