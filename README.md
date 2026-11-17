@@ -134,6 +134,9 @@ Results are ignored by Git except for the explicitly published runs under
 
 ## Site
 
+Live at https://p95.qainsights.com.
+Deploys on push to main.
+
 The static Astro showcase lives in `site/` and requires Node 22.23.4 or newer.
 Fonts are self-hosted. To regenerate the leaderboard and build:
 
