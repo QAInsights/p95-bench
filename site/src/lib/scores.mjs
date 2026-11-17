@@ -15,3 +15,7 @@ export function toolScore(model, tool) {
   const tasks = model.per_task_results.filter((t) => t.tool === tool);
   return tasks.length ? 100 * tasks.filter((t) => t.passed).length / tasks.length : null;
 }
+export function toolScoreLabel(model, tool) {
+  const value = toolScore(model, tool);
+  return value === null ? 'Not run' : score(value);
+}

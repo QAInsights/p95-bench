@@ -4,10 +4,20 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { buildData } from '../scripts/build-data.mjs';
-import { contributions, bestWithin, toolScore } from '../src/lib/scores.mjs';
+import { contributions, bestWithin, toolScore, toolScoreLabel } from '../src/lib/scores.mjs';
 
 const runs = ['deepseek-flash', 'deepseek-v4-pro'].map((m) =>
   new URL(`../../results/published/${m}/`, import.meta.url).pathname);
+
+test('tool card labels distinguish unrun tools from failed and passing runs', () => {
+  assert.equal(toolScoreLabel({ per_task_results: [] }, 'jmeter'), 'Not run');
+  assert.equal(toolScoreLabel({ per_task_results: [{ tool: 'none', passed: true }] }, 'jmeter'), 'Not run');
+  assert.equal(toolScoreLabel({ per_task_results: [{ tool: 'jmeter', passed: false }] }, 'jmeter'), '0.0');
+  assert.equal(toolScoreLabel({ per_task_results: [{ tool: 'jmeter', passed: true }] }, 'jmeter'), '100.0');
+  assert.equal(toolScoreLabel({ per_task_results: [
+    { tool: 'jmeter', passed: true }, { tool: 'jmeter', passed: false },
+  ] }, 'jmeter'), '50.0');
+});
 
 test('published data is reproducible, redacted and matches weighted scores', async () => {
   const result = await buildData(runs);

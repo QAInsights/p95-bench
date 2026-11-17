@@ -7,7 +7,7 @@ import '@fontsource/jetbrains-mono/latin-700.css';
 import '../styles/global.css';
 import data from '../data/leaderboard.json';
 import Hint from '../components/Hint.astro';
-import { contributions, name, score, money, toolScore } from '../lib/scores.mjs';
+import { contributions, name, score, money, toolScore, toolScoreLabel } from '../lib/scores.mjs';
 
 const { models, weights } = data;
 const leader = models[0];
@@ -140,8 +140,8 @@ const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScor
           <p class="eyebrow">04 / PICK YOUR INSTRUMENT</p><h2>Built for the tools you use.</h2>
           <p class="sub">Executable plans first. More engines next.</p>
           <div class="tools">
-            <article class="tool active-tool"><h3>JMeter</h3><div class="tool-heading">Real scripts.<br />Real checkouts.</div><p class="tool-note mono">3 executable tasks per model</p>
-              <ol role="list">{toolRanking.map((m) => <li><span>{name(m.model)}</span><b>{score(toolScore(m, 'jmeter'))}</b></li>)}</ol>
+            <article class="tool active-tool"><h3>JMeter</h3><div class="tool-heading">Real scripts.<br />Real checkouts.</div><p class="tool-note mono">Executable task pass rate</p>
+              <ol role="list">{toolRanking.map((m) => <li><span>{name(m.model)}</span><b>{toolScoreLabel(m, 'jmeter')}</b></li>)}</ol>
             </article>
             {['k6', 'Gatling', 'Locust'].map((tool, i) => <article class="tool"><h3>{tool}</h3><div class="tool-heading">Next in<br />the pipeline.</div><div class="mini-flame" aria-hidden="true">{[1, 2, 3].map((n) => <i style={`--heat:var(--h${i + n + 1});width:${90 - n * 20}%`}></i>)}</div><p class="coming mono">Graders coming</p></article>)}
           </div>
