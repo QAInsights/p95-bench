@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from urllib.error import URLError
 
-from p95bench.providers import PROVIDERS, OpenAICompatible
+from p95bench.providers import PROVIDERS, get_provider
 from p95bench.runner import run, score_run
 from p95bench.tasks import load_tasks
 
@@ -31,7 +31,7 @@ def main(argv=None):
             if args.repeats < 1:
                 raise ValueError("repeats must be positive")
             tasks = load_tasks(args.tasks)
-            directory, summary = run(OpenAICompatible(config), args.provider, args.model,
+            directory, summary = run(get_provider(args.provider), args.provider, args.model,
                                      config.prices[args.model], tasks, args.out, args.repeats)
             print(f"Run: {directory}")
         print(json.dumps(summary, indent=2))

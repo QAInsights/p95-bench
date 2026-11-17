@@ -48,8 +48,20 @@ protocol returning text, prompt/completion/cache-hit tokens and elapsed seconds.
 `OpenAICompatible` accepts a base URL, key environment-variable name, prices,
 temperature (use `None` when unsupported), and optional request fields.
 Add another OpenAI-compatible provider by adding a `ProviderConfig` entry to
-`PROVIDERS`. Anthropic and Google need separate adapters in later releases.
+`PROVIDERS`. Anthropic uses a native Messages API adapter; Google is future work.
 The runner supports dependency injection for testing and custom adapters.
+
+For Anthropic, set `ANTHROPIC_API_KEY` and use `--provider anthropic` with
+`--model claude-sonnet-5-5` or `--model claude-opus-5-5`. The adapter sends the
+fixed prompt through the top-level `system` field, with temperature 0 and the
+same 8192-token output cap. It uses `x-api-key` authentication and API version
+`2023-06-01`, without an SDK. Discover IDs in Python with
+`get_provider('anthropic').models()` from `p95bench.providers` (there is no
+discovery CLI). Verified list input/output prices per million tokens are
+$2/$10 for Sonnet and $4/$20 for Opus, from <https://claude.com/pricing>.
+Prices live in `PROVIDERS['anthropic'].prices` in `src/p95bench/providers.py`,
+using the same `Price(input, cached, output)` entries as DeepSeek. Prompt caching
+is not enabled, so the cached rate is set to the ordinary input rate.
 
 DeepSeek `/models` was queried during implementation and returned
 `deepseek-flash` and `deepseek-v4-pro`. Flash is the cheapest listed model.
