@@ -28,6 +28,7 @@ def test_transport(monkeypatch, model, rates, content):
             'https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1/chat/completions')
         assert req.get_method() == 'POST'
         assert req.get_header('Authorization') == 'Bearer test-key'
+        assert req.get_header('User-agent') == 'p95bench/0.1.0'
         assert timeout == 180
         assert json.loads(req.data) == {
             'model': model, 'messages': messages, 'temperature': 0, 'max_tokens': 8192,

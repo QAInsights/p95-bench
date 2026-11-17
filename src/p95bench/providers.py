@@ -72,7 +72,8 @@ class OpenAICompatible:
         self.config = config
 
     def _headers(self, key: str) -> dict[str, str]:
-        return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        return {"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                "User-Agent": "p95bench/0.1.0"}
 
     def _request(self, path: str, body: dict | None = None) -> dict:
         key = os.environ.get(self.config.key_env)
