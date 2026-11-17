@@ -273,3 +273,11 @@ def test_isolation_and_refresh_have_distinct_requirements():
     tasks = {t.id: t for t in load_tasks(ROOT / "tasks")}
     assert tasks["session-isolation"].params["min_checkout_threads"] == 2
     assert "min_checkout_threads" not in tasks["token-refresh"].params
+
+
+def test_jmeter_prompts_contain_valid_json_examples():
+    for task in load_tasks(ROOT / "tasks"):
+        if task.grader == "jmeter_exec":
+            assert '\\"' not in task.prompt
+            assert '{"username":"bench","password":"bench"}' in task.prompt
+            assert '{"product_id":"sku-1"}' in task.prompt
