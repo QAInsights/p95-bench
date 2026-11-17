@@ -1,0 +1,7 @@
+id: closed
+category: concepts
+tool: none
+prompt: "Which workload is closed? A: fixed users start their next iteration after their previous finishes and any think time. B: arrivals are independent of completion. C: every second starts exactly 10 new users regardless of completions."
+grader: choice
+params:
+  answer: "A"

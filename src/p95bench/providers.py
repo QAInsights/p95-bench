@@ -1,0 +1,85 @@
+"""Direct provider APIs and explicit per-million-token pricing."""
+
+import json
+import os
+import time
+import urllib.request
+from dataclasses import dataclass, field
+from typing import Protocol
+
+
+@dataclass
+class Response:
+    text: str
+    input_tokens: int
+    output_tokens: int
+    cached_tokens: int = 0
+    latency_seconds: float = 0
+
+
+class Provider(Protocol):
+    def send(self, model: str, messages: list[dict[str, str]]) -> Response: ...
+
+
+@dataclass(frozen=True)
+class Price:
+    input: float
+    cached: float
+    output: float
+
+    def cost(self, response: Response) -> float:
+        return ((response.input_tokens - response.cached_tokens) * self.input
+                + response.cached_tokens * self.cached
+                + response.output_tokens * self.output) / 1_000_000
+
+
+@dataclass(frozen=True)
+class ProviderConfig:
+    base_url: str
+    key_env: str
+    prices: dict[str, Price]
+    temperature: float | None = 0
+    extra: dict = field(default_factory=dict)
+
+
+PROVIDERS = {
+    "deepseek": ProviderConfig(
+        "https://api.deepseek.com", "DEEPSEEK_API_KEY",
+        {"deepseek-flash": Price(0.30, 0.006, 1.20),
+         "deepseek-v4-pro": Price(1.32, 0.044, 3.96)},
+        extra={"thinking": {"type": "disabled"}, "max_tokens": 8192},
+    ),
+}
+
+
+class OpenAICompatible:
+    def __init__(self, config: ProviderConfig):
+        self.config = config
+
+    def _request(self, path: str, body: dict | None = None) -> dict:
+        key = os.environ.get(self.config.key_env)
+        if not key:
+            raise ValueError(f"Set {self.config.key_env}")
+        request = urllib.request.Request(
+            self.config.base_url.rstrip("/") + path,
+            data=json.dumps(body).encode() if body is not None else None,
+            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=180) as response:
+            return json.load(response)
+
+    def models(self) -> list[str]:
+        return [item["id"] for item in self._request("/models")["data"]]
+
+    def send(self, model: str, messages: list[dict[str, str]]) -> Response:
+        body = {"model": model, "messages": messages, **self.config.extra}
+        if self.config.temperature is not None:
+            body["temperature"] = self.config.temperature
+        start = time.perf_counter()
+        data = self._request("/chat/completions", body)
+        elapsed = time.perf_counter() - start
+        usage = data["usage"]
+        cached = usage.get("prompt_cache_hit_tokens",
+                           usage.get("prompt_tokens_details", {}).get("cached_tokens", 0))
+        return Response(data["choices"][0]["message"]["content"] or "",
+                        usage["prompt_tokens"], usage["completion_tokens"], cached, elapsed)

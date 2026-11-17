@@ -1,0 +1,8 @@
+id: little-law
+category: workload
+tool: none
+prompt: "Steady arrival rate is 40 transactions/second and mean response time is 0.25 seconds. By Little's Law, what is mean in-flight concurrency?"
+grader: numeric
+params:
+  answer: 10
+  tolerance: 0.001
