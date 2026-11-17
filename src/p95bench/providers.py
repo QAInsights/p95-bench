@@ -64,6 +64,13 @@ PROVIDERS = {
          "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00)},
         extra={"max_tokens": 8192},
     ),
+    "openai": ProviderConfig(
+        "https://api.openai.com/v1", "OPENAI_API_KEY",
+        {"gpt-6.2-sol": Price(2, 2, 10),
+         "gpt-6.2-astra": Price(8, 8, 40)},
+        temperature=None,
+        extra={"max_completion_tokens": 8192},
+    ),
 }
 
 

@@ -88,6 +88,16 @@ Keep exact model IDs in API calls and saved attempts. Run directories use
 timestamp IDs, independent of model names; published copies use the flat slugs
 above under `results/published/`. Site artifact links use those same slugs.
 
+OpenAI also uses the OpenAI-compatible adapter at `https://api.openai.com/v1`.
+Set `OPENAI_API_KEY` and select `--provider openai` with `gpt-6.2-sol` or
+`gpt-6.2-astra`. Verified Standard input/output list prices per million tokens
+are $2/$10 for Sol and $8/$40 for Astra, from <https://openai.com/api/pricing/>.
+Cached input is conservatively priced at the ordinary input rate pending a
+verified cache discount. Both models reject `max_tokens` and temperature 0:
+requests use `max_completion_tokens: 8192` and omit temperature, leaving the
+API default. Published metadata records these exceptions. Reasoning tokens
+count toward the completion cap and reported output usage.
+
 DeepSeek `/models` was queried during implementation and returned
 `deepseek-flash` and `deepseek-v4-pro`. Flash is the cheapest listed model.
 Use `OpenAICompatible(PROVIDERS['deepseek']).models()` in Python to refresh IDs.
