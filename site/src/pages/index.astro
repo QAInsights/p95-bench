@@ -7,7 +7,7 @@ import '@fontsource/jetbrains-mono/latin-700.css';
 import '../styles/global.css';
 import data from '../data/leaderboard.json';
 import Hint from '../components/Hint.astro';
-import { contributions, name, score, money, toolScore, toolScoreLabel } from '../lib/scores.mjs';
+import { contributions, name, score, money, toolScore, toolScoreLabel, taskResult } from '../lib/scores.mjs';
 
 const { models, weights } = data;
 const leader = models[0];
@@ -124,9 +124,9 @@ const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScor
                 {uniqueTasks.filter((t) => t.category === category).map((task, t) => <tr>
                   <th scope="row"><span>{task.task_id}</span><small class="mono">{task.tool === 'none' ? 'reasoning' : task.tool}</small></th>
                   {models.map((m, index) => {
-                    const result = m.per_task_results.find((r) => r.task_id === task.task_id);
+                    const result = taskResult(m, task.task_id);
                     return <td>{result ? <Hint id={`task-${c}-${t}-${index}`} class={result.passed ? 'result pass' : 'result fail'} label={`${name(m.model)}, ${task.task_id} grading detail`} text={result.detail}>
-                      <span aria-hidden="true">{result.passed ? '✓' : '×'}</span> {result.passed ? 'Pass' : 'Fail'} <span class="result-info" aria-hidden="true">↗</span>
+                      <span aria-hidden="true">{result.passed ? '✓' : '×'}</span> {result.label} <span class="result-info" aria-hidden="true">↗</span>
                     </Hint> : <span>Not run</span>}</td>;
                   })}
                 </tr>)}

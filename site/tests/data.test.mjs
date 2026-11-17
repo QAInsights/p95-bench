@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { buildData } from '../scripts/build-data.mjs';
-import { contributions, bestWithin, toolScore, toolScoreLabel } from '../src/lib/scores.mjs';
+import { contributions, bestWithin, toolScore, toolScoreLabel, taskResult } from '../src/lib/scores.mjs';
 
 const runs = ['deepseek-flash', 'deepseek-v4-pro'].map((m) =>
   new URL(`../../results/published/${m}/`, import.meta.url).pathname);
@@ -17,6 +17,34 @@ test('tool card labels distinguish unrun tools from failed and passing runs', ()
   assert.equal(toolScoreLabel({ per_task_results: [
     { tool: 'jmeter', passed: true }, { tool: 'jmeter', passed: false },
   ] }, 'jmeter'), '50.0');
+});
+
+test('task matrix includes every repeat and fails a cell if any attempt failed', () => {
+  const attempts = [
+    { task_id: 'flow', passed: true, detail: 'Verified checkout' },
+    { task_id: 'other', passed: false, detail: 'Unrelated failure' },
+    { task_id: 'flow', passed: false, detail: 'Failed samples' },
+    { task_id: 'flow', passed: true, detail: 'Verified again' },
+  ];
+  assert.deepEqual(taskResult({ per_task_results: attempts }, 'flow'), {
+    passed: false,
+    label: '2/3 pass',
+    detail: 'Attempt 1: Pass · Verified checkout\nAttempt 2: Fail · Failed samples\nAttempt 3: Pass · Verified again',
+  });
+  assert.equal(taskResult({ per_task_results: [] }, 'flow'), null);
+  assert.equal(taskResult({ per_task_results: attempts }, 'missing'), null);
+  assert.deepEqual(taskResult({ per_task_results: [attempts[0]] }, 'flow'), {
+    passed: true, label: 'Pass', detail: 'Verified checkout',
+  });
+  assert.deepEqual(taskResult({ per_task_results: [attempts[2]] }, 'flow'), {
+    passed: false, label: 'Fail', detail: 'Failed samples',
+  });
+  const allPass = taskResult({ per_task_results: [attempts[0], attempts[3]] }, 'flow');
+  assert.equal(allPass.passed, true);
+  assert.equal(allPass.label, '2/2 pass');
+  const allFail = taskResult({ per_task_results: [attempts[2], attempts[2]] }, 'flow');
+  assert.equal(allFail.passed, false);
+  assert.equal(allFail.label, '0/2 pass');
 });
 
 test('published data is reproducible, redacted and matches weighted scores', async () => {

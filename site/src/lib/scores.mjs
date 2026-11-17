@@ -19,3 +19,14 @@ export function toolScoreLabel(model, tool) {
   const value = toolScore(model, tool);
   return value === null ? 'Not run' : score(value);
 }
+export function taskResult(model, taskId) {
+  const attempts = model.per_task_results.filter((task) => task.task_id === taskId);
+  if (!attempts.length) return null;
+  const passed = attempts.filter((attempt) => attempt.passed).length;
+  return {
+    passed: passed === attempts.length,
+    label: attempts.length === 1 ? (passed ? 'Pass' : 'Fail') : `${passed}/${attempts.length} pass`,
+    detail: attempts.length === 1 ? attempts[0].detail : attempts.map((attempt, index) =>
+      `Attempt ${index + 1}: ${attempt.passed ? 'Pass' : 'Fail'} · ${attempt.detail}`).join('\n'),
+  };
+}
