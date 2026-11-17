@@ -1,6 +1,9 @@
 import csv
 import json
+import os
 import subprocess
+import sys
+import time
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
@@ -10,7 +13,7 @@ import pytest
 
 from p95bench.cli import main
 from p95bench.demo import demo_app
-from p95bench.graders import choice, extract_jmx, jmeter_exec, numeric
+from p95bench.graders import choice, extract_jmx, jmeter_exec, numeric, run_jmeter
 from p95bench.providers import OpenAICompatible, Price, ProviderConfig, Response
 from p95bench.runner import run, score_run, summarize
 from p95bench.tasks import Task, load_tasks
@@ -188,29 +191,48 @@ def test_exec_empty_errors_timeout(tmp_path, monkeypatch):
     assert extract_jmx("```xml\n<jmeterTestPlan></jmeterTestPlan>\n```")
     xml = "<jmeterTestPlan></jmeterTestPlan>"
 
-    def fake_run(command, **kwargs):
+    def fake_run(command, *args):
         result = Path(command[command.index("-l") + 1])
         result.write_text("success\nfalse\n")
         return subprocess.CompletedProcess(command, 0)
 
-    with patch("subprocess.run", fake_run):
+    with patch("p95bench.graders.run_jmeter", fake_run):
         assert not jmeter_exec(xml, {}, tmp_path / "failed").passed
-    def empty_run(command, **kwargs):
+    def empty_run(command, *args):
         Path(command[command.index("-l") + 1]).write_text("success\n")
         return subprocess.CompletedProcess(command, 0)
 
-    with patch("subprocess.run", empty_run):
+    with patch("p95bench.graders.run_jmeter", empty_run):
         assert not jmeter_exec(xml, {}, tmp_path / "empty").passed
 
-    def successful_run(command, **kwargs):
+    def successful_run(command, *args):
         Path(command[command.index("-l") + 1]).write_text("success\ntrue\n")
         return subprocess.CompletedProcess(command, 0)
 
-    with patch("subprocess.run", successful_run):
+    with patch("p95bench.graders.run_jmeter", successful_run):
         assert not jmeter_exec(xml, {}, tmp_path / "no-flow").passed
         with patch("json.load", return_value={"completions": 1}):
             assert jmeter_exec(xml, {}, tmp_path / "success").passed
-    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("jmeter", 1)):
+    with patch("p95bench.graders.run_jmeter", side_effect=subprocess.TimeoutExpired("jmeter", 1)):
         assert "timed out" in jmeter_exec(xml, {}, tmp_path / "timeout").detail
     monkeypatch.setattr(Path, "is_file", lambda self: False)
     assert "not found" in jmeter_exec(xml, {}, tmp_path / "missing").detail
+
+
+@pytest.mark.skipif(os.name != "posix", reason="JMeter launcher process groups require POSIX")
+def test_timeout_kills_launcher_and_child(tmp_path):
+    pidfile = tmp_path / "child.pid"
+    code = ("import subprocess,sys,time; "
+            "p=subprocess.Popen([sys.executable,'-c','import time; time.sleep(90)']); "
+            "open(sys.argv[1],'w').write(str(p.pid)); time.sleep(90)")
+    with (tmp_path / "stdout").open("w") as log:
+        with pytest.raises(subprocess.TimeoutExpired):
+            run_jmeter([sys.executable, "-c", code, str(pidfile)], log, 1)
+    child = int(pidfile.read_text())
+    for _ in range(100):
+        stat = Path(f"/proc/{child}/stat")
+        if not stat.exists() or stat.read_text().split()[2] == "Z":
+            break
+        time.sleep(.01)
+    else:
+        pytest.fail("Child survived launcher timeout")

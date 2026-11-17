@@ -5,6 +5,7 @@ import json
 import math
 import os
 import re
+import signal
 import subprocess
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -46,6 +47,21 @@ def extract_jmx(text):
     return xml
 
 
+def run_jmeter(command, log, timeout):
+    environment = {k: v for k, v in os.environ.items()
+                   if not any(secret in k.upper() for secret in
+                              ("KEY", "TOKEN", "SECRET", "PASSWORD"))}
+    with subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
+                          start_new_session=True, env=environment) as process:
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait()
+            raise
+        return process
+
+
 def jmeter_exec(text, params, workdir):
     try:
         xml = extract_jmx(text)
@@ -68,11 +84,7 @@ def jmeter_exec(text, params, workdir):
                    "-Jjmeter.save.saveservice.successful=true"]
         try:
             with (workdir / "stdout.log").open("w") as log:
-                process = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT,
-                                         timeout=params.get("timeout", 60), check=False,
-                                         env={k: v for k, v in os.environ.items()
-                                              if not any(secret in k.upper() for secret in
-                                                         ("KEY", "TOKEN", "SECRET", "PASSWORD"))})
+                process = run_jmeter(command, log, params.get("timeout", 60))
             if process.returncode:
                 return Grade(False, f"JMeter exit code {process.returncode}")
             with result.open() as stream:
