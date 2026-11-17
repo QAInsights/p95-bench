@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from p95bench.graders import GRADERS, grade
+from p95bench.graders import GRADERS, grade, jmeter_executable
 from p95bench.tasks import CATEGORIES
 
 SYSTEM_PROMPT = (
@@ -49,6 +49,8 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1):
     for task in tasks:
         if task.grader not in GRADERS:
             raise ValueError(f"Unknown grader: {task.grader}")
+    if any(task.grader == "jmeter_exec" for task in tasks):
+        jmeter_executable()
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     directory = (out / run_id).resolve()
     directory.mkdir(parents=True)

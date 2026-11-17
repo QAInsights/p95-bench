@@ -183,11 +183,12 @@ def test_demo_flow():
 
 @pytest.mark.parametrize("text", ["", "not xml", "<jmeterTestPlan><bad></jmeterTestPlan>"])
 def test_invalid_jmx(text, tmp_path):
-    assert not jmeter_exec(text, {}, tmp_path).passed
+    with patch("p95bench.graders.jmeter_executable", return_value=Path("jmeter")):
+        assert not jmeter_exec(text, {}, tmp_path).passed
 
 
 def test_exec_empty_errors_timeout(tmp_path, monkeypatch):
-    monkeypatch.setattr(Path, "is_file", lambda self: True)
+    monkeypatch.setattr("p95bench.graders.jmeter_executable", lambda: Path("jmeter"))
     assert extract_jmx("```xml\n<jmeterTestPlan></jmeterTestPlan>\n```")
     xml = "<jmeterTestPlan></jmeterTestPlan>"
 
@@ -215,8 +216,22 @@ def test_exec_empty_errors_timeout(tmp_path, monkeypatch):
             assert jmeter_exec(xml, {}, tmp_path / "success").passed
     with patch("p95bench.graders.run_jmeter", side_effect=subprocess.TimeoutExpired("jmeter", 1)):
         assert "timed out" in jmeter_exec(xml, {}, tmp_path / "timeout").detail
-    monkeypatch.setattr(Path, "is_file", lambda self: False)
-    assert "not found" in jmeter_exec(xml, {}, tmp_path / "missing").detail
+
+
+def test_missing_jmeter_preflight(tmp_path, monkeypatch):
+    monkeypatch.setenv("JMETER_HOME", str(tmp_path / "absent"))
+    provider = FakeProvider()
+    task = Task("exec", "authoring", "jmeter", "test", "jmeter_exec", {}, {})
+    with pytest.raises(ValueError, match="set JMETER_HOME"):
+        run(provider, "fake", "model", Price(0, 0, 0), [task], tmp_path / "results")
+    assert not provider.calls
+    assert not (tmp_path / "results").exists()
+    with pytest.raises(ValueError, match="set JMETER_HOME"):
+        jmeter_exec("<jmeterTestPlan></jmeterTestPlan>", {}, tmp_path)
+    task.grader = "numeric"
+    task.params = {"answer": 10}
+    run(provider, "fake", "model", Price(0, 0, 0), [task], tmp_path / "results")
+    assert len(provider.calls) == 1
 
 
 @pytest.mark.skipif(os.name != "posix", reason="JMeter launcher process groups require POSIX")

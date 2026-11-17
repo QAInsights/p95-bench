@@ -62,15 +62,20 @@ def run_jmeter(command, log, timeout):
         return process
 
 
+def jmeter_executable():
+    home = Path(os.environ.get("JMETER_HOME", "~/apache-jmeter-5.6.3")).expanduser()
+    executable = home / "bin" / "jmeter"
+    if not executable.is_file() or not os.access(executable, os.X_OK):
+        raise ValueError(f"JMeter executable not found or not executable: {executable}; set JMETER_HOME")
+    return executable
+
+
 def jmeter_exec(text, params, workdir):
+    executable = jmeter_executable()
     try:
         xml = extract_jmx(text)
     except (ValueError, ET.ParseError) as error:
         return Grade(False, str(error))
-    home = Path(os.environ.get("JMETER_HOME", "~/apache-jmeter-5.6.3")).expanduser()
-    executable = home / "bin" / "jmeter"
-    if not executable.is_file():
-        return Grade(False, f"JMeter not found: {executable}")
     workdir.mkdir(parents=True, exist_ok=True)
     with demo_app() as (url, admin):
         port = url.rsplit(":", 1)[1]
