@@ -1,0 +1,174 @@
+---
+import '@fontsource/bricolage-grotesque/latin-400.css';
+import '@fontsource/bricolage-grotesque/latin-500.css';
+import '@fontsource/bricolage-grotesque/latin-800.css';
+import '@fontsource/jetbrains-mono/latin-400.css';
+import '@fontsource/jetbrains-mono/latin-700.css';
+import '../styles/global.css';
+import data from '../data/leaderboard.json';
+import Hint from '../components/Hint.astro';
+import { contributions, name, score, money, toolScore } from '../lib/scores.mjs';
+
+const { models, weights } = data;
+const leader = models[0];
+const [integer, decimal] = score(leader.overall_score).split('.');
+const categories = Object.keys(weights);
+const active = categories.filter((c) => models.some((m) => c in m.category_scores));
+const uniqueTasks = [...new Map(models.flatMap((m) => m.per_task_results).map((t) => [t.task_id, t])).values()];
+const passed = (model) => model.per_task_results.filter((t) => t.passed).length;
+const repo = 'https://github.com/QAInsights/p95-bench';
+const maxBudget = Math.ceil(Math.max(...models.map((m) => m.cost)) * 100) / 100;
+const x = (cost) => 48 + cost / maxBudget * 440;
+const y = (value) => 260 - value / 100 * 210;
+const toolRanking = [...models].sort((a, b) => toolScore(b, 'jmeter') - toolScore(a, 'jmeter'));
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="An open benchmark for AI on performance test scripting and engineering. Real model runs, executable JMeter tests and transparent scoring." />
+    <meta name="theme-color" content="#0c0b10" />
+    <title>P95 Bench · Performance, under test.</title>
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <div class="wrap">
+      <header>
+        <nav aria-label="Primary">
+          <a class="logo" href="#"><span>p95</span>bench</a>
+          <div class="nav-links">
+            <a href="#leaderboard" class="current">Leaderboard</a>
+            <a href="#tasks">Task matrix</a>
+            <a href="#method">Method</a>
+            <a href={repo}>GitHub <span aria-hidden="true">↗</span></a>
+          </div>
+        </nav>
+      </header>
+      <main>
+        <section class="hero">
+          <div class="hero-score" aria-label={`${score(leader.overall_score)} out of 100`}>
+            {integer}<sup>.{decimal}</sup><span class="score-label mono">LEADING SCORE / 100</span>
+          </div>
+          <div class="hero-copy">
+            <p class="eyebrow">PERFORMANCE, UNDER TEST.</p>
+            <h1 id="content" tabindex="-1">Writing load tests is easy.<br />Getting them right is <b>the benchmark.</b></h1>
+            <p class="positioning">An open benchmark for AI on performance test scripting and engineering.</p>
+            <div class="leader">
+              <div><b>#1 overall</b><span>{name(leader.model)}</span></div>
+              <div><b>{money(leader.cost)}</b><span>estimated run cost</span></div>
+              <div><b>{passed(leader)} / {leader.per_task_results.length}</b><span>tasks passed</span></div>
+            </div>
+          </div>
+        </section>
+        <div class="run-strip mono"><span><i class="live-dot"></i> REAL RUNS. NO SYNTHETIC RANKINGS.</span><span>{models.length} models · {uniqueTasks.length} tasks · 1 executable tool</span><span>17 NOV 2026 / SEED PACK 01</span></div>
+
+        <section class="sec" id="leaderboard">
+          <div class="section-top"><div><p class="eyebrow">01 / THE LEADERBOARD</p><h2>Follow the flame.</h2></div><span class="section-note mono">WIDER IS BETTER ↗</span></div>
+          <p class="sub">Every segment is earned. Explore where each model picked up its points.</p>
+          <div class="legend">{categories.map((category, index) => <span class:list={{ untested: !active.includes(category) }}><i style={`background:var(--h${index + 1})`}></i>{category} {weights[category]}{!active.includes(category) && <small> · not yet benchmarked</small>}</span>)}</div>
+          <ol class="flame" role="list">
+            {models.map((model, rank) => <li class="flame-row">
+              <div class="model-name"><span class="rank mono">0{rank + 1}</span><span>{name(model.model)}<small class="mono">{model.provider} / direct API</small></span></div>
+              <div class="track">{contributions(model, weights).map((segment) => <Hint
+                id={`flame-${rank}-${segment.category}`} class="segment"
+                style={`--segment-width:${segment.points}%;--heat:var(--h${categories.indexOf(segment.category) + 1})`}
+                label={`${name(model.model)}, ${segment.category} details`}
+                text={`${segment.category}: ${score(segment.score)}/100 · ${score(segment.points)} weighted points`}>
+                <span class="segment-mark" aria-hidden="true">↗</span>
+              </Hint>)}</div>
+              <strong class="model-score mono">{score(model.overall_score)}</strong>
+            </li>)}
+          </ol>
+          <p class="footnote">Points = category score × weight ÷ present weights. Five active categories; 75 total weight. Hover, focus or tap a segment.</p>
+        </section>
+
+        <section class="sec grid2" id="frontier">
+          <div class="card chart-card">
+            <p class="eyebrow">02 / THE COST FRONTIER</p><h2>More score. Less spend.</h2>
+            <p class="sub">A full seed run, priced in dollars. Up and left wins.</p>
+            <svg viewBox="0 0 540 310" role="img" aria-labelledby="chart-title chart-desc">
+              <title id="chart-title">Score versus estimated run cost</title>
+              <desc id="chart-desc">{models.map((m) => `${name(m.model)}: ${score(m.overall_score)} points at ${money(m.cost)}.`).join(' ')} Both models are on the cost frontier.</desc>
+              {[0, 25, 50, 75, 100].map((v) => <g><line x1="48" x2="505" y1={y(v)} y2={y(v)} class="grid-line" /><text x="35" y={y(v) + 4} text-anchor="end">{v}</text></g>)}
+              {[0, maxBudget / 2, maxBudget].map((c) => <text x={x(c)} y="287" text-anchor="middle">${c.toFixed(2)}</text>)}
+              <text x="48" y="20" class="axis-label">SCORE / 100</text>
+              <text x="505" y="307" text-anchor="end" class="axis-label">ESTIMATED USD / RUN</text>
+              <polyline points={[...models].sort((a, b) => a.cost - b.cost).map((m) => `${x(m.cost)},${y(m.overall_score)}`).join(' ')} class="frontier-line" />
+              {models.map((m, index) => <g class="chart-model" data-model={m.model}>
+                <circle cx={x(m.cost)} cy={y(m.overall_score)} r="7" />
+                <text x={x(m.cost) + (index === 0 ? -12 : 12)} y={y(m.overall_score) + (index === 0 ? -17 : 25)} text-anchor={index === 0 ? 'end' : 'start'}>{name(m.model)}</text>
+              </g>)}
+            </svg>
+          </div>
+          <div class="card budget-card">
+            <p class="eyebrow">A SMALL BUDGET. A REAL CHOICE.</p><h2>What's your ceiling?</h2>
+            <p class="sub" id="budget-help">Find the highest score within your per-run budget.</p>
+            <label class="mono" for="budget">Estimated run budget <output id="budget-value" for="budget">{money(maxBudget)}</output></label>
+            <input id="budget" type="range" min="0" max={maxBudget} step="0.0001" value={maxBudget} aria-describedby="budget-help" />
+            <div id="budget-result" role="status" aria-live="polite"><p class="pick-name">{name(leader.model)}</p><p class="mono pick-detail">{score(leader.overall_score)} points · {money(leader.cost)} / run</p></div>
+            <p class="budget-caveat">Two models. One run each. A starting signal, not a final verdict.</p>
+            <noscript><p>Enable JavaScript to adjust the budget. All scores and costs remain visible.</p></noscript>
+          </div>
+        </section>
+
+        <section class="sec" id="tasks">
+          <div class="section-top"><div><p class="eyebrow">03 / UNDER THE HOOD</p><h2>No place to hide a miss.</h2></div><span class="section-note mono">{uniqueTasks.length} TASKS / PASS OR FAIL</span></div>
+          <p class="sub">The same task, the same prompt. Focus or tap a result to inspect its grading detail.</p>
+          <div class="matrix-scroll" tabindex="0" role="region" aria-labelledby="matrix-caption">
+            <table>
+              <caption id="matrix-caption" class="sr-only">Seed task results by model, grouped by category</caption>
+              <thead><tr><th scope="col">Category / task</th>{models.map((m) => <th scope="col">{name(m.model)}</th>)}</tr></thead>
+              {categories.filter((c) => active.includes(c)).map((category, c) => <tbody>
+                <tr class="category-row"><th scope="rowgroup" colspan={models.length + 1}><i style={`background:var(--h${categories.indexOf(category) + 1})`}></i>{category}<span class="mono">{uniqueTasks.filter((t) => t.category === category).length} tasks</span></th></tr>
+                {uniqueTasks.filter((t) => t.category === category).map((task, t) => <tr>
+                  <th scope="row"><span>{task.task_id}</span><small class="mono">{task.tool === 'none' ? 'reasoning' : task.tool}</small></th>
+                  {models.map((m, index) => {
+                    const result = m.per_task_results.find((r) => r.task_id === task.task_id);
+                    return <td>{result ? <Hint id={`task-${c}-${t}-${index}`} class={result.passed ? 'result pass' : 'result fail'} label={`${name(m.model)}, ${task.task_id} grading detail`} text={result.detail}>
+                      <span aria-hidden="true">{result.passed ? '✓' : '×'}</span> {result.passed ? 'Pass' : 'Fail'} <span class="result-info" aria-hidden="true">↗</span>
+                    </Hint> : <span>Not run</span>}</td>;
+                  })}
+                </tr>)}
+              </tbody>)}
+            </table>
+          </div>
+          <p class="footnote">Repair and migration: not yet benchmarked. Results are binary, with no partial credit.</p>
+        </section>
+
+        <section class="sec" id="tools">
+          <p class="eyebrow">04 / PICK YOUR INSTRUMENT</p><h2>Built for the tools you use.</h2>
+          <p class="sub">Executable plans first. More engines next.</p>
+          <div class="tools">
+            <article class="tool active-tool"><h3>JMeter</h3><div class="tool-heading">Real scripts.<br />Real checkouts.</div><p class="tool-note mono">3 executable tasks per model</p>
+              <ol role="list">{toolRanking.map((m) => <li><span>{name(m.model)}</span><b>{score(toolScore(m, 'jmeter'))}</b></li>)}</ol>
+            </article>
+            {['k6', 'Gatling', 'Locust'].map((tool, i) => <article class="tool"><h3>{tool}</h3><div class="tool-heading">Next in<br />the pipeline.</div><div class="mini-flame" aria-hidden="true">{[1, 2, 3].map((n) => <i style={`--heat:var(--h${i + n + 1});width:${90 - n * 20}%`}></i>)}</div><p class="coming mono">Graders coming</p></article>)}
+          </div>
+          <p class="footnote">JMeter score = percentage of executable tasks passed. No scores are assigned to tools without graders.</p>
+        </section>
+
+        <section class="sec methodology" id="method">
+          <div><p class="eyebrow">05 / SHOW YOUR WORK</p><h2>A benchmark.<br />Not a black box.</h2><a class="repo-link mono" href={repo}>Explore the harness on GitHub ↗</a></div>
+          <div class="method-copy">
+            <p>Direct provider APIs. Temperature 0. One fixed system prompt and identical task prompts for every model. No routing layer.</p>
+            <p>Generated JMeter plans run against a loopback demo shop. Passing requires zero sample errors and verified session-aware checkouts. Numeric and choice tasks use deterministic answer keys.</p>
+            <p>Category means are weighted, then renormalized over categories with tasks. Unmeasured categories stay unmeasured, never zero.</p>
+            <div class="weight-list mono">{categories.map((c, i) => <span><i style={`background:var(--h${i + 1})`}></i>{c}<b>{weights[c]}</b></span>)}</div>
+            <p>Cost is estimated from published peak list prices, including cache-hit pricing. It is not an invoice. Latency measures provider calls, excluding grading.</p>
+            <p class="small-copy">This public seed pack is small: one run per model, not a confidence interval. DeepSeek thinking is disabled. Output cap: 8,192 tokens. Tool scores and overall scores measure different slices.</p>
+          </div>
+        </section>
+        <section class="provenance card">
+          <h2 class="eyebrow">THE PAPER TRAIL</h2>
+          {models.map((m) => <div><strong>{name(m.model)}</strong><span class="mono">{m.run_date ? new Date(m.run_date).toISOString().replace('T', ' / ').replace('.000Z', ' UTC') : 'Date not recorded'}</span><span class="mono">{(m.tokens.input + m.tokens.output).toLocaleString('en-US')} tokens · {m.latency.toFixed(2)}s API latency</span><a class="mono" href={`${repo}/tree/main/results/published/${m.model}`}>Run artifacts ↗</a><span class="mono">Harness {m.harness_commit ? <a href={`${repo}/commit/${m.harness_commit}`}>{m.harness_commit.slice(0, 7)}</a> : 'not recorded'}</span></div>)}
+        </section>
+      </main>
+      <footer><span>Open source · MIT · P95 Bench</span><span>© 2026 NaveenKumar Namachivayam</span></footer>
+    </div>
+    <script>
+      import { initialize } from '../lib/interactions';
+      initialize();
+    </script>
+  </body>
+</html>

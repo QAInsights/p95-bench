@@ -1,0 +1,22 @@
+{
+  "name": "p95-bench-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "data": "node scripts/build-data.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@fontsource/bricolage-grotesque": "^5.2.0",
+    "@fontsource/jetbrains-mono": "^5.2.0",
+    "@oddbird/popover-polyfill": "^0.7.3",
+    "astro": "7.4.12",
+    "interestfor": "^1.0.14"
+  },
+  "devDependencies": {
+    "yaml": "^2.8.0"
+  }
+}
