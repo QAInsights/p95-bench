@@ -6,6 +6,20 @@ import { taskCoverage } from '../src/lib/scores.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 
+test('stack and replay score cells reserve tabular single-line widths at every breakpoint', async () => {
+  const css = await readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8');
+  for (const selector of ['.bar-value', '.lane-score']) {
+    const rule = css.slice(css.indexOf(selector + ' {')).split('}')[0];
+    assert.match(rule, /white-space: nowrap/);
+    assert.match(rule, /font-variant-numeric: tabular-nums/);
+    assert.match(rule, /(?:min-)?inline-size: 10ch/);
+  }
+  assert.match(css, /#flames\s*\{[^}]*grid-auto-rows: 1fr/);
+  const columns = [...css.matchAll(/\.flame-row\s*\{[^}]*grid-template-columns: ([^;]+)/g)];
+  assert.equal(columns.length, 3);
+  for (const [, tracks] of columns) assert.match(tracks, /minmax\(0, 1fr\) max-content$/);
+});
+
 test('task coverage marks missing tasks as partial without counting duplicates or unknown ids', () => {
   const tasks = [{ id: 'a' }, { id: 'b' }];
   const model = { per_task_results: [{ task_id: 'a' }, { task_id: 'a' }, { task_id: 'unknown' }] };
