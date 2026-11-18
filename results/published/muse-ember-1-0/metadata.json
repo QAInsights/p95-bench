@@ -1,0 +1,41 @@
+{
+  "run_date": "2026-11-18T05:27:45.626212+00:00",
+  "provider": "meta",
+  "model": "muse-ember-1.0",
+  "base_url": "https://api.meta.ai/v1",
+  "cost_note": "USD \u00b7 list-price estimate (includes reasoning tokens).",
+  "pricing_source": "https://dev.meta.ai/products/meta-model-api",
+  "temperature": null,
+  "max_completion_tokens": 8192,
+  "harness_commit": "d0e26d753aae9e6b7789d28e4bec05ae14ddd875",
+  "task_count": 15,
+  "k6_version": "1.0.0",
+  "jmeter_version": "5.6.3",
+  "repeats": 1,
+  "temperature_note": "Omitted per Meta Chat Completions documentation; default 1.",
+  "thinking_note": "Default reasoning retained; completion tokens already include reasoning, not added again.",
+  "default_reasoning_effort": "max",
+  "output_cap_note": "8192 tokens shared by reasoning and answer; no cap or effort changes, no answer retries.",
+  "pricing_verified_date": "2026-11-18",
+  "spend_limit_usd": 3,
+  "cumulative_spend_upper_bound_usd": 0.9917628500000002,
+  "cap_hit_task_ids": [
+    "shop-flow",
+    "session-isolation",
+    "token-refresh"
+  ],
+  "empty_reasoning_cap_task_ids": [
+    "shop-flow",
+    "session-isolation",
+    "token-refresh"
+  ],
+  "run_spend_upper_bound_usd": 0.017998600000000087,
+  "unreturned_request_reserve_usd": 8.673617379884035e-17,
+  "price_per_million": {
+    "input": 0.1,
+    "cached": 0.004,
+    "output": 0.5
+  },
+  "maximum_observed_input_tokens": 303,
+  "pricing_tier": "Below 200k context tokens"
+}
