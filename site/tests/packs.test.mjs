@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { mkdtemp, mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { buildData, loadTaskData } from '../scripts/build-data.mjs';
+import { buildData, loadTaskData, snapshotDigest } from '../scripts/build-data.mjs';
 
 const packId = 'p95-v2.0.0';
 
@@ -33,6 +33,10 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
       input_tokens: 100, output_tokens: 20, latency_seconds: 2 };
     const metadata = { pack_id: packId, pack_digest: summary.pack_digest, visibility: 'public' };
     const manifest = { pack_id: packId, digest: summary.pack_digest, visibility: 'public' };
+    const { digest: _, ...contents } = manifest;
+    manifest.digest = snapshotDigest(contents);
+    summary.pack_digest = manifest.digest;
+    metadata.pack_digest = manifest.digest;
     const attempt = { pack_id: packId, pack_digest: summary.pack_digest, repeat: 0,
       model: 'synthetic', provider: 'test', task_id: 'sample', category: 'repair',
       response: { input_tokens: 100, output_tokens: 20 }, cost_usd: .01,
@@ -48,6 +52,9 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     assert.equal(data.models[0].quality_score, 80);
     assert.equal(data.models[0].per_task_results[0].score, .8);
     assert.equal(data.models[0].per_task_results[0].repeat, 0);
+    await save('pack.json', { ...manifest, repeats: 2 });
+    await assert.rejects(buildData([directory], options), /digest/);
+    await save('pack.json', manifest);
     await assert.rejects(buildData([directory]), /Mixed pack/);
     await save('summary.json', { ...summary, complete: false });
     await assert.rejects(buildData([directory], options), /Incomplete/);

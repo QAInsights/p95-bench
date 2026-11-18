@@ -3,10 +3,30 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { parse } from 'yaml';
+import { createHash } from 'node:crypto';
 import { taskCoverage } from '../src/lib/scores.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const readJSON = async (file) => JSON.parse(await readFile(file, 'utf8'));
+
+export function snapshotDigest(value) {
+  const canonical = item => {
+    if (item === null) return ['null'];
+    if (typeof item === 'boolean') return ['boolean', item];
+    if (typeof item === 'number') {
+      if (!Number.isFinite(item)) throw new Error('Nonfinite digest number');
+      const bytes = Buffer.alloc(8);
+      bytes.writeDoubleBE(item);
+      return ['number', bytes.toString('hex')];
+    }
+    if (typeof item === 'string') return ['string', item];
+    if (Array.isArray(item)) return ['array', item.map(canonical)];
+    return ['object', Object.entries(item)
+      .sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b)))
+      .map(([key, val]) => [key, canonical(val)])];
+  };
+  return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
+}
 
 export async function loadTaskData({ packId = 'p95-v1', tasksRoot } = {}) {
   const packs = await readJSON(path.join(root, 'src/p95bench/packs.json'));
@@ -60,6 +80,8 @@ export async function buildData(directories, options = {}) {
     if (attempts.some(a => (a.pack_id ?? 'p95-v1') !== packId)
       || (summary.pack_id ?? 'p95-v1') !== packId) throw new Error('Mixed pack input');
     if (v2) {
+      const { digest, ...contents } = manifest;
+      if (digest !== snapshotDigest(contents)) throw new Error('Pack snapshot digest mismatch');
       if (summary.complete !== true || !summary.pack_digest
         || attempts.some(a => a.pack_digest !== summary.pack_digest
           || a.grade.schema_version !== 2 || !Number.isFinite(a.grade.score)

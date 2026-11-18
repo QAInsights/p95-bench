@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import struct
 from collections import defaultdict
 from importlib.resources import files
 
@@ -48,8 +49,23 @@ def snapshot(pack_id, tasks, repeats=1, budgets=None, private=False):
 
 
 def digest(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
-                                     allow_nan=False).encode()).hexdigest()
+    def canonical(item):
+        if item is None:
+            return ["null"]
+        if isinstance(item, bool):
+            return ["boolean", item]
+        if isinstance(item, (int, float)):
+            if not finite(abs(item)):
+                raise ValueError("Nonfinite digest number")
+            return ["number", struct.pack(">d", item).hex()]
+        if isinstance(item, str):
+            return ["string", item]
+        if isinstance(item, list):
+            return ["array", [canonical(v) for v in item]]
+        return ["object", [[k, canonical(v)] for k, v in sorted(item.items())]]
+
+    return hashlib.sha256(json.dumps(canonical(value), ensure_ascii=False,
+                                     separators=(",", ":")).encode()).hexdigest()
 
 
 def validate_snapshot(value):
