@@ -28,6 +28,189 @@
       "latency": 100.32705740701931,
       "run_date": "2026-11-17T20:53:56Z",
       "harness_commit": "572a8d133f181ee61de2d4dd74c1ad1ecd67d612",
+      "output_cap": 8192,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 119,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000278
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 123,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000286
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 282,
+          "cached_tokens": 0,
+          "output_tokens": 2105,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.021614
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 101,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000242
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 96,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000232
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 90,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.00022
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 291,
+          "cached_tokens": 0,
+          "output_tokens": 2003,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.020612
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 295,
+          "cached_tokens": 0,
+          "output_tokens": 2164,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.02223
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 78,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000196
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 81,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000202
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 89,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000218
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 93,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000226
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 290,
+          "cached_tokens": 0,
+          "output_tokens": 333,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.00391
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 299,
+          "cached_tokens": 0,
+          "output_tokens": 500,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.005598
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 303,
+          "cached_tokens": 0,
+          "output_tokens": 317,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.003776
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",
@@ -155,6 +338,189 @@
       "latency": 95.9756153749986,
       "run_date": "2026-11-17T20:53:56Z",
       "harness_commit": "572a8d133f181ee61de2d4dd74c1ad1ecd67d612",
+      "output_cap": 8192,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 119,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.001112
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 123,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.001144
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 282,
+          "cached_tokens": 0,
+          "output_tokens": 1784,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.073616
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 101,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.000968
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 96,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.000928
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 90,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.00088
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 291,
+          "cached_tokens": 0,
+          "output_tokens": 1684,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.069688
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 295,
+          "cached_tokens": 0,
+          "output_tokens": 1693,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.07008
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 78,
+          "cached_tokens": 0,
+          "output_tokens": 16,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.001264
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 81,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.000808
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 89,
+          "cached_tokens": 0,
+          "output_tokens": 4,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.000872
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 93,
+          "cached_tokens": 0,
+          "output_tokens": 20,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.001544
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 290,
+          "cached_tokens": 0,
+          "output_tokens": 292,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.014
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 299,
+          "cached_tokens": 0,
+          "output_tokens": 307,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.014672
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 303,
+          "cached_tokens": 0,
+          "output_tokens": 284,
+          "price_per_million": {
+            "input": 8,
+            "cached": 8,
+            "output": 40
+          },
+          "cost_usd": 0.013784
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",
@@ -282,6 +648,189 @@
       "latency": 152.03948986998148,
       "run_date": "2026-11-17T18:21:15Z",
       "harness_commit": "5c81ef803dbbcf39c3955b345eb3cbfbf24f6191",
+      "output_cap": 8192,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 174,
+          "cached_tokens": 0,
+          "output_tokens": 16,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.001016
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 190,
+          "cached_tokens": 0,
+          "output_tokens": 22,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.0012
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 437,
+          "cached_tokens": 0,
+          "output_tokens": 5271,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.107168
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 145,
+          "cached_tokens": 0,
+          "output_tokens": 3,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.00064
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 133,
+          "cached_tokens": 0,
+          "output_tokens": 3,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.000592
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 129,
+          "cached_tokens": 0,
+          "output_tokens": 3,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.000576
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 454,
+          "cached_tokens": 0,
+          "output_tokens": 4620,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.094216
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 457,
+          "cached_tokens": 0,
+          "output_tokens": 5694,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.115708
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 117,
+          "cached_tokens": 0,
+          "output_tokens": 13,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.000728
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 113,
+          "cached_tokens": 0,
+          "output_tokens": 26,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.000972
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 131,
+          "cached_tokens": 0,
+          "output_tokens": 20,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.000924
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 141,
+          "cached_tokens": 0,
+          "output_tokens": 40,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.001364
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 438,
+          "cached_tokens": 0,
+          "output_tokens": 1040,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.022552
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 456,
+          "cached_tokens": 0,
+          "output_tokens": 1175,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.025324
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 458,
+          "cached_tokens": 0,
+          "output_tokens": 1204,
+          "price_per_million": {
+            "input": 4,
+            "cached": 4,
+            "output": 20
+          },
+          "cost_usd": 0.025912
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",
@@ -409,6 +958,189 @@
       "latency": 100.35273389300346,
       "run_date": "2026-11-17T10:02:15Z",
       "harness_commit": "7383b4ec880b2cc9249e395c30d1200626d235a6",
+      "output_cap": null,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 123,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00016632000000000002
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 127,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00017160000000000002
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 286,
+          "cached_tokens": 0,
+          "output_tokens": 2955,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.01207932
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 97,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000132
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 93,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00012672
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 86,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00011748000000000001
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 295,
+          "cached_tokens": 256,
+          "output_tokens": 2935,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.011685344
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 299,
+          "cached_tokens": 256,
+          "output_tokens": 2960,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.011789624
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 74,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00010164
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 76,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00010428
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 85,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00011616
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 88,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00012012000000000001
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 293,
+          "cached_tokens": 0,
+          "output_tokens": 411,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00201432
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 302,
+          "cached_tokens": 256,
+          "output_tokens": 381,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0015807439999999998
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 306,
+          "cached_tokens": 256,
+          "output_tokens": 409,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0016969039999999997
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",
@@ -536,6 +1268,189 @@
       "latency": 48.77899586199419,
       "run_date": "2026-11-17T10:01:23Z",
       "harness_commit": "7383b4ec880b2cc9249e395c30d1200626d235a6",
+      "output_cap": null,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 124,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0000384
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 128,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0000396
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 287,
+          "cached_tokens": 0,
+          "output_tokens": 3546,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0043413
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 98,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0000306
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 94,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0000294
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 87,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000027299999999999996
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 296,
+          "cached_tokens": 128,
+          "output_tokens": 3230,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.003927168
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 300,
+          "cached_tokens": 128,
+          "output_tokens": 3546,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004307568
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 75,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0000237
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 77,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000024299999999999998
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 86,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000027
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 89,
+          "cached_tokens": 0,
+          "output_tokens": 1,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000027899999999999997
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 294,
+          "cached_tokens": 0,
+          "output_tokens": 349,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000507
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 303,
+          "cached_tokens": 128,
+          "output_tokens": 341,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00046246799999999995
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 307,
+          "cached_tokens": 128,
+          "output_tokens": 358,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000484068
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",
@@ -663,6 +1578,189 @@
       "latency": 110.9553824229879,
       "run_date": "2026-11-17T18:21:01Z",
       "harness_commit": "5c81ef803dbbcf39c3955b345eb3cbfbf24f6191",
+      "output_cap": 8192,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 174,
+          "cached_tokens": 0,
+          "output_tokens": 54,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000888
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 190,
+          "cached_tokens": 0,
+          "output_tokens": 3,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.00041
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 437,
+          "cached_tokens": 0,
+          "output_tokens": 4796,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.048834
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 145,
+          "cached_tokens": 0,
+          "output_tokens": 5,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.00034
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 133,
+          "cached_tokens": 0,
+          "output_tokens": 3,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000296
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 129,
+          "cached_tokens": 0,
+          "output_tokens": 3,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000288
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 454,
+          "cached_tokens": 0,
+          "output_tokens": 4529,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.046198
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 457,
+          "cached_tokens": 0,
+          "output_tokens": 4730,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.048214
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 117,
+          "cached_tokens": 0,
+          "output_tokens": 3,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000264
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 113,
+          "cached_tokens": 0,
+          "output_tokens": 50,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000726
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 131,
+          "cached_tokens": 0,
+          "output_tokens": 3,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.000292
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 141,
+          "cached_tokens": 0,
+          "output_tokens": 100,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.001282
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 438,
+          "cached_tokens": 0,
+          "output_tokens": 958,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.010456
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 456,
+          "cached_tokens": 0,
+          "output_tokens": 1492,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.015832
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 458,
+          "cached_tokens": 0,
+          "output_tokens": 1384,
+          "price_per_million": {
+            "input": 2,
+            "cached": 2,
+            "output": 10
+          },
+          "cost_usd": 0.014756
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",
@@ -790,6 +1888,189 @@
       "latency": 368.816436167981,
       "run_date": "2026-11-17T20:53:03Z",
       "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
+      "output_cap": 8192,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 139,
+          "cached_tokens": 0,
+          "output_tokens": 109,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.00015069999999999998
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 145,
+          "cached_tokens": 0,
+          "output_tokens": 62,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.0001055
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 325,
+          "cached_tokens": 0,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.0082895
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 114,
+          "cached_tokens": 0,
+          "output_tokens": 148,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.00018219999999999998
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 108,
+          "cached_tokens": 0,
+          "output_tokens": 74,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.00010640000000000001
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 100,
+          "cached_tokens": 0,
+          "output_tokens": 82,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.000112
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 334,
+          "cached_tokens": 256,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.00822308
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 338,
+          "cached_tokens": 256,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.00822428
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 91,
+          "cached_tokens": 0,
+          "output_tokens": 59,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.0000863
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 91,
+          "cached_tokens": 0,
+          "output_tokens": 91,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.0001183
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 101,
+          "cached_tokens": 0,
+          "output_tokens": 77,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.00010729999999999999
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 103,
+          "cached_tokens": 0,
+          "output_tokens": 173,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.0002039
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 330,
+          "cached_tokens": 0,
+          "output_tokens": 3352,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.003451
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 339,
+          "cached_tokens": 256,
+          "output_tokens": 3412,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.00344458
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 343,
+          "cached_tokens": 256,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.03,
+            "output": 1
+          },
+          "cost_usd": 0.00822578
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",
@@ -917,6 +2198,153 @@
       "latency": 357.1809215930116,
       "run_date": "2026-11-17T20:53:03Z",
       "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
+      "output_cap": 8192,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 126,
+          "cached_tokens": 0,
+          "output_tokens": 53,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00014939999999999997
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 130,
+          "cached_tokens": 0,
+          "output_tokens": 50,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00014739999999999998
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 289,
+          "cached_tokens": 0,
+          "output_tokens": 7887,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.0115249
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 108,
+          "cached_tokens": 0,
+          "output_tokens": 118,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00023255999999999998
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 103,
+          "cached_tokens": 0,
+          "output_tokens": 65,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00015333999999999997
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 97,
+          "cached_tokens": 0,
+          "output_tokens": 53,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00013257999999999998
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 298,
+          "cached_tokens": 256,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.011850536
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 302,
+          "cached_tokens": 256,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.011852856
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 85,
+          "cached_tokens": 0,
+          "output_tokens": 41,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00010834000000000001
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 88,
+          "cached_tokens": 0,
+          "output_tokens": 55,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00013024
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 96,
+          "cached_tokens": 0,
+          "output_tokens": 67,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00015215999999999998
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 100,
+          "cached_tokens": 0,
+          "output_tokens": 175,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.00031
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",
@@ -1023,6 +2451,153 @@
       "latency": 103.44006397798512,
       "run_date": "2026-11-17T20:52:43Z",
       "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
+      "output_cap": 8192,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 126,
+          "cached_tokens": 0,
+          "output_tokens": 63,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.0005304600000000001
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 130,
+          "cached_tokens": 0,
+          "output_tokens": 81,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.0006221800000000001
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 289,
+          "cached_tokens": 0,
+          "output_tokens": 7886,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.03744690999999999
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 108,
+          "cached_tokens": 0,
+          "output_tokens": 121,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00076824
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 103,
+          "cached_tokens": 0,
+          "output_tokens": 73,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00053425
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 97,
+          "cached_tokens": 0,
+          "output_tokens": 35,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00034519
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 298,
+          "cached_tokens": 256,
+          "output_tokens": 8136,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.03825076399999999
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 302,
+          "cached_tokens": 256,
+          "output_tokens": 7373,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.034687404000000005
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 85,
+          "cached_tokens": 0,
+          "output_tokens": 35,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00032275
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 88,
+          "cached_tokens": 0,
+          "output_tokens": 60,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00044535999999999995
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 96,
+          "cached_tokens": 0,
+          "output_tokens": 50,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00041351999999999996
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 100,
+          "cached_tokens": 0,
+          "output_tokens": 186,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00105748
+        }
+      ],
       "per_task_results": [
         {
           "task_id": "errors",

@@ -409,14 +409,22 @@ footer {
   z-index: 12;
   display: grid;
   gap: 14px;
+  max-block-size: calc(100svh - 14rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 0.375rem;
 }
-.rail button {
+.rail a {
   display: flex;
   align-items: center;
   gap: 9px;
   font-size: 0.75rem;
   color: var(--mute);
   padding: 4px;
+  text-decoration: none;
+  min-block-size: 1.875rem;
+  flex-shrink: 0;
 }
 .rail i {
   width: 2px;
@@ -425,11 +433,16 @@ footer {
   display: block;
   transition: background 0.2s;
 }
-.rail button[aria-current="true"] {
-  color: var(--lime);
+.rail a:focus-visible {
+  outline-offset: -0.125rem;
 }
-.rail button[aria-current="true"] i {
+.rail a[aria-current="true"] {
+  color: var(--lime);
+  font-weight: 600;
+}
+.rail a[aria-current="true"] i {
   background: var(--lime);
+  width: 0.1875rem;
 }
 .replay-stats {
   display: flex;
@@ -1477,11 +1490,11 @@ th {
     right: 5px;
     gap: 5px;
   }
-  .rail button {
+  .rail a {
     padding: 3px;
     min-height: 28px;
   }
-  .rail button span {
+  .rail a span {
     display: none;
   }
   .rail i {

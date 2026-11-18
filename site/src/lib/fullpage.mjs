@@ -2,6 +2,7 @@
 import DATA from "../data/leaderboard.json";
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection } from "./section-scroll.mjs";
+import { sectionMetadata, sectionShortcut } from "./section-navigation.mjs";
 import {
   name as modelName,
   modelSlug,
@@ -60,15 +61,24 @@ const versionMarkup = (m) =>
     : "") +
   (m.discontinued ? ' · <span class="version-badge">Discontinued</span>' : "");
 const scenes = [...document.querySelectorAll(".scene, .reading-section")],
-  sceneNames = [
-    "LIVE RUN",
-    "FLAME STACK",
-    "VALUE FRONTIER",
-    "MODEL FOCUS",
-    "SCENARIOS",
-    "TOOLS",
-    "METHODOLOGY",
-  ];
+  sections = sectionMetadata(scenes),
+  sceneNames = sections.map(section => section.label.toUpperCase());
+document.querySelector('.rail').replaceChildren(...sections.map(section => {
+  const link = document.createElement('a');
+  link.href = '#' + section.id;
+  link.dataset.scene = section.index;
+  link.setAttribute('aria-label', section.number + ': ' + section.label);
+  link.setAttribute('aria-current', String(section.index === 0));
+  const number = document.createElement('span'), marker = document.createElement('i');
+  number.textContent = section.number;
+  marker.setAttribute('aria-hidden', 'true');
+  link.append(number, marker);
+  const eyebrow = scenes[section.index].querySelector('.eyebrow b, .eyebrow');
+  const label = eyebrow.querySelector('b') ?? eyebrow;
+  label.textContent = label.textContent.replace(/^\s*\d+\s*\//, section.number + ' /');
+  return link;
+}));
+document.querySelector('[data-section-shortcuts]').textContent = '1 to ' + sections.length;
 let currentScene = 0,
   selected = 0,
   zoom = null,
@@ -115,13 +125,18 @@ function goScene(index, focus = true, instant = false) {
 }
 document
   .querySelectorAll("[data-scene]")
-  .forEach((b) => (b.onclick = () => goScene(Number(b.dataset.scene))));
+  .forEach((b) => (b.onclick = (e) => {
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    if (b.href !== location.href) history.replaceState(null, "", b.href);
+    goScene(Number(b.dataset.scene));
+  }));
 $("next-scene").onclick = () => goScene(currentScene + 1);
 document.querySelector(".wordmark").onclick = (e) => {
   e.preventDefault();
   goScene(0);
 };
-document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios"]').forEach(
+document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios"],a[href="#explainer"]').forEach(
   (a) =>
     (a.onclick = (e) => {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
@@ -214,9 +229,10 @@ document.addEventListener("keydown", (e) => {
     e.target.closest("input,select,textarea,[contenteditable=true]")
   )
     return;
-  if (/^[1-4]$/.test(e.key)) {
+  const shortcut = sectionShortcut(e.key, scenes.length);
+  if (shortcut !== null) {
     e.preventDefault();
-    goScene(Number(e.key) - 1);
+    goScene(shortcut);
   } else if (e.key.toLowerCase() === "f") {
     e.preventDefault();
     fullscreen();
@@ -1070,5 +1086,6 @@ if (!("switch" in HTMLInputElement.prototype))
   $("show-versions").classList.add("switch-fallback");
 updateVisibleCounts();
 startReplay();
-if (location.hash.match(/^#scene-[1-4]$/))
-  setTimeout(() => goScene(Number(location.hash.at(-1)) - 1, false, true), 50);
+const initialSection = scenes.findIndex(scene => '#' + scene.id === location.hash);
+if (initialSection >= 0)
+  setTimeout(() => goScene(initialSection, false, true), 50);
