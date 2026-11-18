@@ -32,7 +32,8 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
       category_scores: { repair: 80 }, repeats: 1, estimated_cost_usd: .01,
       input_tokens: 100, output_tokens: 20, latency_seconds: 2 };
     const metadata = { pack_id: packId, pack_digest: summary.pack_digest, visibility: 'public' };
-    const manifest = { pack_id: packId, digest: summary.pack_digest, visibility: 'public' };
+    const manifest = { pack_id: packId, digest: summary.pack_digest, visibility: 'public',
+      tasks: [{ id: 'sample', category: 'repair' }], repeats: 1 };
     const { digest: _, ...contents } = manifest;
     manifest.digest = snapshotDigest(contents);
     summary.pack_digest = manifest.digest;
@@ -55,6 +56,10 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     await save('pack.json', { ...manifest, repeats: 2 });
     await assert.rejects(buildData([directory], options), /digest/);
     await save('pack.json', manifest);
+    await writeFile(path.join(taskFolder, 'missing.yaml'),
+      'id: missing\ncategory: repair\ntool: k6\nprompt: Synthetic\ngrader: test_checkpoint\n');
+    await assert.rejects(buildData([directory], options), /inventory/);
+    await rm(path.join(taskFolder, 'missing.yaml'));
     await assert.rejects(buildData([directory]), /Mixed pack/);
     await save('summary.json', { ...summary, complete: false });
     await assert.rejects(buildData([directory], options), /Incomplete/);

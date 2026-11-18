@@ -88,6 +88,19 @@ export async function buildData(directories, options = {}) {
           || a.grade.score < 0 || a.grade.score > 1)
         || manifest.digest !== summary.pack_digest
         || metadata.pack_digest !== summary.pack_digest) throw new Error('Incomplete or mismatched v2 run');
+      const inventory = manifest.tasks;
+      const repeats = manifest.repeats;
+      if (!tasks.length || !Array.isArray(inventory) || inventory.length !== tasks.length
+        || new Set(inventory.map(t => t.id)).size !== tasks.length
+        || inventory.some(t => taskMap.get(t.id)?.category !== t.category)
+        || !Number.isInteger(repeats) || repeats < 1 || summary.repeats !== repeats
+        || attempts.length !== tasks.length * repeats
+        || attempts.some(a => !taskMap.has(a.task_id)
+          || a.category !== taskMap.get(a.task_id).category
+          || !Number.isInteger(a.repeat) || a.repeat < 0 || a.repeat >= repeats)
+        || new Set(attempts.map(a => JSON.stringify([a.task_id, a.repeat]))).size !== attempts.length) {
+        throw new Error('Public task inventory or repeat coverage mismatch');
+      }
       digests.add(summary.pack_digest);
     }
     if (attempts.some((a) => a.model !== first.model || a.provider !== first.provider)) {
