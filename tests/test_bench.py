@@ -35,7 +35,7 @@ def test_choice(text, passed):
 
 def test_seed_answers():
     tasks = {task.id: task for task in load_tasks(ROOT / "tasks")}
-    assert len(tasks) == 12
+    assert len(tasks) == 15
     expected = {"little-law": 40 * .25, "pacing": 100 / 20 - 2,
                 "arrival": 18000 / 300, "concurrency": 75 * .8}
     with (ROOT / "tasks/analysis/samples.csv").open() as stream:

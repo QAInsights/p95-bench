@@ -1,0 +1,14 @@
+id: k6-token-refresh
+category: correlation
+tool: k6
+prompt: >-
+  Write a complete k6 script (k6 v1.0.0 JavaScript, built-in modules only: k6, k6/http).
+  Read the base URL from __ENV.BASE_URL; the grader supplies it.
+  No external network, file access, or extensions. Use k6's per-VU cookie handling.
+  Each iteration must POST /login with JSON {"username":"bench","password":"bench"}, extract the JSON field csrf from its response (fresh random token each login), GET /products, POST /cart with JSON {"product_id":"sku-1"}, then POST /checkout with JSON {}. Send Content-Type: application/json for POSTs. For /cart and /checkout send X-CSRF-Token containing the extracted token. Login sets a session cookie and all later requests need it. Tokens and carts are session-specific. Product listing is required before cart and cart before checkout. Each session can checkout only once. Do not access /internal/stats. All requests must succeed.
+  Use one VU with two iterations. Log in again and extract a fresh token for each iteration. Complete exactly two checkouts. Define options (VUs/iterations) as required above.
+  Return the script in a single javascript code block.
+grader: k6_exec
+params:
+  completions: 2
+  timeout: 60

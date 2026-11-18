@@ -145,6 +145,31 @@ stats API. `params.timeout` defaults to 60 seconds. A zero process exit code
 alone does not pass. Add future execution graders to `graders.GRADERS`; the
 runner and task schema do not need tool-specific changes.
 
+`k6_exec` extracts a `js` or `javascript` code block and runs pinned k6 v1.0.0
+against the same demo shop. It requires exit 0, nonempty `http_reqs` points,
+successful HTTP statuses and `expected_response` tags, and exact verified
+completions. `min_checkout_vus` requires distinct checkout VUs; k6 JSON output
+stores VU/iteration system tags in point metadata. Timeout handling kills the
+whole process group, as for JMeter. Set `K6_PATH` or put `k6` on PATH.
+
+Install the official Linux amd64 release:
+
+```sh
+curl -fL https://github.com/grafana/k6/releases/download/v1.0.0/k6-v1.0.0-linux-amd64.tar.gz -o /home/ubuntu/Downloads/k6-v1.0.0-linux-amd64.tar.gz
+tar -xzf /home/ubuntu/Downloads/k6-v1.0.0-linux-amd64.tar.gz -C /home/ubuntu/Downloads
+install -m 0755 /home/ubuntu/Downloads/k6-v1.0.0-linux-amd64/k6 /home/ubuntu/.local/bin/k6
+k6 version
+```
+
+`p95bench execute --provider deepseek --model deepseek-flash --tool k6`
+runs only the three k6 tasks. `execute` aliases `run`; repeat `--tool` to select
+multiple engines. Without a filter, the seed pack has 15 tasks. k6 prompts
+require built-in modules and a JavaScript code block; the shared system prompt
+is unchanged. Execution artifacts are trusted local code, not sandboxed code.
+Run generated scripts only in an isolated environment without credentials or
+access to sensitive services. The execution environment strips secret-named
+variables, but this is not a filesystem or network sandbox.
+
 `min_checkout_threads` optionally requires successful checkout samples from that
 many distinct JMeter threads, in addition to the app's verified session completions.
 The isolation seed requires two checkout threads; the refresh seed permits one

@@ -5,6 +5,7 @@ import json
 import math
 import os
 import re
+import shutil
 import signal
 import subprocess
 import urllib.request
@@ -117,7 +118,68 @@ def jmeter_exec(text, params, workdir):
             return Grade(False, f"Execution failed: {error}")
 
 
-GRADERS = {"numeric": numeric, "choice": choice, "jmeter_exec": jmeter_exec}
+def k6_executable():
+    executable = shutil.which(os.environ.get("K6_PATH", "k6"))
+    if not executable:
+        raise ValueError("k6 executable not found or not executable; set K6_PATH or install k6 on PATH")
+    return Path(executable)
+
+
+def k6_exec(text, params, workdir):
+    match = re.search(r"```(?:javascript|js)[ \t]*\r?\n([\s\S]*?)```", text, re.IGNORECASE)
+    if not match or not match[1].strip():
+        return Grade(False, "No javascript code block found")
+    executable = k6_executable()
+    workdir = workdir.resolve()
+    workdir.mkdir(parents=True, exist_ok=True)
+    script = workdir / "script.js"
+    script.write_text(match[1])
+    points = workdir / "points.json"
+    with demo_app() as (url, admin):
+        command = [str(executable), "run", "--quiet", "--no-usage-report", "-e", f"BASE_URL={url}",
+                   "--out", f"json={points}", ("--system-tags=proto,subproto,status,method,url,name,"
+                   "group,check,error,error_code,tls_version,scenario,service,expected_response,vu,iter"),
+                   str(script)]
+        try:
+            with (workdir / "stdout.log").open("w") as log:
+                process = run_jmeter(command, log, params.get("timeout", 60))
+            if process.returncode:
+                return Grade(False, f"k6 exit code {process.returncode}")
+            requests = []
+            with points.open() as stream:
+                for line in stream:
+                    record = json.loads(line)
+                    if not isinstance(record, dict):
+                        raise TypeError("Invalid k6 metric record")
+                    if record.get("type") == "Point" and record.get("metric") == "http_reqs":
+                        tags = record["data"]["tags"]
+                        if not isinstance(tags, dict):
+                            raise TypeError("Invalid k6 request tags")
+                        vu = record["data"].get("metadata", {}).get("vu", tags.get("vu"))
+                        tags = {**tags, "vu": vu}
+                        requests.append(tags)
+            if not requests:
+                return Grade(False, "Empty run: no http_reqs points")
+            if any(tags.get("expected_response") != "true"
+                   or not 0 < int(tags.get("status", 0)) < 400 for tags in requests):
+                return Grade(False, "Failed HTTP samples")
+            minimum = params.get("min_checkout_vus", 1)
+            checkout_vus = {tags["vu"] for tags in requests if tags.get("vu")
+                            and urlsplit(tags.get("url", "")).path == "/checkout"}
+            if minimum > 1 and len(checkout_vus) < minimum:
+                return Grade(False, f"Checkout VUs: {len(checkout_vus)}/{minimum}")
+            request = urllib.request.Request(url + "/internal/stats", headers={"X-Admin-Key": admin})
+            with urllib.request.urlopen(request, timeout=5) as response:
+                completed = json.load(response)["completions"]
+            expected = params.get("completions", 1)
+            return Grade(completed == expected, f"Verified completions: {completed}/{expected}")
+        except subprocess.TimeoutExpired:
+            return Grade(False, "k6 timed out")
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            return Grade(False, f"Execution failed: {error}")
+
+
+GRADERS = {"numeric": numeric, "choice": choice, "jmeter_exec": jmeter_exec, "k6_exec": k6_exec}
 
 
 def grade(task, text, workdir):

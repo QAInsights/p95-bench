@@ -6,18 +6,19 @@ from urllib.error import URLError
 
 from p95bench.providers import PROVIDERS, get_provider
 from p95bench.runner import run, score_run
-from p95bench.tasks import load_tasks
+from p95bench.tasks import TOOLS, load_tasks
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="p95bench")
     commands = parser.add_subparsers(dest="command", required=True)
-    execute = commands.add_parser("run")
+    execute = commands.add_parser("run", aliases=["execute"])
     execute.add_argument("--provider", choices=PROVIDERS, required=True)
     execute.add_argument("--model", required=True)
     execute.add_argument("--tasks", type=Path, default=Path("tasks"))
     execute.add_argument("--out", type=Path, default=Path("results"))
     execute.add_argument("--repeats", type=int, default=1)
+    execute.add_argument("--tool", choices=sorted(TOOLS), action="append")
     score = commands.add_parser("score")
     score.add_argument("directory", type=Path)
     args = parser.parse_args(argv)
@@ -31,6 +32,10 @@ def main(argv=None):
             if args.repeats < 1:
                 raise ValueError("repeats must be positive")
             tasks = load_tasks(args.tasks)
+            if args.tool:
+                tasks = [task for task in tasks if task.tool in args.tool]
+                if not tasks:
+                    raise ValueError("No tasks match the selected tools")
             directory, summary = run(get_provider(args.provider), args.provider, args.model,
                                      config.prices[args.model], tasks, args.out, args.repeats)
             print(f"Run: {directory}")
