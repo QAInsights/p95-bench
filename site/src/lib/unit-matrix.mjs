@@ -1,4 +1,5 @@
 import { unitGroups, unitSummary, passRateLabel } from './unit-matrix-data.mjs';
+import { rollNumber, rollText, announceRolling } from './rolling-numbers.mjs';
 
 export function mountUnitMatrix(root) {
   const records = JSON.parse(root.querySelector('#matrix-records').textContent);
@@ -72,7 +73,7 @@ export function mountUnitMatrix(root) {
       heading.id = `matrix-group-${index}`;
       heading.textContent = group.label;
       const stats = document.createElement('span');
-      stats.textContent = `${group.count} squares · ${passRateLabel(group.passRate)}`;
+      rollText(stats, `${group.count} squares · ${passRateLabel(group.passRate)}`, { key: `matrix:${mode}:${group.label}`, animate, max: records.length });
       heading.append(stats);
       section.setAttribute('aria-labelledby', heading.id);
       const grid = document.createElement('div');
@@ -101,10 +102,11 @@ export function mountUnitMatrix(root) {
       ], { duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)' }));
     }
     const summary = unitSummary(visible);
-    root.querySelector('#matrix-total').textContent = summary.measured;
-    root.querySelector('#matrix-source-count').textContent = summary.measured;
-    root.querySelector('#matrix-summary').textContent = `${summary.passed} passed · ${summary.failed} failed · ${summary.notRun} not run. ${passRateLabel(summary.passRate)}.`;
+    rollNumber(root.querySelector('#matrix-total'), summary.measured, { animate, max: records.length });
+    rollNumber(root.querySelector('#matrix-source-count'), summary.measured, { animate, max: records.length });
+    rollText(root.querySelector('#matrix-summary'), `${summary.passed} passed · ${summary.failed} failed · ${summary.notRun} not run. ${passRateLabel(summary.passRate)}.`, { animate, max: records.length });
     root.querySelector('#matrix-status').textContent = `Grouped by ${mode}. ${summary.count} squares in ${groups.length} groups. ${passRateLabel(summary.passRate)}.`;
+    if (animate) announceRolling(`Matrix grouped by ${mode}. ${summary.count} squares in ${groups.length} groups; ${summary.passed} passed, ${summary.failed} failed, ${summary.notRun} not run. ${passRateLabel(summary.passRate)}.`, 'matrix');
     root.querySelectorAll('[data-matrix-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.matrixMode === mode)));
   }
   root.querySelectorAll('[data-matrix-mode]').forEach(button => button.addEventListener('click', () => {

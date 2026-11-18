@@ -43,7 +43,7 @@ const summary = unitSummary(records.filter(record => record.latest));
       </table>
     </div>
   </details>
-  <p class="sr" role="status" id="matrix-status" aria-atomic="true"></p>
+  <p class="sr" id="matrix-status"></p>
   <div id="matrix-tooltip" role="tooltip" hidden></div>
   <script type="application/json" id="matrix-records" set:html={JSON.stringify(records).replaceAll('<', '\\u003c')} />
 </section>

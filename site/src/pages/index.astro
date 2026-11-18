@@ -14,6 +14,7 @@ import Explainer from "../components/Explainer.astro";
 import UnitMatrix from "../components/UnitMatrix.astro";
 import Heatmap from "../components/Heatmap.astro";
 import "../styles/scatter.css";
+import "../styles/rolling-numbers.css";
 
 const { weights } = data;
 const models = selectModelVersions(data.models);
@@ -552,6 +553,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
           >NEXT SECTION <span aria-hidden="true">↓</span></button>
       </div>
     </footer><div id="status" class="sr" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="rolling-status" class="sr" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="fullscreen-message" class="status" hidden>
       <span id="fullscreen-message-text"></span>
       <button type="button" class="control" id="dismiss-fullscreen-message" aria-label="Dismiss fullscreen notice">Dismiss</button>

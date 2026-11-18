@@ -1,0 +1,2 @@
+.rolling-number { display: inline-block; inline-size: calc(var(--number-chars) * 1ch); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: end; }
+.rolling-visual { font: inherit; }

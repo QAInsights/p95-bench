@@ -5,6 +5,7 @@ import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs"
 import { sectionMetadata, sectionShortcut, sectionNumber } from "./section-navigation.mjs";
 import { leastSquares, scatterScale, scatterValue, scatterLabels } from "./scatter-data.mjs";
 import { providerName } from "./provider-names.mjs";
+import { rollNumber, rollText, announceRolling } from "./rolling-numbers.mjs";
 import {
   name as modelName,
   modelSlug,
@@ -156,9 +157,9 @@ scenarioButtons.forEach(button => {
       card.hidden = button.dataset.scenarioFilter !== 'all' && card.dataset.scenarioTool !== button.dataset.scenarioFilter;
     });
     const visible = cards.filter(card => !card.hidden).length;
-    $('scenario-count').textContent = `Showing ${visible} of ${cards.length} scenarios`;
+    rollText($('scenario-count'), `Showing ${visible} of ${cards.length} scenarios`, { animate: true, max: cards.length });
     $('scenario-empty').hidden = visible > 0;
-    announce(`${visible} scenarios shown. ${button.textContent.trim()} filter.`);
+    announceRolling(`${visible} scenarios shown. ${button.textContent.trim()} filter.`, 'scenarios');
   };
 });
 observeScenes(scenes, (scene) => {
@@ -366,12 +367,12 @@ function updateCounters() {
     count = 0;
   models.forEach((m, i) => {
     const n = partialScore(i);
-    laneNodes.get(i).querySelector(".score-number").textContent = score(n);
+    rollNumber(laneNodes.get(i).querySelector(".score-number"), n, { key: 'lane:' + m.model, from: 0, digits: 2, max: 100 });
     max = Math.max(max, n);
     count += arrived[i].size;
   });
-  $("leading-score").textContent = max.toFixed(2);
-  $("sample-count").textContent = count;
+  rollNumber($("leading-score"), max, { from: 0, digits: 2, max: 100 });
+  rollNumber($("sample-count"), count, { from: 0, max: DATA.models.reduce((sum, model) => sum + model.per_task_results.length, 0) });
 }
 function land(s) {
   if (s.done) return;
@@ -493,7 +494,7 @@ function stackInfo(m, c) {
     weights[c] +
     ". Click to isolate this category.";
 }
-function renderFlames() {
+function renderFlames(animate = false) {
   $("zoom-path").textContent = zoom
     ? "/ " + cap(zoom)
     : "/ Weighted contribution";
@@ -540,14 +541,18 @@ function renderFlames() {
       versionMarkup(m) +
       '</span></button><div class="flame-track">' +
       segments +
-      '</div><span class="bar-value">' +
+      '</div><span class="bar-value"><span data-flame-score="' + i + '">' +
       (zoom && m.category_scores[zoom] === undefined
         ? "Not run"
         : score(zoom ? m.category_scores[zoom] : m.overall_score)) +
-      "<small> /100</small></span></div>"
+      "</span><small> /100</small></span></div>"
     );
   });
   $("flames").innerHTML = rows.join("");
+  $('flames').querySelectorAll('[data-flame-score]').forEach(node => {
+    const model = models[Number(node.dataset.flameScore)], value = zoom ? model.category_scores[zoom] : model.overall_score;
+    if (Number.isFinite(value)) rollNumber(node, value, { key: 'flame:' + model.model, from: 0, digits: 2, max: 100, animate });
+  });
   $("flames")
     .querySelectorAll("[data-open]")
     .forEach((b) => (b.onclick = () => openModel(Number(b.dataset.open), b)));
@@ -565,7 +570,8 @@ function zoomCategory(c) {
   change(
     () => {
       zoom = c;
-      renderFlames();
+      renderFlames(true);
+      announceRolling(`${c ? cap(c) : 'Overall'} Flame Stack scores updated for ${models.length} models. Highest score ${Math.max(...models.map(model => c ? model.category_scores[c] ?? 0 : model.overall_score)).toFixed(2)} out of 100.`, 'flames');
       $("stack-info-title").textContent = c
         ? cap(c)
         : activeWeight + " active points";
@@ -700,7 +706,7 @@ function renderChart(animate = false) {
   $('chart-title').textContent = 'Published score versus ' + axisLabel;
   $('chart-desc').textContent = `${axisLabel}. Higher score is better. Dashed Flame line is least squares against ${domain.log ? 'log10 of' : ''} the horizontal values. Diamonds mark models above the fitted trend. Select a numbered model to inspect it.`;
   $('scatter-fit').textContent = axisLabel + (trend ? ` · dashed OLS slope ${trend.slope.toPrecision(3)} score/${domain.log ? 'log10(x)' : 'x'} · R² ${trend.r2 === null ? 'n/a (constant scores)' : trend.r2.toFixed(3)}` : ' · slope/R² n/a (need two distinct x values)');
-  $('scatter-source').textContent = samples.length;
+  rollNumber($('scatter-source'), samples.length, { max: DATA.models.length });
   $('scatter-figure').textContent = 'FIG. ' + sectionNumber(scenes.findIndex(scene => scene.id === 'scene-3') + 1);
   document.querySelector('#scene-3 .value-winner').hidden = !costView;
   document.querySelector('#scene-3 .budget-slider-wrap').hidden = !costView;
@@ -856,7 +862,7 @@ document.querySelectorAll('[data-scatter-axis]').forEach(button => button.addEve
   chartAxis = button.dataset.scatterAxis;
   document.querySelectorAll('[data-scatter-axis]').forEach(control => control.setAttribute('aria-pressed', String(control === button)));
   updateBudget(true);
-  announce(scatterLabels[chartAxis] + ' axis. ' + $('scatter-fit').textContent);
+  announceRolling(scatterLabels[chartAxis] + ' axis. ' + models.length + ' published runs. ' + $('scatter-fit').textContent, 'scatter');
 }));
 $("budget").oninput = () => {
   budget = budgetFor($("budget").value);
@@ -1024,26 +1030,26 @@ $("previous-model").onclick = () =>
 $("next-model").onclick = () => openModel((selected + 1) % models.length);
 $("model-picker").onchange = () => openModel(Number($("model-picker").value));
 renderProfile();
-function updateVisibleCounts() {
+function updateVisibleCounts(animate = false) {
   const tasks = new Set(
     models.flatMap((m) => m.per_task_results.map((t) => t.task_id)),
   ).size;
   const samples = models.reduce((sum, m) => sum + m.per_task_results.length, 0);
   document
     .querySelectorAll("[data-model-count]")
-    .forEach((el) => (el.textContent = models.length));
+    .forEach((el) => rollNumber(el, models.length, { animate, max: DATA.models.length }));
   document
     .querySelectorAll("[data-task-count]")
-    .forEach((el) => (el.textContent = tasks));
+    .forEach((el) => rollNumber(el, tasks, { animate, max: new Set(DATA.models.flatMap(model => model.per_task_results.map(task => task.task_id))).size }));
   document
     .querySelectorAll("[data-sample-total]")
-    .forEach((el) => (el.textContent = samples));
+    .forEach((el) => rollNumber(el, samples, { animate, max: DATA.models.reduce((sum, model) => sum + model.per_task_results.length, 0) }));
   document
     .querySelectorAll("[data-active-weight]")
-    .forEach((el) => (el.textContent = activeWeight));
+    .forEach((el) => rollNumber(el, activeWeight, { animate, max: 100 }));
   document
     .querySelectorAll("[data-active-count]")
-    .forEach((el) => (el.textContent = categories.length));
+    .forEach((el) => rollNumber(el, categories.length, { animate, max: Object.keys(weights).length }));
   const ids = new Set(models.map((m) => m.model));
   document
     .querySelectorAll("[data-tool-model]")
@@ -1103,7 +1109,7 @@ function applyVersions() {
   $("budget").value = Math.ceil(scale.position(budget) * 1000);
   budget = budgetFor($("budget").value);
   buildLanes();
-  renderFlames();
+  renderFlames(true);
   renderCategoryLegend();
   $("stack-info-title").textContent = activeWeight + " active points";
   $("stack-info-detail").textContent =
@@ -1111,16 +1117,17 @@ function applyVersions() {
   renderModelControls();
   renderProfile();
   updateBudget();
-  updateVisibleCounts();
+  updateVisibleCounts(true);
   document.dispatchEvent(new CustomEvent('modelversionschange', { detail: { showEarlier: all } }));
   startReplay();
   if (wasFinished) settle(false);
   else if (wasPaused) $("pause").click();
   scenes[currentScene].scrollIntoView({ behavior: "instant", block: "start" });
-  announce(
+  announceRolling(
     models.length +
       " published runs shown. " +
-      (all ? "Earlier versions included." : "Latest versions only."),
+      (all ? "Earlier versions included." : "Latest versions only.") +
+      ` ${models.reduce((sum, model) => sum + model.per_task_results.length, 0)} published attempts. Highest overall score ${Math.max(...models.map(model => model.overall_score)).toFixed(2)} out of 100.`, 'versions',
   );
 }
 $("show-versions").checked =
