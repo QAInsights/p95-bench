@@ -416,6 +416,66 @@ exhaustion is Not run. The client timeout is 600 seconds.
 `Muse(config, spend_limit=3)` shares the conservative per-network-attempt budget
 policy documented above, including retained reserves for unknown outcomes.
 
+## V2 execution and demo foundations
+
+`p95bench.demo_v2.demo_app_v2(Profile(...), seed=...)` is separate from the frozen
+v1 `demo_app()`. Its public protocol includes:
+
+- `GET /v2/login-form`, `POST /v2/login` (`bench` or `bench-1` through `bench-16`,
+  password `bench`), optional form CSRF, exclusive sessions and rotating CSRF.
+- `GET /v2/catalog`, `/v2/catalog/page?cursor=TOKEN`, `/v2/catalog-html`: seeded dynamic
+  product/variant IDs, pagination and stock. JSON products live at `data.products`.
+- `POST /v2/carts` with `product_id` and `variant_id`; `GET/PATCH /v2/carts/{id}`.
+  PATCH takes `quantity` and an `If-Match` ETag. Cart creation returns ETag `"1"`.
+- `POST /v2/session/renew` resets the deterministic operation-count expiry and
+  returns fresh CSRF. After re-login, `POST /v2/carts/{id}/recover` rebinds an
+  account-owned cart. Mutations require `X-CSRF-Token`.
+- `POST /v2/orders` takes `cart_id`, an `Idempotency-Key`, optionally a reservation
+  and, for ETag profiles, `If-Match`. Controlled business declines return HTTP 200
+  with `accepted: false`. A lost response after commit can be retried exactly once
+  without a duplicate business commit.
+- `POST /v2/reservations` takes `cart_id` and returns a dynamic `status_url`;
+  `GET /v2/jobs/{id}` transitions through bounded polls, with configurable polling
+  limits and ready/failed outcomes. Ready jobs supply a one-use `reservation_id`.
+- `/v2/browse`, `/v2/search`, `/v2/work`: controlled delay phases and deterministic
+  rate faults with `Retry-After`. Delays occur outside state locks.
+- Optional one-use login redirects, `/v2/challenge-form`, `/v2/challenges/{id}`
+  and `/v2/claim/{token}` bridge HTML challenges to session-owned JSON cart grants.
+  Profiles select both hidden-input layouts, eligibility/order variants, challenge
+  expiry, one scheduled ETag conflict, and separate checkout slowdown phases.
+  `/v2/health` stays fast and is never business-completion evidence.
+  Timed phases use the owner's monotonic clock, anchored on the first operation
+  of the relevant pool; deterministic operation-count phases are also available.
+
+The evaluator receives `shop.audit()`: a defensive copy of append-only server-owned
+start/end, authentication, cart, commit, job, rate/fault and phase events using a
+monotonic clock. There is **no public audit/reset/control endpoint**. Every trial
+gets fresh state; audit overflow and bounded state capacity fail closed.
+Final audit snapshots wait for in-flight requests to drain with a bounded deadline;
+`shop.audit(wait=False)` offers a live snapshot while a trial is running.
+
+`p95bench.worker.execution_trial(workdir, profile=..., seed=..., image=...)` creates
+an isolated worker for future v2 graders. Images must be preloaded and pinned by
+digest, and include Python 3 for the public-protocol relay. The default pinned
+Python image is a safety probe, **not a JMeter/k6 runtime**. Tool images and grader
+integration follow in the next rollout; v1 still uses its existing trusted launcher.
+
+Workers run unprivileged with a read-only root, no capabilities, no-new-privileges,
+one CPU, 256 MiB RAM, 64 PIDs, bounded stdout/deadlines, read-only explicit byte
+fixtures, and size-limited ephemeral scratch. No home, provider environment or
+Docker socket is mounted. Docker networking is disabled entirely: a container-local
+loopback relay forwards only to a fresh Unix socket serving the public shop API.
+Audit/control stays in the owner process, outside the container. Timeout/output
+limits remove the entire container, including descendants. Missing runtime/image
+or failed cleanup is an infrastructure error; there is no host execution fallback.
+Returned stdout is untrusted tool evidence; business credit must use the owner audit.
+
+Docker integration tests are opt-in and never pull images automatically:
+`docker pull python@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b`,
+then `P95_TEST_DOCKER=1 .venv/bin/python -m pytest tests/test_worker.py`.
+The pinned worker environment still needs capacity preflight before workload grades
+or paid publication. Artifact export and executable checkpoint graders are not yet wired.
+
 ## License
 
 MIT. Copyright 2026 NaveenKumar Namachivayam.
