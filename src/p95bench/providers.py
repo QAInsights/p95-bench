@@ -181,9 +181,19 @@ class OpenAICompatible:
             data=json.dumps(body).encode() if body is not None else None,
             headers=self._headers(key),
         )
+        measured = getattr(self, "measure_transport", False)
+        if measured:
+            self.transport_attempts, self.backoff_seconds = 0, 0
+            self.response_latency_seconds = None
         for attempt in range(self.config.max_retries + 1):
             try:
-                return self._request_once(request)
+                if measured:
+                    self.transport_attempts += 1
+                    started = time.perf_counter()
+                result = self._request_once(request)
+                if measured:
+                    self.response_latency_seconds = time.perf_counter() - started
+                return result
             except (URLError, TimeoutError, HTTPException, ConnectionResetError) as error:
                 if not self.config.max_retries or (
                     isinstance(error, HTTPError) and error.code not in {429, 500, 502, 503, 504}
@@ -201,7 +211,10 @@ class OpenAICompatible:
                     delay = float(retry_after) if retry_after is not None else 2 ** attempt
                 except ValueError:
                     delay = 2 ** attempt
-                time.sleep(max(0, min(delay, 60)))
+                delay = max(0, min(delay, 60))
+                if measured:
+                    self.backoff_seconds += delay
+                time.sleep(delay)
 
     def models(self) -> list[str]:
         return [item["id"] for item in self._request("/models")["data"]]

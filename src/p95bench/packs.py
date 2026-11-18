@@ -1,0 +1,123 @@
+"""Versioned scoring contracts; no task content or held-out data lives here."""
+
+import hashlib
+import json
+from collections import defaultdict
+from importlib.resources import files
+
+from p95bench.grades import CheckpointGrade, finite
+from p95bench.tasks import CATEGORIES
+
+PACKS = json.loads(files("p95bench").joinpath("packs.json").read_text())
+
+
+def pack_config(pack_id):
+    if pack_id not in PACKS:
+        raise ValueError(f"Unknown pack: {pack_id}")
+    config = dict(PACKS[pack_id])
+    config["weights"] = dict(config.get("weights", CATEGORIES))
+    return config
+
+
+def snapshot(pack_id, tasks, repeats=1, budgets=None, private=False):
+    config = pack_config(pack_id)
+    if not isinstance(repeats, int) or isinstance(repeats, bool) or repeats < 1:
+        raise ValueError("repeats must be a positive integer")
+    inventory = sorted([{"id": t.id, "category": t.category,
+                         "task_digest": digest({"tool": t.tool, "grader": t.grader,
+                                                "prompt": t.prompt, "params": t.params,
+                                                "fixtures": t.fixtures})}
+                        for t in tasks], key=lambda item: item["id"])
+    if ((not inventory and config["grade_schema_version"] == 2)
+            or len({t["id"] for t in inventory}) != len(inventory)):
+        raise ValueError("Pack requires nonempty, unique tasks")
+    if any(t["category"] not in config["weights"] for t in inventory):
+        raise ValueError("Task category is not in the selected pack")
+    budgets = budgets or {}
+    if config["grade_schema_version"] == 2:
+        if not isinstance(budgets, dict) or set(budgets) != {t.id for t in tasks}:
+            raise ValueError("Provide frozen efficiency budgets for every task")
+        for values in budgets.values():
+            if (not isinstance(values, dict)
+                    or not finite(values.get("tokens"), .001)
+                    or not finite(values.get("latency_seconds"), .001)):
+                raise ValueError("Efficiency budgets must be finite and positive")
+    result = {"pack_id": pack_id, **config, "tasks": inventory, "repeats": repeats,
+              "efficiency_budgets": budgets, "visibility": "private" if private else "public"}
+    return {**result, "digest": digest(result)}
+
+
+def digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
+                                     allow_nan=False).encode()).hexdigest()
+
+
+def validate_snapshot(value):
+    data = dict(value)
+    saved = data.pop("digest", None)
+    if saved != digest(data):
+        raise ValueError("Pack snapshot digest mismatch")
+    config = pack_config(data["pack_id"])
+    if any(data.get(k) != v for k, v in config.items()):
+        raise ValueError("Pack scoring contract mismatch")
+
+
+def efficiency(quality, response, budget):
+    if not finite(quality) or quality > 1:
+        raise ValueError("Quality must be between zero and one")
+    for name in ("input_tokens", "output_tokens", "response_latency_seconds"):
+        if not finite(response.get(name)):
+            raise ValueError("Missing or invalid efficiency telemetry")
+    if (not finite(budget.get("tokens"), .001)
+            or not finite(budget.get("latency_seconds"), .001)):
+        raise ValueError("Efficiency budgets must be finite and positive")
+    tokens = response["input_tokens"] + response["output_tokens"]
+    latency = response["response_latency_seconds"]
+    return quality * (.5 * min(1, budget["tokens"] / max(1, tokens))
+                      + .5 * min(1, budget["latency_seconds"] / max(.001, latency)))
+
+
+def summarize_v2(attempts, manifest):
+    validate_snapshot(manifest)
+    if len({(a["model"], a["provider"]) for a in attempts}) > 1:
+        raise ValueError("Mixed model/provider run")
+    weights = manifest["weights"]
+    inventory = {t["id"]: t["category"] for t in manifest["tasks"]}
+    repeats = manifest["repeats"]
+    seen = set()
+    task_quality, task_efficiency = defaultdict(float), defaultdict(float)
+    for attempt in attempts:
+        key = (attempt["task_id"], attempt["repeat"])
+        if (key in seen or key[0] not in inventory or not isinstance(key[1], int)
+                or isinstance(key[1], bool) or not 0 <= key[1] < repeats):
+            raise ValueError("Duplicate or unknown trial slot")
+        seen.add(key)
+        if (attempt.get("pack_id") != manifest["pack_id"]
+                or attempt.get("pack_digest") != manifest["digest"]
+                or attempt["category"] != inventory[key[0]]):
+            raise ValueError("Mixed pack or task category")
+        quality = CheckpointGrade.from_dict(attempt["grade"]).score
+        task_quality[key[0]] += quality / repeats
+        task_efficiency[key[0]] += efficiency(
+            quality, attempt["response"], manifest["efficiency_budgets"][key[0]]) / repeats
+    categories, efficiencies = defaultdict(list), defaultdict(list)
+    for task_id, category in inventory.items():
+        categories[category].append(task_quality[task_id])
+        efficiencies[category].append(task_efficiency[task_id])
+    scores = {k: 100 * sum(categories[k]) / len(categories[k]) if categories[k] else 0
+              for k in weights}
+    quality = sum(weights[k] * scores[k] for k in weights) / 100
+    efficient = sum(weights[k] * (sum(efficiencies[k]) / len(efficiencies[k])
+                                 if efficiencies[k] else 0) for k in weights)
+    weight = manifest["efficiency_weight"]
+    expected = len(inventory) * repeats
+    return {"pack_id": manifest["pack_id"], "pack_digest": manifest["digest"],
+            "overall_score": (1 - weight) * quality + weight * efficient,
+            "quality_score": quality, "efficiency_score": efficient,
+            "category_scores": scores, "attempts": len(attempts), "expected_attempts": expected,
+            "repeats": repeats,
+            "complete": len(seen) == expected and set(inventory.values()) == set(weights),
+            "passed": sum(a["grade"]["passed"] for a in attempts),
+            "estimated_cost_usd": sum(a["cost_usd"] for a in attempts),
+            **{k: sum(a["response"][k] for a in attempts)
+               for k in ("input_tokens", "output_tokens", "latency_seconds")}}

@@ -1,0 +1,13 @@
+{
+  "p95-v1": {
+    "grade_schema_version": 1,
+    "default_repeats": 1,
+    "efficiency_weight": 0
+  },
+  "p95-v2.0.0": {
+    "grade_schema_version": 2,
+    "default_repeats": 1,
+    "efficiency_weight": 0.05,
+    "weights": {"repair": 25, "migration": 15, "correlation": 25, "workload": 20, "analysis": 15}
+  }
+}
