@@ -1,0 +1,48 @@
+---
+import { unitRecords, unitSummary, passRateLabel, unitDescription, resultLabels, toolLabel } from '../lib/unit-matrix-data.mjs';
+import '../styles/unit-matrix.css';
+const records = unitRecords(Astro.props.models, Astro.props.tasks);
+const summary = unitSummary(records.filter(record => record.latest));
+---
+<section class="scene unit-matrix" id="unit-matrix" data-section-label="Unit matrix" aria-labelledby="matrix-title">
+  <div class="scene-head matrix-head">
+    <div class="scene-intro">
+      <p class="eyebrow"><b>02 / Unit matrix</b> &nbsp; The shape of the evidence</p>
+      <h2 id="matrix-title" tabindex="-1">Every attempt.<br />One square.</h2>
+      <p class="subcopy">Same evidence, different arrangements. Follow what passes, and what breaks.</p>
+    </div>
+    <p class="matrix-total"><strong id="matrix-total">{summary.measured}</strong><span>published attempts</span></p>
+  </div>
+  <div class="matrix-controls" role="group" aria-label="Group attempts by">
+    {['All', 'Tool', 'Category', 'Provider', 'Result'].map(mode => <button type="button" class="control" data-matrix-mode={mode.toLowerCase()} aria-pressed={mode === 'All'}>{mode}</button>)}
+  </div>
+  <p id="matrix-summary">{summary.passed} passed · {summary.failed} failed · {summary.notRun} not run. {passRateLabel(summary.passRate)}.</p>
+  <p id="matrix-instructions" class="sr">Focus the matrix, then use Left and Right arrows, Home or End to inspect squares. Tab leaves the matrix. Full results are also available in the data table.</p>
+  <figure class="matrix-figure">
+    <div class="matrix-board" id="matrix-board" role="region" tabindex="0" aria-label="Published attempt matrix" aria-describedby="matrix-summary matrix-instructions">
+      <div class="matrix-group" role="group" aria-labelledby="matrix-initial-heading">
+        <h3 id="matrix-initial-heading">All attempts <span>{summary.count} squares · {passRateLabel(summary.passRate)}</span></h3>
+        <div class="matrix-squares">
+          {records.map((record, index) => <span id={`unit-${index}`} class="unit-square" role="img" tabindex="-1" data-unit-id={record.id} data-result={record.result} aria-label={unitDescription(record)} hidden={!record.latest}>{record.result === 'fail' ? '×' : ''}</span>)}
+        </div>
+      </div>
+    </div>
+    <figcaption><span><b data-matrix-figure>FIG. 02</b> · Each square is a published attempt; hatching marks a missing task.</span><span>Source: published attempts, n = <span id="matrix-source-count">{summary.measured}</span></span></figcaption>
+  </figure>
+  <div class="legend-inline matrix-legend"><span><i class="matrix-key" data-result="pass"></i>Pass</span><span><i class="matrix-key" data-result="fail"></i>Fail ×</span><span><i class="matrix-key" data-result="not_run"></i>Not run</span></div>
+  <details class="matrix-data">
+    <summary>Show data table</summary>
+    <div class="matrix-table-wrap" role="region" tabindex="0" aria-labelledby="matrix-table-caption">
+      <table>
+        <caption id="matrix-table-caption">Individual attempts in the current grouping. Not run is excluded from pass-rate denominators.</caption>
+        <thead><tr>{['Group', 'Model', 'Task', 'Tool', 'Category', 'Provider', 'Result'].map(text => <th scope="col">{text}</th>)}</tr></thead>
+        <tbody>{records.map(record => <tr data-unit-row={record.id} hidden={!record.latest}>
+          <td data-unit-group>All attempts</td><th scope="row">{record.model}</th><td>{record.task}</td><td>{toolLabel(record.tool)}</td><td>{record.category}</td><td>{record.provider}</td><td>{resultLabels[record.result]}</td>
+        </tr>)}</tbody>
+      </table>
+    </div>
+  </details>
+  <p class="sr" role="status" id="matrix-status" aria-atomic="true"></p>
+  <div id="matrix-tooltip" role="tooltip" hidden></div>
+  <script type="application/json" id="matrix-records" set:html={JSON.stringify(records).replaceAll('<', '\\u003c')} />
+</section>

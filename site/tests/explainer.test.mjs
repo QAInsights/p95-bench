@@ -74,14 +74,15 @@ test('real attempt costs reproduce list-price estimates with bounded cached toke
 });
 
 test('section rail metadata and shortcuts include every numbered section in DOM order', () => {
-  const labels = ['Live run', 'Flame stack', 'Value frontier', 'Model focus', 'Scenarios', 'How scoring works', 'Tools', 'Methodology'];
+  const labels = ['Live run', 'Unit matrix', 'Flame stack', 'Value frontier', 'Model focus', 'Scenarios', 'How scoring works', 'Tools', 'Methodology'];
   const sections = labels.map((label, index) => ({ id: `section-${index}`, dataset: { sectionLabel: label } }));
   assert.deepEqual(sectionMetadata(sections).map(section => section.label), labels);
-  assert.deepEqual(sectionMetadata(sections).map(section => section.number), ['01', '02', '03', '04', '05', '06', '07', '08']);
+  assert.deepEqual(sectionMetadata(sections).map(section => section.number), ['01', '02', '03', '04', '05', '06', '07', '08', '09']);
   assert.equal(sectionShortcut('5', sections.length), 4);
   assert.equal(sectionShortcut('6', sections.length), 5);
   assert.equal(sectionShortcut('8', sections.length), 7);
-  for (const key of ['9', '0', 'x', '16']) assert.equal(sectionShortcut(key, sections.length), null);
+  assert.equal(sectionShortcut('9', sections.length), 8);
+  for (const key of ['0', 'x', '16']) assert.equal(sectionShortcut(key, sections.length), null);
   assert.equal(sectionShortcut('1', 0), null);
   assert.deepEqual(sectionMetadata([]), []);
   assert.equal(sectionMetadata([{ id: 'future', dataset: {}, querySelector: () => ({ textContent: ' Future section ' }) }])[0].label, 'Future section');
