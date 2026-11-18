@@ -35,6 +35,10 @@ export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'gemini-4-argon' ? 'Gemini 4 Argon'
   : model === 'gemini-4-hydrogen' ? 'Gemini 4 Hydrogen'
   : model === 'gemini-3.8-flash' ? 'Gemini 3.8 Flash'
+  : model === 'muse-wonder-1.0' ? 'Muse Wonder 1.0'
+  : model === 'muse-spark-1.3' ? 'Muse Spark 1.3'
+  : model === 'muse-spark-1.2' ? 'Muse Spark 1.2'
+  : model === 'muse-ember-1.0' ? 'Muse Ember 1.0'
   : model === 'gpt-6.2-sol' ? 'GPT-6.2 Sol'
   : model === 'gpt-6.2-astra' ? 'GPT-6.2 Astra' : model;
 export const modelSlug = (model) => model.replace(/^thinkingmachines\//, '').toLowerCase()
