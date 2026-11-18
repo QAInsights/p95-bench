@@ -18,6 +18,7 @@ test('stack and replay score cells reserve tabular single-line widths at every b
   const columns = [...css.matchAll(/\.flame-row\s*\{[^}]*grid-template-columns: ([^;]+)/g)];
   assert.equal(columns.length, 3);
   for (const [, tracks] of columns) assert.match(tracks, /minmax\(0, 1fr\) max-content$/);
+  assert.match(css, /@media \(max-width: 1000px\)[\s\S]*?\.sample-head,\s*\.lane\s*\{\s*grid-template-columns: 24px 170px minmax\(0, 1fr\) 17rem/);
 });
 
 test('task coverage marks missing tasks as partial without counting duplicates or unknown ids', () => {
