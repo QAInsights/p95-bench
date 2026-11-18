@@ -19,8 +19,12 @@ ARCHIVE_SHA512 = ("5978a1a35edb5a7d428e270564ff49d2b1b257a65e17a759d259a9283fc17
                   "522fe46f474a043864aea6910683486340706d745fcdf3db1505fd71e689083")
 
 
+def image_state(state=None):
+    return Path(state if state is not None else os.environ.get("P95_TOOL_IMAGES", STATE)).expanduser().resolve()
+
+
 def tool_image(tool, state=None):
-    path = Path(state or os.environ.get("P95_TOOL_IMAGES", STATE))
+    path = image_state(state)
     try:
         data = json.loads(path.read_text())
         record = data["images"][tool]
@@ -36,8 +40,8 @@ def tool_image(tool, state=None):
     return image
 
 
-def build_images(state=STATE):
-    state = Path(state).expanduser().resolve()
+def build_images(state=None):
+    state = image_state(state)
     state.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     archive = state.parent / ARCHIVE
     if not archive.exists():
@@ -82,6 +86,6 @@ def build_images(state=STATE):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["build"])
-    parser.add_argument("--state", type=Path, default=STATE)
+    parser.add_argument("--state", type=Path)
     args = parser.parse_args()
     print(json.dumps(build_images(args.state), indent=2))

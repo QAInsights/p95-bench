@@ -1,0 +1,41 @@
+import hashlib
+import runpy
+import subprocess
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from p95bench import images
+
+
+@pytest.mark.parametrize("invocation", ["function", "cli"])
+@pytest.mark.parametrize("explicit", [False, True])
+def test_image_build_and_execution_share_state_override(tmp_path, monkeypatch, invocation, explicit):
+    home = tmp_path / "home"
+    default = home / ".local/state/p95-bench/tool-images.json"
+    environment = tmp_path / "override/images.json"
+    specified = tmp_path / "explicit state/images.json"
+    for state in (default, environment, specified):
+        state.parent.mkdir(parents=True)
+        (state.parent / images.ARCHIVE).write_bytes(b"trusted archive fixture")
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    monkeypatch.setenv("P95_TOOL_IMAGES", str(environment))
+    monkeypatch.setattr(hashlib, "sha512", lambda data: SimpleNamespace(hexdigest=lambda: images.ARCHIVE_SHA512))
+
+    def build(command, **kwargs):
+        Path(command[command.index("--iidfile") + 1]).write_text("sha256:" + "a" * 64)
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(subprocess, "run", build)
+    if invocation == "cli":
+        monkeypatch.setattr(sys, "argv", [images.__file__, "build", *(["--state", str(specified)] if explicit else [])])
+        namespace = runpy.run_path(images.__file__, run_name="__main__")
+    else:
+        namespace = runpy.run_path(images.__file__, run_name="image-build-test")
+        namespace["build_images"](*([specified] if explicit else []))
+    expected = specified if explicit else environment
+    assert expected.exists()
+    assert not default.exists()
+    assert namespace["tool_image"]("k6", specified if explicit else None) == "sha256:" + "a" * 64
