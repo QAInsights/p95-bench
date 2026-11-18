@@ -8,12 +8,68 @@ import { heatmapData, heatValue, heatColor } from '../src/lib/heatmap-data.mjs';
 import { loadTaskData } from '../scripts/build-data.mjs';
 import { buildScenarios } from '../src/lib/scenarios.mjs';
 import { fakeV2 } from './fake-v2.mjs';
-import { toolRanking } from '../src/lib/tool-rankings.mjs';
+import { renderToolRankings, toolRanking } from '../src/lib/tool-rankings.mjs';
 
 const v1 = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 const v2 = fakeV2();
 const tasks = { v1: (await loadTaskData()).tasks, v2: (await loadTaskData({ packId: v2.pack_id })).tasks };
 const catalog = makePackCatalog(v1, v2, tasks, []);
+
+test('reused Tools rows refresh version labels and newer tags for v1 → v2 → v1', () => {
+  class Element {
+    constructor(tag) {
+      this.tag = tag;
+      this.children = [];
+      this.dataset = {};
+      this.classList = { toggle() {} };
+    }
+    append(...nodes) {
+      for (const node of nodes) {
+        if (typeof node !== 'string') {
+          if (node.parentNode) node.parentNode.children.splice(node.parentNode.children.indexOf(node), 1);
+          node.parentNode = this;
+        }
+        this.children.push(node);
+      }
+    }
+    replaceChildren(...nodes) { this.children = []; this.append(...nodes); }
+    set textContent(value) { this.replaceChildren(value); }
+    get textContent() { return this.children.map(node => typeof node === 'string' ? node : node.textContent).join(''); }
+    querySelector(selector) {
+      for (const child of this.children.filter(node => typeof node !== 'string')) {
+        if (selector === child.tag || selector === '.' + child.className) return child;
+        const nested = child.querySelector(selector);
+        if (nested) return nested;
+      }
+      return null;
+    }
+  }
+  const previousDocument = globalThis.document;
+  globalThis.document = { createElement: tag => new Element(tag) };
+  try {
+    for (const tool of ['jmeter', 'k6']) {
+      const list = new Element('ol');
+      list.dataset.toolRanking = tool;
+      list.previousElementSibling = new Element('p');
+      const root = { querySelectorAll: () => [list] };
+      let original;
+      for (const pack of ['v1', 'v2', 'v1']) {
+        renderToolRankings(root, catalog[pack].models, pack, true);
+        const row = list.children.find(row => row.dataset.toolModel === 'Qwen-Ambassador/Qwen3.7-Max');
+        original ??= row;
+        assert.equal(row, original);
+        const version = row.querySelector('.model-version');
+        assert.equal(version.textContent, pack === 'v2' ? 'Latest' : 'Earlier versionnewer: Qwen3.8 Max');
+        assert.equal(version.querySelector('small') !== null, pack === 'v1');
+        assert.equal(list.children.length, catalog[pack].models.length);
+      }
+    }
+    assert.doesNotThrow(() => renderToolRankings({ querySelectorAll: () => [] }, [], 'v2', false));
+  } finally {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  }
+});
 
 test('Tools rankings follow the selected pack, including missing runs and earlier versions', () => {
   const before = structuredClone(catalog);
