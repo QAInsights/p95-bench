@@ -28,6 +28,7 @@ test('jelly canvas samples each word with its own face and waits for both fonts'
   assert.match(source, /document.fonts.load\('400 64px "Geist Pixel Square"'\)/);
   assert.match(source, /document.fonts.load\('400 64px "Geist Pixel Grid"'\)/);
   assert.doesNotMatch(source, /Bricolage/);
+  assert.match(source, /Promise\.allSettled\(\[[\s\S]*\]\)\.then\(build\)/);
 });
 
 test('short desktop focus scenes grow rather than hiding task results', async () => {

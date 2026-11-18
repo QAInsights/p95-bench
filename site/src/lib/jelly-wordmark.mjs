@@ -167,10 +167,10 @@ export function mountJellyWordmark(host) {
   const resize = new ResizeObserver(build);
   intersection.observe(host);
   resize.observe(host);
-  Promise.all([
+  Promise.allSettled([
     document.fonts.load('400 64px "Geist Pixel Square"'),
     document.fonts.load('400 64px "Geist Pixel Grid"'),
-  ]).then(build).catch(build);
+  ]).then(build);
   function cleanup() {
     if (disposed) return;
     disposed = true;
