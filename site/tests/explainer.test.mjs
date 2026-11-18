@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import { loadTaskData } from '../scripts/build-data.mjs';
 import { scoreAttempts } from '../src/lib/scores.mjs';
 import { executionShapes, simulatorRows, setTaskState, attemptCost } from '../src/lib/explainer-data.mjs';
-import { sectionMetadata, sectionShortcut } from '../src/lib/section-navigation.mjs';
+import { sectionMetadata, sectionShortcut, sectionNumber } from '../src/lib/section-navigation.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 
@@ -88,6 +88,12 @@ test('section rail metadata and shortcuts include every numbered section in DOM 
   assert.equal(sectionShortcut('1', 0), null);
   assert.deepEqual(sectionMetadata([]), []);
   assert.equal(sectionMetadata([{ id: 'future', dataset: {}, querySelector: () => ({ textContent: ' Future section ' }) }])[0].label, 'Future section');
+});
+
+test('footer and rail share two-digit section formatting without a third leading digit', async () => {
+  assert.deepEqual([1, 9, 10, 11].map(sectionNumber), ['01', '09', '10', '11']);
+  const source = await readFile(new URL('../src/lib/fullpage.mjs', import.meta.url), 'utf8');
+  assert.match(source, /sectionNumber\(currentScene \+ 1\) \+ " \/ "/);
 });
 
 test('explainer is a semantic long section between scenarios and tools without the supplied audit stage', async () => {

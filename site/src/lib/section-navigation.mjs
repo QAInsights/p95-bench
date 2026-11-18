@@ -1,7 +1,9 @@
+export const sectionNumber = number => String(number).padStart(2, '0');
+
 export function sectionMetadata(sections) {
   return sections.map((section, index) => ({ id: section.id,
     label: section.dataset.sectionLabel ?? section.querySelector('h1,h2').textContent.trim(),
-    number: String(index + 1).padStart(2, '0'), index }));
+    number: sectionNumber(index + 1), index }));
 }
 
 export function sectionShortcut(key, count) {

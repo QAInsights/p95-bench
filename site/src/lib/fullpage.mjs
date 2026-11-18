@@ -2,7 +2,7 @@
 import DATA from "../data/leaderboard.json";
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
-import { sectionMetadata, sectionShortcut } from "./section-navigation.mjs";
+import { sectionMetadata, sectionShortcut, sectionNumber } from "./section-navigation.mjs";
 import {
   name as modelName,
   modelSlug,
@@ -168,7 +168,7 @@ observeScenes(scenes, (scene) => {
       b.setAttribute("aria-current", String(i === currentScene)),
     );
   $("scene-label").textContent =
-    "0" + (currentScene + 1) + " / " + sceneNames[currentScene];
+    sectionNumber(currentScene + 1) + " / " + sceneNames[currentScene];
   document.title = "P95 Bench / " + cap(sceneNames[currentScene].toLowerCase());
   if (!scene.classList.contains("in-view")) {
     scene.classList.add("points-entering");
