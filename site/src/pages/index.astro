@@ -399,7 +399,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
           </div>
           <p class="scenario-count" id="scenario-count">Showing {scenarios.length} of {scenarios.length} scenarios</p>
         </div>
-        <ul class="scenario-list" id="scenario-list">
+        <ul class="scenario-list" id="scenario-list" role="list">
           {scenarios.map(scenario => <li class="scenario-card" data-scenario-tool={scenario.tool}>
             <div class="scenario-tags"><span>{scenario.category}</span><span>{scenario.toolLabel}</span></div>
             <h3>{scenario.title}</h3>

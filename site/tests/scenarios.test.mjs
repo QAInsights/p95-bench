@@ -122,6 +122,7 @@ test('scenario content is build-time semantic markup between Model focus and Too
   assert.ok(page.indexOf('id="scenarios"') < page.indexOf('id="tools"'));
   assert.match(page, /import\.meta\.glob\("\.\.\/\.\.\/\.\.\/tasks\/\*\*\/\*\.yaml"/);
   assert.match(page, /<ul class="scenario-list"/);
+  assert.match(page, /<ul class="scenario-list" id="scenario-list" role="list">/);
   assert.match(page, /data-scenario-filter=/);
   assert.match(page, /aria-pressed=/);
   assert.match(page, /id="status" class="sr" role="status" aria-live="polite"/);
