@@ -3,6 +3,8 @@ import DATA from "../data/leaderboard.json";
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
 import { sectionMetadata, sectionShortcut, sectionNumber } from "./section-navigation.mjs";
+import { leastSquares, scatterScale, scatterValue, scatterLabels } from "./scatter-data.mjs";
+import { providerName } from "./provider-names.mjs";
 import {
   name as modelName,
   modelSlug,
@@ -13,7 +15,6 @@ import {
   replayToolLayout,
   replayToolCounts,
   replaySampleLabel,
-  budgetScale,
   selectModelVersions,
 } from "./scores.mjs";
 const weights = DATA.weights;
@@ -597,10 +598,11 @@ function renderCategoryLegend() {
 }
 renderCategoryLegend();
 renderFlames();
-let scale = budgetScale(models);
-const budgetFor = (v) => scale.toCost(Number(v));
+let chartAxis = 'cost';
+let scale = scatterScale(models, 'cost');
+const budgetFor = (v) => scale.value(Math.max(0, Math.min(1000, Number(v))) / 1000);
 let budget = models[0]?.cost ?? scale.min;
-$("budget").value = Math.ceil(scale.toPosition(budget));
+$("budget").value = Math.ceil(scale.position(budget) * 1000);
 budget = budgetFor($("budget").value);
 let frontier = costFrontier(models);
 const NS = "http://www.w3.org/2000/svg";
@@ -610,11 +612,9 @@ function svgEl(tag, attrs, text) {
   if (text !== undefined) el.textContent = text;
   return el;
 }
-function renderChart() {
-  const minCost = scale.min,
-    maxCost = scale.max;
-  const logMin = Math.log10(minCost),
-    logMax = Math.log10(maxCost);
+function renderChart(animate = false) {
+  const domain = scatterScale(models, chartAxis);
+  const costView = chartAxis === 'cost';
   const svg = $("scatter"),
     w = svg.clientWidth,
     h = svg.clientHeight,
@@ -622,12 +622,20 @@ function renderChart() {
     right = w - 23,
     top = 27,
     bottom = h - 30;
+  if (w < 80 || h < 80) return;
+  const existing = new Map([...svg.querySelectorAll('.point')].map(node => [node.dataset.modelId, node]));
+  const bounds = svg.getBoundingClientRect();
+  const before = new Map(animate && !reduced.matches ? [...existing.values()].map(node => {
+    const rect = node.querySelector('circle').getBoundingClientRect();
+    return [node, { x: rect.left + rect.width / 2 - bounds.left, y: rect.top + rect.height / 2 - bounds.top }];
+  }) : []);
+  existing.forEach(node => node.getAnimations().forEach(animation => animation.cancel()));
   svg.setAttribute("viewBox", "0 0 " + w + " " + h);
   svg
-    .querySelectorAll(":scope > :not(title):not(desc)")
+    .querySelectorAll(":scope > :not(title):not(desc):not(.point)")
     .forEach((n) => n.remove());
   const x = (v) =>
-      left + ((Math.log10(v) - logMin) / (logMax - logMin)) * (right - left),
+      left + domain.position(v) * (right - left),
     y = (v) => bottom - (v / 100) * (bottom - top);
   for (const n of [0, 25, 50, 75, 100]) {
     svg.append(
@@ -647,18 +655,21 @@ function renderChart() {
       ),
     );
   }
-  const ticks = w < 500 ? [0.01, 0.05, 0.2] : [0.01, 0.02, 0.05, 0.1, 0.2];
-  for (const n of ticks)
-    if (n >= minCost && n <= maxCost)
+  const tickFormat = value => chartAxis === 'cost' ? '$' + Number(value.toPrecision(2)).toLocaleString('en-US')
+    : Number(value.toPrecision(2)).toLocaleString('en-US');
+  const ticks = w < 500 ? [0, .5, 1] : [0, .25, .5, .75, 1];
+  for (const ratio of ticks) {
+    const n = domain.value(ratio);
       svg.append(
         svgEl(
           "text",
           { x: x(n), y: bottom + 21, class: "axis", "text-anchor": "middle" },
-          "$" + n.toFixed(2),
+          tickFormat(n),
         ),
       );
+  }
   svg.append(svgEl("text", { x: left, y: 10, class: "axis" }, "SCORE ↑"));
-  svg.append(
+  if (costView) svg.append(
     svgEl("polyline", {
       points: frontier
         .map((m) => x(m.cost) + "," + y(m.overall_score))
@@ -667,7 +678,7 @@ function renderChart() {
       pathLength: 1,
     }),
   );
-  svg.append(
+  if (costView) svg.append(
     svgEl("line", {
       x1: x(budget),
       x2: x(budget),
@@ -676,18 +687,42 @@ function renderChart() {
       class: "budget-line",
     }),
   );
+  const samples = models.filter(model => Number.isFinite(scatterValue(model, chartAxis)) && scatterValue(model, chartAxis) >= 0 && Number.isFinite(model.overall_score));
+  const trend = leastSquares(samples.map(model => ({ x: domain.transform(scatterValue(model, chartAxis)), y: model.overall_score })));
+  const predict = value => trend ? trend.intercept + trend.slope * domain.transform(value) : null;
+  if (trend) {
+    const defs = svgEl('defs', {}), clip = svgEl('clipPath', { id: 'scatter-trend-clip' });
+    clip.append(svgEl('rect', { x: left, y: top, width: right - left, height: bottom - top }));
+    defs.append(clip); svg.append(defs);
+    svg.append(svgEl('line', { x1: left, x2: right, y1: y(predict(domain.min)), y2: y(predict(domain.max)), class: 'regression-line', 'clip-path': 'url(#scatter-trend-clip)' }));
+  }
+  const axisLabel = scatterLabels[chartAxis] + (domain.log ? ' · log10 scale' : ' · linear scale');
+  $('chart-title').textContent = 'Published score versus ' + axisLabel;
+  $('chart-desc').textContent = `${axisLabel}. Higher score is better. Dashed Flame line is least squares against ${domain.log ? 'log10 of' : ''} the horizontal values. Diamonds mark models above the fitted trend. Select a numbered model to inspect it.`;
+  $('scatter-fit').textContent = axisLabel + (trend ? ` · dashed OLS slope ${trend.slope.toPrecision(3)} score/${domain.log ? 'log10(x)' : 'x'} · R² ${trend.r2 === null ? 'n/a (constant scores)' : trend.r2.toFixed(3)}` : ' · slope/R² n/a (need two distinct x values)');
+  $('scatter-source').textContent = samples.length;
+  $('scatter-figure').textContent = 'FIG. ' + sectionNumber(scenes.findIndex(scene => scene.id === 'scene-3') + 1);
+  document.querySelector('#scene-3 .value-winner').hidden = !costView;
+  document.querySelector('#scene-3 .budget-slider-wrap').hidden = !costView;
+  document.querySelector('#scene-3 .budget-label').hidden = !costView;
+  $('budget').setAttribute('aria-label', `Maximum estimated run cost in USD, ${scale.log ? 'logarithmic' : 'linear'} scale`);
   const best = bestWithin(models, budget);
+  const kept = new Set();
   models.forEach((m, i) => {
-    const g = svgEl("g", {
+    if (!samples.includes(m)) return;
+    const value = scatterValue(m, chartAxis), px = x(value), py = y(m.overall_score);
+    const beats = trend && m.overall_score > predict(value) + 1e-8;
+    const attrs = {
       class:
         "point" +
-        (m.cost > budget ? " above" : "") +
+        (costView && m.cost > budget ? " above" : "") +
         (m.discontinued ? " is-discontinued" : "") +
-        (m === best ? " winner" : ""),
+        (costView && m === best ? " winner" : ""),
       tabindex: 0,
       role: "button",
       "aria-label":
         name(m) +
+        ', ' + providerName(m.provider) +
         ", " +
         m.version_status +
         (m.discontinued ? ", Discontinued" : "") +
@@ -695,28 +730,25 @@ function renderChart() {
         score(m.overall_score) +
         ", estimated cost " +
         money(m.cost) +
+        ', ' + scatterLabels[chartAxis] + ' ' + tickFormat(value) + (beats ? ', beats trend' : '') +
         ". Open model focus.",
       style: "--delay:" + i * 45 + "ms",
-    });
-    g.append(
-      svgEl("circle", {
-        cx: x(m.cost),
-        cy: y(m.overall_score),
-        r: m === best ? 8 : 6,
-      }),
-    );
-    const dx = m.cost > Math.sqrt(minCost * maxCost) ? -11 : 11;
-    g.append(
-      svgEl(
-        "text",
-        {
-          x: x(m.cost) + dx,
-          y: y(m.overall_score) + 3,
-          "text-anchor": dx < 0 ? "end" : "start",
-        },
-        String(i + 1).padStart(2, "0"),
-      ),
-    );
+    };
+    const g = existing.get(m.model) ?? svgEl('g', {});
+    kept.add(g);
+    for (const [key, val] of Object.entries(attrs)) g.setAttribute(key, val);
+    g.dataset.modelId = m.model;
+    g.dataset.beatsTrend = String(Boolean(beats));
+    if (!g.firstElementChild) g.append(svgEl('circle', { cx: 0, cy: 0 }), svgEl('text', {}), svgEl('path', { d: 'M0 -15 l3 3 -3 3 -3 -3 Z', class: 'trend-marker' }));
+    g.querySelector('circle').setAttribute('r', costView && m === best ? 8 : 6);
+    const dx = domain.position(value) > .5 ? -11 : 11;
+    const text = g.querySelector('text');
+    text.setAttribute('x', dx); text.setAttribute('y', 3); text.setAttribute('text-anchor', dx < 0 ? 'end' : 'start');
+    text.textContent = sectionNumber(i + 1);
+    g.querySelector('.trend-marker').toggleAttribute('hidden', !beats);
+    g.setAttribute('transform', `translate(${px} ${py})`);
+    const from = before.get(g);
+    if (from && !reduced.matches && g.animate) g.animate([{ transform: `translate(${from.x}px, ${from.y}px)` }, { transform: `translate(${px}px, ${py}px)` }], { duration: 450, easing: 'cubic-bezier(.2,.8,.2,1)' });
     g.onclick = () => openModel(i, g);
     g.onkeydown = (e) => {
       if (e.key === "Enter" || e.key === " ") {
@@ -724,10 +756,16 @@ function renderChart() {
         openModel(i, g);
       }
     };
-    svg.append(g);
+    if (g.parentElement === svg && svg.moveBefore) svg.moveBefore(g, null);
+    else {
+      const focused = document.activeElement === g;
+      svg.append(g);
+      if (focused) g.focus({ preventScroll: true });
+    }
   });
+  existing.forEach(node => { if (!kept.has(node)) node.remove(); });
 }
-function updateBudget() {
+function updateBudget(animate = false) {
   const best = bestWithin(models, budget);
   $("budget-value").textContent = "$" + budget.toFixed(3);
   $("budget").setAttribute(
@@ -755,10 +793,10 @@ function updateBudget() {
   $("chart-models")
     .querySelectorAll("button")
     .forEach((b, i) => {
-      b.classList.toggle("above", models[i].cost > budget);
-      b.classList.toggle("winner", models[i] === best);
+      b.classList.toggle("above", chartAxis === 'cost' && models[i].cost > budget);
+      b.classList.toggle("winner", chartAxis === 'cost' && models[i] === best);
     });
-  renderChart();
+  renderChart(animate);
 }
 function renderModelControls() {
   $("chart-models").innerHTML = models
@@ -793,6 +831,8 @@ function renderModelControls() {
         score(m.overall_score) +
         "</td><td>" +
         money(m.cost) +
+        '</td><td>' + escape(providerName(m.provider)) + '</td><td>' +
+        m.tokens.output.toLocaleString('en-US') + '</td><td>' + m.latency.toFixed(2) +
         "</td></tr>",
     )
     .join("");
@@ -812,13 +852,20 @@ function renderModelControls() {
     .join("");
 }
 renderModelControls();
+document.querySelectorAll('[data-scatter-axis]').forEach(button => button.addEventListener('click', () => {
+  chartAxis = button.dataset.scatterAxis;
+  document.querySelectorAll('[data-scatter-axis]').forEach(control => control.setAttribute('aria-pressed', String(control === button)));
+  updateBudget(true);
+  announce(scatterLabels[chartAxis] + ' axis. ' + $('scatter-fit').textContent);
+}));
 $("budget").oninput = () => {
   budget = budgetFor($("budget").value);
   updateBudget();
 };
 $("budget").onchange = () =>
   announce($("winner-name").textContent + " is the current budget result.");
-new ResizeObserver(() => renderChart()).observe($("scatter"));
+new ResizeObserver(() => renderChart([...$("scatter").querySelectorAll('.point')].some(node => node.getAnimations().some(animation => animation.playState === 'running')))).observe($("scatter"));
+reduced.addEventListener('change', () => { if (reduced.matches) renderChart(); });
 updateBudget();
 function renderProfile() {
   const m = models[selected];
@@ -1050,10 +1097,10 @@ function applyVersions() {
   );
   activeWeight = categories.reduce((sum, c) => sum + weights[c], 0);
   zoom = null;
-  scale = budgetScale(models);
+  scale = scatterScale(models, 'cost');
   frontier = costFrontier(models);
   budget = Math.max(scale.min, Math.min(scale.max, budget));
-  $("budget").value = Math.ceil(scale.toPosition(budget));
+  $("budget").value = Math.ceil(scale.position(budget) * 1000);
   budget = budgetFor($("budget").value);
   buildLanes();
   renderFlames();
