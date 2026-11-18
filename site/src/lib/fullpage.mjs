@@ -126,7 +126,7 @@ document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios
     (a.onclick = (e) => {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
-      if (a.href !== location.href) history.pushState(null, "", a.href);
+      if (a.href !== location.href) history.replaceState(null, "", a.href);
       goScene(scenes.findIndex(scene => '#' + scene.id === a.hash));
     }),
 );
@@ -1055,8 +1055,6 @@ $("show-versions").onchange = () => {
 addEventListener("popstate", () => {
   const all = new URLSearchParams(location.search).get("versions") === "all";
   if (all !== showingEarlier) applyVersions();
-  const index = location.hash ? scenes.findIndex(scene => '#' + scene.id === location.hash) : 0;
-  if (index >= 0) goScene(index, false, true);
 });
 if (!("switch" in HTMLInputElement.prototype))
   $("show-versions").classList.add("switch-fallback");
