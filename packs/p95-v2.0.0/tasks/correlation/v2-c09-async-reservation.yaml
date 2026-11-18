@@ -21,7 +21,7 @@ prompt: 'Extract a 202 job ID, poll its dynamic status URL and use the eventual 
 
   behavior: 40 points — ready reservation consumed by the correct checkout Requires: loads, setup.
 
-  safety: 25 points — respects poll interval/deadline and never checks out a pending/failed job. Requires:
+  safety: 25 points — at most 5 polls per job, separated by the profile poll_interval; never checks out a pending/failed job. Requires:
   loads, behavior.
 
   Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite fault can lose multiple
@@ -50,7 +50,7 @@ params:
     - setup
   - id: safety
     points: 25
-    description: respects poll interval/deadline and never checks out a pending/failed job.
+    description: at most 5 polls per job, separated by the profile poll_interval; never checks out a pending/failed job.
     requires:
     - loads
     - behavior

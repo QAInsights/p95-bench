@@ -199,7 +199,8 @@ def flow_fractions(trial, controls, contract):
         for timestamps in polls.values():
             timestamps.sort()
             safety *= float(1 <= len(timestamps) <= 5 and all(
-                right - left >= .05 - 1e-9 for left, right in zip(timestamps, timestamps[1:])))
+                right - left >= contract.get("poll_interval", 0) - 1e-9
+                for left, right in zip(timestamps, timestamps[1:])))
         ready = {event["reservation"] for event in events(trial, "job_state") if event["phase"] == "ready"}
         behavior = min(success, ratio(sum(event.get("reservation") in ready for event in commits), expected))
     elif mode == "errors":
@@ -256,7 +257,8 @@ def executable(text, params, workdir, fixtures):
                 **dict(common, profile={**case.get("profile", {}), **control}))
                 for position, control in enumerate(params.get("controls", []))]
             fractions = (workload_fractions(trial, contract) if contract.get("workload")
-                         else flow_fractions(trial, controls, contract))
+                         else flow_fractions(trial, controls, {
+                             **contract, "poll_interval": case.get("profile", {}).get("poll_interval", 0)}))
             values.append(award(rubric, fractions))
     except (ValueError, KeyError, TypeError, ET.ParseError) as error:
         return CheckpointGrade(award(rubric, {}), str(error))

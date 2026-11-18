@@ -57,7 +57,7 @@ def reservation_control():
 ])
 def test_reservation_bounds_are_enforced_per_job(offsets, expected):
     result = flow_fractions(flow_trial(poll_offsets=offsets), [reservation_control()],
-                            {"mode": "reservation"})
+                            {"mode": "reservation", "poll_interval": .05})
     assert result["safety"] == expected
 
 
@@ -67,6 +67,12 @@ def test_reservation_polls_must_reference_their_reserved_job():
         if event["kind"] == "start" and event["path"].startswith("/v2/jobs/"):
             event["path"] = "/v2/jobs/unreserved"
     assert flow_fractions(trial, [reservation_control()], {"mode": "reservation"})["safety"] == 0
+
+
+@pytest.mark.parametrize("interval,expected", [(.02, 1), (.05, 0), (0, 1)])
+def test_reservation_uses_the_declared_profile_interval(interval, expected):
+    assert flow_fractions(flow_trial(poll_offsets=[.2, .23]), [reservation_control()],
+                          {"mode": "reservation", "poll_interval": interval})["safety"] == expected
 
 
 def workload_trial(extra_starts=()):
