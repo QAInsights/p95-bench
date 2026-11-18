@@ -10,6 +10,14 @@ const runs = ['deepseek-flash', 'deepseek-v4-pro', 'claude-sonnet-5-5', 'claude-
   'inkling', 'inkling-small', 'inkling-2-small', 'gpt-6-2-sol', 'gpt-6-2-astra'].map((m) =>
   new URL(`../../results/published/${m}/`, import.meta.url).pathname);
 
+test('site weights come from the same packaged JSON as the Python scorer', async () => {
+  const shared = JSON.parse(await readFile(new URL('../../src/p95bench/category-weights.json', import.meta.url)));
+  assert.deepEqual((await buildData(runs)).weights, shared);
+  assert.equal(Object.values(shared).reduce((sum, value) => sum + value, 0), 100);
+  const generator = await readFile(new URL('../scripts/build-data.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(generator, /harness\.match|tasks\.py/);
+});
+
 test('tool card labels distinguish unrun tools from failed and passing runs', () => {
   assert.equal(toolScoreLabel({ per_task_results: [] }, 'jmeter'), 'Not run');
   assert.equal(toolScoreLabel({ per_task_results: [{ tool: 'none', passed: true }] }, 'jmeter'), 'Not run');

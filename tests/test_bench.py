@@ -16,9 +16,17 @@ from p95bench.demo import demo_app
 from p95bench.graders import choice, extract_jmx, jmeter_exec, numeric, run_jmeter
 from p95bench.providers import OpenAICompatible, Price, ProviderConfig, Response
 from p95bench.runner import run, score_run, summarize
-from p95bench.tasks import Task, load_tasks
+from p95bench.tasks import CATEGORIES, Task, load_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_shared_category_weights():
+    expected = {"authoring": 25, "correlation": 15, "workload": 15, "analysis": 15,
+                "repair": 15, "migration": 10, "concepts": 5}
+    assert CATEGORIES == expected
+    assert CATEGORIES == json.loads((ROOT / "src/p95bench/category-weights.json").read_text())
+    assert sum(CATEGORIES.values()) == 100
 
 
 @pytest.mark.parametrize("text,passed", [("10", True), ("10.001", True), ("11", False),
@@ -183,6 +191,25 @@ def test_demo_flow():
 
 @pytest.mark.parametrize("text", ["", "not xml", "<jmeterTestPlan><bad></jmeterTestPlan>"])
 def test_invalid_jmx(text, tmp_path):
+    with patch("p95bench.graders.jmeter_executable", return_value=Path("jmeter")):
+        assert not jmeter_exec(text, {}, tmp_path).passed
+
+
+@pytest.mark.parametrize("declaration", [
+    '<!DOCTYPE jmeterTestPlan SYSTEM "file:///does-not-exist">',
+    '<!DOCTYPE jmeterTestPlan [<!ENTITY sample "value">]>',
+    '<!ENTITY sample SYSTEM "file:///does-not-exist">',
+    '<!doctype jmeterTestPlan>',
+])
+@pytest.mark.parametrize("position", ["before", "inside", "after"])
+def test_reject_jmx_declarations_before_parsing(declaration, position, tmp_path):
+    xml = "<jmeterTestPlan></jmeterTestPlan>"
+    text = {"before": declaration + xml, "inside": xml.replace(
+        "</jmeterTestPlan>", declaration + "</jmeterTestPlan>"), "after": xml + declaration}[position]
+    with patch("p95bench.graders.ET.fromstring") as parser:
+        with pytest.raises(ValueError, match="DOCTYPE and ENTITY"):
+            extract_jmx(text)
+        parser.assert_not_called()
     with patch("p95bench.graders.jmeter_executable", return_value=Path("jmeter")):
         assert not jmeter_exec(text, {}, tmp_path).passed
 

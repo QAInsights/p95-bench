@@ -19,5 +19,8 @@ p95bench = "p95bench.cli:main"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[tool.setuptools.package-data]
+p95bench = ["category-weights.json"]
+
 [tool.ruff]
 line-length = 100

@@ -1,0 +1,9 @@
+{
+  "authoring": 25,
+  "correlation": 15,
+  "workload": 15,
+  "analysis": 15,
+  "repair": 15,
+  "migration": 10,
+  "concepts": 5
+}

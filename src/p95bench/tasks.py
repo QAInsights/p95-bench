@@ -1,12 +1,13 @@
 """Validated YAML task loading; fixture paths stay under the task directory."""
 
+import json
 from dataclasses import dataclass
+from importlib.resources import files
 from pathlib import Path
 
 import yaml
 
-CATEGORIES = {"authoring": 25, "correlation": 15, "workload": 15, "analysis": 15,
-              "repair": 15, "migration": 10, "concepts": 5}
+CATEGORIES = json.loads(files("p95bench").joinpath("category-weights.json").read_text())
 TOOLS = {"jmeter", "k6", "gatling", "locust", "none"}
 
 

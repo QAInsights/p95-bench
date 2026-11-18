@@ -29,8 +29,9 @@ class Price:
     output: float
 
     def cost(self, response: Response) -> float:
-        return ((response.input_tokens - response.cached_tokens) * self.input
-                + response.cached_tokens * self.cached
+        cached = max(0, min(response.cached_tokens, response.input_tokens))
+        return ((response.input_tokens - cached) * self.input
+                + cached * self.cached
                 + response.output_tokens * self.output) / 1_000_000
 
 
@@ -106,7 +107,7 @@ class OpenAICompatible:
         elapsed = time.perf_counter() - start
         usage = data["usage"]
         cached = usage.get("prompt_cache_hit_tokens",
-                           usage.get("prompt_tokens_details", {}).get("cached_tokens", 0))
+                           (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0))
         return Response(data["choices"][0]["message"]["content"] or "",
                         usage["prompt_tokens"], usage["completion_tokens"], cached, elapsed)
 
