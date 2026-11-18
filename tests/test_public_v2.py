@@ -6,6 +6,7 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
+from p95bench import analysis_v2
 from p95bench.analysis_v2 import truth
 from p95bench.checkpoint_graders import award, rate_fraction
 from p95bench.graders import grade
@@ -80,6 +81,35 @@ def test_analysis_goldens_and_independent_mutations(task, tmp_path):
         assert [item.earned for item in result.checkpoints] == vector
     for malformed in ("", "{", "null", "{}"):
         assert grade(task, malformed, tmp_path, 2).score == 0
+
+
+@pytest.mark.parametrize("text", ["", "{", "[1,]", "NaN", '\ud800', None, [], "x" * 65537,
+                                  '{"n":' + "9" * 5000 + '}'])
+def test_analysis_invalid_model_json_fails_with_detail(text, tmp_path):
+    result = grade(ANALYSIS[0], text, tmp_path, 2)
+    assert result.score == 0 and not result.passed
+    assert all(checkpoint.earned == 0 for checkpoint in result.checkpoints)
+    assert result.detail.startswith("Invalid model answer (")
+
+
+def test_analysis_nested_model_json_does_not_escape_runner_dispatch(tmp_path):
+    text = '{"x":' + '[' * 10000 + '0' + ']' * 10000 + '}'
+    assert len(text.encode()) == 20007
+    result = grade(ANALYSIS[0], text, tmp_path, 2)
+    assert result.score == 0 and not result.passed
+    assert all(checkpoint.earned == 0 for checkpoint in result.checkpoints)
+    assert "Invalid model answer (RecursionError)" in result.detail
+
+
+@pytest.mark.parametrize("error", [ValueError, TypeError, UnicodeError, RecursionError, OverflowError])
+def test_analysis_model_decode_errors_fail_closed(error, monkeypatch, tmp_path):
+    def fail(*args, **kwargs):
+        raise error("decode failed")
+    monkeypatch.setattr(analysis_v2.json, "loads", fail)
+    result = grade(ANALYSIS[0], "{}", tmp_path, 2)
+    assert result.score == 0 and not result.passed
+    assert all(checkpoint.earned == 0 for checkpoint in result.checkpoints)
+    assert result.detail == f"Invalid model answer ({error.__name__}): decode failed"
 
 
 @pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1", reason="Opt-in native Docker tests")
