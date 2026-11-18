@@ -64,7 +64,7 @@ test('tool pass counts distinguish failures, partial coverage and tools with no 
 test('published replay tools have nine General, three JMeter and three k6 aligned columns', () => {
   const { groups, rows } = replayToolLayout(published.models);
   assert.deepEqual(groups.map(group => [group.label, group.count]), [['General', 9], ['JMeter', 3], ['k6', 3]]);
-  assert.equal(rows.flat().filter(index => index === null).length, 6);
+  assert.equal(rows.flat().filter(index => index === null).length, 0);
 });
 
 test('sample descriptions expose task names, tools and all three result states without color', () => {

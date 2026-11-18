@@ -251,6 +251,8 @@ Tool cards report each engine's own executable task pass rate.
 Tinker's client timeout is 600 seconds rather than the default 180 seconds.
 Earlier k6 requests timed out without responses; this gives those models more
 time without changing their prompts, temperature or 8192-token output cap.
+Leaderboard and replay labels mark partial runs with their distinct-task coverage.
+Repeated attempts do not fill missing tasks, and not-run tasks are not failures.
 
 Model families and release order live in `site/src/data/model-registry.json`.
 The site defaults to the newest benchmarked release per family; enable
