@@ -1,6 +1,7 @@
 import io
 import json
 from dataclasses import replace
+from http.client import IncompleteRead, RemoteDisconnected
 from urllib.error import HTTPError, URLError
 
 import pytest
@@ -79,13 +80,17 @@ def test_rate_limit_backoff_then_success(monkeypatch, retry_after, expected):
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize('error', [429, 503, 'network', 'timeout'])
+@pytest.mark.parametrize('error', [429, 503, 'network', 'timeout',
+                                  RemoteDisconnected('closed'), IncompleteRead(b'partial'),
+                                  ConnectionResetError('reset')])
 def test_exhausted_transport_is_not_a_model_failure(monkeypatch, error):
     monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
     sleeps = []
     monkeypatch.setattr('p95bench.providers.time.sleep', sleeps.append)
 
     def request(req, timeout):
+        if isinstance(error, Exception):
+            raise error
         if error == 'network':
             raise URLError('unavailable')
         if error == 'timeout':
@@ -96,6 +101,36 @@ def test_exhausted_transport_is_not_a_model_failure(monkeypatch, error):
     with pytest.raises(ProviderUnavailable, match='No response after 6 requests'):
         get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
     assert sleeps == [1, 2, 4, 8, 16]
+
+
+@pytest.mark.parametrize('error', [RemoteDisconnected('closed'), IncompleteRead(b'partial'),
+                                  ConnectionResetError('reset')])
+@pytest.mark.parametrize('recover', [True, False])
+def test_response_read_disconnects_retry(monkeypatch, error, recover):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    sleeps, calls = [], []
+    monkeypatch.setattr('p95bench.providers.time.sleep', sleeps.append)
+
+    class InterruptedBody(io.BytesIO):
+        def read(self, *args):
+            raise error
+
+    def request(req, timeout):
+        calls.append(req)
+        if not recover or len(calls) == 1:
+            return InterruptedBody()
+        return io.BytesIO(b'{"data":[{"id":"model"}]}')
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    if recover:
+        assert get_provider('qwen').models() == ['model']
+        assert len(calls) == 2
+        assert sleeps == [1]
+    else:
+        with pytest.raises(ProviderUnavailable, match='No response after 6 requests'):
+            get_provider('qwen').models()
+        assert len(calls) == 6
+        assert sleeps == [1, 2, 4, 8, 16]
 
 
 def test_auth_error_does_not_retry(monkeypatch):

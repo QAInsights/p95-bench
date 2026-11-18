@@ -6,6 +6,7 @@ import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field, replace
+from http.client import HTTPException
 from typing import Protocol
 from urllib.error import HTTPError, URLError
 
@@ -116,7 +117,7 @@ class OpenAICompatible:
             try:
                 with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
                     return json.load(response)
-            except (URLError, TimeoutError) as error:
+            except (URLError, TimeoutError, HTTPException, ConnectionResetError) as error:
                 if not self.config.max_retries or (
                     isinstance(error, HTTPError) and error.code not in {429, 500, 502, 503, 504}
                 ):
