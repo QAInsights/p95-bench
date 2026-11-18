@@ -1,3 +1,24 @@
+import registry from '../data/model-registry.json' with { type: 'json' };
+
+export function selectModelVersions(models, showEarlier = false, versions = registry) {
+  const familyKey = (model) => Object.hasOwn(versions, model.model)
+    ? `registered:${versions[model.model].family}` : `unknown:${model.model}`;
+  const latest = new Map();
+  for (const model of models) {
+    const key = familyKey(model), order = versions[model.model]?.release_order ?? 0;
+    if (!latest.has(key) || order > latest.get(key).order) latest.set(key, { model: model.model, order });
+  }
+  return models.map((model) => {
+    const entry = versions[model.model];
+    const newer = latest.get(familyKey(model)).model;
+    return { ...model, family: entry?.family ?? model.model,
+      release_order: entry?.release_order ?? 0, discontinued: entry?.discontinued === true,
+      version_status: newer === model.model ? 'Latest' : 'Earlier version',
+      newer_model: newer === model.model ? null : newer };
+  }).filter((model) => showEarlier || model.newer_model === null)
+    .sort((a, b) => b.overall_score - a.overall_score || a.cost - b.cost || a.model.localeCompare(b.model));
+}
+
 export const score = (value) => value.toFixed(1);
 export const money = (value) => `$${value.toFixed(4)}`;
 export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'

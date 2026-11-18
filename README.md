@@ -205,6 +205,13 @@ execution timestamps, harness commits and any temperature exception. The publish
 files are full reproduction artifacts and were checked for credentials before
 publication. Do not add secrets to prompts or fixtures.
 
+Model families and release order live in `site/src/data/model-registry.json`.
+The site defaults to the newest benchmarked release per family; enable
+"Show earlier versions" (`?versions=all`) to include every published result at
+its full rank. Add increasing `release_order` values within a `family` and set
+`discontinued: true` only when the provider no longer offers a model. Unknown
+model IDs get their own latest family automatically.
+
 ## License
 
 MIT. Copyright 2026 NaveenKumar Namachivayam.

@@ -4,9 +4,11 @@ import "@fontsource/bricolage-grotesque/latin-600.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/global.css";
 import data from "../data/leaderboard.json";
-import { name, toolScore, toolScoreLabel } from "../lib/scores.mjs";
+import { name, toolScore, toolScoreLabel, selectModelVersions } from "../lib/scores.mjs";
 
-const { models, weights } = data;
+const { weights } = data;
+const models = selectModelVersions(data.models);
+const allModels = selectModelVersions(data.models, true);
 const colors = {
   authoring: "#6b2a7a",
   correlation: "#c4416a",
@@ -44,7 +46,7 @@ const latestRun = latestDate
       })
       .toUpperCase()
   : "PUBLISHED RUNS";
-const toolRanking = [...models].sort(
+const toolRanking = [...allModels].sort(
   (a, b) => (toolScore(b, "jmeter") ?? -1) - (toolScore(a, "jmeter") ?? -1),
 );
 const repo = "https://github.com/QAInsights/p95-bench";
@@ -75,13 +77,14 @@ const repo = "https://github.com/QAInsights/p95-bench";
             aria-hidden="true"
           />
           <span>P95 Bench</span></a
-        ><span class="edition">UNDER LOAD / AN INTERACTIVE FIELD REPORT</span>
+        ><label class="version-switch" for="show-versions"><input id="show-versions" type="checkbox" switch role="switch" aria-describedby="versions-help" />Show earlier versions</label>
+        <p class="sr" id="versions-help">Latest means the newest benchmarked release in each family. Earlier versions remain fully ranked when shown. Discontinued means the provider no longer offers the model.</p>
       </div><div class="header-tools">
         <a class="header-link" href="#method">Method</a><a
           class="header-link"
           href={repo}>GitHub ↗</a
-        ><span class="muted">{latestRun}</span><span class="pill"
-          ><span class="dot"></span>{models.length} PUBLISHED RUNS</span
+        ><span class="muted" id="published-date">{latestRun}</span><span class="pill"
+          ><span class="dot"></span><span data-model-count>{models.length}</span> PUBLISHED RUNS</span
         ><button class="control" id="fullscreen" aria-label="Enter fullscreen"
           ><span aria-hidden="true">⛶</span><span class="fullscreen-label">
             Fullscreen</span
@@ -123,7 +126,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
               </div><p class="stat-label">LEADING WEIGHTED SCORE</p>
             </div><div>
               <div class="sample-count">
-                <span id="sample-count">0</span><small> / {totalSamples}</small>
+                <span id="sample-count">0</span><small> / <span data-sample-total>{totalSamples}</span></small>
               </div><p class="stat-label">SAMPLES LANDED</p>
             </div>
           </div>
@@ -150,7 +153,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
               ><i style="background:var(--fail)"></i>Fail ×</span
             ><span>Press a lane to inspect ↗</span>
           </div><span
-            >{uniqueTasks} tasks × {models.length} models · Published attempts<br
+            ><span data-task-count>{uniqueTasks}</span> tasks × <span data-model-count>{models.length}</span> models · Published attempts<br
             /><b>Animated replay, not a running benchmark.</b></span>
         </div>
       </section>
@@ -168,7 +171,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
           </div><aside class="stack-info" aria-label="Selected category">
             <strong id="stack-info-title">{activeWeight} active points</strong
             ><p id="stack-info-detail">
-              Scores are normalized across the {active.length} categories with tasks.
+              Scores are normalized across the <span data-active-count>{active.length}</span> categories with tasks.
               Empty categories never count as zero.
             </p>
           </aside>
@@ -185,7 +188,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
           class="legend"
           aria-label="Zoom into category"
         >
-        </div><div class="not-run">
+        </div><div class="not-run" id="not-run">
           {
             inactive.map((c) => (
               <div class="empty-frame">
@@ -200,7 +203,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
           }
         </div><div class="scene-foot">
           <span
-            >Segment width = category score × weight / {activeWeight}.<br />In
+            >Segment width = category score × weight / <span data-active-weight>{activeWeight}</span>.<br />In
             category view, width = category score.</span
           ><span
             >THE UNMEASURED CATEGORIES<br /><b
@@ -263,10 +266,10 @@ const repo = "https://github.com/QAInsights/p95-bench";
         <details class="data-disclosure">
           <summary>Read the chart as a data table ↗</summary><table>
             <caption
-              >All {models.length} published runs. Score is out of 100.</caption
+              ><span data-model-count>{models.length}</span> visible published runs. Score is out of 100.</caption
             ><thead
               ><tr
-                ><th scope="col">Model</th><th scope="col">Score</th><th
+                ><th scope="col">Rank</th><th scope="col">Model</th><th scope="col">Score</th><th
                   scope="col">Cost (USD)</th
                 ></tr
               ></thead
@@ -294,6 +297,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
               style="margin-top:10px"
             >
             </p>
+            <p id="focus-version" class="model-version"></p>
           </div><div class="model-controls">
             <button
               class="control"
@@ -322,7 +326,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
                     WEIGHTED / 100
                   </p>
                 </div>
-              </div><figcaption class="ring-caption">
+              </div><figcaption class="ring-caption" id="ring-caption">
                 {active.length} measured categories. Every point traceable.
               </figcaption>
             </figure><div id="cat-keys" class="cat-keys"></div>
@@ -380,9 +384,9 @@ const repo = "https://github.com/QAInsights/p95-bench";
             <ol role="list">
               {
                 toolRanking.map((m) => (
-                  <li>
+                  <li data-tool-model={m.model} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
                     <>
-                      <span>{name(m.model)}</span>
+                      <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
                       <b>{toolScoreLabel(m, "jmeter")}</b>
                     </>
                   </li>
@@ -475,7 +479,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
       <div class="footer-left">
         <span class="line"></span><span id="scene-label">01 / LIVE RUN</span
         ><span class="desktop-help"
-          >{uniqueTasks} TASKS · {models.length} MODELS · DIRECT APIs</span>
+          ><span data-task-count>{uniqueTasks}</span> TASKS · <span data-model-count>{models.length}</span> MODELS · DIRECT APIs</span>
       </div><div class="footer-right">
         <span class="desktop-help"
           >SCROLL TO EXPLORE &nbsp; <span class="key">1</span>

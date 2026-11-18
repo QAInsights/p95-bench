@@ -9,12 +9,16 @@ import {
   bestWithin,
   replayScore,
   budgetScale,
+  selectModelVersions,
 } from "./scores.mjs";
-const models = DATA.models,
-  weights = DATA.weights;
+const weights = DATA.weights;
+let models = selectModelVersions(
+  DATA.models,
+  new URLSearchParams(location.search).get("versions") === "all",
+);
 const $ = (id) => document.getElementById(id),
   reduced = matchMedia("(prefers-reduced-motion: reduce)");
-const categories = Object.keys(weights).filter((c) =>
+let categories = Object.keys(weights).filter((c) =>
   models.some((m) => m.category_scores[c] !== undefined),
 );
 const colors = {
@@ -30,8 +34,8 @@ const name = (m) => modelName(m.model),
   cap = (s) => s[0].toUpperCase() + s.slice(1),
   score = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 const money = (n) => "$" + n.toFixed(6),
-  fmt = (n) => n.toLocaleString("en-US"),
-  activeWeight = categories.reduce((s, c) => s + weights[c], 0);
+  fmt = (n) => n.toLocaleString("en-US");
+let activeWeight = categories.reduce((s, c) => s + weights[c], 0);
 const escape = (s) =>
   String(s).replace(
     /[&<>"']/g,
@@ -40,6 +44,16 @@ const escape = (s) =>
         c
       ],
   );
+const versionMarkup = (m) =>
+  '<span class="version-badge">' +
+  m.version_status +
+  "</span>" +
+  (m.newer_model
+    ? '<small class="newer-tag">newer: ' +
+      escape(modelName(m.newer_model)) +
+      "</small>"
+    : "") +
+  (m.discontinued ? ' · <span class="version-badge">Discontinued</span>' : "");
 const scenes = [...document.querySelectorAll(".scene, .reading-section")],
   sceneNames = [
     "LIVE RUN",
@@ -61,13 +75,18 @@ const announce = (s) => {
 function change(update, after = () => {}) {
   if (transition) transition.skipTransition();
   if (!reduced.matches && document.startViewTransition) {
-    const t = document.startViewTransition(update);
+    const t = document.startViewTransition(() => {
+      if (transition === t) update();
+    });
+    t.ready.catch(() => {});
     transition = t;
     t.finished
       .catch(() => {})
       .finally(() => {
-        if (transition === t) transition = null;
-        after();
+        if (transition === t) {
+          transition = null;
+          after();
+        }
       });
   } else {
     update();
@@ -189,73 +208,87 @@ document.addEventListener("keydown", (e) => {
     );
   }
 });
-const taskShort = (models[0]?.per_task_results ?? []).map((t) =>
-  t.task_id.replaceAll("-", "").slice(0, 4).toUpperCase(),
-);
-$("task-heads").innerHTML = taskShort
-  .map((t) => "<span>" + t + "</span>")
-  .join("");
-$("task-heads").style.gridTemplateColumns =
-  `repeat(${taskShort.length}, minmax(0, 1fr))`;
 const laneNodes = new Map(),
-  arrived = models.map(() => new Set());
+  arrived = [],
+  schedule = [];
 let frame = 0,
   paused = false,
   finished = false,
   elapsed = 0,
   lastTime = null,
   replayAnimations = [];
-const schedule = [];
-models.forEach((m, i) => {
-  const row = document.createElement("button");
-  row.className = "lane";
-  row.dataset.index = i;
-  row.style.viewTransitionName = "lane-" + i;
-  row.setAttribute(
-    "aria-label",
-    name(m) +
-      ", inspect all " +
-      m.per_task_results.length +
-      " published task results",
+function buildLanes() {
+  const taskShort = (models[0]?.per_task_results ?? []).map((t) =>
+    t.task_id.replaceAll("-", "").slice(0, 4).toUpperCase(),
   );
-  row.style.setProperty("--sample-count", m.per_task_results.length);
-  row.innerHTML =
-    '<span class="lane-index">' +
-    String(i + 1).padStart(2, "0") +
-    '</span><span><span class="lane-title">' +
-    escape(name(m)) +
-    '</span><span class="lane-provider">' +
-    escape(m.provider) +
-    '</span></span><span class="track">' +
-    m.per_task_results
-      .map(
-        (t, j) =>
-          '<span class="sample" data-task="' +
-          j +
-          '" title="' +
-          escape(
-            t.task_id + ": " + (t.passed ? "Pass" : "Fail") + " · " + t.detail,
-          ) +
-          '"></span>',
-      )
-      .join("") +
-    '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span>';
-  row.onclick = () => openModel(i, row);
-  laneNodes.set(i, row);
-  m.per_task_results.forEach((t, j) =>
-    schedule.push({
-      i,
-      j,
-      start: 300 + j * 420 + i * 30,
-      land: 700 + j * 420 + i * 30,
-      sent: false,
-      done: false,
-    }),
-  );
-});
-[...models.keys()]
-  .sort((a, b) => name(models[a]).localeCompare(name(models[b])))
-  .forEach((i) => $("lanes").append(laneNodes.get(i)));
+  $("task-heads").innerHTML = taskShort
+    .map((t) => "<span>" + t + "</span>")
+    .join("");
+  $("task-heads").style.gridTemplateColumns =
+    `repeat(${taskShort.length}, minmax(0, 1fr))`;
+  $("lanes").replaceChildren();
+  laneNodes.clear();
+  arrived.length = 0;
+  schedule.length = 0;
+  models.forEach((m, i) => {
+    arrived.push(new Set());
+    const row = document.createElement("button");
+    row.className = "lane" + (m.discontinued ? " is-discontinued" : "");
+    row.dataset.index = i;
+    row.style.viewTransitionName = "lane-" + i;
+    row.setAttribute(
+      "aria-label",
+      name(m) +
+        ", inspect all " +
+        m.per_task_results.length +
+        " published task results",
+    );
+    row.style.setProperty("--sample-count", m.per_task_results.length);
+    row.innerHTML =
+      '<span class="lane-index">' +
+      String(i + 1).padStart(2, "0") +
+      '</span><span><span class="lane-title">' +
+      escape(name(m)) +
+      '</span><span class="lane-provider">' +
+      escape(m.provider) +
+      " · " +
+      versionMarkup(m) +
+      '</span></span><span class="track">' +
+      m.per_task_results
+        .map(
+          (t, j) =>
+            '<span class="sample" data-task="' +
+            j +
+            '" title="' +
+            escape(
+              t.task_id +
+                ": " +
+                (t.passed ? "Pass" : "Fail") +
+                " · " +
+                t.detail,
+            ) +
+            '"></span>',
+        )
+        .join("") +
+      '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span>';
+    row.onclick = () => openModel(i, row);
+    laneNodes.set(i, row);
+    m.per_task_results.forEach((t, j) =>
+      schedule.push({
+        i,
+        j,
+        start: 300 + j * 420 + i * 30,
+        land: 700 + j * 420 + i * 30,
+        sent: false,
+        done: false,
+      }),
+    );
+  });
+  [...models.keys()]
+    .sort((a, b) => name(models[a]).localeCompare(name(models[b])))
+    .forEach((i) => $("lanes").append(laneNodes.get(i)));
+}
+buildLanes();
 function partialScore(i) {
   return replayScore(models[i], arrived[i], weights);
 }
@@ -428,11 +461,15 @@ function renderFlames() {
       })
       .join("");
     return (
-      '<div class="flame-row"><button class="model-link" data-open="' +
+      '<div class="flame-row' +
+      (m.discontinued ? " is-discontinued" : "") +
+      '"><button class="model-link" data-open="' +
       i +
       '">' +
       escape(name(m)) +
-      ' <span style="color:var(--mute)">↗</span></button><div class="flame-track">' +
+      ' <span style="color:var(--mute)">↗</span><span class="model-version">' +
+      versionMarkup(m) +
+      '</span></button><div class="flame-track">' +
       segments +
       '</div><span class="bar-value">' +
       (zoom && m.category_scores[zoom] === undefined
@@ -471,34 +508,33 @@ function zoomCategory(c) {
   );
 }
 $("zoom-out").onclick = () => zoomCategory(null);
-$("category-legend").innerHTML = categories
-  .map(
-    (c) =>
-      '<button data-category="' +
-      c +
-      '"><i style="background:' +
-      colors[c] +
-      '"></i>' +
-      cap(c) +
-      " · " +
-      weights[c] +
-      "</button>",
-  )
-  .join("");
-$("category-legend")
-  .querySelectorAll("button")
-  .forEach((b) => (b.onclick = () => zoomCategory(b.dataset.category)));
+function renderCategoryLegend() {
+  $("category-legend").innerHTML = categories
+    .map(
+      (c) =>
+        '<button data-category="' +
+        c +
+        '"><i style="background:' +
+        colors[c] +
+        '"></i>' +
+        cap(c) +
+        " · " +
+        weights[c] +
+        "</button>",
+    )
+    .join("");
+  $("category-legend")
+    .querySelectorAll("button")
+    .forEach((b) => (b.onclick = () => zoomCategory(b.dataset.category)));
+}
+renderCategoryLegend();
 renderFlames();
-const scale = budgetScale(models),
-  minCost = scale.min,
-  maxCost = scale.max;
-const logMin = Math.log10(minCost),
-  logMax = Math.log10(maxCost),
-  budgetFor = (v) => scale.toCost(Number(v));
-let budget = models[0]?.cost ?? minCost;
+let scale = budgetScale(models);
+const budgetFor = (v) => scale.toCost(Number(v));
+let budget = models[0]?.cost ?? scale.min;
 $("budget").value = Math.ceil(scale.toPosition(budget));
 budget = budgetFor($("budget").value);
-const frontier = costFrontier(models);
+let frontier = costFrontier(models);
 const NS = "http://www.w3.org/2000/svg";
 function svgEl(tag, attrs, text) {
   const el = document.createElementNS(NS, tag);
@@ -507,6 +543,10 @@ function svgEl(tag, attrs, text) {
   return el;
 }
 function renderChart() {
+  const minCost = scale.min,
+    maxCost = scale.max;
+  const logMin = Math.log10(minCost),
+    logMax = Math.log10(maxCost);
   const svg = $("scatter"),
     w = svg.clientWidth,
     h = svg.clientHeight,
@@ -574,11 +614,15 @@ function renderChart() {
       class:
         "point" +
         (m.cost > budget ? " above" : "") +
+        (m.discontinued ? " is-discontinued" : "") +
         (m === best ? " winner" : ""),
       tabindex: 0,
       role: "button",
       "aria-label":
         name(m) +
+        ", " +
+        m.version_status +
+        (m.discontinued ? ", Discontinued" : "") +
         ", score " +
         score(m.overall_score) +
         ", estimated cost " +
@@ -648,33 +692,58 @@ function updateBudget() {
     });
   renderChart();
 }
-$("chart-models").innerHTML = models
-  .map(
-    (m, i) =>
-      '<button class="chart-chip" data-model="' +
-      i +
-      '"><span>' +
-      String(i + 1).padStart(2, "0") +
-      "</span>" +
-      escape(name(m)) +
-      "</button>",
-  )
-  .join("");
-$("chart-models")
-  .querySelectorAll("button")
-  .forEach((b) => (b.onclick = () => openModel(Number(b.dataset.model), b)));
-$("chart-table").innerHTML = models
-  .map(
-    (m) =>
-      '<tr><th scope="row">' +
-      escape(name(m)) +
-      "</th><td>" +
-      score(m.overall_score) +
-      "</td><td>" +
-      money(m.cost) +
-      "</td></tr>",
-  )
-  .join("");
+function renderModelControls() {
+  $("chart-models").innerHTML = models
+    .map(
+      (m, i) =>
+        '<button class="chart-chip' +
+        (m.discontinued ? " is-discontinued" : "") +
+        '" data-model="' +
+        i +
+        '"><span>' +
+        String(i + 1).padStart(2, "0") +
+        "</span>" +
+        escape(name(m)) +
+        "</button>",
+    )
+    .join("");
+  $("chart-models")
+    .querySelectorAll("button")
+    .forEach((b) => (b.onclick = () => openModel(Number(b.dataset.model), b)));
+  $("chart-table").innerHTML = models
+    .map(
+      (m, i) =>
+        "<tr" +
+        (m.discontinued ? ' class="is-discontinued"' : "") +
+        "><td>" +
+        (i + 1) +
+        '</td><th scope="row">' +
+        escape(name(m)) +
+        '<span class="model-version">' +
+        versionMarkup(m) +
+        "</span></th><td>" +
+        score(m.overall_score) +
+        "</td><td>" +
+        money(m.cost) +
+        "</td></tr>",
+    )
+    .join("");
+  $("model-picker").innerHTML = models
+    .map(
+      (m, i) =>
+        '<option value="' +
+        i +
+        '">' +
+        escape(name(m)) +
+        " · " +
+        m.version_status +
+        (m.newer_model ? " · newer: " + escape(modelName(m.newer_model)) : "") +
+        (m.discontinued ? " · Discontinued" : "") +
+        "</option>",
+    )
+    .join("");
+}
+renderModelControls();
 $("budget").oninput = () => {
   budget = budgetFor($("budget").value);
   updateBudget();
@@ -683,14 +752,14 @@ $("budget").onchange = () =>
   announce($("winner-name").textContent + " is the current budget result.");
 new ResizeObserver(() => renderChart()).observe($("scatter"));
 updateBudget();
-$("model-picker").innerHTML = models
-  .map((m, i) => '<option value="' + i + '">' + escape(name(m)) + "</option>")
-  .join("");
 function renderProfile() {
   const m = models[selected];
   $("model-picker").value = selected;
   $("focus-name").textContent = name(m);
   $("focus-provider").textContent = m.provider.toUpperCase() + " / " + m.model;
+  $("focus-version").innerHTML =
+    "Rank " + (selected + 1) + " · " + versionMarkup(m);
+  $("scene-4").classList.toggle("is-discontinued", m.discontinued);
   $("focus-score").textContent = score(m.overall_score);
   $("focus-passed").textContent =
     m.per_task_results.filter((t) => t.passed).length +
@@ -762,6 +831,8 @@ function renderProfile() {
     circ = 2 * Math.PI * r;
   let offset = 0;
   const parts = contributions(m, weights);
+  $("ring-caption").textContent =
+    parts.length + " measured categories. Every point traceable.";
   const measured = parts.reduce((s, p) => s + weights[p.category], 0);
   ring.append(
     svgEl("circle", {
@@ -836,6 +907,116 @@ $("previous-model").onclick = () =>
 $("next-model").onclick = () => openModel((selected + 1) % models.length);
 $("model-picker").onchange = () => openModel(Number($("model-picker").value));
 renderProfile();
+function updateVisibleCounts() {
+  const tasks = new Set(
+    models.flatMap((m) => m.per_task_results.map((t) => t.task_id)),
+  ).size;
+  const samples = models.reduce((sum, m) => sum + m.per_task_results.length, 0);
+  document
+    .querySelectorAll("[data-model-count]")
+    .forEach((el) => (el.textContent = models.length));
+  document
+    .querySelectorAll("[data-task-count]")
+    .forEach((el) => (el.textContent = tasks));
+  document
+    .querySelectorAll("[data-sample-total]")
+    .forEach((el) => (el.textContent = samples));
+  document
+    .querySelectorAll("[data-active-weight]")
+    .forEach((el) => (el.textContent = activeWeight));
+  document
+    .querySelectorAll("[data-active-count]")
+    .forEach((el) => (el.textContent = categories.length));
+  const ids = new Set(models.map((m) => m.model));
+  document
+    .querySelectorAll("[data-tool-model]")
+    .forEach((el) => (el.hidden = !ids.has(el.dataset.toolModel)));
+  const date = models
+    .map((m) => m.run_date)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  $("published-date").textContent = date
+    ? new Date(date)
+        .toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        })
+        .toUpperCase()
+    : "PUBLISHED RUNS";
+  $("not-run").innerHTML = Object.keys(weights)
+    .filter((c) => !categories.includes(c))
+    .map(
+      (c) =>
+        '<div class="empty-frame"><b>' +
+        cap(c) +
+        " / weight " +
+        weights[c] +
+        "</b><span>Not yet benchmarked</span></div>",
+    )
+    .join("");
+}
+function applyVersions() {
+  const previous = models[selected]?.model,
+    wasFinished = finished,
+    wasPaused = paused;
+  cancelAnimationFrame(frame);
+  replayAnimations.forEach((a) => a.cancel());
+  replayAnimations = [];
+  transition?.skipTransition();
+  transition = null;
+  const all = new URLSearchParams(location.search).get("versions") === "all";
+  $("show-versions").checked = all;
+  models = selectModelVersions(DATA.models, all);
+  selected = Math.max(
+    0,
+    models.findIndex((m) => m.model === previous),
+  );
+  categories = Object.keys(weights).filter((c) =>
+    models.some((m) => c in m.category_scores),
+  );
+  activeWeight = categories.reduce((sum, c) => sum + weights[c], 0);
+  zoom = null;
+  scale = budgetScale(models);
+  frontier = costFrontier(models);
+  budget = Math.max(scale.min, Math.min(scale.max, budget));
+  $("budget").value = Math.ceil(scale.toPosition(budget));
+  budget = budgetFor($("budget").value);
+  buildLanes();
+  renderFlames();
+  renderCategoryLegend();
+  $("stack-info-title").textContent = activeWeight + " active points";
+  $("stack-info-detail").textContent =
+    "Scores are normalized over measured categories. Unmeasured categories never count as zero.";
+  renderModelControls();
+  renderProfile();
+  updateBudget();
+  updateVisibleCounts();
+  startReplay();
+  if (wasFinished) settle(false);
+  else if (wasPaused) $("pause").click();
+  scenes[currentScene].scrollIntoView({ behavior: "instant", block: "start" });
+  announce(
+    models.length +
+      " published runs shown. " +
+      (all ? "Earlier versions included." : "Latest versions only."),
+  );
+}
+$("show-versions").checked =
+  new URLSearchParams(location.search).get("versions") === "all";
+$("show-versions").onchange = () => {
+  const url = new URL(location.href);
+  if ($("show-versions").checked) url.searchParams.set("versions", "all");
+  else url.searchParams.delete("versions");
+  history.pushState(null, "", url);
+  applyVersions();
+};
+addEventListener("popstate", applyVersions);
+if (!("switch" in HTMLInputElement.prototype))
+  $("show-versions").classList.add("switch-fallback");
+updateVisibleCounts();
 startReplay();
 if (location.hash.match(/^#scene-[1-4]$/))
   setTimeout(() => goScene(Number(location.hash.at(-1)) - 1, false, true), 50);
