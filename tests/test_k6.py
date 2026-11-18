@@ -118,6 +118,7 @@ def test_k6_preflight_before_provider(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("metadata", [True, False])
+@pytest.mark.parametrize("named", [True, False])
 @pytest.mark.parametrize("debug_iterations,metric_samples,passed", [
     ([None, None], [("1", "0"), ("1", "1")], True),
     (["0", None], [("1", "0"), ("1", "1")], True),
@@ -126,8 +127,12 @@ def test_k6_preflight_before_provider(tmp_path, monkeypatch):
     ([None, None], [("1", None), ("1", None)], False),
     (["0", "0"], [("1", "0"), ("1", "1")], False),
 ])
-def test_debug_iteration_fallback(stub, tmp_path, metadata, debug_iterations, metric_samples, passed):
+def test_debug_iteration_fallback(stub, tmp_path, metadata, named, debug_iterations,
+                                 metric_samples, passed):
     points = [point(vu, iteration=iteration) for vu, iteration in metric_samples]
+    if named:
+        for sample in points:
+            sample["data"]["tags"].update(url="checkout", name="checkout")
     if not metadata:
         for sample in points:
             sample["data"]["tags"].update(sample["data"].pop("metadata"))
@@ -139,6 +144,22 @@ def test_debug_iteration_fallback(stub, tmp_path, metadata, debug_iterations, me
     grade = k6_exec("```js\nx\n```", {"completions": 2, "expected_checkout_vus": 1,
                     "min_checkout_iterations": 2}, tmp_path / "run")
     assert grade.passed is passed
+
+
+def test_named_iteration_fallback_consumes_all_requests_in_vu_order(stub, tmp_path):
+    points, requests = [], []
+    for iteration in ("0", "1"):
+        for method, path, name in (("GET", "/products", "catalog"),
+                                    ("POST", "/checkout", "checkout")):
+            sample = point(iteration=iteration)
+            sample["data"]["tags"].update(url=name, name=name)
+            points.append(sample)
+            requests.append({"source": "http-debug", "vu": 1,
+                             "msg": f"Request:\n{method} {path} HTTP/1.1\r\n"})
+    stub(points, requests=requests)
+    grade = k6_exec("```js\nx\n```", {"completions": 2, "expected_checkout_vus": 1,
+                    "min_checkout_iterations": 2}, tmp_path / "run")
+    assert grade.passed
 
 
 @pytest.mark.parametrize("debug", [False, True])

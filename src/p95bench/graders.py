@@ -175,8 +175,8 @@ def k6_exec(text, params, workdir):
                          if urlsplit(tags.get("url", "")).path == "/checkout"]
             if minimum > 1 or expected_vus is not None or minimum_iterations > 1:
                 metric_iterations = defaultdict(deque)
-                for vu, iteration in checkouts:
-                    metric_iterations[str(vu)].append(iteration)
+                for tags in requests:
+                    metric_iterations[str(tags.get("vu"))].append(tags.get("iter"))
                 debug_checkouts, debug_seen = [], False
                 for line in (workdir / "stdout.log").read_text().splitlines():
                     try:
@@ -188,12 +188,12 @@ def k6_exec(text, params, workdir):
                     request = re.match(r"Request:\r?\n(\S+) (\S+) HTTP/", record.get("msg", ""))
                     if request:
                         debug_seen = True
+                        vu, iteration = record.get("vu"), record.get("iter")
+                        candidates = metric_iterations[str(vu)]
+                        fallback = candidates.popleft() if candidates else None
+                        if iteration is None or str(iteration) == "":
+                            iteration = fallback
                         if request[1] == "POST" and urlsplit(request[2]).path == "/checkout":
-                            vu, iteration = record.get("vu"), record.get("iter")
-                            candidates = metric_iterations[str(vu)]
-                            fallback = candidates.popleft() if candidates else None
-                            if iteration is None or str(iteration) == "":
-                                iteration = fallback
                             debug_checkouts.append((vu, iteration))
                 if debug_seen:
                     checkouts = debug_checkouts
