@@ -44,3 +44,23 @@ export function taskResult(model, taskId) {
       `Attempt ${index + 1}: ${attempt.passed ? 'Pass' : 'Fail'} · ${attempt.detail}`).join('\n'),
   };
 }
+
+export function replayScore(model, landed, weights) {
+  return contributions(model, weights).reduce((total, { category, points }) => {
+    const passed = model.per_task_results.flatMap((task, index) =>
+      task.category === category && task.passed ? [index] : []);
+    return total + (passed.length ? points * passed.filter((index) => landed.has(index)).length / passed.length : 0);
+  }, 0);
+}
+
+export function budgetScale(models) {
+  const costs = models.map((model) => model.cost).filter((cost) => Number.isFinite(cost) && cost > 0);
+  const min = costs.length ? Math.min(...costs) * .65 : .001;
+  const max = costs.length ? Math.max(...costs) * 1.22 : 1;
+  const start = Math.log10(min), range = Math.log10(max) - start;
+  return {
+    min, max,
+    toCost: (position) => 10 ** (start + Math.max(0, Math.min(1000, position)) / 1000 * range),
+    toPosition: (cost) => cost > 0 ? Math.max(0, Math.min(1000, (Math.log10(cost) - start) / range * 1000)) : 0,
+  };
+}

@@ -1,0 +1,852 @@
+"use strict";
+import DATA from "../data/leaderboard.json";
+import {
+  name as modelName,
+  modelSlug,
+  contributions,
+  costFrontier,
+  bestWithin,
+  replayScore,
+  budgetScale,
+} from "./scores.mjs";
+const models = DATA.models,
+  weights = DATA.weights;
+const $ = (id) => document.getElementById(id),
+  reduced = matchMedia("(prefers-reduced-motion: reduce)");
+const categories = Object.keys(weights).filter((c) =>
+  models.some((m) => m.category_scores[c] !== undefined),
+);
+const colors = {
+  authoring: "#6b2a7a",
+  correlation: "#c4416a",
+  workload: "#ff7a3d",
+  analysis: "#ffc94a",
+  concepts: "#a587e8",
+  repair: "#2a1a4a",
+  migration: "#75688b",
+};
+const name = (m) => modelName(m.model),
+  cap = (s) => s[0].toUpperCase() + s.slice(1),
+  score = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+const money = (n) => "$" + n.toFixed(6),
+  fmt = (n) => n.toLocaleString("en-US"),
+  activeWeight = categories.reduce((s, c) => s + weights[c], 0);
+const escape = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const scenes = [...document.querySelectorAll(".scene, .reading-section")],
+  sceneNames = [
+    "LIVE RUN",
+    "FLAME STACK",
+    "VALUE FRONTIER",
+    "MODEL FOCUS",
+    "TOOLS",
+    "METHODOLOGY",
+  ];
+let currentScene = 0,
+  selected = 0,
+  zoom = null,
+  transition = null;
+const announce = (s) => {
+  $("status").textContent = s;
+  clearTimeout(announce.timer);
+  announce.timer = setTimeout(() => ($("status").textContent = ""), 3500);
+};
+function change(update, after = () => {}) {
+  if (transition) transition.skipTransition();
+  if (!reduced.matches && document.startViewTransition) {
+    const t = document.startViewTransition(update);
+    transition = t;
+    t.finished
+      .catch(() => {})
+      .finally(() => {
+        if (transition === t) transition = null;
+        after();
+      });
+  } else {
+    update();
+    after();
+  }
+}
+function goScene(index, focus = true, instant = false) {
+  index = (index + scenes.length) % scenes.length;
+  if (index !== currentScene) {
+    clearTimeout(announce.timer);
+    $("status").textContent = "";
+  }
+  currentScene = index;
+  scenes[index].scrollIntoView({
+    behavior: instant || reduced.matches ? "instant" : "smooth",
+    block: "start",
+  });
+  if (focus)
+    scenes[index].querySelector("h1,h2").focus({ preventScroll: true });
+}
+document
+  .querySelectorAll("[data-scene]")
+  .forEach((b) => (b.onclick = () => goScene(Number(b.dataset.scene))));
+$("next-scene").onclick = () => goScene(currentScene + 1);
+document.querySelector(".wordmark").onclick = (e) => {
+  e.preventDefault();
+  goScene(0);
+};
+document.querySelectorAll('a[href="#method"],a[href="#tools"]').forEach(
+  (a) =>
+    (a.onclick = (e) => {
+      e.preventDefault();
+      goScene(a.hash === "#tools" ? 4 : 5);
+    }),
+);
+const observer = new IntersectionObserver(
+  (entries) => {
+    for (const e of entries) {
+      const visible =
+        e.intersectionRect.height /
+        Math.min(innerHeight, e.boundingClientRect.height);
+      if (visible > 0.55) {
+        currentScene = scenes.indexOf(e.target);
+        document
+          .querySelectorAll("[data-scene]")
+          .forEach((b, i) =>
+            b.setAttribute("aria-current", String(i === currentScene)),
+          );
+        $("scene-label").textContent =
+          "0" + (currentScene + 1) + " / " + sceneNames[currentScene];
+        document.title =
+          "P95 Bench / " + cap(sceneNames[currentScene].toLowerCase());
+        if (!e.target.classList.contains("in-view")) {
+          e.target.classList.add("points-entering");
+          setTimeout(() => e.target.classList.remove("points-entering"), 1800);
+        }
+        e.target.classList.add("in-view");
+      }
+    }
+  },
+  { root: null, threshold: [0, 0.25, 0.5, 0.6, 0.75, 1] },
+);
+scenes.forEach((s) => observer.observe(s));
+if (
+  !CSS.supports("animation-timeline: view()") ||
+  !CSS.supports("animation-range: 0% 100%")
+)
+  document.documentElement.classList.add("scroll-fallback");
+async function fullscreen() {
+  if (!document.fullscreenEnabled) {
+    announce(
+      "Fullscreen is unavailable in this browser. The scenes still fill the window.",
+    );
+    return;
+  }
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch {
+    announce(
+      "Fullscreen was blocked by the browser. Try the fullscreen button.",
+    );
+  }
+}
+$("fullscreen").onclick = fullscreen;
+document.addEventListener("fullscreenchange", () => {
+  $("fullscreen").setAttribute(
+    "aria-label",
+    document.fullscreenElement ? "Exit fullscreen" : "Enter fullscreen",
+  );
+  $("fullscreen").querySelector(".fullscreen-label").textContent =
+    document.fullscreenElement ? " Exit fullscreen" : " Fullscreen";
+});
+document.addEventListener("keydown", (e) => {
+  if (
+    e.altKey ||
+    e.ctrlKey ||
+    e.metaKey ||
+    e.isComposing ||
+    e.target.closest("input,select,textarea,[contenteditable=true]")
+  )
+    return;
+  if (/^[1-4]$/.test(e.key)) {
+    e.preventDefault();
+    goScene(Number(e.key) - 1);
+  } else if (e.key.toLowerCase() === "f") {
+    e.preventDefault();
+    fullscreen();
+  } else if (e.key === "PageDown" || e.key === "PageUp") {
+    e.preventDefault();
+    goScene(currentScene + (e.key === "PageDown" ? 1 : -1));
+  } else if (
+    currentScene === 0 &&
+    ["ArrowLeft", "ArrowRight"].includes(e.key)
+  ) {
+    e.preventDefault();
+    const row = e.target.closest(".lane"),
+      i = row ? Number(row.dataset.index) : selected;
+    openModel(
+      (i + (e.key === "ArrowRight" ? 1 : -1) + models.length) % models.length,
+      row,
+    );
+  } else if (
+    currentScene === 3 &&
+    ["ArrowLeft", "ArrowRight"].includes(e.key)
+  ) {
+    e.preventDefault();
+    openModel(
+      (selected + (e.key === "ArrowRight" ? 1 : -1) + models.length) %
+        models.length,
+    );
+  }
+});
+const taskShort = (models[0]?.per_task_results ?? []).map((t) =>
+  t.task_id.replaceAll("-", "").slice(0, 4).toUpperCase(),
+);
+$("task-heads").innerHTML = taskShort
+  .map((t) => "<span>" + t + "</span>")
+  .join("");
+$("task-heads").style.gridTemplateColumns =
+  `repeat(${taskShort.length}, minmax(0, 1fr))`;
+const laneNodes = new Map(),
+  arrived = models.map(() => new Set());
+let frame = 0,
+  paused = false,
+  finished = false,
+  elapsed = 0,
+  lastTime = null,
+  replayAnimations = [];
+const schedule = [];
+models.forEach((m, i) => {
+  const row = document.createElement("button");
+  row.className = "lane";
+  row.dataset.index = i;
+  row.style.viewTransitionName = "lane-" + i;
+  row.setAttribute(
+    "aria-label",
+    name(m) +
+      ", inspect all " +
+      m.per_task_results.length +
+      " published task results",
+  );
+  row.style.setProperty("--sample-count", m.per_task_results.length);
+  row.innerHTML =
+    '<span class="lane-index">' +
+    String(i + 1).padStart(2, "0") +
+    '</span><span><span class="lane-title">' +
+    escape(name(m)) +
+    '</span><span class="lane-provider">' +
+    escape(m.provider) +
+    '</span></span><span class="track">' +
+    m.per_task_results
+      .map(
+        (t, j) =>
+          '<span class="sample" data-task="' +
+          j +
+          '" title="' +
+          escape(
+            t.task_id + ": " + (t.passed ? "Pass" : "Fail") + " · " + t.detail,
+          ) +
+          '"></span>',
+      )
+      .join("") +
+    '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span>';
+  row.onclick = () => openModel(i, row);
+  laneNodes.set(i, row);
+  m.per_task_results.forEach((t, j) =>
+    schedule.push({
+      i,
+      j,
+      start: 300 + j * 420 + i * 30,
+      land: 700 + j * 420 + i * 30,
+      sent: false,
+      done: false,
+    }),
+  );
+});
+[...models.keys()]
+  .sort((a, b) => name(models[a]).localeCompare(name(models[b])))
+  .forEach((i) => $("lanes").append(laneNodes.get(i)));
+function partialScore(i) {
+  return replayScore(models[i], arrived[i], weights);
+}
+function updateCounters() {
+  let max = 0,
+    count = 0;
+  models.forEach((m, i) => {
+    const n = partialScore(i);
+    laneNodes.get(i).querySelector(".score-number").textContent = score(n);
+    max = Math.max(max, n);
+    count += arrived[i].size;
+  });
+  $("leading-score").textContent = max.toFixed(2);
+  $("sample-count").textContent = count;
+}
+function land(s) {
+  if (s.done) return;
+  s.done = true;
+  arrived[s.i].add(s.j);
+  const t = models[s.i].per_task_results[s.j],
+    cell = laneNodes.get(s.i).querySelector('[data-task="' + s.j + '"]');
+  cell.classList.add("landed", t.passed ? "pass" : "fail");
+  if (!t.passed && !reduced.matches) cell.classList.add("glitch");
+}
+function send(s) {
+  s.sent = true;
+  const row = laneNodes.get(s.i),
+    track = row.querySelector(".track"),
+    target = track.querySelector('[data-task="' + s.j + '"]');
+  const p = document.createElement("span");
+  p.className =
+    "puck" + (models[s.i].per_task_results[s.j].passed ? "" : " fail");
+  p.setAttribute("aria-hidden", "true");
+  track.append(p);
+  const a = p.animate(
+    [
+      { transform: "translateX(0)", opacity: 0 },
+      { opacity: 1, offset: 0.15 },
+      { transform: "translateX(" + target.offsetLeft + "px)", opacity: 1 },
+    ],
+    { duration: 400, easing: "cubic-bezier(.2,.7,.2,1)" },
+  );
+  a.onfinish = () => p.remove();
+  a.oncancel = () => p.remove();
+  replayAnimations.push(a);
+}
+function settle(animate = true) {
+  if (finished) return;
+  finished = true;
+  cancelAnimationFrame(frame);
+  schedule.forEach(land);
+  replayAnimations.forEach((a) => a.cancel());
+  replayAnimations = [];
+  updateCounters();
+  const update = () =>
+    models.forEach((m, i) => {
+      $("lanes").append(laneNodes.get(i));
+      laneNodes.get(i).querySelector(".lane-index").textContent = String(
+        i + 1,
+      ).padStart(2, "0");
+    });
+  if (animate) change(update);
+  else update();
+  $("run-state").textContent = "ALL SAMPLES LANDED · RANKED BY SCORE";
+  $("pause").textContent = "Replay";
+  $("finish").disabled = true;
+}
+function tick(now) {
+  if (paused || finished) return;
+  if (lastTime !== null) elapsed += Math.min(now - lastTime, 100);
+  lastTime = now;
+  schedule.forEach((s) => {
+    if (elapsed >= s.start && !s.sent) send(s);
+    if (elapsed >= s.land && !s.done) land(s);
+  });
+  updateCounters();
+  if (schedule.every((s) => s.done)) settle();
+  else frame = requestAnimationFrame(tick);
+}
+function startReplay() {
+  finished = false;
+  paused = false;
+  elapsed = 0;
+  lastTime = null;
+  schedule.forEach((s) => {
+    s.sent = false;
+    s.done = false;
+  });
+  arrived.forEach((s) => s.clear());
+  laneNodes.forEach((row) =>
+    row.querySelectorAll(".sample").forEach((c) => (c.className = "sample")),
+  );
+  $("pause").textContent = "Pause";
+  $("finish").disabled = false;
+  $("run-state").textContent = "REPLAYING PUBLISHED SAMPLES";
+  updateCounters();
+  if (reduced.matches) settle(false);
+  else frame = requestAnimationFrame(tick);
+}
+$("pause").onclick = () => {
+  if (finished) {
+    startReplay();
+    return;
+  }
+  paused = !paused;
+  $("pause").textContent = paused ? "Resume" : "Pause";
+  $("run-state").textContent = paused
+    ? "REPLAY PAUSED"
+    : "REPLAYING PUBLISHED SAMPLES";
+  replayAnimations
+    .filter((a) => a.playState === "running" || a.playState === "paused")
+    .forEach((a) => (paused ? a.pause() : a.play()));
+  if (!paused) {
+    lastTime = null;
+    frame = requestAnimationFrame(tick);
+  } else cancelAnimationFrame(frame);
+};
+$("finish").onclick = () => settle();
+reduced.addEventListener("change", () => {
+  if (reduced.matches) settle(false);
+});
+function stackInfo(m, c) {
+  const points =
+    contributions(m, weights).find((s) => s.category === c)?.points ?? 0;
+  $("stack-info-title").textContent = points.toFixed(2) + " points";
+  $("stack-info-detail").textContent =
+    name(m) +
+    " / " +
+    cap(c) +
+    " · " +
+    score(m.category_scores[c]) +
+    "/100 · weight " +
+    weights[c] +
+    ". Click to isolate this category.";
+}
+function renderFlames() {
+  $("zoom-path").textContent = zoom
+    ? "/ " + cap(zoom)
+    : "/ Weighted contribution";
+  const rows = models.map((m, i) => {
+    const cats = zoom ? [zoom] : categories;
+    const parts = contributions(m, weights);
+    const segments = cats
+      .map((c) => {
+        const v = zoom
+          ? (m.category_scores[c] ?? 0)
+          : (parts.find((s) => s.category === c)?.points ?? 0);
+        if (v === 0) return "";
+        return (
+          '<button class="segment" data-model="' +
+          i +
+          '" data-cat="' +
+          c +
+          '" style="width:calc(' +
+          v +
+          "% - 2px);background:" +
+          colors[c] +
+          '" aria-label="' +
+          escape(name(m)) +
+          " / " +
+          cap(c) +
+          " / " +
+          score(m.category_scores[c]) +
+          " out of 100 / " +
+          (parts.find((s) => s.category === c)?.points ?? 0).toFixed(2) +
+          ' weighted points. Zoom category."><span>' +
+          (v > 7 ? score(v) : "") +
+          "</span></button>"
+        );
+      })
+      .join("");
+    return (
+      '<div class="flame-row"><button class="model-link" data-open="' +
+      i +
+      '">' +
+      escape(name(m)) +
+      ' <span style="color:var(--mute)">↗</span></button><div class="flame-track">' +
+      segments +
+      '</div><span class="bar-value">' +
+      (zoom && m.category_scores[zoom] === undefined
+        ? "Not run"
+        : score(zoom ? m.category_scores[zoom] : m.overall_score)) +
+      "<small> /100</small></span></div>"
+    );
+  });
+  $("flames").innerHTML = rows.join("");
+  $("flames")
+    .querySelectorAll("[data-open]")
+    .forEach((b) => (b.onclick = () => openModel(Number(b.dataset.open), b)));
+  $("flames")
+    .querySelectorAll("[data-cat]")
+    .forEach((b) => {
+      b.onpointerenter = () =>
+        stackInfo(models[Number(b.dataset.model)], b.dataset.cat);
+      b.onfocus = () =>
+        stackInfo(models[Number(b.dataset.model)], b.dataset.cat);
+      b.onclick = () => zoomCategory(b.dataset.cat);
+    });
+}
+function zoomCategory(c) {
+  change(
+    () => {
+      zoom = c;
+      renderFlames();
+      $("stack-info-title").textContent = c
+        ? cap(c)
+        : activeWeight + " active points";
+      $("stack-info-detail").textContent = c
+        ? "Category view. All models share a 100-point scale. Select a model name to inspect its tasks."
+        : "Scores are normalized over measured categories. Unmeasured categories never count as zero.";
+    },
+    () => $("zoom-out").focus({ preventScroll: true }),
+  );
+}
+$("zoom-out").onclick = () => zoomCategory(null);
+$("category-legend").innerHTML = categories
+  .map(
+    (c) =>
+      '<button data-category="' +
+      c +
+      '"><i style="background:' +
+      colors[c] +
+      '"></i>' +
+      cap(c) +
+      " · " +
+      weights[c] +
+      "</button>",
+  )
+  .join("");
+$("category-legend")
+  .querySelectorAll("button")
+  .forEach((b) => (b.onclick = () => zoomCategory(b.dataset.category)));
+renderFlames();
+const scale = budgetScale(models),
+  minCost = scale.min,
+  maxCost = scale.max;
+const logMin = Math.log10(minCost),
+  logMax = Math.log10(maxCost),
+  budgetFor = (v) => scale.toCost(Number(v));
+let budget = models[0]?.cost ?? minCost;
+$("budget").value = Math.ceil(scale.toPosition(budget));
+budget = budgetFor($("budget").value);
+const frontier = costFrontier(models);
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs, text) {
+  const el = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+function renderChart() {
+  const svg = $("scatter"),
+    w = svg.clientWidth,
+    h = svg.clientHeight,
+    left = 47,
+    right = w - 23,
+    top = 27,
+    bottom = h - 30;
+  svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+  svg
+    .querySelectorAll(":scope > :not(title):not(desc)")
+    .forEach((n) => n.remove());
+  const x = (v) =>
+      left + ((Math.log10(v) - logMin) / (logMax - logMin)) * (right - left),
+    y = (v) => bottom - (v / 100) * (bottom - top);
+  for (const n of [0, 25, 50, 75, 100]) {
+    svg.append(
+      svgEl("line", {
+        x1: left,
+        y1: y(n),
+        x2: right,
+        y2: y(n),
+        class: "gridline",
+      }),
+    );
+    svg.append(
+      svgEl(
+        "text",
+        { x: left - 12, y: y(n) + 3, class: "axis", "text-anchor": "end" },
+        n,
+      ),
+    );
+  }
+  const ticks = w < 500 ? [0.01, 0.05, 0.2] : [0.01, 0.02, 0.05, 0.1, 0.2];
+  for (const n of ticks)
+    if (n >= minCost && n <= maxCost)
+      svg.append(
+        svgEl(
+          "text",
+          { x: x(n), y: bottom + 21, class: "axis", "text-anchor": "middle" },
+          "$" + n.toFixed(2),
+        ),
+      );
+  svg.append(svgEl("text", { x: left, y: 10, class: "axis" }, "SCORE ↑"));
+  svg.append(
+    svgEl("polyline", {
+      points: frontier
+        .map((m) => x(m.cost) + "," + y(m.overall_score))
+        .join(" "),
+      class: "frontier-path",
+      pathLength: 1,
+    }),
+  );
+  svg.append(
+    svgEl("line", {
+      x1: x(budget),
+      x2: x(budget),
+      y1: top - 7,
+      y2: bottom + 4,
+      class: "budget-line",
+    }),
+  );
+  const best = bestWithin(models, budget);
+  models.forEach((m, i) => {
+    const g = svgEl("g", {
+      class:
+        "point" +
+        (m.cost > budget ? " above" : "") +
+        (m === best ? " winner" : ""),
+      tabindex: 0,
+      role: "button",
+      "aria-label":
+        name(m) +
+        ", score " +
+        score(m.overall_score) +
+        ", estimated cost " +
+        money(m.cost) +
+        ". Open model focus.",
+      style: "--delay:" + i * 45 + "ms",
+    });
+    g.append(
+      svgEl("circle", {
+        cx: x(m.cost),
+        cy: y(m.overall_score),
+        r: m === best ? 8 : 6,
+      }),
+    );
+    const dx = m.cost > Math.sqrt(minCost * maxCost) ? -11 : 11;
+    g.append(
+      svgEl(
+        "text",
+        {
+          x: x(m.cost) + dx,
+          y: y(m.overall_score) + 3,
+          "text-anchor": dx < 0 ? "end" : "start",
+        },
+        String(i + 1).padStart(2, "0"),
+      ),
+    );
+    g.onclick = () => openModel(i, g);
+    g.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openModel(i, g);
+      }
+    };
+    svg.append(g);
+  });
+}
+function updateBudget() {
+  const best = bestWithin(models, budget);
+  $("budget-value").textContent = "$" + budget.toFixed(3);
+  $("budget").setAttribute(
+    "aria-valuetext",
+    budget.toFixed(3) +
+      " US dollars; " +
+      (best
+        ? "best within budget " +
+          name(best) +
+          ", score " +
+          score(best.overall_score)
+        : "no published model within budget"),
+  );
+  $("winner-name").textContent = best ? name(best) : "No run within budget";
+  $("winner-meta").textContent = best
+    ? score(best.overall_score) +
+      " / 100  ·  " +
+      money(best.cost) +
+      " per run  ·  " +
+      best.per_task_results.filter((t) => t.passed).length +
+      "/" +
+      best.per_task_results.length +
+      " pass"
+    : "Increase the budget to include a published run.";
+  $("chart-models")
+    .querySelectorAll("button")
+    .forEach((b, i) => {
+      b.classList.toggle("above", models[i].cost > budget);
+      b.classList.toggle("winner", models[i] === best);
+    });
+  renderChart();
+}
+$("chart-models").innerHTML = models
+  .map(
+    (m, i) =>
+      '<button class="chart-chip" data-model="' +
+      i +
+      '"><span>' +
+      String(i + 1).padStart(2, "0") +
+      "</span>" +
+      escape(name(m)) +
+      "</button>",
+  )
+  .join("");
+$("chart-models")
+  .querySelectorAll("button")
+  .forEach((b) => (b.onclick = () => openModel(Number(b.dataset.model), b)));
+$("chart-table").innerHTML = models
+  .map(
+    (m) =>
+      '<tr><th scope="row">' +
+      escape(name(m)) +
+      "</th><td>" +
+      score(m.overall_score) +
+      "</td><td>" +
+      money(m.cost) +
+      "</td></tr>",
+  )
+  .join("");
+$("budget").oninput = () => {
+  budget = budgetFor($("budget").value);
+  updateBudget();
+};
+$("budget").onchange = () =>
+  announce($("winner-name").textContent + " is the current budget result.");
+new ResizeObserver(() => renderChart()).observe($("scatter"));
+updateBudget();
+$("model-picker").innerHTML = models
+  .map((m, i) => '<option value="' + i + '">' + escape(name(m)) + "</option>")
+  .join("");
+function renderProfile() {
+  const m = models[selected];
+  $("model-picker").value = selected;
+  $("focus-name").textContent = name(m);
+  $("focus-provider").textContent = m.provider.toUpperCase() + " / " + m.model;
+  $("focus-score").textContent = score(m.overall_score);
+  $("focus-passed").textContent =
+    m.per_task_results.filter((t) => t.passed).length +
+    " / " +
+    m.per_task_results.length +
+    " PASS";
+  $("task-grid").innerHTML = m.per_task_results
+    .map(
+      (t, i) =>
+        '<article class="task ' +
+        (t.passed ? "pass" : "fail") +
+        '"><div class="task-top"><span>' +
+        String(i + 1).padStart(2, "0") +
+        " / " +
+        escape(t.tool === "none" ? t.category : t.tool) +
+        '</span><span class="task-state">' +
+        (t.passed ? "✓ PASS" : "× FAIL") +
+        "</span></div><strong>" +
+        escape(t.task_id) +
+        "</strong><p>" +
+        escape(t.detail) +
+        "</p></article>",
+    )
+    .join("");
+  $("focus-cost").textContent = money(m.cost);
+  $("focus-tokens").textContent = fmt(m.tokens.input + m.tokens.output);
+  $("focus-token-detail").textContent =
+    fmt(m.tokens.input) + " in / " + fmt(m.tokens.output) + " out";
+  $("focus-latency").textContent = m.latency.toFixed(2) + "s";
+  $("focus-latency-detail").textContent =
+    "Total across " + m.per_task_results.length + " requests";
+  $("focus-provenance").replaceChildren();
+  const slug = modelSlug(m.model);
+  const link = document.createElement("a");
+  link.href =
+    "https://github.com/QAInsights/p95-bench/tree/main/results/published/" +
+    slug;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = "Inspect published artifacts ↗";
+  $("focus-provenance").append(
+    document.createTextNode(
+      "RUN " +
+        (m.run_date ?? "not recorded") +
+        " · HARNESS " +
+        (m.harness_commit?.slice(0, 12) ?? "not recorded") +
+        " · PUBLISHED ATTEMPTS · ",
+    ),
+    link,
+  );
+  $("cat-keys").innerHTML = Object.keys(weights)
+    .map(
+      (c) =>
+        '<div class="cat-key"><i style="background:' +
+        colors[c] +
+        (m.category_scores[c] === undefined ? ";opacity:.4" : "") +
+        '"></i>' +
+        cap(c) +
+        "<b>" +
+        (m.category_scores[c] === undefined
+          ? "Not run"
+          : score(m.category_scores[c])) +
+        "</b></div>",
+    )
+    .join("");
+  const ring = $("ring");
+  ring.replaceChildren();
+  const r = 103,
+    circ = 2 * Math.PI * r;
+  let offset = 0;
+  const parts = contributions(m, weights);
+  const measured = parts.reduce((s, p) => s + weights[p.category], 0);
+  ring.append(
+    svgEl("circle", {
+      cx: 130,
+      cy: 130,
+      r,
+      fill: "none",
+      stroke: "#282331",
+      "stroke-width": 16,
+    }),
+  );
+  parts.forEach(({ category: c, score: value }) => {
+    const slot = (weights[c] / measured) * circ,
+      len = Math.max(0, (slot * value) / 100 - 5);
+    const circle = svgEl("circle", {
+      cx: 130,
+      cy: 130,
+      r,
+      fill: "none",
+      stroke: colors[c],
+      "stroke-width": 16,
+      "stroke-dasharray": len + " " + (circ - len),
+      "stroke-dashoffset": -offset,
+    });
+    circle.append(
+      svgEl(
+        "title",
+        {},
+        cap(c) + ": " + score(m.category_scores[c]) + " out of 100",
+      ),
+    );
+    ring.append(circle);
+    offset += slot;
+  });
+  ring.setAttribute(
+    "aria-label",
+    name(m) +
+      " category scores. " +
+      parts
+        .map(({ category, score: value }) => cap(category) + " " + score(value))
+        .join(", ") +
+      ". Unmeasured categories are listed as not run.",
+  );
+}
+function openModel(i, source) {
+  const heading = $("focus-name");
+  if (source) {
+    settle(false);
+    source.style.viewTransitionName = "model-focus";
+    heading.style.viewTransitionName = "none";
+  }
+  const update = () => {
+    selected = i;
+    renderProfile();
+    if (source) {
+      source.style.viewTransitionName = "none";
+      heading.style.viewTransitionName = "model-focus";
+    }
+    goScene(3, false, true);
+  };
+  change(update, () => {
+    heading.focus({ preventScroll: true });
+    heading.style.viewTransitionName = "none";
+    if (source)
+      source.style.viewTransitionName = source.classList.contains("lane")
+        ? "lane-" + source.dataset.index
+        : "none";
+  });
+}
+$("previous-model").onclick = () =>
+  openModel((selected - 1 + models.length) % models.length);
+$("next-model").onclick = () => openModel((selected + 1) % models.length);
+$("model-picker").onchange = () => openModel(Number($("model-picker").value));
+renderProfile();
+startReplay();
+if (location.hash.match(/^#scene-[1-4]$/))
+  setTimeout(() => goScene(Number(location.hash.at(-1)) - 1, false, true), 50);
