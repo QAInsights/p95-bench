@@ -187,6 +187,18 @@ def flow_fractions(trial, controls, contract):
         behavior = success if all(event.get("grant") for event in carts) else 0
     elif mode == "reservation":
         setup = ratio(len(events(trial, "reservation")), expected)
+        polls = {event["job"]: [] for event in events(trial, "reservation")}
+        for event in events(trial, "start"):
+            if event["method"] == "GET" and event["path"].startswith("/v2/jobs/"):
+                job = event["path"].split("?", 1)[0].removeprefix("/v2/jobs/")
+                if job not in polls:
+                    safety = 0
+                else:
+                    polls[job].append(event["time"])
+        for timestamps in polls.values():
+            timestamps.sort()
+            safety *= float(1 <= len(timestamps) <= 5 and all(
+                right - left >= .05 - 1e-9 for left, right in zip(timestamps, timestamps[1:])))
         ready = {event["reservation"] for event in events(trial, "job_state") if event["phase"] == "ready"}
         behavior = min(success, ratio(sum(event.get("reservation") in ready for event in commits), expected))
     elif mode == "errors":
