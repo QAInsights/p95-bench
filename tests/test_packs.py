@@ -252,8 +252,13 @@ def test_legacy_published_scores_bit_identical():
         attempts = [json.loads(l) for l in (directory / "attempts.jsonl").read_text().splitlines()]
         expected = json.loads((directory / "summary.json").read_text())
         actual = summarize(attempts)
+        # Python 3.12 changed floating-point sum precision for telemetry totals.
+        for field in ("estimated_cost_usd", "latency_seconds"):
+            assert actual.pop(field) == pytest.approx(expected.pop(field), rel=1e-14, abs=1e-14)
         assert actual == expected
         assert actual["overall_score"].hex() == float(expected["overall_score"]).hex()
+        for category, score in actual["category_scores"].items():
+            assert score.hex() == float(expected["category_scores"][category]).hex()
 
 
 def test_legacy_run_preserves_binary_score_and_directory_layout(tmp_path):
