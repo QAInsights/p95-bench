@@ -165,9 +165,14 @@ if (
   !CSS.supports("animation-range: 0% 100%")
 )
   document.documentElement.classList.add("scroll-fallback");
+function fullscreenFailure(message) {
+  $("fullscreen-message").textContent = message;
+  announce(message);
+}
 async function fullscreen() {
+  $("fullscreen-message").textContent = "";
   if (!document.fullscreenEnabled) {
-    announce(
+    fullscreenFailure(
       "Fullscreen is unavailable in this browser. The scenes still fill the window.",
     );
     return;
@@ -176,7 +181,7 @@ async function fullscreen() {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
   } catch {
-    announce(
+    fullscreenFailure(
       "Fullscreen was blocked by the browser. Try the fullscreen button.",
     );
   }
