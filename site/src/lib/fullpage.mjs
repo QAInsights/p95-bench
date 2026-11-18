@@ -851,6 +851,7 @@ function renderProfile() {
         "</p></article>",
     )
     .join("");
+  $("task-grid").scrollTop = 0;
   $("focus-cost").textContent = money(m.cost);
   $("focus-tokens").textContent = fmt(m.tokens.input + m.tokens.output);
   $("focus-token-detail").textContent =

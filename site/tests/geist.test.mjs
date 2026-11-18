@@ -37,3 +37,8 @@ test('short desktop focus scenes grow rather than hiding task results', async ()
   assert.match(css, /#scene-4 \.profile\s*\{\s*flex: none;\s*grid-template-rows: auto/);
   assert.match(css, /#scene-4 \.task-grid\s*\{[\s\S]*min-block-size: 5\.5rem;\s*max-block-size: 16\.5rem/);
 });
+
+test('rendering another model resets the nested task results position', async () => {
+  const source = await readFile(new URL('../src/lib/fullpage.mjs', import.meta.url), 'utf8');
+  assert.match(source, /\$\("task-grid"\)\.scrollTop = 0/);
+});
