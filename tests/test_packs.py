@@ -218,6 +218,25 @@ def test_external_private_loading_and_output_guard(tmp_path):
             private=True)
 
 
+def test_private_pack_symlink_cannot_write_into_repository(tmp_path, monkeypatch):
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    output = tmp_path / "output"
+    output.mkdir()
+    (output / V2).symlink_to(repository, target_is_directory=True)
+    monkeypatch.setattr("p95bench.runner.require_external",
+                        lambda path, _: require_external(path, repository))
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint", lambda *args: result(80))
+    provider = FakeProvider()
+    with pytest.raises(ValueError, match="outside"):
+        run(provider, "fake", "model", Price(1, 1, 1), [task()], output,
+            pack_id=V2, private=True,
+            efficiency_budgets={"repair": {"tokens": 100, "latency_seconds": 1}},
+            budget_ledger=BudgetLedger(tmp_path / "ledger.json"))
+    assert not list(repository.iterdir())
+    assert provider.calls == 0
+
+
 def test_legacy_published_scores_bit_identical():
     for directory in (ROOT / "results/published").iterdir():
         attempts = [json.loads(l) for l in (directory / "attempts.jsonl").read_text().splitlines()]

@@ -38,6 +38,12 @@ def summarize(attempts):
     }
 
 
+def _output_path(path, private):
+    if private:
+        require_external(path, Path(__file__).resolve().parents[2])
+    return path
+
+
 def score_run(directory: Path):
     attempts = [json.loads(line) for line in (directory / "attempts.jsonl").read_text().splitlines()
                 if line.strip()]
@@ -53,7 +59,9 @@ def score_run(directory: Path):
     if manifest and manifest["grade_schema_version"] == 2:
         skipped = directory / "not-run.jsonl"
         summary["not_run"] = (len(skipped.read_text().splitlines()) if skipped.exists() else 0)
-    (directory / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    _output_path(directory / "summary.json", bool(manifest and manifest.get("visibility")
+                                                 == "private")).write_text(
+        json.dumps(summary, indent=2) + "\n")
     return summary
 
 
@@ -81,8 +89,10 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
             provider.configure_run(started, model=model, price=price)
     run_id = started.strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     directory = ((out / pack_id if v2 else out) / run_id).resolve()
+    _output_path(directory, private)
     directory.mkdir(parents=True)
-    (directory / "pack.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    _output_path(directory / "pack.json", private).write_text(
+        json.dumps(manifest, indent=2) + "\n")
     config = getattr(provider, "config", None)
     ledger = (budget_ledger or BudgetLedger()) if v2 else None
     provider.measure_transport = v2
@@ -100,9 +110,10 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                             price_per_million=asdict(price))
         if v2:
             metadata["spend_cap_usd"] = ledger.limit / 1_000_000
-        (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+        _output_path(directory / "metadata.json", private).write_text(
+            json.dumps(metadata, indent=2) + "\n")
     budget_error = None
-    with (directory / "attempts.jsonl").open("w") as stream:
+    with _output_path(directory / "attempts.jsonl", private).open("w") as stream:
         for index, task in enumerate(tasks):
             for repeat in range(repeats):
                 reservation = None
@@ -132,7 +143,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                 except (ProviderUnavailable, SpendLimitExceeded) as error:
                     if isinstance(error, SpendLimitExceeded):
                         budget_error = str(error)
-                    with (directory / "not-run.jsonl").open("a") as skipped:
+                    with _output_path(directory / "not-run.jsonl", private).open("a") as skipped:
                         entry = {"task_id": task.id, "repeat": repeat,
                                  "provider": provider_name, "model": model,
                                  "status": "not_run", "error": str(error)}
@@ -140,8 +151,9 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                             entry.update(pack_id=pack_id, budget_reservation=reservation)
                         skipped.write(json.dumps(entry) + "\n")
                     continue
-                result = (grade(task, response.text, directory / f"task-{index}-{repeat}", 2)
-                          if v2 else grade(task, response.text, directory / f"task-{index}-{repeat}"))
+                workdir = _output_path(directory / f"task-{index}-{repeat}", private)
+                result = (grade(task, response.text, workdir, 2)
+                          if v2 else grade(task, response.text, workdir))
                 attempt = {"task_id": task.id, "category": task.category, "repeat": repeat,
                            "provider": provider_name, "model": model,
                            "messages": messages, "grader": task.grader, "params": task.params,
