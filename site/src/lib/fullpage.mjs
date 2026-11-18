@@ -390,7 +390,7 @@ function startReplay() {
   });
   arrived.forEach((s) => s.clear());
   laneNodes.forEach((row) =>
-    row.querySelectorAll(".sample").forEach((c) => (c.className = "sample")),
+    row.querySelectorAll(".sample[data-task]").forEach((c) => (c.className = "sample")),
   );
   $("pause").textContent = "Pause";
   $("finish").disabled = false;
