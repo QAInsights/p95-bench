@@ -8,11 +8,37 @@ import { heatmapData, heatValue, heatColor } from '../src/lib/heatmap-data.mjs';
 import { loadTaskData } from '../scripts/build-data.mjs';
 import { buildScenarios } from '../src/lib/scenarios.mjs';
 import { fakeV2 } from './fake-v2.mjs';
+import { toolRanking } from '../src/lib/tool-rankings.mjs';
 
 const v1 = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 const v2 = fakeV2();
 const tasks = { v1: (await loadTaskData()).tasks, v2: (await loadTaskData({ packId: v2.pack_id })).tasks };
 const catalog = makePackCatalog(v1, v2, tasks, []);
+
+test('Tools rankings follow the selected pack, including missing runs and earlier versions', () => {
+  const before = structuredClone(catalog);
+  for (const tool of ['jmeter', 'k6']) {
+    for (const pack of ['v1', 'v2']) {
+      const rows = toolRanking(catalog[pack].models, tool, pack);
+      assert.equal(rows.length, catalog[pack].models.length);
+      assert.deepEqual(new Set(rows.filter(row => !row.hidden).map(row => row.model)),
+        new Set(selectModelVersions(catalog[pack].models).map(model => model.model)));
+      assert.ok(toolRanking(catalog[pack].models, tool, pack, true).every(row => !row.hidden));
+      const opus = rows.find(row => row.model === 'claude-opus-5-5');
+      if (tool === 'jmeter') assert.equal(opus.tool_label, pack === 'v2' ? '62.5%' : '100%');
+      const measured = rows.filter(row => row.tool_score !== null);
+      assert.ok(measured.every((row, index) => !index || row.tool_score <= measured[index - 1].tool_score));
+    }
+    assert.equal(toolRanking(catalog.v2.models, tool, 'v2').find(row => row.model === 'gpt-6.2-sol').tool_label, 'Not run on v2');
+  }
+  const only = { ...v2.models[0], provider: 'test', model: 'v2-only-model' };
+  const union = makePackCatalog(v1, { ...v2, models: [...v2.models, only] }, tasks, []);
+  assert.equal(toolRanking(union.v2.models, 'jmeter', 'v2').find(row => row.model === only.model).tool_label, '62.5%');
+  assert.equal(toolRanking(union.v1.models, 'jmeter', 'v1').find(row => row.model === only.model).tool_label, 'Not run on v1');
+  assert.deepEqual(catalog, before);
+  assert.ok(toolRanking([], 'jmeter', 'v2').length === 0);
+  assert.equal(toolRanking([{ provider: 'test', model: 'empty', per_task_results: [{ tool: 'jmeter', score: NaN }] }], 'jmeter', 'v2')[0].tool_label, 'Not run on v2');
+});
 
 test('only a nonempty v2 leaderboard enables v2; URLs resolve without prototype lookups', () => {
   for (const absent of [undefined, {}, { ...v2, models: [] }, { ...v2, models: 'bad' }, { ...v2, pack_id: 'unknown' }]) {

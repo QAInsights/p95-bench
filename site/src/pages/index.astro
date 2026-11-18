@@ -395,10 +395,10 @@ const repo = "https://github.com/QAInsights/p95-bench";
             <h3>JMeter</h3><div class="tool-heading">
               Real scripts.<br />Real checkouts.
             </div><p class="tool-note mono">Executable task pass rate</p>
-            <ol role="list">
+            <ol role="list" data-tool-ranking="jmeter">
               {
                 toolRanking.map((m) => (
-                  <li data-tool-model={m.model} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
+                  <li data-tool-model={m.model} data-tool-provider={m.provider} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
                     <>
                       <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
                       <b class={toolScore(m, "jmeter") === null ? 'tool-unrun' : undefined}>{toolScoreLabel(m, "jmeter")}</b>
@@ -412,10 +412,10 @@ const repo = "https://github.com/QAInsights/p95-bench";
             <h3>k6</h3><div class="tool-heading">
               Real scripts.<br />Real checkouts.
             </div><p class="tool-note mono">Executable task pass rate</p>
-            <ol role="list">
+            <ol role="list" data-tool-ranking="k6">
               {
                 k6Ranking.map((m) => (
-                  <li data-tool-model={m.model} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
+                  <li data-tool-model={m.model} data-tool-provider={m.provider} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
                     <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
                     <b class={toolScore(m, "k6") === null ? 'tool-unrun' : undefined}>{toolScoreLabel(m, "k6")}</b>
                   </li>

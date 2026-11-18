@@ -1,6 +1,7 @@
 "use strict";
 import { resolvePack, creditGradient } from './packs.mjs';
 import { mountPackScenes } from './pack-scenes.mjs';
+import { renderToolRankings } from './tool-rankings.mjs';
 import { buildScenarios } from './scenarios.mjs';
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
@@ -1107,10 +1108,7 @@ function updateVisibleCounts(animate = false) {
   document
     .querySelectorAll("[data-active-count]")
     .forEach((el) => rollNumber(el, categories.length, { animate, max: Object.keys(weights).length }));
-  const ids = new Set(models.map((m) => m.model));
-  document
-    .querySelectorAll("[data-tool-model]")
-    .forEach((el) => (el.hidden = !ids.has(el.dataset.toolModel)));
+  renderToolRankings(document.getElementById('tools'), DATA.models, pack, showingEarlier);
   const date = models
     .map((m) => m.run_date)
     .filter(Boolean)
