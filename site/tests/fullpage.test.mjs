@@ -167,6 +167,9 @@ test('home uses build-time data, separate client code and preserved methodology 
   assert.match(page, /import data from ['"]\.\.\/data\/leaderboard\.json['"]/);
   assert.match(page, /id="pack-data"[^>]*JSON\.stringify\(packCatalog\)/);
   assert.match(client, /JSON\.parse\(document\.getElementById\('pack-data'\)\.textContent\)/);
+  assert.match(page, /class="wordmark" href="\/" aria-label="P95 Bench, home"/);
+  assert.doesNotMatch(client, /querySelector\("\.wordmark"\)\.onclick/);
+  assert.match(client, /if \(initialURL\.searchParams\.has\('pack'\)\)/);
   assert.doesNotMatch(page + client, /fonts\.googleapis\.com|benchmark-data/);
   for (const attribute of ['rel="icon"', 'rel="apple-touch-icon"', 'rel="manifest"', 'name="theme-color"']) {
     assert.ok(page.includes(attribute));

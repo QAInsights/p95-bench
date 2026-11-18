@@ -107,10 +107,9 @@ test('only a nonempty v2 leaderboard enables v2; URLs resolve without prototype 
   assert.equal(resolvePack('v2', catalog), 'v2');
   assert.equal(resolvePack(null, catalog), 'v2');
   assert.equal(resolvePack('__proto__', catalog), 'v2');
-  const pilot = makePackCatalog(v1, { ...v2, default_view: false }, tasks, []);
-  assert.equal(resolvePack(null, pilot), 'v1');
-  assert.equal(resolvePack('unknown', pilot), 'v1');
-  assert.equal(resolvePack('v2', pilot), 'v2');
+  assert.equal(resolvePack(undefined, catalog), 'v2');
+  assert.equal(resolvePack('', catalog), 'v2');
+  assert.equal(resolvePack('unknown', catalog), 'v2');
 });
 
 test('pack changes retain unrun model identities, preserve latest/earlier selection, and do not mutate v1', () => {

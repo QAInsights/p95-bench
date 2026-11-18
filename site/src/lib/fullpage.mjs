@@ -36,8 +36,10 @@ const $ = (id) => document.getElementById(id),
 $('show-versions').checked = showingEarlier;
 mountPackScenes(pack);
 const initialURL = new URL(location.href);
-initialURL.searchParams.set('pack', pack);
-history.replaceState(null, '', initialURL);
+if (initialURL.searchParams.has('pack')) {
+  initialURL.searchParams.set('pack', pack);
+  history.replaceState(null, '', initialURL);
+}
 let categories = Object.keys(weights).filter((c) =>
   models.some((m) => m.category_scores[c] !== undefined),
 );
@@ -149,10 +151,6 @@ document
     goScene(Number(b.dataset.scene));
   }));
 $("next-scene").onclick = () => goScene(currentScene + 1);
-document.querySelector(".wordmark").onclick = (e) => {
-  e.preventDefault();
-  goScene(0);
-};
 document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios"],a[href="#explainer"]').forEach(
   (a) =>
     (a.onclick = (e) => {
@@ -1088,8 +1086,8 @@ function updateVisibleCounts(animate = false) {
   document.querySelectorAll('[data-pack-model]').forEach(row => { row.hidden = !models.some(model => model.model === row.dataset.packModel); });
   $('leading-label').textContent = pack === 'v2' ? 'LEADING COMPOSITE · 95/5' : 'LEADING WEIGHTED SCORE';
   $('method-pack').textContent = pack === 'v2'
-    ? `Showing ${DATA.pack_id} · 50-task design, ${DATA.tasks.length} public tasks. Composite = 95% quality + 5% quality-gated efficiency. Checkpoints total 100 possible points per task; prerequisites gate dependent credit. Repetitions are averaged; first publication defaults to one. Pinned workers, independent server audit evidence and workload capacity preflights verify execution. Private task details are never published.`
-    : 'Showing p95-v1 · 15 tasks · binary pass/fail. Weighted category pass rates retain their original scoring.';
+    ? `Showing ${DATA.pack_id} · 50-task design, ${DATA.tasks.length} public tasks. V2 is the default landing view; select v1 for the legacy board. Composite = 95% quality + 5% quality-gated efficiency. Checkpoints total 100 possible points per task; prerequisites gate dependent credit. Repetitions are averaged; first publication defaults to one. Pinned workers, independent server audit evidence and workload capacity preflights verify execution. Private task details are never published.`
+    : 'Showing p95-v1 · 15 tasks · binary pass/fail. Weighted category pass rates retain their original scoring. V2 is the default landing view.';
   document.querySelectorAll('[data-v1-method]').forEach(node => { node.hidden = pack !== 'v1'; });
   $('method-weights').innerHTML = Object.entries(weights).map(([category, weight]) =>
     `<span><i style="background:${colors[category]}"></i>${escape(category)}<b>${weight}</b></span>`).join('');

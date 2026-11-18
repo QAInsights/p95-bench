@@ -38,10 +38,10 @@ compatibility. Both get a hashed `pack.json` snapshot
 containing scoring rules, task inventory, efficiency budgets and repeat count.
 Offline `p95bench score DIRECTORY` dispatches by that snapshot. Old directories
 without a snapshot are v1. Mixed pack inputs and altered snapshots are rejected.
-Site generation defaults to the unchanged v1 `leaderboard.json`; the public
+Site data generation preserves the unchanged v1 `leaderboard.json`; the public
 v2 builder uses `npm run data -- --pack p95-v2.0.0 --tasks PUBLIC_TASK_ROOT RUN_DIR...`
-and writes `leaderboard-p95-v2.0.0.json`, never overwriting v1. Pack-switching UI is
-a later rollout step.
+and writes `leaderboard-p95-v2.0.0.json`, never overwriting v1. The site lands on v2
+by default; `?pack=v1` selects the legacy board.
 
 V2 has a shared **$30 maximum budget across all models**, backed by
 `~/.local/state/p95-bench/p95-v2.0.0-budget.json`. Do not delete/reset that ledger
@@ -321,7 +321,9 @@ or open its semantic data table. Reduced motion disables regrouping animation.
 The header keeps pack and earlier-version choices in the URL. With no v2
 leaderboard, only v1 is offered. Generate `leaderboard-p95-v2.0.0.json` with
 `npm run data -- --pack p95-v2.0.0 <public-run-directories>` to enable v2;
-it becomes the default, while `?pack=v1` still selects the legacy board.
+it becomes the default, including with a one-model board. Missing or invalid
+`pack` parameters select v2, while `?pack=v1` selects the legacy board. The header
+wordmark returns home to `/` on v2 without a pack parameter.
 The v2 control names the 50-task design; the public site describes the 40 public
 tasks only. Quality, quality-gated efficiency and the 95/5 composite stay separate.
 Models missing a selected-pack run remain visible without invented scores.

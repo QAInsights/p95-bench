@@ -12,7 +12,6 @@ const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9,
 
 test('published v2 Qwen results expose only public per-task records and aggregate the full 50', () => {
   assert.equal(data.pack_id, 'p95-v2.0.0');
-  assert.equal(data.default_view, false);
   assert.equal(data.budget_file_sha256, '09ca8ed77cd7cb0eebea6a3618ae13c0fdb55496dd14d438745234a0b4a05bc7');
   assert.deepEqual(new Set(data.models.map(model => model.model)),
     new Set(['Qwen-Ambassador/Qwen3.7-Max']));
@@ -61,9 +60,11 @@ test('published v2 Qwen results expose only public per-task records and aggregat
   }
 });
 
-test('v2 is opt-in and defaults to the latest family model with v2 results', () => {
+test('v2 is the default even with one model and selects the latest family model with results', () => {
   const catalog = makePackCatalog(v1, data, { v1: [], v2: tasks }, []);
-  assert.equal(resolvePack(null, catalog), 'v1');
+  assert.equal(resolvePack(null, catalog), 'v2');
+  assert.equal(resolvePack('invalid', catalog), 'v2');
+  assert.equal(resolvePack('v1', catalog), 'v1');
   assert.equal(resolvePack('v2', catalog), 'v2');
   const latest = selectModelVersions(catalog.v2.models);
   assert.ok(!latest.some(model => model.model === 'Qwen-Ambassador/Qwen3.8-Max'));
