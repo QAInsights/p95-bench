@@ -4,8 +4,32 @@ import json
 import pytest
 
 from p95bench.cli import main
-from p95bench.providers import PROVIDERS, OpenAICompatible, Response, get_provider
+from p95bench.providers import PROVIDERS, OpenAICompatible, Price, Response, get_provider
 from p95bench.runner import SYSTEM_PROMPT
+
+
+@pytest.mark.parametrize('cached,billed', [(-20, 0), (0, 0), (40, 40), (100, 100), (150, 100)])
+def test_cached_token_billing_bounds(cached, billed):
+    response = Response('answer', 100, 20, cached)
+    assert Price(2, .5, 10).cost(response) == pytest.approx(
+        ((100 - billed) * 2 + billed * .5 + 20 * 10) / 1_000_000)
+    assert response.cached_tokens == cached
+
+
+def test_cached_tokens_without_input():
+    assert Price(2, .5, 10).cost(Response('', 0, 0, 50)) == 0
+
+
+@pytest.mark.parametrize('details,expected', [({}, 0), ({'prompt_tokens_details': None}, 0),
+    ({'prompt_tokens_details': {}}, 0),
+    ({'prompt_tokens_details': None, 'prompt_cache_hit_tokens': 40}, 40),
+    ({'prompt_tokens_details': {'cached_tokens': 90}, 'prompt_cache_hit_tokens': 10}, 10)])
+def test_optional_prompt_token_details(monkeypatch, details, expected):
+    provider = get_provider('openai')
+    monkeypatch.setattr(provider, '_request', lambda *args: {
+        'choices': [{'message': {'content': 'answer'}}],
+        'usage': {'prompt_tokens': 100, 'completion_tokens': 20, **details}})
+    assert provider.send('gpt-6.2-sol', []).cached_tokens == expected
 
 
 @pytest.mark.parametrize('model,rates', [

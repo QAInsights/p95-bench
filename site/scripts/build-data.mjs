@@ -7,8 +7,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const readJSON = async (file) => JSON.parse(await readFile(file, 'utf8'));
 
 export async function loadTaskData() {
-  const harness = await readFile(path.join(root, 'src/p95bench/tasks.py'), 'utf8');
-  const weights = JSON.parse(harness.match(/CATEGORIES\s*=\s*({[^}]+})/s)[1]);
+  const weights = await readJSON(path.join(root, 'src/p95bench/category-weights.json'));
   const taskMap = new Map();
   for (const category of Object.keys(weights)) {
     const folder = path.join(root, 'tasks', category);

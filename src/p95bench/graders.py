@@ -10,6 +10,7 @@ import signal
 import subprocess
 import urllib.request
 import xml.etree.ElementTree as ET
+from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -41,6 +42,8 @@ def choice(text, params, workdir):
 
 
 def extract_jmx(text):
+    if re.search(r"<!\s*(?:DOCTYPE|ENTITY)\b", text, re.IGNORECASE):
+        raise ValueError("DOCTYPE and ENTITY declarations are not allowed")
     match = re.search(r"<jmeterTestPlan\b[\s\S]*?</jmeterTestPlan>", text)
     if not match:
         raise ValueError("No complete jmeterTestPlan found")
@@ -171,6 +174,9 @@ def k6_exec(text, params, workdir):
             checkouts = [(tags.get("vu"), tags.get("iter")) for tags in requests
                          if urlsplit(tags.get("url", "")).path == "/checkout"]
             if minimum > 1 or expected_vus is not None or minimum_iterations > 1:
+                metric_iterations = defaultdict(deque)
+                for tags in requests:
+                    metric_iterations[str(tags.get("vu"))].append(tags.get("iter"))
                 debug_checkouts, debug_seen = [], False
                 for line in (workdir / "stdout.log").read_text().splitlines():
                     try:
@@ -182,8 +188,13 @@ def k6_exec(text, params, workdir):
                     request = re.match(r"Request:\r?\n(\S+) (\S+) HTTP/", record.get("msg", ""))
                     if request:
                         debug_seen = True
+                        vu, iteration = record.get("vu"), record.get("iter")
+                        candidates = metric_iterations[str(vu)]
+                        fallback = candidates.popleft() if candidates else None
+                        if iteration is None or str(iteration) == "":
+                            iteration = fallback
                         if request[1] == "POST" and urlsplit(request[2]).path == "/checkout":
-                            debug_checkouts.append((record.get("vu"), record.get("iter")))
+                            debug_checkouts.append((vu, iteration))
                 if debug_seen:
                     checkouts = debug_checkouts
             checkout_vus = {str(vu) for vu, _ in checkouts if vu is not None and str(vu)}
