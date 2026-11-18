@@ -5,6 +5,7 @@ import math
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
+from itertools import pairwise
 from pathlib import Path
 from statistics import mean
 from uuid import uuid4
@@ -218,7 +219,7 @@ def flow_fractions(trial, controls, contract):
             timestamps.sort()
             safety *= float(1 <= len(timestamps) <= 5 and all(
                 right - left >= contract.get("poll_interval", 0) - 1e-9
-                for left, right in zip(timestamps, timestamps[1:])))
+                for left, right in pairwise(timestamps)))
         ready = {event["reservation"] for event in events(trial, "job_state") if event["phase"] == "ready"}
         behavior = min(success, ratio(sum(event.get("reservation") in ready for event in commits), expected))
     elif mode == "errors":
