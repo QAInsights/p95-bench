@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { test } from 'node:test';
 import { loadTaskData } from '../scripts/build-data.mjs';
 import { buildScenarios, scenarioFilters, scenarioGrading } from '../src/lib/scenarios.mjs';
@@ -9,7 +9,8 @@ const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.jso
 test('scenario catalog loads every YAML at build time with summaries, grading and latest-model pass rates', async () => {
   const { tasks } = await loadTaskData();
   const scenarios = buildScenarios(tasks, published.models);
-  assert.equal(scenarios.length, 15);
+  const files = await readdir(new URL('../../tasks/', import.meta.url), { recursive: true });
+  assert.equal(scenarios.length, files.filter(file => file.endsWith('.yaml')).length);
   assert.equal(new Set(scenarios.map(scenario => scenario.id)).size, tasks.length);
   for (const scenario of scenarios) {
     const task = tasks.find(task => task.id === scenario.id);
