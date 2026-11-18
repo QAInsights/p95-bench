@@ -79,7 +79,7 @@ document.querySelector('.rail').replaceChildren(...sections.map(section => {
   label.textContent = label.textContent.replace(/^\s*\d+\s*\//, section.number + ' /');
   return link;
 }));
-document.querySelector('[data-section-shortcuts]').textContent = '1 to ' + sections.length;
+document.querySelector('[data-section-shortcuts]').textContent = sections.length >= 10 ? '1–9 · 0 = 10' : '1 to ' + sections.length;
 let currentScene = 0,
   selected = 0,
   zoom = null,

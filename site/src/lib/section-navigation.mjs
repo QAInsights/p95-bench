@@ -5,5 +5,6 @@ export function sectionMetadata(sections) {
 }
 
 export function sectionShortcut(key, count) {
-  return /^[1-9]$/.test(key) && Number(key) <= count ? Number(key) - 1 : null;
+  const number = key === '0' ? 10 : /^[1-9]$/.test(key) ? Number(key) : null;
+  return number !== null && number <= count ? number - 1 : null;
 }
