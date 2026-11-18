@@ -1,0 +1,16 @@
+{
+  "overall_score": 73.33333333333333,
+  "category_scores": {
+    "analysis": 100.0,
+    "authoring": 50.0,
+    "concepts": 100.0,
+    "correlation": 50.0,
+    "workload": 100.0
+  },
+  "attempts": 15,
+  "passed": 12,
+  "estimated_cost_usd": 0.0179986,
+  "input_tokens": 2646,
+  "output_tokens": 35468,
+  "latency_seconds": 63.10715074102336
+}

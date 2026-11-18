@@ -223,6 +223,7 @@ document.addEventListener("fullscreenchange", () => {
 });
 document.addEventListener("keydown", (e) => {
   if (
+    e.defaultPrevented ||
     e.altKey ||
     e.ctrlKey ||
     e.metaKey ||
@@ -255,7 +256,7 @@ document.addEventListener("keydown", (e) => {
       row,
     );
   } else if (
-    currentScene === 3 &&
+    scenes[currentScene].id === 'scene-4' &&
     ["ArrowLeft", "ArrowRight"].includes(e.key)
   ) {
     e.preventDefault();
@@ -960,7 +961,7 @@ function openModel(i, source) {
       source.style.viewTransitionName = "none";
       heading.style.viewTransitionName = "model-focus";
     }
-    goScene(3, false, true);
+    goScene(scenes.findIndex(scene => scene.id === 'scene-4'), false, true);
   };
   change(update, () => {
     heading.focus({ preventScroll: true });
@@ -1064,6 +1065,7 @@ function applyVersions() {
   renderProfile();
   updateBudget();
   updateVisibleCounts();
+  document.dispatchEvent(new CustomEvent('modelversionschange', { detail: { showEarlier: all } }));
   startReplay();
   if (wasFinished) settle(false);
   else if (wasPaused) $("pause").click();

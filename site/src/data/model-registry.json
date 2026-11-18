@@ -1,4 +1,8 @@
 {
+  "muse-wonder-1.0": { "family": "muse-wonder", "release_order": 1 },
+  "muse-spark-1.3": { "family": "muse-spark", "release_order": 2 },
+  "muse-spark-1.2": { "family": "muse-spark", "release_order": 1 },
+  "muse-ember-1.0": { "family": "muse-ember", "release_order": 1 },
   "gemini-4-carbon": { "family": "gemini-carbon", "release_order": 1 },
   "gemini-4-argon": { "family": "gemini-argon", "release_order": 1 },
   "gemini-4-hydrogen": { "family": "gemini-hydrogen", "release_order": 1 },
