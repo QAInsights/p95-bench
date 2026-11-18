@@ -248,6 +248,10 @@ then appended and rescored together using the same category weights. Metadata
 records the separate k6 run date, version, harness commit and execution note.
 Tool cards report each engine's own executable task pass rate.
 
+Tinker's client timeout is 600 seconds rather than the default 180 seconds.
+Earlier k6 requests timed out without responses; this gives those models more
+time without changing their prompts, temperature or 8192-token output cap.
+
 Model families and release order live in `site/src/data/model-registry.json`.
 The site defaults to the newest benchmarked release per family; enable
 "Show earlier versions" (`?versions=all`) to include every published result at

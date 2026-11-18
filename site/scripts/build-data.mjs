@@ -2,6 +2,7 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { parse } from 'yaml';
+import { taskCoverage } from '../src/lib/scores.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const readJSON = async (file) => JSON.parse(await readFile(file, 'utf8'));
@@ -51,6 +52,7 @@ export async function buildData(directories) {
       tokens: { input: summary.input_tokens, output: summary.output_tokens },
       latency: summary.latency_seconds, run_date: runDate,
       harness_commit: metadata.harness_commit ?? first.harness_commit ?? null,
+      coverage: taskCoverage({ per_task_results: attempts }, tasks),
       per_task_results: attempts.map((a) => {
         const task = taskMap.get(a.task_id);
         if (!task) throw new Error(`Unknown task: ${a.task_id}`);
