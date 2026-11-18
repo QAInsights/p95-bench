@@ -330,6 +330,31 @@ conservative text-input allowance (request bytes plus 1024 framing tokens).
 Successful responses reconcile to returned usage; unknown outcomes retain their
 full reservation. Insufficient remaining budget stops before another request.
 
+## Meta Muse
+
+The `meta` provider uses OpenAI-compatible Chat Completions at
+`https://api.meta.ai/v1`, authenticating with `MODEL_API_KEY`. Models are
+`muse-wonder-1.0`, `muse-spark-1.3`, `muse-spark-1.2`, and `muse-ember-1.0`.
+Contributor variants and Spark 1.1 are not included.
+
+Temperature is omitted per Meta's recommendation (default 1). Reasoning effort
+is omitted: Wonder and Ember default to max, Spark to high. The 8192
+`max_completion_tokens` cap includes reasoning and visible output. Returned
+`completion_tokens` already includes reasoning; the harness does not add
+`completion_tokens_details.reasoning_tokens` again. It records the latter
+separately with the finish reason, never substituting reasoning for an answer.
+An empty reasoning-only `length` response requires review before cap changes.
+
+[Verified list prices](https://dev.meta.ai/products/meta-model-api), USD per
+million input / cached input / output tokens: Wonder 4 / 0.20 / 20;
+Spark 1.3 and 1.2 1.25 / 0.15 / 4.25; Ember 0.10 / 0.004 / 0.50 below 200k
+context. The Ember adapter conservatively rejects larger text contexts before
+sending, rather than silently underbilling the higher tier. Prompts, caps and
+grading are otherwise unchanged. Transient requests retry with bounded backoff;
+exhaustion is Not run. The client timeout is 600 seconds.
+`Muse(config, spend_limit=3)` shares the conservative per-network-attempt budget
+policy documented above, including retained reserves for unknown outcomes.
+
 ## License
 
 MIT. Copyright 2026 NaveenKumar Namachivayam.

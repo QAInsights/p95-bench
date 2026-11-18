@@ -43,6 +43,16 @@ class GeminiResponse(Response):
         return not self.text.strip() and self.thinking_tokens > 0 and self.finish_reason == "MAX_TOKENS"
 
 
+@dataclass
+class MuseResponse(Response):
+    reasoning_tokens: int = 0
+    finish_reason: str = ""
+
+    @property
+    def thinking_exhausted(self):
+        return not self.text.strip() and self.reasoning_tokens > 0 and self.finish_reason == "length"
+
+
 @dataclass(frozen=True)
 class Price:
     input: float
@@ -70,6 +80,19 @@ class ProviderConfig:
 
 
 PROVIDERS = {
+    "meta": ProviderConfig(
+        "https://api.meta.ai/v1", "MODEL_API_KEY",
+        {"muse-wonder-1.0": Price(4, .2, 20),
+         "muse-spark-1.3": Price(1.25, .15, 4.25),
+         "muse-spark-1.2": Price(1.25, .15, 4.25),
+         "muse-ember-1.0": Price(.1, .004, .5)},
+        temperature=None,
+        extra={"max_completion_tokens": 8192},
+        timeout_seconds=600,
+        max_retries=5,
+        cost_note="USD · list-price estimate (includes reasoning tokens).",
+        pricing_source="https://dev.meta.ai/products/meta-model-api",
+    ),
     "gemini": ProviderConfig(
         "https://generativelanguage.googleapis.com/v1beta", "GEMINI_API_KEY",
         {"gemini-4-carbon": Price(2, .1, 10),
@@ -197,6 +220,51 @@ class OpenAICompatible:
                         usage["prompt_tokens"], usage["completion_tokens"], cached, elapsed)
 
 
+class Muse(OpenAICompatible):
+    def __init__(self, config, spend_limit=None):
+        super().__init__(config)
+        if spend_limit is not None and spend_limit <= 0:
+            raise ValueError("spend_limit must be positive")
+        self.spend_limit = spend_limit
+        self.spent_upper_bound = 0
+
+    def _request_once(self, request):
+        if self.spend_limit is None or not request.full_url.endswith("/chat/completions"):
+            return super()._request_once(request)
+        body = json.loads(request.data)
+        price = self.config.prices[body["model"]]
+        maximum = price.cost(Response("", len(request.data) + 1024,
+                                      body["max_completion_tokens"]))
+        if self.spent_upper_bound + maximum > self.spend_limit:
+            raise SpendLimitExceeded("Insufficient budget for another maximum-sized response")
+        self.spent_upper_bound += maximum
+        data = super()._request_once(request)
+        usage = data["usage"]
+        cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0) or 0
+        actual = price.cost(Response("", usage["prompt_tokens"], usage["completion_tokens"], cached))
+        self.spent_upper_bound += actual - maximum
+        return data
+
+    def send(self, model, messages):
+        body = {"model": model, "messages": messages, **self.config.extra}
+        if self.config.temperature is not None:
+            body["temperature"] = self.config.temperature
+        if model == "muse-ember-1.0" and (
+            len(json.dumps(body).encode()) + 1024 + body["max_completion_tokens"] >= 200_000
+        ):
+            raise ValueError("Muse Ember pricing is verified only for contexts below 200k tokens")
+        start = time.perf_counter()
+        data = self._request("/chat/completions", body)
+        elapsed = time.perf_counter() - start
+        usage = data["usage"]
+        choice = data["choices"][0]
+        reasoning = (usage.get("completion_tokens_details") or {}).get("reasoning_tokens", 0) or 0
+        cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0) or 0
+        return MuseResponse(choice["message"]["content"] or "", usage["prompt_tokens"],
+                            usage["completion_tokens"], cached, elapsed, reasoning,
+                            choice.get("finish_reason", ""))
+
+
 class Gemini(OpenAICompatible):
     def __init__(self, config, spend_limit=None):
         super().__init__(config)
@@ -308,7 +376,7 @@ class Anthropic(OpenAICompatible):
 
 
 def get_provider(name: str) -> Provider:
-    adapter = {"anthropic": Anthropic, "gemini": Gemini}.get(name, OpenAICompatible)
+    adapter = {"anthropic": Anthropic, "gemini": Gemini, "meta": Muse}.get(name, OpenAICompatible)
     config = PROVIDERS[name]
     if name == "qwen":
         config = replace(config, base_url=os.environ.get("QWEN_BASE_URL", config.base_url))

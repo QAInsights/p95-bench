@@ -27,6 +27,14 @@ test('Qwen Max groups the earlier 3.7 release under 3.8 and Flash stays independ
   assert.equal(selectModelVersions(models, true)[0].newer_model, models[1].model);
 });
 
+test('Muse Spark 1.3 is latest, 1.2 is earlier, Wonder and Ember stay independent', () => {
+  const models = ['muse-wonder-1.0', 'muse-spark-1.3', 'muse-spark-1.2', 'muse-ember-1.0']
+    .map(model => ({model, overall_score: 100, cost: 1}));
+  assert.equal(selectModelVersions(models).length, 3);
+  assert.equal(selectModelVersions(models).some(m => m.model === 'muse-spark-1.2'), false);
+  assert.equal(selectModelVersions(models, true).find(m => m.model === 'muse-spark-1.2').newer_model, 'muse-spark-1.3');
+});
+
 test('Gemini Carbon, Argon, Hydrogen and Flash have independent latest families', () => {
   const models = ['gemini-4-carbon', 'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-3.8-flash']
     .map(model => ({ model, overall_score: 100, cost: 1 }));

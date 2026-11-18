@@ -75,8 +75,8 @@ test('published data is reproducible, redacted and matches weighted scores', asy
       assert.equal(metadata.enable_thinking, false);
       assert.equal(metadata.max_tokens, 8192);
       assert.equal(model.per_task_results.length, metadata.task_count);
-    } else if (model.provider === 'gemini') {
-      assert.match(model.cost_note, /thinking tokens/);
+    } else if (['gemini', 'meta'].includes(model.provider)) {
+      assert.match(model.cost_note, /(?:thinking|reasoning) tokens/);
       assert.equal(metadata.temperature, null);
       assert.equal(model.output_cap, 8192);
       assert.equal(model.per_task_results.length, metadata.task_count);
@@ -92,11 +92,11 @@ test('published data is reproducible, redacted and matches weighted scores', asy
     assert.ok(model.run_date);
     assert.match(model.harness_commit, /^[a-f0-9]{40}$/);
     const k6 = model.per_task_results.filter(t => t.tool === 'k6');
-    if (!['qwen', 'gemini'].includes(model.provider)) assert.equal(k6.length, metadata.k6_status === 'completed' ? 3 : 0);
+    if (!['qwen', 'gemini', 'meta'].includes(model.provider)) assert.equal(k6.length, metadata.k6_status === 'completed' ? 3 : 0);
     assert.equal(toolScore(model, 'k6'), k6.length
       ? 100 * k6.filter(t => t.passed).length / k6.length : null);
     if (!k6.length) assert.equal(toolScoreLabel(model, 'k6'), 'Not run');
-    if (!['qwen', 'gemini'].includes(model.provider)) {
+    if (!['qwen', 'gemini', 'meta'].includes(model.provider)) {
       const expectedToolScore = model.provider === 'thinkingmachines' ? 0
         : model.provider === 'deepseek' ? 200 / 3 : 100;
       assert.ok(Math.abs(toolScore(model, 'jmeter') - expectedToolScore) < 1e-10);
