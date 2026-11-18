@@ -25,18 +25,21 @@ def stub(tmp_path, monkeypatch):
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **k:
                         io.BytesIO(b'{"completions":2}'))
 
-    def install(points, exit_code=0, delay=0):
+    def install(points, exit_code=0, delay=0, requests=None):
         executable = tmp_path / "k6"
         executable.write_text(f"#!{sys.executable}\n" +
                               "import json,os,sys,time\nfrom pathlib import Path\n" +
                               "assert 'FAKE_API_KEY' not in os.environ\n" +
                               "assert '--no-usage-report' in sys.argv\n" +
+                              "assert '--http-debug' in sys.argv and '--log-format=json' in sys.argv\n" +
                               "assert 'BASE_URL=http://127.0.0.1:1234' in sys.argv\n" +
                               "assert sys.argv[-2].endswith(',vu,iter')\n" +
                               f"time.sleep({delay})\n" +
                               f"points={points!r}\n" +
                               "target=sys.argv[sys.argv.index('--out')+1].split('=',1)[1]\n" +
                               "Path(target).write_text(''.join(json.dumps(p)+'\\n' for p in points))\n" +
+                              f"requests={requests or []!r}\n" +
+                              "for record in requests: print(json.dumps(record))\n" +
                               f"print('stub k6')\nsys.exit({exit_code})\n")
         executable.chmod(0o755)
         monkeypatch.setenv("K6_PATH", str(executable))
@@ -87,6 +90,21 @@ def test_nonzero_and_timeout(stub, tmp_path):
     assert k6_exec("```js\nx\n```", {}, tmp_path / "exit").detail == "k6 exit code 1"
     stub([], delay=90)
     assert k6_exec("```js\nx\n```", {"timeout": .1}, tmp_path / "timeout").detail == "k6 timed out"
+
+
+@pytest.mark.parametrize("vus,passed", [([1, 2], True), ([1, 1], False)])
+def test_named_requests_use_real_debug_paths(stub, tmp_path, vus, passed):
+    points = [point("1"), point("2")]
+    for sample in points:
+        sample["data"]["tags"].update({"url": "checkout", "name": "checkout"})
+    requests = [{"source": "http-debug", "vu": vu,
+                 "msg": "Request:\nPOST /checkout HTTP/1.1\r\nHost: 127.0.0.1:1234\r\n"}
+                for vu in vus]
+    requests.append({"source": "http-debug", "vu": 3,
+                     "msg": "Request:\nGET /products HTTP/1.1\r\n"})
+    stub(points, requests=requests)
+    result = k6_exec("```js\nx\n```", {"completions": 2, "min_checkout_vus": 2}, tmp_path / "run")
+    assert result.passed is passed
 
 
 def test_k6_preflight_before_provider(tmp_path, monkeypatch):

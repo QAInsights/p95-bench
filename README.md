@@ -5,10 +5,11 @@ General purpose and independent of any AI assistant product. Compare model
 quality, cost and latency before selecting a scripting assistant, detect model
 regressions, or evaluate workload reasoning and dynamic-value correlation.
 
-Python 3.11+ is required. The first release includes 12 tasks: four workload
-calculations, three concepts questions, two CSV analysis questions and three
-executable JMeter authoring/correlation tasks. k6, Gatling and Locust execution
-graders are future work. No OpenRouter: calls go directly to providers.
+Python 3.11+ is required. The seed pack includes 15 tasks: four workload
+calculations, three concepts questions, two CSV analysis questions, three
+executable JMeter authoring/correlation tasks and three mirrored k6 tasks.
+Gatling and Locust execution graders are future work. No OpenRouter: calls go
+directly to providers.
 
 ## Run
 
@@ -24,6 +25,8 @@ p95bench score results/<run>
 
 Install Apache JMeter 5.6.3 and a compatible Java runtime separately. The default
 JMeter location is `~/apache-jmeter-5.6.3`; override with `JMETER_HOME`.
+Install k6 v1.0.0 as documented below, or use `--tool jmeter --tool none`
+to run the original 12 tasks without k6.
 Run from this checkout so the default task path resolves. All unit tests use a
 fake provider or mocked transport, with no external API calls:
 
@@ -32,7 +35,7 @@ ruff check .
 pytest
 ```
 
-**Execution safety:** generated JMX is executable code, not a safe document.
+**Execution safety:** generated JMX and k6 scripts are executable code, not safe documents.
 Run execution benchmarks only in a disposable, isolated environment without
 valuable files or credentials, and restrict outbound network access. This
 release uses a subprocess timeout, not a security sandbox. JMeter plugins and
@@ -149,7 +152,10 @@ runner and task schema do not need tool-specific changes.
 against the same demo shop. It requires exit 0, nonempty `http_reqs` points,
 successful HTTP statuses and `expected_response` tags, and exact verified
 completions. `min_checkout_vus` requires distinct checkout VUs; k6 JSON output
-stores VU/iteration system tags in point metadata. Timeout handling kills the
+stores VU/iteration system tags in point metadata. Isolation checks use actual
+request paths and VUs from `--http-debug --log-format=json`, since custom
+request names can replace the metric URL tag; URL tags are a fallback.
+Timeout handling kills the
 whole process group, as for JMeter. Set `K6_PATH` or put `k6` on PATH.
 
 Install the official Linux amd64 release:
@@ -198,9 +204,10 @@ not a statistically comprehensive leaderboard or a contamination-resistant test.
 Each unique run directory contains `attempts.jsonl` with raw model text, exact
 messages, model/provider, grader parameters, token usage, latency, estimated
 cost and grade. `summary.json` aggregates category/overall scores and totals.
-Execution subdirectories retain JMX, JTL, JMeter log and stdout for inspection.
+Execution subdirectories retain JMX, JTL, JMeter log and stdout, or k6
+`script.js`, `points.json` and `stdout.log`, for inspection.
 `score` recomputes aggregates from saved grades without calling APIs or rerunning
-JMeter. It can summarize partial runs; check attempt counts before comparing.
+execution engines. It can summarize partial runs; check attempt counts before comparing.
 Results are ignored by Git except for the explicitly published runs under
 `results/published/`. No credentials should be included in task fixtures.
 
@@ -229,6 +236,11 @@ and harness commit when known. Published metadata sidecars document the
 execution timestamps, harness commits and any temperature exception. The published JSONL
 files are full reproduction artifacts and were checked for credentials before
 publication. Do not add secrets to prompts or fixtures.
+
+Published k6 tasks were executed separately from the original 12-task runs,
+then appended and rescored together using the same category weights. Metadata
+records the separate k6 run date, version, harness commit and execution note.
+Tool cards report each engine's own executable task pass rate.
 
 Model families and release order live in `site/src/data/model-registry.json`.
 The site defaults to the newest benchmarked release per family; enable

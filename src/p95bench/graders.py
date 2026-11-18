@@ -136,7 +136,8 @@ def k6_exec(text, params, workdir):
     script.write_text(match[1])
     points = workdir / "points.json"
     with demo_app() as (url, admin):
-        command = [str(executable), "run", "--quiet", "--no-usage-report", "-e", f"BASE_URL={url}",
+        command = [str(executable), "run", "--quiet", "--no-usage-report",
+                   "--http-debug", "--log-format=json", "-e", f"BASE_URL={url}",
                    "--out", f"json={points}", ("--system-tags=proto,subproto,status,method,url,name,"
                    "group,check,error,error_code,tls_version,scenario,service,expected_response,vu,iter"),
                    str(script)]
@@ -166,6 +167,22 @@ def k6_exec(text, params, workdir):
             minimum = params.get("min_checkout_vus", 1)
             checkout_vus = {tags["vu"] for tags in requests if tags.get("vu")
                             and urlsplit(tags.get("url", "")).path == "/checkout"}
+            if minimum > 1:
+                debug_vus, debug_seen = set(), False
+                for line in (workdir / "stdout.log").read_text().splitlines():
+                    try:
+                        record = json.loads(line)
+                    except ValueError:
+                        continue
+                    if not isinstance(record, dict) or record.get("source") != "http-debug":
+                        continue
+                    request = re.match(r"Request:\r?\n(\S+) (\S+) HTTP/", record.get("msg", ""))
+                    if request and record.get("vu"):
+                        debug_seen = True
+                        if request[1] == "POST" and urlsplit(request[2]).path == "/checkout":
+                            debug_vus.add(str(record["vu"]))
+                if debug_seen:
+                    checkout_vus = debug_vus
             if minimum > 1 and len(checkout_vus) < minimum:
                 return Grade(False, f"Checkout VUs: {len(checkout_vus)}/{minimum}")
             request = urllib.request.Request(url + "/internal/stats", headers={"X-Admin-Key": admin})
