@@ -1,6 +1,7 @@
 id: correlation
 category: concepts
 tool: none
+summary: Choose the correct way to handle a per-session CSRF token. Distinguish response extraction and session reuse from hard-coding a token or removing validation.
 prompt: "How should a per-session CSRF token be handled? A: hard-code a recorded value. B: remove validation. C: extract it from the response and reuse it in that session's requests."
 grader: choice
 params:

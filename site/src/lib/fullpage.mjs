@@ -63,6 +63,7 @@ const scenes = [...document.querySelectorAll(".scene, .reading-section")],
     "FLAME STACK",
     "VALUE FRONTIER",
     "MODEL FOCUS",
+    "SCENARIOS",
     "TOOLS",
     "METHODOLOGY",
   ];
@@ -118,13 +119,27 @@ document.querySelector(".wordmark").onclick = (e) => {
   e.preventDefault();
   goScene(0);
 };
-document.querySelectorAll('a[href="#method"],a[href="#tools"]').forEach(
+document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios"]').forEach(
   (a) =>
     (a.onclick = (e) => {
       e.preventDefault();
-      goScene(a.hash === "#tools" ? 4 : 5);
+      goScene(scenes.findIndex(scene => '#' + scene.id === a.hash));
     }),
 );
+const scenarioButtons = [...document.querySelectorAll('[data-scenario-filter]')];
+scenarioButtons.forEach(button => {
+  button.onclick = () => {
+    scenarioButtons.forEach(filter => filter.setAttribute('aria-pressed', String(filter === button)));
+    const cards = [...document.querySelectorAll('[data-scenario-tool]')];
+    cards.forEach(card => {
+      card.hidden = button.dataset.scenarioFilter !== 'all' && card.dataset.scenarioTool !== button.dataset.scenarioFilter;
+    });
+    const visible = cards.filter(card => !card.hidden).length;
+    $('scenario-count').textContent = `Showing ${visible} of ${cards.length} scenarios`;
+    $('scenario-empty').hidden = visible > 0;
+    announce(`${visible} scenarios shown. ${button.textContent.trim()} filter.`);
+  };
+});
 observeScenes(scenes, (scene) => {
   currentScene = scenes.indexOf(scene);
   document

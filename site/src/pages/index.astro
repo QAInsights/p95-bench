@@ -5,10 +5,16 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/global.css";
 import data from "../data/leaderboard.json";
 import { name, toolScore, toolScoreLabel, selectModelVersions } from "../lib/scores.mjs";
+import { parse } from "yaml";
+import { buildScenarios, scenarioFilters } from "../lib/scenarios.mjs";
 
 const { weights } = data;
 const models = selectModelVersions(data.models);
 const allModels = selectModelVersions(data.models, true);
+const taskSources = import.meta.glob("../../../tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
+const tasks = Object.values(taskSources).map(source => parse(source));
+const scenarios = buildScenarios(tasks, data.models);
+const filters = scenarioFilters(scenarios);
 const colors = {
   authoring: "#6b2a7a",
   correlation: "#c4416a",
@@ -372,15 +378,48 @@ const repo = "https://github.com/QAInsights/p95-bench";
         </div><div class="scene-foot">
           <span
             >← → to change model · Select any lane or chart point to open this
-            view.<br />Pass/fail reflects each task's exact grading contract.</span
+            view.<br />Pass/fail reflects each task's exact grading contract.
+            <a href="#scenarios">Explore scenarios ↗</a></span
           ><span
             >REAL ARTIFACTS. OPEN HARNESS.<br /><b
               >No hidden prompts. No synthetic models.</b
             ></span>
         </div>
       </section>
+      <section class="reading-section scenarios" id="scenarios" aria-labelledby="scenarios-title">
+        <p class="eyebrow">05 / INSIDE THE TASK PACK</p>
+        <h2 id="scenarios-title" tabindex="-1">Scenarios.<br />Every task, in the open.</h2>
+        <p class="subcopy">What models must do, how we grade it and where they succeed.
+          Pass rates always use the {models.length} latest published model families, even when earlier versions are shown.</p>
+        <div class="scenario-toolbar">
+          <div class="scenario-filters" role="group" aria-label="Filter scenarios by tool">
+            {filters.map(filter => <button class="control" type="button"
+              data-scenario-filter={filter.tool} aria-pressed={filter.tool === 'all' ? 'true' : 'false'}
+              aria-controls="scenario-list">{filter.label}</button>)}
+          </div>
+          <p class="scenario-count" id="scenario-count">Showing {scenarios.length} of {scenarios.length} scenarios</p>
+        </div>
+        <ul class="scenario-list" id="scenario-list">
+          {scenarios.map(scenario => <li class="scenario-card" data-scenario-tool={scenario.tool}>
+            <div class="scenario-tags"><span>{scenario.category}</span><span>{scenario.toolLabel}</span></div>
+            <h3>{scenario.title}</h3>
+            {scenario.title !== scenario.id && <code>{scenario.id}</code>}
+            <dl>
+              <div><dt>The task</dt><dd>{scenario.summary}</dd></div>
+              <div><dt>How it is graded</dt><dd>{scenario.grading}</dd></div>
+            </dl>
+            <div class="scenario-results">
+              <strong>{scenario.passLabel}</strong>
+              {scenario.notRun > 0 && <span>{scenario.notRun} not run</span>}
+            </div>
+          </li>)}
+        </ul>
+        <p class="scenario-empty" id="scenario-empty" hidden={scenarios.length > 0}>No scenarios match this tool.</p>
+        <p class="scenario-note">A model passes a scenario only if every published attempt passes.
+          Missing attempts are shown as not run, not failed. Descriptions come from the checked-in task definitions.</p>
+      </section>
       <section class="reading-section" id="tools">
-        <p class="eyebrow">05 / PICK YOUR INSTRUMENT</p><h2 tabindex="-1">
+        <p class="eyebrow">06 / PICK YOUR INSTRUMENT</p><h2 tabindex="-1">
           Built for the tools you use.
         </h2>
         <p class="subcopy">Executable plans first. More engines next.</p>
@@ -449,7 +488,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
 
       <section class="reading-section methodology" id="method">
         <div>
-          <p class="eyebrow">06 / SHOW YOUR WORK</p><h2 tabindex="-1">
+          <p class="eyebrow">07 / SHOW YOUR WORK</p><h2 tabindex="-1">
             A benchmark.<br />Not a black box.
           </h2><a class="repo-link mono" href={repo}
             >Explore the harness on GitHub ↗</a>

@@ -6,8 +6,7 @@ import { parse } from 'yaml';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const readJSON = async (file) => JSON.parse(await readFile(file, 'utf8'));
 
-export async function buildData(directories) {
-  if (!directories.length) throw new Error('Pass at least one run directory');
+export async function loadTaskData() {
   const harness = await readFile(path.join(root, 'src/p95bench/tasks.py'), 'utf8');
   const weights = JSON.parse(harness.match(/CATEGORIES\s*=\s*({[^}]+})/s)[1]);
   const taskMap = new Map();
@@ -17,11 +16,19 @@ export async function buildData(directories) {
       if (error.code === 'ENOENT') return [];
       throw error;
     });
-    for (const file of files.filter((name) => name.endsWith('.yaml'))) {
+    for (const file of files.filter((name) => name.endsWith('.yaml')).sort()) {
       const task = parse(await readFile(path.join(folder, file), 'utf8'));
+      if (taskMap.has(task.id)) throw new Error(`Duplicate task: ${task.id}`);
       taskMap.set(task.id, task);
     }
   }
+  return { weights, tasks: [...taskMap.values()] };
+}
+
+export async function buildData(directories) {
+  if (!directories.length) throw new Error('Pass at least one run directory');
+  const { weights, tasks } = await loadTaskData();
+  const taskMap = new Map(tasks.map(task => [task.id, task]));
   const models = [];
   for (const directory of directories) {
     const summary = await readJSON(path.join(directory, 'summary.json'));
