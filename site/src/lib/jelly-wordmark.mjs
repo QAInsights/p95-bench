@@ -108,17 +108,27 @@ export function mountJellyWordmark(host) {
     offscreen.height = Math.ceil(height / cell);
     const sample = offscreen.getContext('2d');
     let size = offscreen.height * .95;
-    sample.font = `800 ${size}px "Bricolage Grotesque"`;
-    const textWidth = sample.measureText('P95 Bench').width;
+    const square = () => { sample.font = `400 ${size}px "Geist Pixel Square"`; };
+    const grid = () => { sample.font = `400 ${size}px "Geist Pixel Grid"`; };
+    square();
+    let limeWidth = sample.measureText('P95').width;
+    grid();
+    const textWidth = limeWidth + sample.measureText(' Bench').width;
     if (textWidth > offscreen.width * .98) {
       size *= offscreen.width * .98 / textWidth;
-      sample.font = `800 ${size}px "Bricolage Grotesque"`;
     }
+    square();
+    limeWidth = sample.measureText('P95').width;
+    grid();
+    const gap = sample.measureText(' ').width;
     sample.textBaseline = 'middle';
     sample.fillStyle = '#fff';
-    sample.fillText('P95 Bench', 0, offscreen.height / 2);
+    square();
+    sample.fillText('P95', 0, offscreen.height / 2);
+    grid();
+    sample.fillText('Bench', limeWidth + gap, offscreen.height / 2);
     dots = sampleDots(sample.getImageData(0, 0, offscreen.width, offscreen.height).data,
-      offscreen.width, offscreen.height, cell, sample.measureText('P95').width);
+      offscreen.width, offscreen.height, cell, limeWidth);
     draw();
     sync();
   }
@@ -157,7 +167,10 @@ export function mountJellyWordmark(host) {
   const resize = new ResizeObserver(build);
   intersection.observe(host);
   resize.observe(host);
-  document.fonts.load('800 64px "Bricolage Grotesque"').then(build).catch(build);
+  Promise.allSettled([
+    document.fonts.load('400 64px "Geist Pixel Square"'),
+    document.fonts.load('400 64px "Geist Pixel Grid"'),
+  ]).then(build);
   function cleanup() {
     if (disposed) return;
     disposed = true;

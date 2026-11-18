@@ -1,7 +1,7 @@
 "use strict";
 import DATA from "../data/leaderboard.json";
 import { observeScenes } from "./scene-observer.mjs";
-import { scrollWithinSection } from "./section-scroll.mjs";
+import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
 import { sectionMetadata, sectionShortcut } from "./section-navigation.mjs";
 import {
   name as modelName,
@@ -227,7 +227,8 @@ document.addEventListener("keydown", (e) => {
     e.ctrlKey ||
     e.metaKey ||
     e.isComposing ||
-    e.target.closest("input,select,textarea,[contenteditable=true]")
+    e.target.closest('input,select,textarea,[contenteditable=true]') ||
+    regionNeedsScrollKey(e.target.closest('[role="region"][tabindex]'), e.key)
   )
     return;
   const shortcut = sectionShortcut(e.key, scenes.length);
@@ -850,6 +851,7 @@ function renderProfile() {
         "</p></article>",
     )
     .join("");
+  $("task-grid").scrollTop = 0;
   $("focus-cost").textContent = money(m.cost);
   $("focus-cost-note").textContent = m.cost_note ?? "USD · list-price estimate";
   $("focus-tokens").textContent = fmt(m.tokens.input + m.tokens.output);
