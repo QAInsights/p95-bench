@@ -1,5 +1,57 @@
 # P95 Bench
 
+## V2 harness foundation (no v2 task publication yet)
+
+The legacy pack is `p95-v1`; its boolean scores and published artifacts are unchanged.
+`p95-v2.0.0` introduces validated `CheckpointGrade` results: unique checkpoints total
+100 possible points, awarded points determine quality, and full credit alone sets
+`passed`. V2 checkpoint graders/tasks are deliberately not registered yet. Selecting
+v2 with a legacy grader fails before sending a request; this is not a runnable v2 pack.
+
+First publication uses **one repeat by default**, configurable with `--repeats`.
+Each task's repeat mean contributes equally within its category. V2 weights are
+repair 25, migration 15, correlation 25, workload 20, analysis 15. Missing slots or
+categories contribute zero to a provisional lower bound, not a renormalized score;
+incomplete runs cannot enter the site data builder. An empty returned answer is a
+graded attempt; transport/budget exhaustion is Not run.
+
+V2 composite is `100 * (.95 * Q + .05 * E)`, where Q is weighted quality (0–1).
+For each trial, `e = q * (.5 * min(1, T_ref/max(1,T)) +
+.5 * min(1, L_ref/max(.001,L)))`; E aggregates e exactly like quality.
+T counts input plus output including reasoning once, without cache discounts.
+L is accepted-response provider time, excluding retry backoff and script execution.
+Frozen task-specific efficiency budgets must be supplied with `--efficiency-budgets`
+as JSON mapping IDs to positive `tokens` and `latency_seconds` values. No calibrated
+reference budgets are claimed by this foundation.
+
+V2 runs are stored under `OUT/p95-v2.0.0/RUN_ID`; v1 preserves `OUT/RUN_ID` for
+compatibility. Both get a hashed `pack.json` snapshot
+containing scoring rules, task inventory, efficiency budgets and repeat count.
+Offline `p95bench score DIRECTORY` dispatches by that snapshot. Old directories
+without a snapshot are v1. Mixed pack inputs and altered snapshots are rejected.
+Site generation defaults to the unchanged v1 `leaderboard.json`; the future public
+v2 builder uses `npm run data -- --pack p95-v2.0.0 --tasks PUBLIC_TASK_ROOT RUN_DIR...`
+and writes `leaderboard-p95-v2.0.0.json`, never overwriting v1. Pack-switching UI is
+a later rollout step.
+
+V2 has a shared **$30 maximum budget across all models**, backed by
+`~/.local/state/p95-bench/p95-v2.0.0-budget.json`. Do not delete/reset that ledger
+between models. File-locked, persistent maximum-cost reservations happen before
+generation and include every possible transport retry. Returned usage releases
+unused reserve; requests without usage retain their conservative bounds, including
+interrupted processes. Bounds use uncached input at serialized-message bytes plus
+4,096 framing tokens, the configured output cap and recorded prices. This is a
+conservative list-price guard, not a provider invoice guarantee; unexpected usage
+above a reservation stops the run for audit. Ledger corruption/cap mismatch fails
+closed. Budget exhaustion skips remaining slots and still writes a provisional
+summary. API keys are not needed for the synthetic tests; no paid runs ship here.
+
+Private task content is **not** included. `--private-tasks EXTERNAL_DIRECTORY` loads
+it only outside the repository (resolved symlinks checked), and requires an external
+`--out` path. Such runs are marked private; the site builder rejects them entirely.
+Raw prompts, responses, checkpoints and fixtures must never be copied into public
+results or commits. A reviewed allowlist exporter/private evaluator comes later.
+
 An open-source benchmark for AI performance test scripting and engineering.
 General purpose and independent of any AI assistant product. Compare model
 quality, cost and latency before selecting a scripting assistant, detect model

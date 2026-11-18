@@ -223,7 +223,9 @@ def k6_exec(text, params, workdir):
 
 
 GRADERS = {"numeric": numeric, "choice": choice, "jmeter_exec": jmeter_exec, "k6_exec": k6_exec}
+CHECKPOINT_GRADERS = {}
 
 
-def grade(task, text, workdir):
-    return GRADERS[task.grader](text, task.params, workdir)
+def grade(task, text, workdir, schema_version=1):
+    registry = CHECKPOINT_GRADERS if schema_version == 2 else GRADERS
+    return registry[task.grader](text, task.params, workdir)

@@ -20,7 +20,7 @@ p95bench = "p95bench.cli:main"
 testpaths = ["tests"]
 
 [tool.setuptools.package-data]
-p95bench = ["category-weights.json"]
+p95bench = ["category-weights.json", "packs.json"]
 
 [tool.ruff]
 line-length = 100
