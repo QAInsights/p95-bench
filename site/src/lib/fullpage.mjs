@@ -1,6 +1,7 @@
 "use strict";
 import DATA from "../data/leaderboard.json";
 import { observeScenes } from "./scene-observer.mjs";
+import { scrollWithinSection } from "./section-scroll.mjs";
 import {
   name as modelName,
   modelSlug,
@@ -202,6 +203,8 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     fullscreen();
   } else if (e.key === "PageDown" || e.key === "PageUp") {
+    if (scrollWithinSection(scenes[currentScene].getBoundingClientRect(), window.innerHeight,
+      e.key === "PageUp")) return;
     e.preventDefault();
     goScene(currentScene + (e.key === "PageDown" ? 1 : -1));
   } else if (
