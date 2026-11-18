@@ -9,10 +9,17 @@
   "max_tokens": 8192,
   "output_cap_note": "The completion cap includes reasoning tokens; null content is treated as empty answer text.",
   "k6_version": "1.0.0",
-  "k6_harness_commit": "9aac66d9ca6f5d5b091469afdbb22186d58ab7df",
-  "k6_note": "k6 tasks were attempted separately with the original provider settings and unchanged system prompt. No attempts were appended because the provider request timed out without text or usage; original attempts and scores are preserved.",
-  "k6_run_date": "2026-11-18T00:59:29.210957+00:00",
-  "k6_status": "not_run",
-  "k6_not_run_reason": "Provider request timed out without returning model text or usage; not graded as a model failure",
-  "k6_cost_note": "Provider requests timed out without usage or model text; any billing is unknown. No failed attempts were fabricated."
+  "k6_harness_commit": "5605874c4fb14678f6dd3030eab0646624727999",
+  "k6_note": "k6 tasks run separately from the original 12-task benchmark. Each task retried once with the same prompts, output cap and provider settings; client timeout increased from 180 to 600 seconds after earlier timeouts.",
+  "k6_run_date": "2026-11-18T03:02:32.632964+00:00",
+  "k6_status": "completed",
+  "k6_cost_note": "Retry costs use returned token usage and list prices. Earlier timed-out requests returned no usage; their billing remains unknown.",
+  "k6_prior_not_run": {
+    "k6_run_date": "2026-11-18T00:59:29.210957+00:00",
+    "k6_note": "k6 tasks were attempted separately with the original provider settings and unchanged system prompt. No attempts were appended because the provider request timed out without text or usage; original attempts and scores are preserved.",
+    "k6_not_run_reason": "Provider request timed out without returning model text or usage; not graded as a model failure",
+    "k6_cost_note": "Provider requests timed out without usage or model text; any billing is unknown. No failed attempts were fabricated."
+  },
+  "k6_client_timeout_seconds": 600,
+  "k6_retry_cost_usd": 0.03900379799999999
 }

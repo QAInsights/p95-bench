@@ -2,8 +2,18 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { budgetScale, replayLayout, replayScore, replayToolLayout, replayToolCounts, replaySampleLabel } from '../src/lib/scores.mjs';
+import { taskCoverage } from '../src/lib/scores.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
+
+test('task coverage marks missing tasks as partial without counting duplicates or unknown ids', () => {
+  const tasks = [{ id: 'a' }, { id: 'b' }];
+  const model = { per_task_results: [{ task_id: 'a' }, { task_id: 'a' }, { task_id: 'unknown' }] };
+  assert.deepEqual(taskCoverage(model, tasks), { run: 1, total: 2, partial: true, label: '1/2 tasks run' });
+  assert.equal(taskCoverage({ per_task_results: [] }, tasks).partial, true);
+  assert.equal(taskCoverage({ per_task_results: [{ task_id: 'a' }, { task_id: 'b' }] }, tasks).partial, false);
+  assert.deepEqual(taskCoverage(model, []), { run: 0, total: 0, partial: false, label: '0/0 tasks run' });
+});
 
 test('tool blocks sort by metadata, retain task identity and repeated occurrences, and include future and unknown tools', () => {
   const tasks = [
@@ -54,7 +64,7 @@ test('tool pass counts distinguish failures, partial coverage and tools with no 
 test('published replay tools have nine General, three JMeter and three k6 aligned columns', () => {
   const { groups, rows } = replayToolLayout(published.models);
   assert.deepEqual(groups.map(group => [group.label, group.count]), [['General', 9], ['JMeter', 3], ['k6', 3]]);
-  assert.equal(rows.flat().filter(index => index === null).length, 6);
+  assert.equal(rows.flat().filter(index => index === null).length, 0);
 });
 
 test('sample descriptions expose task names, tools and all three result states without color', () => {

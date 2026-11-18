@@ -71,6 +71,8 @@ test('published data is reproducible, redacted and matches weighted scores', asy
     assert.ok(metadata.k6_run_date);
     assert.match(metadata.k6_note, /separately/);
     assert.equal(model.per_task_results.length, metadata.k6_status === 'completed' ? 15 : 12);
+    assert.equal(model.coverage.run, new Set(model.per_task_results.map(task => task.task_id)).size);
+    assert.equal(model.coverage.partial, model.coverage.run < model.coverage.total);
     assert.equal(model.category_scores.repair, undefined);
     assert.equal(model.category_scores.migration, undefined);
     assert.ok(model.run_date);
