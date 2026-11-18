@@ -8,12 +8,19 @@ prompt: 'Maintain separate 8/s browse and 2/s checkout pools while checkout alon
 
   Execution contract: {"users": 2, "iterations": 2, "mode": "flow", "workload": true, "pools": {"browse":
   {"path": "/v2/browse", "rate": 8}, "checkout": {"path": "/v2/orders", "rate": 2, "operation": "journey"}}}.
-  Non-workload counts are iterations per user. One committed order per journey, no duplicate/extra carts.
   Two fixture variants count equally; the same artifact is reused without feedback. Fresh owner seeds
   are recorded after execution. Profiles: [{"checkout_delay_seconds": 0.15, "checkout_slow_after_seconds":
   20, "checkout_slow_seconds": 0.6}, {"checkout_delay_seconds": 0.15, "checkout_slow_after_seconds": 20,
   "checkout_slow_seconds": 0.6, "html_layout": 1, "reverse_catalog": true}]. Negative-control overrides:
   [].
+
+  Pool browse: POST /v2/browse is the operation. No checkout belongs to this pool; orders and
+  cart/catalog calls are extra routes unless explicitly needed by another declared pool.
+  Count the server request start timestamp, only for authenticated requests with a successful
+  owner work event and response status below 400. Login and renewal never count as operations.
+  Pool checkout: POST /v2/orders is a complete owned checkout. Count its checkout request start
+  at the server request start timestamp, only when the owner records a committed order.
+  Login, catalog selection and cart setup are part of the journey but do not count as starts.
 
   First authenticated eligible POST anchors T0, within10s of launch. Warmup5s, score [T0+5,T0+35) in six5s
   windows, drain<=5s. Phased targets5/15/5 apply to three10s scored plateaus. Count only declared paths/pools;

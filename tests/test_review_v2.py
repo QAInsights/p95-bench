@@ -1,11 +1,17 @@
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
 from p95bench.analysis_v2 import analysis, truth
 from p95bench.checkpoint_graders import flow_fractions, workload_fractions
 from p95bench.execution import Trial
+from p95bench.packs import pack_config
+from p95bench.tasks import load_tasks
+
+PUBLIC_TASKS = load_tasks(Path(__file__).resolve().parents[1] / "packs/p95-v2.0.0/tasks",
+                          pack_config("p95-v2.0.0")["weights"])
 
 
 def flow_trial(counts=(2, 2), poll_offsets=None, actors=None):
@@ -183,3 +189,23 @@ def test_fixture_assignment_is_bound_to_each_native_worker(actors, expected, mod
     records = [{"username": "bench-1", "quantity": 1}, {"username": "bench-2", "quantity": 2}]
     result = flow_fractions(trial, [], {"mode": mode, "records": records})
     assert result["safety"] == expected
+
+
+@pytest.mark.parametrize("task", [task for task in PUBLIC_TASKS if task.params.get("contract", {}).get("workload")],
+                         ids=lambda task: task.id)
+def test_workload_prompts_describe_exact_counted_operations(task):
+    contract = task.params["contract"]
+    pools = contract.get("pools") or {"work": {"path": contract.get("path", "/v2/work"),
+                                             "operation": contract.get("operation", "work")}}
+    for pool in pools.values():
+        assert f"POST {pool['path']}" in task.prompt
+        if pool.get("operation") == "journey":
+            assert "checkout request start" in task.prompt
+        else:
+            assert "No checkout belongs to this pool" in task.prompt
+    assert "One committed order per journey" not in task.prompt
+    if contract.get("completion"):
+        assert "successful response completion timestamp" in task.prompt
+        assert "every scored 1s bucket" in task.prompt
+    else:
+        assert "server request start timestamp" in task.prompt

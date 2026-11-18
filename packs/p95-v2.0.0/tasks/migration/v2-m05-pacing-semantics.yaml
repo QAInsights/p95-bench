@@ -7,10 +7,13 @@ prompt: 'Convert a JMX plan''s specified iteration pacing into an equivalent k6 
   Translate the supplied JMX to k6.
 
   Execution contract: {"users": 2, "iterations": 2, "mode": "flow", "workload": true, "operation": "journey",
-  "path": "/v2/orders", "rate": 2, "max_vus": 4}. Non-workload counts are iterations per user. One committed
-  order per journey, no duplicate/extra carts. Two fixture variants count equally; the same artifact is
+  "path": "/v2/orders", "rate": 2, "max_vus": 4}. Two fixture variants count equally; the same artifact is
   reused without feedback. Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout":
   1, "reverse_catalog": true}]. Negative-control overrides: [].
+
+  Pool work: POST /v2/orders is a complete owned checkout. Count its checkout request start
+  at the server request start timestamp, only when the owner records a committed order.
+  Login, catalog selection and cart setup are part of the journey but do not count as starts.
 
   First authenticated eligible POST anchors T0, within10s of launch. Warmup5s, score [T0+5,T0+35) in six5s
   windows, drain<=5s. Phased targets5/15/5 apply to three10s scored plateaus. Count only declared paths/pools;

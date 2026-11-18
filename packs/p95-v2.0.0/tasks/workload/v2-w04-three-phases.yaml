@@ -7,10 +7,14 @@ prompt: 'Deliver 5 → 15 → 5 starts/s over three specified 10-second plateaus
   Write a complete executable solution.
 
   Execution contract: {"users": 2, "iterations": 2, "mode": "flow", "workload": true, "rates": [5, 15,
-  5]}. Non-workload counts are iterations per user. One committed order per journey, no duplicate/extra
-  carts. Two fixture variants count equally; the same artifact is reused without feedback. Fresh owner
+  5]}. Two fixture variants count equally; the same artifact is reused without feedback. Fresh owner
   seeds are recorded after execution. Profiles: [{}, {"html_layout": 1, "reverse_catalog": true}]. Negative-control
   overrides: [].
+
+  Pool work: POST /v2/work is the operation. No checkout belongs to this pool; orders and
+  cart/catalog calls are extra routes unless explicitly needed by another declared pool.
+  Count the server request start timestamp, only for authenticated requests with a successful
+  owner work event and response status below 400. Login and renewal never count as operations.
 
   First authenticated eligible POST anchors T0, within10s of launch. Warmup5s, score [T0+5,T0+35) in six5s
   windows, drain<=5s. Phased targets5/15/5 apply to three10s scored plateaus. Count only declared paths/pools;
