@@ -106,14 +106,26 @@ class Shop:
             return
         self._events.append({"sequence": len(self._events), "time": self.clock(), **values})
 
+    def _audit_capacity(self, count):
+        if self.audit_overflow or len(self._events) + self._pending + count > 32768:
+            self.audit_overflow = True
+            return False
+        return True
+
     def audit(self, *, wait=True):
         with self._idle:
+            if wait and self.audit_overflow:
+                raise RuntimeError("Demo audit overflow; evidence is incomplete")
             if wait and not self._idle.wait_for(lambda: self._pending == 0, timeout=6):
                 raise RuntimeError("Demo requests did not drain; audit is not final")
+            if wait and self.audit_overflow:
+                raise RuntimeError("Demo audit overflow; evidence is incomplete")
             return copy.deepcopy(self._events)
 
     def begin(self, method, path):
         with self._lock:
+            if not self._audit_capacity(2):
+                raise RuntimeError("Demo audit overflow; cannot admit request")
             self._pending += 1
             request = self._id("request")
             self._event(kind="start", request=request, method=method, path=path[:2048])
@@ -127,7 +139,10 @@ class Shop:
 
     def dispatch(self, method, target, headers, body, request):
         with self._lock:
-            if self.audit_overflow or max(map(len, (self._sessions, self._forms, self._carts,
+            path = urlsplit(target).path
+            budget = (0 if path in ("/v2/health", "/v2/login-form") else
+                      1 if path == "/v2/login" and method == "POST" else 2)
+            if not self._audit_capacity(budget) or max(map(len, (self._sessions, self._forms, self._carts,
                                                    self._orders, self._jobs, self._challenges,
                                                    self._claims))) >= 4096:
                 return 503, {"error": "capacity"}, {}, 0, False
@@ -137,6 +152,8 @@ class Shop:
         if method != "POST" or urlsplit(target).path != "/v2/orders":
             return 0
         with self._lock:
+            if not self._audit_capacity(1):
+                return 0
             count = self._rates.get("/v2/orders", 0) + 1
             self._rates["/v2/orders"] = count
             slow = bool(self.profile.checkout_slow_after and count > self.profile.checkout_slow_after)

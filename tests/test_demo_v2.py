@@ -66,6 +66,41 @@ class Client:
         return value["id"]
 
 
+@pytest.mark.parametrize("spare", range(8))
+@pytest.mark.parametrize("inflight", [False, True])
+def test_audit_reserves_checkout_and_inflight_end_capacity(spare, inflight):
+    with demo_app_v2() as (shop, url):
+        client = Client(url)
+        cookie = client.login()[2]["Set-Cookie"].split(";")[0]
+        cart = client.cart()
+        earlier = shop.begin("GET", "/v2/health") if inflight else None
+        shop._events.extend([{"kind": "padding"}] * (32768 - spare - len(shop._events)))
+        request = None
+        try:
+            request = shop.begin("POST", "/v2/orders")
+            shop.service_delay("POST", "/v2/orders", request)
+            shop.dispatch("POST", "/v2/orders", {"Cookie": cookie,
+                "X-CSRF-Token": client.csrf, "Idempotency-Key": "boundary"},
+                {"cart_id": cart}, request)
+        except RuntimeError:
+            assert shop.audit_overflow
+        finally:
+            if request:
+                shop.end(request, 200)
+            if earlier:
+                shop.end(earlier, 200)
+        expected = int(spare >= 5 + inflight)
+        assert len(shop._orders) == expected
+        assert sum(event["kind"] == "commit" for event in shop._events) == expected
+        assert shop._pending == 0
+        if expected:
+            assert not shop.audit_overflow
+            shop.audit()
+        else:
+            with pytest.raises(RuntimeError, match="overflow"):
+                shop.audit()
+
+
 def test_v2_seeded_catalog_html_csrf_and_audit_boundary():
     assert Shop(Profile(), 42).products == Shop(Profile(), 42).products
     assert Shop(Profile(), 42).products != Shop(Profile(), 43).products
@@ -203,11 +238,15 @@ def test_controlled_rate_faults_and_service_delay_outside_state_lock(monkeypatch
 
 def test_audit_overflow_fails_closed():
     shop = Shop(Profile(), "synthetic")
-    for _ in range(32769):
-        shop.begin("GET", "/v2/catalog")
+    with pytest.raises(RuntimeError, match="overflow"):
+        for _ in range(32769):
+            request = shop.begin("GET", "/v2/catalog")
+            shop.end(request, 200)
     assert shop.audit_overflow
     assert shop.dispatch("GET", "/v2/catalog", {}, {}, "synthetic")[0] == 503
     assert len(shop.audit(wait=False)) == 32768
+    with pytest.raises(RuntimeError, match="overflow"):
+        shop.audit()
 
 
 @pytest.mark.parametrize("layout", [0, 1])
