@@ -1,4 +1,5 @@
 import { name, selectModelVersions } from './scores.mjs';
+import { providerName } from './provider-names.mjs';
 
 export const matrixModes = ['all', 'tool', 'category', 'provider', 'result'];
 export const resultLabels = { pass: 'Pass', fail: 'Fail', not_run: 'Not run' };
@@ -49,7 +50,7 @@ export function unitGroups(records, mode = 'all') {
     return (ai < 0 ? order.length : ai) - (bi < 0 ? order.length : bi) || a.localeCompare(b);
   }).map(([key, items]) => ({ key, records: items, ...unitSummary(items),
     label: mode === 'all' ? 'All attempts' : mode === 'tool' ? toolLabel(key)
-      : mode === 'result' ? resultLabels[key] : label(key) }));
+      : mode === 'result' ? resultLabels[key] : mode === 'provider' ? providerName(key) : label(key) }));
 }
 
 export const unitDescription = record =>

@@ -64,6 +64,7 @@ export function mountUnitMatrix(root) {
     animations = [];
     const old = [...board.children];
     const groups = unitGroups(visible, mode);
+    board.style.setProperty('--matrix-columns', Math.max(1, groups.length));
     for (const [index, group] of groups.entries()) {
       const section = document.createElement('div'), heading = document.createElement('h3');
       section.className = 'matrix-group';

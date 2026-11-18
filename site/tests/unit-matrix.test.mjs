@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { selectModelVersions } from '../src/lib/scores.mjs';
+import { providerName } from '../src/lib/provider-names.mjs';
 import { unitRecords, unitGroups, unitSummary, matrixModes, unitDescription, passRateLabel } from '../src/lib/unit-matrix-data.mjs';
 
 const data = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
@@ -54,6 +55,19 @@ test('empty and invalid groupings do not invent observations', () => {
   assert.equal(passRateLabel(null), '— pass (unmeasured)');
   assert.equal(passRateLabel(2 / 3 * 100), '66.7% pass');
   assert.throws(() => unitGroups([], 'unknown'), /Unknown matrix grouping/);
+});
+
+test('provider groups and the data table share proper display names without changing provider keys', () => {
+  const expected = new Map([['anthropic', 'Anthropic'], ['deepseek', 'DeepSeek'], ['gemini', 'Google'],
+    ['meta', 'Meta'], ['openai', 'OpenAI'], ['qwen', 'Qwen'], ['thinkingmachines', 'Thinking Machines']]);
+  for (const group of unitGroups(unitRecords(data.models), 'provider')) {
+    assert.equal(group.label, expected.get(group.key));
+    assert.equal(providerName(group.key), group.label);
+    assert.ok(group.records.every(record => record.provider === group.key));
+  }
+  assert.equal(providerName('new-provider'), 'new-provider');
+  assert.equal(providerName('__proto__'), '__proto__');
+  assert.equal(providerName(''), '');
 });
 
 test('matrix is build-time markup with native controls, a table alternative, and no individual tab stops', async () => {
