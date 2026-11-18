@@ -165,8 +165,9 @@ test('home uses build-time data, separate client code and preserved methodology 
   const page = await readFile(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
   const client = await readFile(new URL('../src/lib/fullpage.mjs', import.meta.url), 'utf8');
   assert.match(page, /import data from ['"]\.\.\/data\/leaderboard\.json['"]/);
-  assert.match(client, /import DATA from ['"]\.\.\/data\/leaderboard\.json['"]/);
-  assert.doesNotMatch(page + client, /fonts\.googleapis\.com|benchmark-data|—/);
+  assert.match(page, /id="pack-data"[^>]*JSON\.stringify\(packCatalog\)/);
+  assert.match(client, /JSON\.parse\(document\.getElementById\('pack-data'\)\.textContent\)/);
+  assert.doesNotMatch(page + client, /fonts\.googleapis\.com|benchmark-data/);
   for (const attribute of ['rel="icon"', 'rel="apple-touch-icon"', 'rel="manifest"', 'name="theme-color"']) {
     assert.ok(page.includes(attribute));
   }

@@ -40,7 +40,7 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     metadata.pack_digest = manifest.digest;
     const attempt = { pack_id: packId, pack_digest: summary.pack_digest, repeat: 0,
       model: 'synthetic', provider: 'test', task_id: 'sample', category: 'repair',
-      response: { input_tokens: 100, output_tokens: 20 }, cost_usd: .01,
+      response: { input_tokens: 100, output_tokens: 20, latency_seconds: 2 }, cost_usd: .01,
       price_per_million: { input: 1, cached: 1, output: 2 },
       grade: { schema_version: 2, score: .8, passed: false, detail: 'Partial' } };
     const save = async (file, value) => writeFile(path.join(directory, file), JSON.stringify(value));
@@ -53,6 +53,8 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     assert.equal(data.models[0].quality_score, 80);
     assert.equal(data.models[0].per_task_results[0].score, .8);
     assert.equal(data.models[0].per_task_results[0].repeat, 0);
+    assert.equal(data.models[0].per_task_results[0].output_tokens, 20);
+    assert.equal(data.models[0].per_task_results[0].latency_seconds, 2);
     await save('pack.json', { ...manifest, repeats: 2 });
     await assert.rejects(buildData([directory], options), /digest/);
     await save('pack.json', manifest);

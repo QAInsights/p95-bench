@@ -1,8 +1,8 @@
-import { name, selectModelVersions } from './scores.mjs';
+import { name, selectModelVersions, attemptFraction } from './scores.mjs';
 import { providerName } from './provider-names.mjs';
 
 export const matrixModes = ['all', 'tool', 'category', 'provider', 'result'];
-export const resultLabels = { pass: 'Pass', fail: 'Fail', not_run: 'Not run' };
+export const resultLabels = { pass: 'Pass', fail: 'Fail', partial: 'Partial credit', not_run: 'Not run' };
 const toolLabels = new Map([['none', 'General'], ['jmeter', 'JMeter'], ['k6', 'k6']]);
 export const toolLabel = tool => toolLabels.get(tool) ?? tool;
 const label = value => value.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
@@ -13,7 +13,9 @@ export function unitRecords(models, tasks = []) {
     const record = (attempt, key) => ({ id: `${model.model}:${key}`, model_id: model.model,
       model: name(model.model), provider: model.provider, task: attempt.task_id,
       category: attempt.category, tool: attempt.tool || 'none', latest: model.newer_model === null,
-      result: attempt.passed === true ? 'pass' : attempt.passed === false ? 'fail' : 'not_run' });
+      ...(Number.isFinite(attempt.score) ? { score: attempt.score } : {}),
+      result: attemptFraction(attempt) === null ? 'not_run' : attemptFraction(attempt) === 1 ? 'pass'
+        : attemptFraction(attempt) === 0 ? 'fail' : 'partial' });
     const records = model.per_task_results.map((attempt, index) => {
       seen.add(attempt.task_id);
       return record(attempt, index);
@@ -29,8 +31,10 @@ export function unitRecords(models, tasks = []) {
 export function unitSummary(records) {
   const passed = records.filter(record => record.result === 'pass').length;
   const failed = records.filter(record => record.result === 'fail').length;
-  const measured = passed + failed;
+  const partial = records.filter(record => record.result === 'partial').length;
+  const measured = passed + failed + partial;
   return { count: records.length, passed, failed, notRun: records.length - measured,
+    ...(partial ? { partial } : {}),
     measured, passRate: measured ? 100 * passed / measured : null };
 }
 
@@ -44,7 +48,7 @@ export function unitGroups(records, mode = 'all') {
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(record);
   }
-  const order = mode === 'result' ? ['pass', 'fail', 'not_run'] : mode === 'tool' ? ['none', 'jmeter', 'k6'] : [];
+  const order = mode === 'result' ? ['pass', 'partial', 'fail', 'not_run'] : mode === 'tool' ? ['none', 'jmeter', 'k6'] : [];
   return [...groups].sort(([a], [b]) => {
     const ai = order.indexOf(a), bi = order.indexOf(b);
     return (ai < 0 ? order.length : ai) - (bi < 0 ? order.length : bi) || a.localeCompare(b);
@@ -54,4 +58,4 @@ export function unitGroups(records, mode = 'all') {
 }
 
 export const unitDescription = record =>
-  `${record.model} · ${record.task} · ${toolLabel(record.tool)} · ${resultLabels[record.result]}`;
+  `${record.model} · ${record.task} · ${toolLabel(record.tool)} · ${Number.isFinite(record.score) ? `${(record.score * 100).toFixed(1)}% credit` : resultLabels[record.result]}`;

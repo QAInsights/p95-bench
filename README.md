@@ -318,6 +318,16 @@ adding hatched placeholders only for missing tasks. Group pass rates exclude
 Not run. Use Left / Right, Home / End within the matrix to inspect a square,
 or open its semantic data table. Reduced motion disables regrouping animation.
 
+The header keeps pack and earlier-version choices in the URL. With no v2
+leaderboard, only v1 is offered. Generate `leaderboard-p95-v2.0.0.json` with
+`npm run data -- --pack p95-v2.0.0 <public-run-directories>` to enable v2;
+it becomes the default, while `?pack=v1` still selects the legacy board.
+The v2 control names the 50-task design; the public site describes the 40 public
+tasks only. Quality, quality-gated efficiency and the 95/5 composite stay separate.
+Models missing a selected-pack run remain visible without invented scores.
+Synthetic fixtures in `site/tests/` are test-only and must never be published as
+a leaderboard or copied into production data.
+
 To regenerate the leaderboard and build:
 
 ```sh

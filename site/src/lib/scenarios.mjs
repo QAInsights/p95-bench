@@ -5,6 +5,8 @@ const labels = new Map([['none', 'General'], ['jmeter', 'JMeter'], ['k6', 'k6'],
 const toolOrder = [...labels.keys()];
 
 export function scenarioGrading({ grader, params = {} }) {
+  if (grader === 'v2_exec' || grader === 'v2_analysis') return params.rubric.map(checkpoint =>
+    `${checkpoint.id}: ${checkpoint.points} points — ${checkpoint.description}; prerequisites: ${(checkpoint.requires ?? []).join(', ') || 'none'}`).join('. ');
   if (grader === 'numeric') return `Numeric answer: ${params.answer}, with absolute tolerance ${params.tolerance ?? 0}. Reply with only the bare finite number; markdown or prose fails.`;
   if (grader === 'choice') return `Exact choice: ${params.answer}. Reply with only the bare letter; markdown or prose fails. Letter case and surrounding whitespace are ignored.`;
   if (grader !== 'jmeter_exec' && grader !== 'k6_exec') return `Custom grader: ${grader}. See the task definition for its checks.`;
@@ -25,18 +27,21 @@ export function scenarioGrading({ grader, params = {} }) {
   return checks.join(' ');
 }
 
-export function buildScenarios(tasks, models) {
-  const latest = selectModelVersions(models);
+export function buildScenarios(tasks, models, showEarlier = false) {
+  const latest = selectModelVersions(models, showEarlier);
   return tasks.map(task => {
     const tool = task.tool || 'none';
     const results = latest.map(model => taskResult(model, task.id));
     const passed = results.filter(result => result?.passed).length;
     const attempted = results.filter(result => result !== null).length;
     return { id: task.id, title: task.title ?? task.id, category: task.category,
-      tool, toolLabel: labels.get(tool) ?? tool, summary: task.summary ?? task.prompt,
+      tool, toolLabel: labels.get(tool) ?? tool, summary: task.summary ?? (task.grader.startsWith('v2_') ? task.prompt.split('\n')[0] : task.prompt),
       grading: scenarioGrading(task), passed, attempted, total: latest.length,
       notRun: latest.length - attempted,
-      passLabel: latest.length ? `${passed}/${latest.length} models pass` : 'No published latest models' };
+      passLabel: latest.length ? task.grader.startsWith('v2_')
+        ? attempted ? `${(100 * results.reduce((sum, result) => sum + (result?.score ?? 0), 0) / attempted).toFixed(1)}% mean quality · ${attempted}/${latest.length} models run`
+          : `Not run on v2 · 0/${latest.length} models run`
+        : `${passed}/${latest.length} models pass` : 'No published latest models' };
   }).sort((a, b) => a.category.localeCompare(b.category, 'en') || a.id.localeCompare(b.id, 'en'));
 }
 

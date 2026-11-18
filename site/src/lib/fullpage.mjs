@@ -1,5 +1,8 @@
 "use strict";
-import DATA from "../data/leaderboard.json";
+import { resolvePack, creditGradient } from './packs.mjs';
+import { mountPackScenes } from './pack-scenes.mjs';
+import { renderToolRankings } from './tool-rankings.mjs';
+import { buildScenarios } from './scenarios.mjs';
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
 import { sectionMetadata, sectionShortcut, sectionNumber } from "./section-navigation.mjs";
@@ -17,8 +20,12 @@ import {
   replayToolCounts,
   replaySampleLabel,
   selectModelVersions,
+  attemptFraction,
+  shortTaskLabel,
 } from "./scores.mjs";
-const weights = DATA.weights;
+const PACKS = JSON.parse(document.getElementById('pack-data').textContent);
+let pack = resolvePack(new URLSearchParams(location.search).get('pack'), PACKS);
+let DATA = PACKS[pack], weights = DATA.weights;
 let showingEarlier = new URLSearchParams(location.search).get("versions") === "all";
 let models = selectModelVersions(
   DATA.models,
@@ -26,6 +33,11 @@ let models = selectModelVersions(
 );
 const $ = (id) => document.getElementById(id),
   reduced = matchMedia("(prefers-reduced-motion: reduce)");
+$('show-versions').checked = showingEarlier;
+mountPackScenes(pack);
+const initialURL = new URL(location.href);
+initialURL.searchParams.set('pack', pack);
+history.replaceState(null, '', initialURL);
 let categories = Object.keys(weights).filter((c) =>
   models.some((m) => m.category_scores[c] !== undefined),
 );
@@ -40,9 +52,9 @@ const colors = {
 };
 const name = (m) => modelName(m.model),
   cap = (s) => s[0].toUpperCase() + s.slice(1),
-  score = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
-const money = (n) => "$" + n.toFixed(6),
-  fmt = (n) => n.toLocaleString("en-US");
+  score = (n) => Number.isFinite(n) ? (Number.isInteger(n) ? String(n) : n.toFixed(2)) : '—';
+const money = (n) => Number.isFinite(n) ? "$" + n.toFixed(6) : '—',
+  fmt = (n) => Number.isFinite(n) ? n.toLocaleString("en-US") : '—';
 let activeWeight = categories.reduce((s, c) => s + weights[c], 0);
 const escape = (s) =>
   String(s).replace(
@@ -62,7 +74,9 @@ const versionMarkup = (m, showCoverage = true) =>
       "</small>"
     : "") +
   (m.discontinued ? ' · <span class="version-badge">Discontinued</span>' : "") +
-  (showCoverage && m.coverage?.partial ? ' · <span class="partial-run">Partial · ' + escape(m.coverage.label) + '</span>' : "");
+  (showCoverage && m.coverage?.partial ? ' · <span class="partial-run">Partial · ' + escape(m.coverage.label) + '</span>' : "") +
+  (m.not_run ? `<span class="pack-not-run">Not run on ${pack}</span>` : pack === 'v2'
+    ? `<span class="pack-quality">Quality ${score(m.quality_score)} · Composite ${score(m.overall_score)} (95/5)</span>` : '');
 const scenes = [...document.querySelectorAll(".scene, .reading-section")],
   sections = sectionMetadata(scenes),
   sceneNames = sections.map(section => section.label.toUpperCase());
@@ -148,6 +162,7 @@ document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios
       goScene(scenes.findIndex(scene => '#' + scene.id === a.hash));
     }),
 );
+function setupScenarioControls() {
 const scenarioButtons = [...document.querySelectorAll('[data-scenario-filter]')];
 scenarioButtons.forEach(button => {
   button.onclick = () => {
@@ -162,6 +177,16 @@ scenarioButtons.forEach(button => {
     announceRolling(`${visible} scenarios shown. ${button.textContent.trim()} filter.`, 'scenarios');
   };
 });
+}
+setupScenarioControls();
+function renderScenarioResults() {
+  for (const scenario of buildScenarios(DATA.tasks, models, true)) {
+    const card = [...document.querySelectorAll('[data-scenario-id]')].find(node => node.dataset.scenarioId === scenario.id);
+    if (!card) continue;
+    rollText(card.querySelector('strong'), scenario.passLabel, { key: 'scenario:' + scenario.id, animate: true, max: models.length * 100 });
+    card.querySelector('[data-scenario-missing]').textContent = scenario.notRun + ' not run';
+  }
+}
 observeScenes(scenes, (scene) => {
   currentScene = scenes.indexOf(scene);
   document
@@ -290,7 +315,7 @@ function buildLanes() {
     .slice(group.offset, group.offset + group.count).map((id, index) =>
       '<span style="grid-column:' + (group.column + index) + '" title="' +
       escape(id + ' · ' + group.label) + '">' +
-      escape(id.replaceAll("-", "").slice(0, 4).toUpperCase()) + '</span>').join(""))
+      escape(shortTaskLabel(id)) + '</span>').join(""))
     .join("");
   $("lanes").replaceChildren();
   $("lane-descriptions").replaceChildren();
@@ -322,7 +347,7 @@ function buildLanes() {
       '" aria-describedby="' + description.id + '"><span class="lane-title">' +
       escape(name(m)) +
       '</span><span class="lane-provider">' +
-      escape(m.provider) +
+      escape(providerName(m.provider)) +
       " · " +
       versionMarkup(m, false) +
       '</span></button><span class="track">' +
@@ -367,12 +392,20 @@ function updateCounters() {
     count = 0;
   models.forEach((m, i) => {
     const n = partialScore(i);
-    rollNumber(laneNodes.get(i).querySelector(".score-number"), n, { key: 'lane:' + m.model, from: 0, digits: 2, max: 100 });
+    const node = laneNodes.get(i).querySelector('.score-number');
+    if (m.not_run) node.textContent = '—';
+    else rollNumber(node, n, { key: 'lane:' + m.model, from: 0, digits: 2, max: 100 });
     max = Math.max(max, n);
     count += arrived[i].size;
   });
   rollNumber($("leading-score"), max, { from: 0, digits: 2, max: 100 });
   rollNumber($("sample-count"), count, { from: 0, max: DATA.models.reduce((sum, model) => sum + model.per_task_results.length, 0) });
+  const leader = models.find(model => !model.not_run);
+  $('leading-score').hidden = !leader;
+  $('leading-empty').hidden = Boolean(leader);
+  $('leading-quality').hidden = pack !== 'v2';
+  if (pack === 'v2' && leader) rollText($('leading-quality'), `Published quality ${leader.quality_score.toFixed(2)} · composite 95/5`, { key: 'hero:quality', animate: true, max: 100 });
+  else if (pack === 'v2') $('leading-quality').replaceChildren('No published runs in this view');
 }
 function land(s) {
   if (s.done) return;
@@ -380,8 +413,10 @@ function land(s) {
   arrived[s.i].add(s.j);
   const t = models[s.i].per_task_results[s.j],
     cell = laneNodes.get(s.i).querySelector('[data-task="' + s.j + '"]');
-  cell.classList.add("landed", t.passed ? "pass" : "fail");
-  if (!t.passed && !reduced.matches) cell.classList.add("glitch");
+  const fraction = attemptFraction(t) ?? 0;
+  cell.classList.add('landed', fraction === 1 ? 'pass' : fraction > 0 ? 'partial' : 'fail');
+  if (fraction > 0 && fraction < 1) cell.style.background = creditGradient(fraction);
+  if (fraction === 0 && !reduced.matches) cell.classList.add('glitch');
 }
 function send(s) {
   s.sent = true;
@@ -422,7 +457,8 @@ function settle(animate = true) {
     });
   if (animate) change(update);
   else update();
-  $("run-state").textContent = "ALL SAMPLES LANDED · RANKED BY SCORE";
+  $("run-state").textContent = models.some(model => !model.not_run)
+    ? 'ALL SAMPLES LANDED · RANKED BY SCORE' : 'NO PUBLISHED RUNS IN THIS VIEW';
   $("pause").textContent = "Replay";
   $("finish").disabled = true;
 }
@@ -483,7 +519,7 @@ reduced.addEventListener("change", () => {
 function stackInfo(m, c) {
   const points =
     contributions(m, weights).find((s) => s.category === c)?.points ?? 0;
-  $("stack-info-title").textContent = points.toFixed(2) + " points";
+  $("stack-info-title").textContent = (points * (pack === 'v2' ? .95 : 1)).toFixed(2) + " points";
   $("stack-info-detail").textContent =
     name(m) +
     " / " +
@@ -505,7 +541,7 @@ function renderFlames(animate = false) {
       .map((c) => {
         const v = zoom
           ? (m.category_scores[c] ?? 0)
-          : (parts.find((s) => s.category === c)?.points ?? 0);
+          : (parts.find((s) => s.category === c)?.points ?? 0) * (pack === 'v2' ? .95 : 1);
         if (v === 0) return "";
         return (
           '<button class="segment" data-model="' +
@@ -523,13 +559,14 @@ function renderFlames(animate = false) {
           " / " +
           score(m.category_scores[c]) +
           " out of 100 / " +
-          (parts.find((s) => s.category === c)?.points ?? 0).toFixed(2) +
+          ((parts.find((s) => s.category === c)?.points ?? 0) * (pack === 'v2' ? .95 : 1)).toFixed(2) +
           ' weighted points. Zoom category."><span>' +
           (v > 7 ? score(v) : "") +
           "</span></button>"
         );
       })
-      .join("");
+      .join("") + (!zoom && pack === 'v2' && !m.not_run
+        ? `<span class="segment efficiency-segment" style="width:${m.efficiency_score * .05}%" role="img" aria-label="Quality-gated efficiency: ${(m.efficiency_score * .05).toFixed(2)} composite points"></span>` : '');
     return (
       '<div class="flame-row' +
       (m.discontinued ? " is-discontinued" : "") +
@@ -542,7 +579,7 @@ function renderFlames(animate = false) {
       '</span></button><div class="flame-track">' +
       segments +
       '</div><span class="bar-value"><span data-flame-score="' + i + '">' +
-      (zoom && m.category_scores[zoom] === undefined
+      (m.not_run || zoom && m.category_scores[zoom] === undefined
         ? "Not run"
         : score(zoom ? m.category_scores[zoom] : m.overall_score)) +
       "</span><small> /100</small></span></div>"
@@ -816,6 +853,7 @@ function renderModelControls() {
         String(i + 1).padStart(2, "0") +
         "</span>" +
         escape(name(m)) +
+        (m.not_run ? `<small class="pack-not-run">Not run on ${pack}</small>` : '') +
         "</button>",
     )
     .join("");
@@ -838,7 +876,7 @@ function renderModelControls() {
         "</td><td>" +
         money(m.cost) +
         '</td><td>' + escape(providerName(m.provider)) + '</td><td>' +
-        m.tokens.output.toLocaleString('en-US') + '</td><td>' + m.latency.toFixed(2) +
+        fmt(m.tokens.output) + '</td><td>' + (Number.isFinite(m.latency) ? m.latency.toFixed(2) : '—') +
         "</td></tr>",
     )
     .join("");
@@ -853,6 +891,7 @@ function renderModelControls() {
         m.version_status +
         (m.newer_model ? " · newer: " + escape(modelName(m.newer_model)) : "") +
         (m.discontinued ? " · Discontinued" : "") +
+        (m.not_run ? ` · Not run on ${pack}` : '') +
         "</option>",
     )
     .join("");
@@ -862,7 +901,7 @@ document.querySelectorAll('[data-scatter-axis]').forEach(button => button.addEve
   chartAxis = button.dataset.scatterAxis;
   document.querySelectorAll('[data-scatter-axis]').forEach(control => control.setAttribute('aria-pressed', String(control === button)));
   updateBudget(true);
-  announceRolling(scatterLabels[chartAxis] + ' axis. ' + models.length + ' published runs. ' + $('scatter-fit').textContent, 'scatter');
+  announceRolling(scatterLabels[chartAxis] + ' axis. ' + models.filter(model => !model.not_run).length + ' published runs. ' + $('scatter-fit').textContent, 'scatter');
 }));
 $("budget").oninput = () => {
   budget = budgetFor($("budget").value);
@@ -877,12 +916,13 @@ function renderProfile() {
   const m = models[selected];
   $("model-picker").value = selected;
   $("focus-name").textContent = name(m);
-  $("focus-provider").textContent = m.provider.toUpperCase() + " / " + m.model;
+  $("focus-provider").textContent = providerName(m.provider) + " / " + m.model;
   $("focus-version").innerHTML =
     "Rank " + (selected + 1) + " · " + versionMarkup(m);
   $("scene-4").classList.toggle("is-discontinued", m.discontinued);
   $("focus-score").textContent = score(m.overall_score);
-  $("focus-passed").textContent =
+  $("focus-passed").textContent = m.not_run ? `Not run on ${pack}` : pack === 'v2'
+    ? `Quality ${score(m.quality_score)} · Composite ${score(m.overall_score)} (95/5)` :
     m.per_task_results.filter((t) => t.passed).length +
     " / " +
     m.per_task_results.length +
@@ -891,13 +931,13 @@ function renderProfile() {
     .map(
       (t, i) =>
         '<article class="task ' +
-        (t.passed ? "pass" : "fail") +
+        (attemptFraction(t) === 1 ? 'pass' : attemptFraction(t) > 0 ? 'partial' : 'fail') +
         '"><div class="task-top"><span>' +
         String(i + 1).padStart(2, "0") +
         " / " +
         escape(t.tool === "none" ? t.category : t.tool) +
         '</span><span class="task-state">' +
-        (t.passed ? "✓ PASS" : "× FAIL") +
+        (Number.isFinite(t.score) ? `${(t.score * 100).toFixed(1)}% CREDIT` : t.passed ? "✓ PASS" : "× FAIL") +
         "</span></div><strong>" +
         escape(t.task_id) +
         "</strong><p>" +
@@ -905,13 +945,14 @@ function renderProfile() {
         "</p></article>",
     )
     .join("");
+  if (m.not_run) $('task-grid').innerHTML = `<p class="pack-not-run">Not run on ${pack}. No task scores, usage or artifacts are available.</p>`;
   $("task-grid").scrollTop = 0;
   $("focus-cost").textContent = money(m.cost);
   $("focus-cost-note").textContent = m.cost_note ?? "USD · list-price estimate";
-  $("focus-tokens").textContent = fmt(m.tokens.input + m.tokens.output);
+  $("focus-tokens").textContent = m.not_run ? '—' : fmt(m.tokens.input + m.tokens.output);
   $("focus-token-detail").textContent =
     fmt(m.tokens.input) + " in / " + fmt(m.tokens.output) + " out";
-  $("focus-latency").textContent = m.latency.toFixed(2) + "s";
+  $("focus-latency").textContent = Number.isFinite(m.latency) ? m.latency.toFixed(2) + 's' : '—';
   $("focus-latency-detail").textContent =
     "Total across " + m.per_task_results.length + " requests";
   $("focus-provenance").replaceChildren();
@@ -933,6 +974,11 @@ function renderProfile() {
     ),
     link,
   );
+  if (m.not_run) $('focus-provenance').replaceChildren(`Not run on ${pack}. No published artifacts.`);
+  else if (pack === 'v2') {
+    link.href = 'https://github.com/QAInsights/p95-bench/tree/main/results/published/';
+    link.textContent = 'Browse published artifacts · ' + DATA.pack_id + ' ↗';
+  }
   $("cat-keys").innerHTML = Object.keys(weights)
     .map(
       (c) =>
@@ -955,7 +1001,8 @@ function renderProfile() {
   let offset = 0;
   const parts = contributions(m, weights);
   $("ring-caption").textContent =
-    parts.length + " measured categories. Every point traceable.";
+    pack === 'v2' && !m.not_run ? `Quality ${score(m.quality_score)} across ${parts.length} categories. Composite ${score(m.overall_score)} includes quality-gated efficiency.`
+      : parts.length + " measured categories. Every point traceable.";
   const measured = parts.reduce((s, p) => s + weights[p.category], 0);
   ring.append(
     svgEl("circle", {
@@ -1035,12 +1082,23 @@ function updateVisibleCounts(animate = false) {
     models.flatMap((m) => m.per_task_results.map((t) => t.task_id)),
   ).size;
   const samples = models.reduce((sum, m) => sum + m.per_task_results.length, 0);
+  const runs = models.filter(model => !model.not_run).length;
+  document.querySelectorAll('[data-run-count]').forEach(el => rollNumber(el, runs, { animate, max: DATA.models.length }));
+  document.querySelectorAll('[data-pack]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.pack === pack)));
+  document.querySelectorAll('[data-pack-model]').forEach(row => { row.hidden = !models.some(model => model.model === row.dataset.packModel); });
+  $('leading-label').textContent = pack === 'v2' ? 'LEADING COMPOSITE · 95/5' : 'LEADING WEIGHTED SCORE';
+  $('method-pack').textContent = pack === 'v2'
+    ? `Showing ${DATA.pack_id} · 50-task design, ${DATA.tasks.length} public tasks. Composite = 95% quality + 5% quality-gated efficiency. Checkpoints total 100 possible points per task; prerequisites gate dependent credit. Repetitions are averaged; first publication defaults to one. Pinned workers, independent server audit evidence and workload capacity preflights verify execution. Private task details are never published.`
+    : 'Showing p95-v1 · 15 tasks · binary pass/fail. Weighted category pass rates retain their original scoring.';
+  document.querySelectorAll('[data-v1-method]').forEach(node => { node.hidden = pack !== 'v1'; });
+  $('method-weights').innerHTML = Object.entries(weights).map(([category, weight]) =>
+    `<span><i style="background:${colors[category]}"></i>${escape(category)}<b>${weight}</b></span>`).join('');
   document
     .querySelectorAll("[data-model-count]")
     .forEach((el) => rollNumber(el, models.length, { animate, max: DATA.models.length }));
   document
     .querySelectorAll("[data-task-count]")
-    .forEach((el) => rollNumber(el, tasks, { animate, max: new Set(DATA.models.flatMap(model => model.per_task_results.map(task => task.task_id))).size }));
+    .forEach((el) => rollNumber(el, pack === 'v2' ? DATA.tasks.length : tasks, { animate, max: DATA.tasks.length }));
   document
     .querySelectorAll("[data-sample-total]")
     .forEach((el) => rollNumber(el, samples, { animate, max: DATA.models.reduce((sum, model) => sum + model.per_task_results.length, 0) }));
@@ -1050,10 +1108,7 @@ function updateVisibleCounts(animate = false) {
   document
     .querySelectorAll("[data-active-count]")
     .forEach((el) => rollNumber(el, categories.length, { animate, max: Object.keys(weights).length }));
-  const ids = new Set(models.map((m) => m.model));
-  document
-    .querySelectorAll("[data-tool-model]")
-    .forEach((el) => (el.hidden = !ids.has(el.dataset.toolModel)));
+  renderToolRankings(document.getElementById('tools'), DATA.models, pack, showingEarlier);
   const date = models
     .map((m) => m.run_date)
     .filter(Boolean)
@@ -1093,7 +1148,16 @@ function applyVersions() {
   const all = new URLSearchParams(location.search).get("versions") === "all";
   showingEarlier = all;
   $("show-versions").checked = all;
+  const nextPack = resolvePack(new URLSearchParams(location.search).get('pack'), PACKS);
+  const packChanged = nextPack !== pack;
+  pack = nextPack;
+  DATA = PACKS[pack];
+  weights = DATA.weights;
   models = selectModelVersions(DATA.models, all);
+  if (packChanged) {
+    mountPackScenes(pack, true);
+    setupScenarioControls();
+  }
   selected = Math.max(
     0,
     models.findIndex((m) => m.model === previous),
@@ -1118,16 +1182,18 @@ function applyVersions() {
   renderProfile();
   updateBudget();
   updateVisibleCounts(true);
-  document.dispatchEvent(new CustomEvent('modelversionschange', { detail: { showEarlier: all } }));
+  if (!packChanged) document.dispatchEvent(new CustomEvent('modelversionschange', { detail: { showEarlier: all } }));
+  renderScenarioResults();
   startReplay();
   if (wasFinished) settle(false);
   else if (wasPaused) $("pause").click();
   scenes[currentScene].scrollIntoView({ behavior: "instant", block: "start" });
   announceRolling(
-    models.length +
+    pack + '. ' + models.filter(model => !model.not_run).length +
       " published runs shown. " +
       (all ? "Earlier versions included." : "Latest versions only.") +
-      ` ${models.reduce((sum, model) => sum + model.per_task_results.length, 0)} published attempts. Highest overall score ${Math.max(...models.map(model => model.overall_score)).toFixed(2)} out of 100.`, 'versions',
+      ` ${models.reduce((sum, model) => sum + model.per_task_results.length, 0)} published attempts. ` +
+      (models.some(model => !model.not_run) ? `Highest overall score ${Math.max(...models.map(model => model.overall_score)).toFixed(2)} out of 100.` : 'No published runs in this view.'), 'versions',
   );
 }
 $("show-versions").checked =
@@ -1141,11 +1207,21 @@ $("show-versions").onchange = () => {
 };
 addEventListener("popstate", () => {
   const all = new URLSearchParams(location.search).get("versions") === "all";
-  if (all !== showingEarlier) applyVersions();
+  const nextPack = resolvePack(new URLSearchParams(location.search).get('pack'), PACKS);
+  if (all !== showingEarlier || nextPack !== pack) applyVersions();
+});
+document.querySelectorAll('[data-pack]').forEach(button => {
+  button.onclick = () => {
+    const url = new URL(location.href);
+    url.searchParams.set('pack', button.dataset.pack);
+    history.pushState(null, '', url);
+    applyVersions();
+  };
 });
 if (!("switch" in HTMLInputElement.prototype))
   $("show-versions").classList.add("switch-fallback");
 updateVisibleCounts();
+renderScenarioResults();
 startReplay();
 const initialSection = scenes.findIndex(scene => '#' + scene.id === location.hash);
 if (initialSection >= 0)

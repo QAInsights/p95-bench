@@ -29,7 +29,7 @@ const cost = attemptCost(initial.cost_attempts[0]);
 <section class="reading-section explainer" id="explainer" data-section-label="How scoring works">
   <p class="eyebrow">06 / OPEN THE BLACK BOX</p>
   <h2 tabindex="-1">How scoring works.</h2>
-  <p class="section-copy">From a versioned prompt to a verified checkout. Follow the run, then change the results yourself. No hidden judge, no mystery weights.</p>
+  <p class="section-copy">Showing p95-v1. From a versioned prompt to a verified checkout. Follow the run, then change the results yourself. No hidden judge, no mystery weights.</p>
   <div class="ex-stage-buttons" role="group" aria-label="Scoring explainer stages" hidden>
     {stages.map((stage, index) => <button type="button" data-ex-stage={index} aria-pressed={String(index === 0)} aria-controls={`ex-panel-${index}`}><span>{String(index + 1).padStart(2, '0')}</span>{stage}</button>)}
   </div>
@@ -106,5 +106,4 @@ const cost = attemptCost(initial.cost_attempts[0]);
     <li>Costs are list-price estimates calculated from returned usage.</li>
   </ul></aside>
   <script type="application/json" id="ex-data" set:html={JSON.stringify({ tasks: tasks.map(({ id, title, category, tool }) => ({ id, title, category, tool })), pipeline: pipeline.map(step => step.detail), shapes }).replaceAll('<', '\\u003c')} />
-  <script>import '../lib/explainer.mjs';</script>
 </section>

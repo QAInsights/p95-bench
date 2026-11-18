@@ -1,10 +1,10 @@
 import { metricExtent, heatColor, heatValue } from './heatmap-data.mjs';
 import { rollNumber, rollText, announceRolling } from './rolling-numbers.mjs';
 
-export function mountHeatmap(root) {
+export function mountHeatmap(root, { signal, animate = false } = {}) {
   const data = JSON.parse(root.querySelector('#heatmap-records').textContent);
   const grid = root.querySelector('#heatmap-grid'), tip = root.querySelector('#heatmap-tooltip');
-  let metric = 'result', active = null, hideTimer;
+  let metric = root.dataset.heatmapMetric ?? 'result', active = null, hideTimer;
   const visibleRows = () => [...grid.querySelectorAll('tbody tr:not([hidden])')];
   function hideTip() { clearTimeout(hideTimer); tip.hidden = true; }
   function inspect(cell) {
@@ -30,7 +30,7 @@ export function mountHeatmap(root) {
   grid.addEventListener('focus', () => inspect(active ?? visibleRows()[0]?.querySelector('[data-heat-cell]')));
   grid.addEventListener('blur', hideTip);
   grid.addEventListener('scroll', () => { if (document.activeElement === grid && active && !tip.hidden) inspect(active); else hideTip(); });
-  root.addEventListener('keydown', event => { if (event.key === 'Escape') hideTip(); });
+  root.addEventListener('keydown', event => { if (event.key === 'Escape') hideTip(); }, { signal });
   grid.addEventListener('keydown', event => {
     if (event.altKey || event.metaKey || event.shiftKey || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
     const rows = visibleRows(), row = active?.parentElement, ri = Math.max(0, rows.indexOf(row));
@@ -51,6 +51,7 @@ export function mountHeatmap(root) {
     inspect(next);
   });
   function render(animate = false) {
+    root.dataset.heatmapMetric = metric;
     hideTip();
     const showEarlier = document.getElementById('show-versions').checked;
     const rows = data.rows.filter(row => showEarlier || row.latest), extent = metricExtent(rows, metric);
@@ -59,7 +60,7 @@ export function mountHeatmap(root) {
     });
     grid.querySelectorAll('[data-heat-cell]').forEach(node => {
       const row = data.rows[Number(node.dataset.row)], cell = row.cells[Number(node.dataset.column)];
-      const color = heatColor(cell[metric], metric, extent);
+      const color = heatColor(cell[metric], metric, extent, cell.partial_credit);
       node.style.setProperty('--heat-color', color ?? 'repeating-linear-gradient(-45deg, transparent 0 .1875rem, #99919f .1875rem .25rem)');
       node.setAttribute('aria-label', `${row.model} · ${row.provider} · ${cell.task} · ${heatValue(cell, metric)} · ${cell.measured}/${cell.attempts} measured attempts (mean)`);
       node.firstElementChild.textContent = metric === 'result' && cell.result === 0 ? '×' : cell[metric] === null ? '—' : metric === 'result' && cell.result !== 1 ? '%' : '';
@@ -75,7 +76,7 @@ export function mountHeatmap(root) {
     };
     if (metric === 'result') {
       swatch('Pass', '#d4ff3a'); swatch('Fail ×', '#c4416a'); swatch('Not run', 'repeating-linear-gradient(-45deg, transparent 0 .1875rem, #99919f .1875rem .25rem)');
-      const note = document.createElement('span'); note.textContent = 'Mixed repetitions: proportional lime/red'; legend.append(note);
+      const note = document.createElement('span'); note.textContent = 'Partial credit and mixed repetitions use lime/red gradients'; legend.append(note);
     } else if (extent.min === null) legend.textContent = 'No measured values';
     else {
       const low = document.createElement('span'), high = document.createElement('span'), ramp = document.createElement('i');
@@ -85,8 +86,8 @@ export function mountHeatmap(root) {
       swatch('No measurement', 'repeating-linear-gradient(-45deg, transparent 0 .1875rem, #99919f .1875rem .25rem)');
     }
     const count = rows.flatMap(row => row.cells).reduce((sum, cell) => sum + cell.attempts, 0);
-    rollNumber(root.querySelector('#heatmap-source'), count, { animate, max: data.rows.flatMap(row => row.cells).reduce((sum, cell) => sum + cell.attempts, 0) });
-    rollText(root.querySelector('#heatmap-summary'), `${rows.length} models · ${data.columns.length} tasks. Repeated attempts show means; Not run is excluded.`, { animate, max: Math.max(data.rows.length, data.columns.length) });
+    rollNumber(root.querySelector('#heatmap-source'), count, { key: 'heatmap:source', animate, max: data.rows.flatMap(row => row.cells).reduce((sum, cell) => sum + cell.attempts, 0) });
+    rollText(root.querySelector('#heatmap-summary'), `${rows.length} models · ${data.columns.length} tasks. Repeated attempts show means; Not run is excluded.`, { key: 'heatmap:summary', animate, max: Math.max(data.rows.length, data.columns.length) });
     const legendLabel = [...legend.querySelectorAll('span')].map(node => node.textContent).join('. ') || legend.textContent;
     root.querySelector('#heatmap-status').textContent = `${metric} metric. ${rows.length} models. ${legendLabel}`;
     if (animate) announceRolling(`Heatmap ${metric} metric. ${rows.length} models, ${data.columns.length} tasks, ${count} published attempts. ${legendLabel}`, 'heatmap');
@@ -94,7 +95,8 @@ export function mountHeatmap(root) {
     if (document.activeElement === grid) inspect(visibleRows()[0]?.querySelector('[data-heat-cell]'));
   }
   root.querySelectorAll('[data-heat-metric]').forEach(button => button.addEventListener('click', () => { metric = button.dataset.heatMetric; render(true); }));
-  document.addEventListener('modelversionschange', () => render(true));
+  document.addEventListener('modelversionschange', () => render(true), { signal });
+  signal?.addEventListener('abort', hideTip, { once: true });
   root.querySelector('[data-heat-figure]').textContent = `FIG. ${String([...document.querySelectorAll('.scene, .reading-section')].indexOf(root) + 1).padStart(2, '0')}`;
-  render();
+  render(animate);
 }

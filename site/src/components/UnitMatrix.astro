@@ -38,7 +38,7 @@ const summary = unitSummary(records.filter(record => record.latest));
         <caption id="matrix-table-caption">Individual attempts in the current grouping. Not run is excluded from pass-rate denominators.</caption>
         <thead><tr>{['Group', 'Model', 'Task', 'Tool', 'Category', 'Provider', 'Result'].map(text => <th scope="col">{text}</th>)}</tr></thead>
         <tbody>{records.map(record => <tr data-unit-row={record.id} hidden={!record.latest}>
-          <td data-unit-group>All attempts</td><th scope="row">{record.model}</th><td>{record.task}</td><td>{toolLabel(record.tool)}</td><td>{record.category}</td><td>{providerName(record.provider)}</td><td>{resultLabels[record.result]}</td>
+          <td data-unit-group>All attempts</td><th scope="row">{record.model}</th><td>{record.task}</td><td>{toolLabel(record.tool)}</td><td>{record.category}</td><td>{providerName(record.provider)}</td><td>{Number.isFinite(record.score) ? `${(record.score * 100).toFixed(1)}% credit` : resultLabels[record.result]}</td>
         </tr>)}</tbody>
       </table>
     </div>
