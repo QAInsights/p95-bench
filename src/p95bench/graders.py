@@ -15,6 +15,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from p95bench.analysis_v2 import analysis
+from p95bench.checkpoint_graders import executable
 from p95bench.demo import demo_app
 
 
@@ -223,9 +225,11 @@ def k6_exec(text, params, workdir):
 
 
 GRADERS = {"numeric": numeric, "choice": choice, "jmeter_exec": jmeter_exec, "k6_exec": k6_exec}
-CHECKPOINT_GRADERS = {}
+CHECKPOINT_GRADERS = {"v2_exec": executable, "v2_analysis": analysis}
 
 
 def grade(task, text, workdir, schema_version=1):
     registry = CHECKPOINT_GRADERS if schema_version == 2 else GRADERS
+    if schema_version == 2 and task.grader in ("v2_exec", "v2_analysis"):
+        return registry[task.grader](text, task.params, workdir, task.fixtures)
     return registry[task.grader](text, task.params, workdir)

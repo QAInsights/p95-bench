@@ -1,0 +1,211 @@
+import copy
+import json
+from pathlib import Path
+
+import pytest
+
+from p95bench.analysis_v2 import analysis, truth
+from p95bench.checkpoint_graders import flow_fractions, workload_fractions
+from p95bench.execution import Trial
+from p95bench.packs import pack_config
+from p95bench.tasks import load_tasks
+
+PUBLIC_TASKS = load_tasks(Path(__file__).resolve().parents[1] / "packs/p95-v2.0.0/tasks",
+                          pack_config("p95-v2.0.0")["weights"])
+
+
+def flow_trial(counts=(2, 2), poll_offsets=None, actors=None):
+    evidence, samples = [], []
+
+    def request(identity, path, timestamp, worker, session=None, method="POST"):
+        evidence.extend([{"kind": "start", "request": identity, "path": path,
+                          "method": method, "time": timestamp},
+                         {"kind": "end", "request": identity, "outcome": 200,
+                          "time": timestamp + .001}])
+        if session:
+            evidence.append({"kind": "authenticated", "request": identity, "session": session})
+        samples.append({"request": identity, "worker": str(worker), "assertion_failures": 0,
+                        "status": "200", "success": True})
+
+    for worker, count in enumerate(counts, 1):
+        actor = actors[worker - 1] if actors else f"bench-{worker}"
+        for iteration in range(count):
+            key, timestamp = f"{worker}-{iteration}", iteration * 10 + worker * .01
+            session, cart = "session-" + key, "cart-" + key
+            request("login-" + key, "/v2/login", timestamp, worker)
+            evidence.append({"kind": "login", "request": "login-" + key,
+                             "session": session, "actor": actor, "time": timestamp})
+            request(cart, "/v2/carts", timestamp + .1, worker, session)
+            evidence.extend([{"kind": "cart", "request": cart, "resource": cart,
+                              "session": session, "actor": actor},
+                             {"kind": "mutation_authorized", "request": cart, "session": session}])
+            reservation = "reservation-" + key
+            if poll_offsets is not None:
+                job = "job-" + key
+                request(job, "/v2/reservations", timestamp + .15, worker, session)
+                evidence.append({"kind": "reservation", "request": job,
+                                 "resource": cart, "job": job})
+                for index, offset in enumerate(poll_offsets):
+                    identity = f"poll-{key}-{index}"
+                    request(identity, "/v2/jobs/" + job, timestamp + offset, worker, session, "GET")
+                    evidence.append({"kind": "job_state", "request": identity, "resource": job,
+                                     "phase": "ready", "reservation": reservation})
+            request("order-" + key, "/v2/orders", timestamp + 3, worker, session)
+            evidence.append({"kind": "commit", "request": "order-" + key,
+                             "resource": cart, "session": session, "actor": actor,
+                             "time": timestamp + 3, "reservation": reservation})
+    return Trial(True, "completed", 0, evidence, samples, [])
+
+
+def reservation_control():
+    return Trial(True, "completed", 0, [], [{"assertion_failures": 1}], [])
+
+
+@pytest.mark.parametrize("offsets,expected", [
+    ([.2, .3], 1), ([.2 + i * .06 for i in range(5)], 1),
+    ([.2 + i * .06 for i in range(6)], 0), ([.2, .21], 0), ([], 0),
+])
+def test_reservation_bounds_are_enforced_per_job(offsets, expected):
+    result = flow_fractions(flow_trial(poll_offsets=offsets), [reservation_control()],
+                            {"mode": "reservation", "poll_interval": .05})
+    assert result["safety"] == expected
+
+
+def test_reservation_polls_must_reference_their_reserved_job():
+    trial = flow_trial(poll_offsets=[.2, .3])
+    for event in trial.events:
+        if event["kind"] == "start" and event["path"].startswith("/v2/jobs/"):
+            event["path"] = "/v2/jobs/unreserved"
+    assert flow_fractions(trial, [reservation_control()], {"mode": "reservation"})["safety"] == 0
+
+
+@pytest.mark.parametrize("interval,expected", [(.02, 1), (.05, 0), (0, 1)])
+def test_reservation_uses_the_declared_profile_interval(interval, expected):
+    assert flow_fractions(flow_trial(poll_offsets=[.2, .23]), [reservation_control()],
+                          {"mode": "reservation", "poll_interval": interval})["safety"] == expected
+
+
+def workload_trial(extra_starts=()):
+    evidence = [{"kind": "login", "request": "login", "session": "session"}]
+    samples = [{"request": "login", "worker": "1"}]
+    for index, timestamp in enumerate([*range(36), *extra_starts]):
+        evidence.extend([{"kind": "start", "request": index, "path": "/v2/work",
+                          "method": "POST", "time": timestamp},
+                         {"kind": "authenticated", "request": index, "session": "session"},
+                         {"kind": "work", "request": index, "fault": None},
+                         {"kind": "end", "request": index, "outcome": 200, "time": timestamp + .001}])
+        samples.append({"request": index, "worker": "1"})
+    evidence.sort(key=lambda event: event.get("time", -1))
+    return Trial(True, "completed", 0, evidence, samples, [])
+
+
+@pytest.mark.parametrize("extra,expected", [
+    ([], 1), ([5.2], 1), ([5.2, 5.3], 0), ([34.8, 34.9], 0),
+    ([4.8, 4.9], 1), ([35.2, 35.3], 1), ([5.9, 6.1], 1),
+])
+def test_completion_raw_ceiling_applies_to_each_scored_second(extra, expected):
+    result = workload_fractions(workload_trial(extra), {"completion": True, "rate": 1, "raw_ceiling": 2})
+    assert result["safety"] == expected
+
+
+@pytest.mark.parametrize("fault", ["exit", "check", "assertion", "sample"])
+def test_positive_flow_requires_clean_native_outcome(fault):
+    trial = flow_trial()
+    if fault == "exit":
+        trial.returncode = 1
+    elif fault == "check":
+        trial.points = [{"metric": "checks", "value": 0}]
+    elif fault == "assertion":
+        trial.samples[-1]["assertion_failures"] = 1
+    else:
+        trial.samples[-1]["success"] = False
+    result = flow_fractions(trial, [], {})
+    assert result["safety"] == 0
+
+
+@pytest.mark.parametrize("mode,status,error", [("expiry", 401, "expired"), ("etag", 412, "etag")])
+@pytest.mark.parametrize("assertion_failure", [0, 1])
+def test_native_positive_retry_samples_remain_allowed(mode, status, error, assertion_failure):
+    trial = flow_trial()
+    trial.events.extend([{"kind": "start", "request": "retry", "path": "/v2/orders",
+                          "method": "POST", "time": 1},
+                         {"kind": "end", "request": "retry", "outcome": status, "error": error}])
+    trial.samples.append({"request": "retry", "worker": "1", "assertion_failures": assertion_failure,
+                          "success": False, "status": str(status)})
+    for sample in trial.samples:
+        if sample["request"] != "retry":
+            trial.events.append({"kind": "renew", "request": sample["request"]})
+    if mode == "etag":
+        for commit in [event for event in trial.events if event["kind"] == "commit"]:
+            commit["quantity"] = 2
+            trial.events.extend([{"kind": "cart_conflict", "request": commit["request"]},
+                                 {"kind": "cart_update", "request": commit["request"]}])
+    assert flow_fractions(trial, [], {"mode": mode})["safety"] == 1
+
+
+@pytest.mark.parametrize("fault", ["empty", "missing", "extra", "bool", "string", "array", "array_item", "length"])
+def test_analysis_loads_requires_recursive_keys_and_types(fault, tmp_path):
+    fixtures = {"summary.json": json.dumps({"limit_ms": 250, "metrics": {
+        "http_req_duration": {"values": {"p(95)": 200}},
+        "http_req_duration{route:checkout}": {"values": {"p(95)": 300}}}})}
+    value = copy.deepcopy(truth("thresholds", fixtures))
+    if fault == "empty":
+        value["observations"] = {}
+    elif fault == "missing":
+        del value["diagnosis"]["route"]
+    elif fault == "extra":
+        value["evidence"]["unknown"] = 1
+    elif fault == "bool":
+        value["observations"]["limit_ms"] = True
+    elif fault == "string":
+        value["observations"]["limit_ms"] = "250"
+    elif fault == "array":
+        value["evidence"]["keys"] = {}
+    elif fault == "array_item":
+        value["evidence"]["keys"][0] = 1
+    else:
+        value["evidence"]["keys"] = []
+    rubric = [{"id": key, "points": points, "requires": [] if key == "loads" else ["loads"]}
+              for key, points in zip(("loads", "setup", "behavior", "safety"), (10, 25, 40, 25))]
+    result = analysis(json.dumps(value), {"analysis": "thresholds", "rubric": rubric}, tmp_path, fixtures)
+    assert [checkpoint.earned for checkpoint in result.checkpoints] == [0, 0, 0, 0]
+
+
+@pytest.mark.parametrize("counts,expected", [((2, 2), 1), ((3, 1), 0), ((1, 3), 0), ((4,), 0)])
+def test_journeys_are_counted_per_native_worker(counts, expected):
+    assert flow_fractions(flow_trial(counts), [], {"users": 2, "iterations": 2})["safety"] == expected
+
+
+@pytest.mark.parametrize("actors,expected", [
+    (("bench-1", "bench-2"), 1), (("bench-2", "bench-1"), 0),
+])
+@pytest.mark.parametrize("mode", ["data", "partition"])
+def test_fixture_assignment_is_bound_to_each_native_worker(actors, expected, mode):
+    trial = flow_trial(actors=actors)
+    for event in list(trial.events):
+        if event["kind"] == "commit":
+            event["quantity"] = 1 if event["actor"] == "bench-1" else 2
+            trial.events.append({"kind": "cart_update", "request": event["request"], "actor": event["actor"]})
+    records = [{"username": "bench-1", "quantity": 1}, {"username": "bench-2", "quantity": 2}]
+    result = flow_fractions(trial, [], {"mode": mode, "records": records})
+    assert result["safety"] == expected
+
+
+@pytest.mark.parametrize("task", [task for task in PUBLIC_TASKS if task.params.get("contract", {}).get("workload")],
+                         ids=lambda task: task.id)
+def test_workload_prompts_describe_exact_counted_operations(task):
+    contract = task.params["contract"]
+    pools = contract.get("pools") or {"work": {"path": contract.get("path", "/v2/work"),
+                                             "operation": contract.get("operation", "work")}}
+    for pool in pools.values():
+        assert f"POST {pool['path']}" in task.prompt
+        if pool.get("operation") == "journey":
+            assert "checkout request start" in task.prompt
+        else:
+            assert "No checkout belongs to this pool" in task.prompt
+    assert "One committed order per journey" not in task.prompt
+    if contract.get("completion"):
+        assert "successful response completion timestamp" in task.prompt
+        assert "every scored 1s bucket" in task.prompt
+    else:
+        assert "server request start timestamp" in task.prompt

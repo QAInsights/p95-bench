@@ -1,0 +1,7 @@
+row_id,timestamp_ms,route,elapsed_ms,success,warmup,parent
+warmup,0,checkout,50000,true,true,false
+checkout-1,1000,checkout,100,true,false,false
+checkout-2,2000,checkout,900,false,false,false
+browse-1,1100,browse,20,true,false,false
+browse-2,2100,browse,30,true,false,false
+parent,2000,transaction,5000,true,false,true

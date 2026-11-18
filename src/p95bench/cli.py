@@ -8,6 +8,7 @@ from p95bench.packs import PACKS, pack_config
 from p95bench.providers import PROVIDERS, get_provider
 from p95bench.runner import run, score_run
 from p95bench.tasks import TOOLS, load_private_tasks, load_tasks
+from p95bench.worker import WorkerUnavailable
 
 
 def main(argv=None):
@@ -16,7 +17,7 @@ def main(argv=None):
     execute = commands.add_parser("run", aliases=["execute"])
     execute.add_argument("--provider", choices=PROVIDERS, required=True)
     execute.add_argument("--model", required=True)
-    execute.add_argument("--tasks", type=Path, default=Path("tasks"))
+    execute.add_argument("--tasks", type=Path)
     execute.add_argument("--out", type=Path, default=Path("results"))
     execute.add_argument("--repeats", type=int, default=1)
     execute.add_argument("--pack", choices=PACKS, default="p95-v1")
@@ -36,7 +37,8 @@ def main(argv=None):
             if args.repeats < 1:
                 raise ValueError("repeats must be positive")
             categories = pack_config(args.pack)["weights"]
-            tasks = load_tasks(args.tasks, categories)
+            tasks = load_tasks(args.tasks or (Path("tasks") if args.pack == "p95-v1" else
+                                             Path("packs") / args.pack / "tasks"), categories)
             if args.private_tasks:
                 if args.pack == "p95-v1":
                     raise ValueError("Private task loading requires a versioned v2 pack")
@@ -57,7 +59,7 @@ def main(argv=None):
                                      tasks, args.out, args.repeats, **options)
             print(f"Run: {directory}")
         print(json.dumps(summary, indent=2))
-    except (ValueError, OSError, URLError) as error:
+    except (ValueError, OSError, URLError, WorkerUnavailable) as error:
         print(f"p95bench: {error}", file=sys.stderr)
         return 1
     return 0

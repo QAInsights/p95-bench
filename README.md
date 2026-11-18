@@ -1,12 +1,16 @@
 # P95 Bench
 
-## V2 harness foundation (no v2 task publication yet)
+## V2 public pack
 
 The legacy pack is `p95-v1`; its boolean scores and published artifacts are unchanged.
 `p95-v2.0.0` introduces validated `CheckpointGrade` results: unique checkpoints total
 100 possible points, awarded points determine quality, and full credit alone sets
-`passed`. V2 checkpoint graders/tasks are deliberately not registered yet. Selecting
-v2 with a legacy grader fails before sending a request; this is not a runnable v2 pack.
+`passed`. The 40 public tasks under `packs/p95-v2.0.0/tasks` use registered native
+`v2_exec` and structured `v2_analysis` graders: 11 repair, 6 migration, 10 correlation,
+8 workload and 5 analysis. Selecting v2 with a legacy grader fails before requests.
+See [the pack contract](packs/p95-v2.0.0/README.md) for isolation, capacity qualification,
+checkpoint gating and offline golden/mutation verification. This is a public evaluation
+pack, not a calibrated model leaderboard; no v2 model results are claimed here.
 
 First publication uses **one repeat by default**, configurable with `--repeats`.
 Each task's repeat mean contributes equally within its category. V2 weights are
@@ -29,7 +33,7 @@ compatibility. Both get a hashed `pack.json` snapshot
 containing scoring rules, task inventory, efficiency budgets and repeat count.
 Offline `p95bench score DIRECTORY` dispatches by that snapshot. Old directories
 without a snapshot are v1. Mixed pack inputs and altered snapshots are rejected.
-Site generation defaults to the unchanged v1 `leaderboard.json`; the future public
+Site generation defaults to the unchanged v1 `leaderboard.json`; the public
 v2 builder uses `npm run data -- --pack p95-v2.0.0 --tasks PUBLIC_TASK_ROOT RUN_DIR...`
 and writes `leaderboard-p95-v2.0.0.json`, never overwriting v1. Pack-switching UI is
 a later rollout step.
@@ -90,7 +94,7 @@ pytest
 **Execution safety:** generated JMX and k6 scripts are executable code, not safe documents.
 Run execution benchmarks only in a disposable, isolated environment without
 valuable files or credentials, and restrict outbound network access. This
-release uses a subprocess timeout, not a security sandbox. JMeter plugins and
+legacy (`p95-v1`) path uses a subprocess timeout, not a security sandbox. JMeter plugins and
 scripts can access the local machine. Do not run untrusted task packs on a
 shared host. The demo app binds only to loopback and stops after each grade.
 The provider key is used only for API requests, never included in prompts or
@@ -426,7 +430,8 @@ v1 `demo_app()`. Its public protocol includes:
 - `GET /v2/catalog`, `/v2/catalog/page?cursor=TOKEN`, `/v2/catalog-html`: seeded dynamic
   product/variant IDs, pagination and stock. JSON products live at `data.products`.
 - `POST /v2/carts` with `product_id` and `variant_id`; `GET/PATCH /v2/carts/{id}`.
-  PATCH takes `quantity` and an `If-Match` ETag. Cart creation returns ETag `"1"`.
+  PATCH takes `quantity` and an `If-Match` ETag. Cart creation returns ETag `"1"`
+  by default; `dynamic_etag` profiles return a fresh seeded revision to correlate.
 - `POST /v2/session/renew` resets the deterministic operation-count expiry and
   returns fresh CSRF. After re-login, `POST /v2/carts/{id}/recover` rebinds an
   account-owned cart. Mutations require `X-CSRF-Token`.
@@ -455,26 +460,32 @@ Final audit snapshots wait for in-flight requests to drain with a bounded deadli
 `shop.audit(wait=False)` offers a live snapshot while a trial is running.
 
 `p95bench.worker.execution_trial(workdir, profile=..., seed=..., image=...)` creates
-an isolated worker for future v2 graders. Images must be preloaded and pinned by
+an isolated worker for the v2 graders. Images must be preloaded and pinned by
 digest, and include Python 3 for the public-protocol relay. The default pinned
-Python image is a safety probe, **not a JMeter/k6 runtime**. Tool images and grader
-integration follow in the next rollout; v1 still uses its existing trusted launcher.
+Python image is a safety probe, **not a JMeter/k6 runtime**. Native tool images are built
+with `python -m p95bench.images build`; v1 still uses its existing trusted launcher.
 
-Workers run unprivileged with a read-only root, no capabilities, no-new-privileges,
-one CPU, 256 MiB RAM, 64 PIDs, bounded stdout/deadlines, read-only explicit byte
+Actors run unprivileged with a read-only root, no capabilities, no-new-privileges,
+one CPU, bounded stdout/deadlines, read-only explicit byte
 fixtures, and size-limited ephemeral scratch. No home, provider environment or
 Docker socket is mounted. Docker networking is disabled entirely: a container-local
 loopback relay forwards only to a fresh Unix socket serving the public shop API.
 Audit/control stays in the owner process, outside the container. Timeout/output
 limits remove the entire container, including descendants. Missing runtime/image
 or failed cleanup is an infrastructure error; there is no host execution fallback.
+The probe defaults to 256 MiB RAM/64 PIDs/128 file descriptors. Native tools use
+768 MiB/256 PIDs/512 file descriptors; the same policy applies to capacity references.
+For bounded export, a root supervisor retains only SETUID/SETGID/KILL; generated
+processes are UID65534 with zero capabilities and cannot modify supervisor state.
 Returned stdout is untrusted tool evidence; business credit must use the owner audit.
 
 Docker integration tests are opt-in and never pull images automatically:
 `docker pull python@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b`,
 then `P95_TEST_DOCKER=1 .venv/bin/python -m pytest tests/test_worker.py`.
-The pinned worker environment still needs capacity preflight before workload grades
-or paid publication. Artifact export and executable checkpoint graders are not yet wired.
+The full native suite additionally requires the two built tool images:
+`P95_TEST_DOCKER=1 .venv/bin/python -m pytest -q`. It makes no provider calls.
+Before workload generation/grading, a trusted native reference qualifies the evaluator;
+an insufficient evaluator aborts as infrastructure-unavailable, not model score zero.
 
 ## License
 

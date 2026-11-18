@@ -24,7 +24,10 @@ class Profile:
     exclusive_accounts: bool = False
     expire_after: int = 1000
     require_etag: bool = False
+    dynamic_etag: bool = False
     decline_orders: bool = False
+    deny_orders: bool = False
+    unexpected_every: int = 0
     lose_commit_response: bool = False
     fail_every: int = 0
     retry_after: float = .01
@@ -42,18 +45,19 @@ class Profile:
     challenge_ttl: float = 2
     etag_conflict_once: bool = False
     checkout_delay_seconds: float = 0
+    catalog_delay_seconds: float = 0
     checkout_slow_after: int = 0
     checkout_slow_seconds: float = 0
     slow_after_seconds: float | None = None
     checkout_slow_after_seconds: float | None = None
 
     def __post_init__(self):
-        for key in ("login_csrf", "rotate_csrf", "exclusive_accounts", "require_etag",
-                    "decline_orders", "lose_commit_response", "job_fails", "reverse_catalog",
+        for key in ("login_csrf", "rotate_csrf", "exclusive_accounts", "require_etag", "dynamic_etag",
+                    "decline_orders", "deny_orders", "lose_commit_response", "job_fails", "reverse_catalog",
                     "require_challenge", "login_redirect", "etag_conflict_once"):
             if type(getattr(self, key)) is not bool:
                 raise ValueError("Invalid profile flag")
-        for key in ("expire_after", "fail_every", "slow_after", "job_polls", "checkout_slow_after"):
+        for key in ("expire_after", "fail_every", "unexpected_every", "slow_after", "job_polls", "checkout_slow_after"):
             value = getattr(self, key)
             if type(value) is not int or not 0 <= value <= 100000:
                 raise ValueError("Invalid profile counter")
@@ -61,7 +65,7 @@ class Profile:
                 or type(self.eligible_index) is not int or self.eligible_index not in (0, 1, 2)):
             raise ValueError("Invalid fixture layout")
         for key in ("retry_after", "delay_seconds", "slow_seconds", "poll_interval",
-                    "challenge_ttl", "checkout_delay_seconds", "checkout_slow_seconds"):
+                    "challenge_ttl", "checkout_delay_seconds", "checkout_slow_seconds", "catalog_delay_seconds"):
             value = getattr(self, key)
             if (isinstance(value, bool) or not isinstance(value, (int, float))
                     or not math.isfinite(value) or not 0 <= value <= 2):
@@ -141,7 +145,7 @@ class Shop:
         with self._lock:
             path = urlsplit(target).path
             budget = (0 if path in ("/v2/health", "/v2/login-form") else
-                      1 if path == "/v2/login" and method == "POST" else 2)
+                      1 if path == "/v2/login" and method == "POST" else 3)
             if not self._audit_capacity(budget) or max(map(len, (self._sessions, self._forms, self._carts,
                                                    self._orders, self._jobs, self._challenges,
                                                    self._claims))) >= 4096:
@@ -149,6 +153,8 @@ class Shop:
             return self._dispatch(method, target, headers, body, request)
 
     def service_delay(self, method, target, request):
+        if method == "GET" and urlsplit(target).path == "/v2/catalog":
+            return self.profile.catalog_delay_seconds
         if method != "POST" or urlsplit(target).path != "/v2/orders":
             return 0
         with self._lock:
@@ -249,6 +255,8 @@ class Shop:
         state["operations"] += 1
         if method != "GET" and headers.get("X-CSRF-Token") != state["csrf"]:
             return reply(403, {"error": "csrf"})
+        if method != "GET":
+            self._event(kind="mutation_authorized", request=request, actor=actor, session=sid)
 
         def mutation(payload, status=200, extra=None, lost=False):
             if p.rotate_csrf:
@@ -307,11 +315,14 @@ class Shop:
                     return reply(403, {"error": "grant"})
                 del state["grant"]
             cart = self._id("cart")
-            self._carts[cart] = {"actor": actor, "session": sid, "etag": 1,
-                                 "in_stock": product["variants"][0]["in_stock"], "ordered": False}
+            revision = int(self._id("revision").split("-")[1], 16) % 1000000 + 2 if p.dynamic_etag else 1
+            self._carts[cart] = {"actor": actor, "session": sid, "etag": revision,
+                                 "in_stock": product["variants"][0]["in_stock"], "ordered": False,
+                                 "quantity": 1, "product": product["id"],
+                                 "variant": product["variants"][0]["id"]}
             self._event(kind="cart", request=request, actor=actor, session=sid, resource=cart,
                         grant=grant if p.require_challenge else None)
-            return mutation({"id": cart}, 201, {"ETag": '"1"'})
+            return mutation({"id": cart}, 201, {"ETag": f'"{revision}"'})
         if path.startswith("/v2/carts/"):
             cart_id = path.split("/")[3]
             cart = self._carts.get(cart_id)
@@ -335,8 +346,9 @@ class Shop:
                                 session=sid, resource=cart_id, version=cart["etag"])
                     return reply(412, {"error": "etag_conflict"})
                 cart["etag"] += 1
+                cart["quantity"] = body["quantity"]
                 self._event(kind="cart_update", request=request, actor=actor, session=sid,
-                            resource=cart_id, version=cart["etag"])
+                            resource=cart_id, version=cart["etag"], quantity=cart["quantity"])
                 return mutation({"id": cart_id}, extra={"ETag": f'"{cart["etag"]}"'})
         if path == "/v2/reservations" and method == "POST":
             cart = self._carts.get(body.get("cart_id"))
@@ -360,10 +372,13 @@ class Shop:
             ready = job["polls"] >= p.job_polls
             phase = ("failed" if p.job_fails else "ready") if ready else "pending"
             self._event(kind="job_state", request=request, actor=actor, session=sid,
-                        resource=path.split("/")[-1], phase=phase)
+                        resource=path.split("/")[-1], phase=phase,
+                        reservation=job["reservation"] if phase == "ready" else None)
             return reply(200, {"status": phase, **({"reservation_id": job["reservation"]}
                                                   if phase == "ready" else {})})
         if path == "/v2/orders" and method == "POST":
+            if p.deny_orders:
+                return reply(401, {"error": "denied"})
             key = headers.get("Idempotency-Key")
             if not key or len(key) > 128:
                 return reply(400, {"error": "idempotency_key"})
@@ -396,7 +411,9 @@ class Shop:
             if job:
                 job["used"] = True
             self._event(kind="commit", request=request, actor=actor, session=sid,
-                        resource=cart_id, order=order, idempotency_key=key)
+                        resource=cart_id, order=order, idempotency_key=key,
+                        quantity=cart["quantity"], product=cart["product"], variant=cart["variant"],
+                        reservation=body.get("reservation_id"))
             previous = state["csrf"]
             response = mutation({"accepted": True, "id": order}, 201, lost=p.lose_commit_response)
             if p.rotate_csrf and p.lose_commit_response:
@@ -413,8 +430,11 @@ class Shop:
                 epoch = self._epochs.setdefault("work", self.clock())
                 slow = self.clock() - epoch >= p.slow_after_seconds
             fault = bool(p.fail_every and count % p.fail_every == 0)
+            unexpected = bool(p.unexpected_every and count % p.unexpected_every == 0)
             self._event(kind="work", request=request, actor=actor, session=sid,
-                        phase="slow" if slow else "base", fault="rate_limit" if fault else None)
+                        phase="slow" if slow else "base", fault="unexpected" if unexpected else "rate_limit" if fault else None)
+            if unexpected:
+                return reply(500, {"error": "unexpected"})
             return reply(429 if fault else 200, {"ok": not fault},
                          {"Retry-After": str(math.ceil(p.retry_after))} if fault else {},
                          p.slow_seconds if slow else p.delay_seconds)
@@ -460,7 +480,7 @@ def demo_app_v2(profile=None, seed="public-development", *, socket_path=None, cl
 
         def handle_request(self):
             request = shop.begin(self.command, self.path)
-            status, lost = 400, False
+            status, lost, payload = 400, False, {}
             try:
                 try:
                     length = int(self.headers.get("Content-Length", 0))
@@ -485,6 +505,7 @@ def demo_app_v2(profile=None, seed="public-development", *, socket_path=None, cl
                     return
                 data = payload.encode() if isinstance(payload, str) else json.dumps(payload).encode()
                 self.send_response(status)
+                self.send_header("X-P95-Request-ID", request)
                 self.send_header("Content-Type", "text/html" if isinstance(payload, str)
                                  else "application/json")
                 self.send_header("Content-Length", str(len(data)))
@@ -495,7 +516,8 @@ def demo_app_v2(profile=None, seed="public-development", *, socket_path=None, cl
             except OSError:
                 pass
             finally:
-                shop.end(request, status, response_lost=lost)
+                shop.end(request, status, response_lost=lost,
+                         error=payload.get("error") if isinstance(payload, dict) else None)
 
     base = ThreadingUnixStreamServer if socket_path else ThreadingHTTPServer
 

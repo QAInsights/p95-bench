@@ -1,0 +1,86 @@
+id: v2-r11-timer-scope
+category: repair
+tool: jmeter
+grader: v2_exec
+prompt: 'Repair a pacing timer applied to every HTTP sampler instead of once per business iteration.
+
+  Repair the supplied artifact.
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "flow", "workload": true, "operation": "journey",
+  "path": "/v2/orders", "rate": 1, "max_vus": 4}. Two fixture variants count equally; the same artifact is
+  reused without feedback. Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout":
+  1, "reverse_catalog": true}]. Negative-control overrides: [].
+
+  Pool work: POST /v2/orders is a complete owned checkout. Count its checkout request start
+  at the server request start timestamp, only when the owner records a committed order.
+  Login, catalog selection and cart setup are part of the journey but do not count as starts.
+
+  First authenticated eligible POST anchors T0, within10s of launch. Warmup5s, score [T0+5,T0+35) in six5s
+  windows, drain<=5s. Phased targets5/15/5 apply to three10s scored plateaus. Count only declared paths/pools;
+  login/setup excluded, health/extra routes forbidden. Journey rate counts committed checkout starts,
+  not HTTP samplers. Rate fraction=1 within max(10% of expected arrivals, 1 arrival) count error, linear
+  to0 at40% relative error; average windows equally, with each window capped by the full scored-window
+  mean-rate fraction using the same quantization allowance. Each1s burst<=ceil(1.5*target)+1. Unexpected
+  error/dropped work<=1%; max concurrent VUs=4. W06 uses successful completions (scheduled429 is expected,
+  never a completion), raw /work ceiling12/s and Retry-After per native worker, including across renewal.
+  Same-native-runtime capacity must sustain3x target before grading or this is infrastructure-unavailable.
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average all cases, never
+  best case):
+
+  loads: 10 points — plan loads Requires: none.
+
+  setup: 25 points — complete valid journeys Full window credit allows max(10% of expected arrivals, 1
+  arrival) count error; average windows with the same quantized full-window mean-rate cap. Requires: loads.
+
+  behavior: 40 points — measured iteration starts meet the target in all windows Requires: loads, setup.
+
+  safety: 25 points — think time is applied once and no compensating request flood occurs. Requires: loads.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite fault can lose multiple
+  checkpoints.'
+params:
+  tool: jmeter
+  contract:
+    users: 2
+    iterations: 2
+    mode: flow
+    workload: true
+    operation: journey
+    path: /v2/orders
+    rate: 1
+    max_vus: 4
+  rubric:
+  - id: loads
+    points: 10
+    description: plan loads
+    requires: []
+  - id: setup
+    points: 25
+    description: complete valid journeys Full window credit allows max(10% of expected arrivals, 1 arrival)
+      count error; average windows with the same quantized full-window mean-rate cap.
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: measured iteration starts meet the target in all windows
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: think time is applied once and no compensating request flood occurs.
+    requires:
+    - loads
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol.md
+- broken-r11.jmx

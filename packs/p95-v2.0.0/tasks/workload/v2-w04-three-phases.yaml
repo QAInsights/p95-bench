@@ -1,0 +1,87 @@
+id: v2-w04-three-phases
+category: workload
+tool: k6
+grader: v2_exec
+prompt: 'Deliver 5 → 15 → 5 starts/s over three specified 10-second plateaus.
+
+  Write a complete executable solution.
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "flow", "workload": true, "rates": [5, 15,
+  5]}. Two fixture variants count equally; the same artifact is reused without feedback. Fresh owner
+  seeds are recorded after execution. Profiles: [{}, {"html_layout": 1, "reverse_catalog": true}]. Negative-control
+  overrides: [].
+
+  Pool work: POST /v2/work is the operation. No checkout belongs to this pool; orders and
+  cart/catalog calls are extra routes unless explicitly needed by another declared pool.
+  Count the server request start timestamp, only for authenticated requests with a successful
+  owner work event and response status below 400. Login and renewal never count as operations.
+
+  First authenticated eligible POST anchors T0, within10s of launch. Warmup5s, score [T0+5,T0+35) in six5s
+  windows, drain<=5s. Phased targets5/15/5 apply to three10s scored plateaus. Count only declared paths/pools;
+  login/setup excluded, health/extra routes forbidden. Journey rate counts committed checkout starts,
+  not HTTP samplers. Rate fraction=1 within max(10% of expected arrivals, 1 arrival) count error, linear
+  to0 at40% relative error; average windows equally, with each window capped by the full scored-window
+  mean-rate fraction using the same quantization allowance. Each1s burst<=ceil(1.5*target)+1. Unexpected
+  error/dropped work<=1%; max concurrent VUs=32. W06 uses successful completions (scheduled429 is expected,
+  never a completion), raw /work ceiling12/s and Retry-After per native worker, including across renewal.
+  Same-native-runtime capacity must sustain3x target before grading or this is infrastructure-unavailable.
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average all cases, never
+  best case):
+
+  loads: 10 points — valid operation Requires: none.
+
+  setup: 40 points — mean phase-rate credit Full window credit allows max(10% of expected arrivals, 1
+  arrival) count error; average windows with the same quantized full-window mean-rate cap. Requires: loads.
+
+  behavior: 30 points — each phase is present with correct boundaries and burst limits Requires: loads,
+  setup.
+
+  safety: 20 points — dropped work, errors and drain remain bounded. Requires: loads.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite fault can lose multiple
+  checkpoints.'
+params:
+  tool: k6
+  contract:
+    users: 2
+    iterations: 2
+    mode: flow
+    workload: true
+    rates:
+    - 5
+    - 15
+    - 5
+  rubric:
+  - id: loads
+    points: 10
+    description: valid operation
+    requires: []
+  - id: setup
+    points: 40
+    description: mean phase-rate credit Full window credit allows max(10% of expected arrivals, 1 arrival)
+      count error; average windows with the same quantized full-window mean-rate cap.
+    requires:
+    - loads
+  - id: behavior
+    points: 30
+    description: each phase is present with correct boundaries and burst limits
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 20
+    description: dropped work, errors and drain remain bounded.
+    requires:
+    - loads
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol.md

@@ -1,0 +1,1 @@
+{"limit_ms": 500, "metrics": {"http_req_duration": {"values": {"p(95)": 100}}, "http_req_duration{route:checkout}": {"values": {"p(95)": 850}, "thresholds": {"p(95)<500": false}}}}
