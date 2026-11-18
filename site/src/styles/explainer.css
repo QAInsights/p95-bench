@@ -1,0 +1,70 @@
+.explainer { padding-block-end: 7rem; }
+.explainer [hidden] { display: none !important; }
+.explainer h3 { font: 400 clamp(1.5rem, 2.6vw, 2.25rem)/1.15 var(--display); letter-spacing: -.035em; }
+.explainer h4 { margin: 0; font: 600 .9375rem/1.4 var(--display); }
+.explainer .ex-copy { color: var(--mute); line-height: 1.7; max-inline-size: 85ch; margin-block: .875rem 1.5rem; font-size: .9375rem; }
+.ex-stage-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; margin-block: 2rem; }
+.ex-stage-buttons button { text-align: start; padding: .875rem 1rem; border: .0625rem solid var(--line); background: var(--panel); font-size: .875rem; }
+.ex-stage-buttons span { display: block; font: .75rem var(--mono); color: var(--mute); margin-block-end: .375rem; }
+.explainer button[aria-pressed="true"] { border-color: var(--lime); color: var(--lime); }
+.ex-panel { padding: clamp(1rem, 2.5vw, 2rem); border: .0625rem solid var(--line); background: linear-gradient(135deg, #191722, var(--panel)); margin-block-end: 1.5rem; }
+.ex-kicker { font: .75rem/1.5 var(--mono); color: var(--mute); overflow-wrap: anywhere; }
+.ex-pipeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; padding: 0; list-style: none; margin-block: 1.75rem; }
+.ex-pipeline button { inline-size: 100%; block-size: 100%; text-align: start; border: .0625rem solid var(--line); padding: 1rem; display: grid; gap: 1rem; }
+.ex-pipeline strong { font-size: 1.125rem; font-weight: 400; }
+.ex-pipeline button > span:last-child { color: var(--lime); }
+.ex-callout { padding: 1rem 1.25rem; border-inline-start: .1875rem solid var(--lime); background: var(--bg); line-height: 1.65; font-size: .875rem; margin-block: 1.25rem; }
+.ex-graders { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.ex-graders article { padding: 1rem; border: .0625rem solid var(--line); }
+.ex-graders h4 { color: var(--lime); overflow-wrap: anywhere; font-family: var(--mono); font-size: .8125rem; }
+.ex-graders p { color: var(--mute); font-size: .875rem; line-height: 1.65; margin-block-start: .5rem; }
+.ex-shapes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-block: 1.5rem; }
+.ex-shape { border: .0625rem solid var(--line); text-align: start; padding: 1rem; display: flex; flex-direction: column; gap: .75rem; min-inline-size: 0; }
+.ex-shape > strong { font: .9375rem var(--mono); }
+.ex-flow-row { display: grid; gap: .5rem; inline-size: 100%; font: .75rem/1.5 var(--mono); color: var(--mute); }
+.ex-flow { display: grid; gap: .375rem; }
+.ex-flow > span { padding: .5rem; border: .0625rem solid var(--line); border-inline-start-color: var(--lime); color: var(--ink); }
+.ex-verification { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ex-score-head { display: flex; justify-content: space-between; align-items: start; gap: 1.5rem; }
+#ex-score { display: block; color: var(--lime); font: clamp(2.5rem, 5vw, 4rem)/1.15 var(--mono); }
+.ex-controls { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-block: 1.5rem; }
+.ex-controls label { font: .75rem/1.5 var(--mono); color: var(--mute); }
+.ex-controls select { background: var(--bg); color: var(--ink); border: .0625rem solid var(--line); padding: .625rem; min-inline-size: 0; max-inline-size: 100%; font-size: .875rem; }
+.ex-formula { padding: 1rem; background: var(--bg); font: .8125rem/1.8 var(--mono); overflow-wrap: anywhere; }
+.ex-category-rows { margin-block: 1.25rem; }
+.ex-category-rows > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; padding-block: .625rem; border-block-end: .0625rem solid var(--line); font: .75rem/1.7 var(--mono); }
+.ex-category-rows dd { margin: 0; color: var(--mute); }
+.ex-category-rows dt { min-inline-size: 7rem; }
+.ex-task-pills { padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.ex-task { min-inline-size: 0; border: .0625rem solid var(--line); padding: 1rem; display: grid; gap: .875rem; }
+.ex-task h4 { overflow-wrap: anywhere; }
+.ex-task p[data-ex-points] { font: .75rem/1.6 var(--mono); color: var(--mute); margin-block-start: .5rem; }
+.ex-task [role="group"] { display: flex; flex-wrap: wrap; gap: .375rem; }
+.ex-task button { border: .0625rem solid var(--line); padding: .5rem .75rem; font: .75rem var(--mono); min-block-size: 2rem; }
+.ex-task button[data-ex-state="fail"][aria-pressed="true"] { border-color: var(--fail); color: var(--ink); background: #c4416a24; }
+.ex-task button[data-ex-state="not_run"][aria-pressed="true"] { color: var(--mute); border-color: var(--mute); border-style: dashed; }
+.ex-cost-parts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-block: 1.5rem; }
+.ex-cost-parts article { padding: 1rem; border: .0625rem solid var(--line); }
+.ex-cost-parts strong { display: block; margin-block: 1rem .375rem; font: 1.125rem var(--mono); color: var(--lime); }
+.ex-cost-parts p { color: var(--mute); font: .8125rem/1.8 var(--mono); }
+.ex-cost-total { font: 1.125rem var(--mono); color: var(--lime); }
+.ex-rules { padding: 1.5rem; border: .0625rem solid var(--line); }
+.ex-rules ul { margin-block-end: 0; padding-inline-start: 1.25rem; color: var(--mute); line-height: 1.8; font-size: .875rem; }
+.ex-rules li + li { margin-block-start: .5rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .ex-shape[aria-pressed="true"] .ex-flow > span { animation: ex-checkout 2s both; animation-delay: calc(var(--step) * .35s); }
+  @keyframes ex-checkout { from { opacity: .35; transform: translateX(-.375rem); } to { opacity: 1; transform: translateX(0); } }
+}
+@media (max-width: 60rem) {
+  .ex-pipeline, .ex-graders { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ex-shapes { grid-template-columns: 1fr; }
+}
+@media (max-width: 40rem) {
+  .ex-stage-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ex-panel { padding: 1rem; }
+  .ex-pipeline, .ex-graders, .ex-task-pills, .ex-cost-parts { grid-template-columns: 1fr; }
+  .ex-score-head { flex-direction: column; }
+  .ex-rules { padding: 1rem; }
+  .ex-controls { align-items: stretch; }
+  .ex-controls label, .ex-controls select { inline-size: 100%; }
+}

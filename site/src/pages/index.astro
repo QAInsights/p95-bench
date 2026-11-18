@@ -9,6 +9,7 @@ import data from "../data/leaderboard.json";
 import { name, toolScore, toolScoreLabel, selectModelVersions } from "../lib/scores.mjs";
 import { parse } from "yaml";
 import { buildScenarios, scenarioFilters } from "../lib/scenarios.mjs";
+import Explainer from "../components/Explainer.astro";
 
 const { weights } = data;
 const models = selectModelVersions(data.models);
@@ -103,24 +104,9 @@ const repo = "https://github.com/QAInsights/p95-bench";
           ><span class="key">F</span></button>
       </div>
     </header>
-    <nav class="rail" aria-label="Scenes">
-      <button data-scene="0" aria-label="Scene 1: Live run" aria-current="true"
-        ><span>01</span><i></i></button
-      ><button
-        data-scene="1"
-        aria-label="Scene 2: Flame stack"
-        aria-current="false"><span>02</span><i></i></button
-      ><button
-        data-scene="2"
-        aria-label="Scene 3: Value frontier"
-        aria-current="false"><span>03</span><i></i></button
-      ><button
-        data-scene="3"
-        aria-label="Scene 4: Model focus"
-        aria-current="false"><span>04</span><i></i></button>
-    </nav>
+    <nav class="rail" aria-label="Page sections"></nav>
     <main id="experience">
-      <section class="scene" id="scene-1">
+      <section class="scene" id="scene-1" data-section-label="Live run">
         <div class="scene-head replay-head">
           <div class="scene-intro">
             <p class="eyebrow">
@@ -173,7 +159,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
             /><b>Animated replay, not a running benchmark.</b></span>
         </div>
       </section>
-      <section class="scene" id="scene-2">
+      <section class="scene" id="scene-2" data-section-label="Flame stack">
         <div class="scene-head stack-top">
           <div class="scene-intro">
             <p class="eyebrow">
@@ -227,7 +213,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
             ></span>
         </div>
       </section>
-      <section class="scene" id="scene-3">
+      <section class="scene" id="scene-3" data-section-label="Value frontier">
         <div class="scene-head frontier-head">
           <div class="scene-intro">
             <p class="eyebrow">
@@ -302,7 +288,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
             ></span>
         </div>
       </section>
-      <section class="scene" id="scene-4">
+      <section class="scene" id="scene-4" data-section-label="Model focus">
         <div class="scene-head focus-head">
           <div>
             <p class="eyebrow">
@@ -388,7 +374,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
             ></span>
         </div>
       </section>
-      <section class="reading-section scenarios" id="scenarios" aria-labelledby="scenarios-title">
+      <section class="reading-section scenarios" id="scenarios" aria-labelledby="scenarios-title" data-section-label="Scenarios">
         <p class="eyebrow">05 / INSIDE THE TASK PACK</p>
         <h2 id="scenarios-title" tabindex="-1">Scenarios.<br />Every task, in the open.</h2>
         <p class="subcopy">What models must do, how we grade it and where they succeed.
@@ -420,8 +406,9 @@ const repo = "https://github.com/QAInsights/p95-bench";
         <p class="scenario-note">A model passes a scenario only if every published attempt passes.
           Missing attempts are shown as not run, not failed. Descriptions come from the checked-in task definitions.</p>
       </section>
-      <section class="reading-section" id="tools">
-        <p class="eyebrow">06 / PICK YOUR INSTRUMENT</p><h2 tabindex="-1">
+      <Explainer tasks={tasks} />
+      <section class="reading-section" id="tools" data-section-label="Tools">
+        <p class="eyebrow">07 / PICK YOUR INSTRUMENT</p><h2 tabindex="-1">
           Built for the tools you use.
         </h2>
         <p class="subcopy">Executable plans first. More engines next.</p>
@@ -488,9 +475,9 @@ const repo = "https://github.com/QAInsights/p95-bench";
         </p>
       </section>
 
-      <section class="reading-section methodology" id="method">
+      <section class="reading-section methodology" id="method" data-section-label="Methodology">
         <div>
-          <p class="eyebrow">07 / SHOW YOUR WORK</p><h2 tabindex="-1">
+          <p class="eyebrow">08 / SHOW YOUR WORK</p><h2 tabindex="-1">
             A benchmark.<br />Not a black box.
           </h2><a class="repo-link mono" href={repo}
             >Explore the harness on GitHub ↗</a>
@@ -554,12 +541,9 @@ const repo = "https://github.com/QAInsights/p95-bench";
           ><span data-task-count>{uniqueTasks}</span> TASKS · <span data-model-count>{models.length}</span> MODELS · DIRECT APIs</span>
       </div><div class="footer-right">
         <span class="desktop-help"
-          >SCROLL TO EXPLORE &nbsp; <span class="key">1</span>
-          <span class="key">2</span>
-          <span class="key">3</span>
-          <span class="key">4</span></span
+          >SCROLL TO EXPLORE &nbsp; <span data-section-shortcuts></span></span
         ><button id="next-scene"
-          >NEXT SCENE <span aria-hidden="true">↓</span></button>
+          >NEXT SECTION <span aria-hidden="true">↓</span></button>
       </div>
     </footer><div id="status" class="sr" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="fullscreen-message" class="status" hidden>

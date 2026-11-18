@@ -51,6 +51,20 @@ export function contributions(model, weights) {
     .map(([category, weight]) => ({ category, score: model.category_scores[category],
       points: model.category_scores[category] * weight / total }));
 }
+export function scoreAttempts(attempts, weights) {
+  const groups = new Map();
+  for (const attempt of attempts) {
+    if (attempt.passed == null) continue;
+    if (!Object.hasOwn(weights, attempt.category)) throw new Error(`Unknown category: ${attempt.category}`);
+    if (!groups.has(attempt.category)) groups.set(attempt.category, []);
+    groups.get(attempt.category).push(attempt);
+  }
+  const category_scores = Object.fromEntries([...groups].map(([category, values]) =>
+    [category, 100 * values.filter(value => value.passed).length / values.length]));
+  const measured_weight = [...groups.keys()].reduce((sum, category) => sum + weights[category], 0);
+  const overall_score = contributions({ category_scores }, weights).reduce((sum, row) => sum + row.points, 0);
+  return { overall_score, category_scores, measured_weight };
+}
 export const bestWithin = (models, budget) => [...models].filter((m) => m.cost <= budget)
   .sort((a, b) => b.overall_score - a.overall_score || a.cost - b.cost)[0] ?? null;
 export function toolScore(model, tool) {
