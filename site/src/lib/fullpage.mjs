@@ -2,6 +2,7 @@
 import { resolvePack, creditGradient } from './packs.mjs';
 import { mountPackScenes } from './pack-scenes.mjs';
 import { renderToolRankings } from './tool-rankings.mjs';
+import { taskCategoryGroups, taskHeading } from './task-headings.mjs';
 import { buildScenarios } from './scenarios.mjs';
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
@@ -302,17 +303,22 @@ let frame = 0,
   replayAnimations = [];
 function buildLanes() {
   const { taskIds, rows, groups } = replayToolLayout(models);
+  const tasksById = new Map(DATA.tasks.map(task => [task.id, task]));
+  const heading = id => taskHeading(tasksById.get(id) ?? { id });
   const sampleCount = taskIds.length;
   $("scene-1").style.setProperty("--sample-columns", groups
     .map(group => `repeat(${group.count}, minmax(0, 1fr))`).join(" var(--group-gap) ") || "none");
   $("tool-heads").innerHTML = groups.map(group =>
     '<span style="grid-column:' + group.column + '/span ' + group.count + '">' +
     '<span class="tool-label">' + escape(group.label) + '</span><span class="group-size"> · ' +
-    group.count + '</span></span>').join("");
-  $("task-heads").innerHTML = groups.map(group => taskIds
+    group.count + '</span>' + (pack === 'v2' ? '<span class="task-category-list">' +
+      taskCategoryGroups(taskIds.slice(group.offset, group.offset + group.count).map(id => tasksById.get(id) ?? { id }))
+        .map(category => '<span>' + escape(category.label) + ' <b>' + category.count + '</b></span>').join('') +
+      '</span>' : '') + '</span>').join("");
+  $("task-heads").innerHTML = pack === 'v2' ? '' : groups.map(group => taskIds
     .slice(group.offset, group.offset + group.count).map((id, index) =>
       '<span style="grid-column:' + (group.column + index) + '" title="' +
-      escape(id + ' · ' + group.label) + '">' +
+      escape(heading(id) + ' · ' + group.label) + '">' +
       escape(shortTaskLabel(id)) + '</span>').join(""))
     .join("");
   $("lanes").replaceChildren();
@@ -330,7 +336,7 @@ function buildLanes() {
     const labels = taskIds.map((id, column) => {
       const task = rows[i][column] === null ? null : m.per_task_results[rows[i][column]];
       const group = groups.find(group => column >= group.offset && column < group.offset + group.count);
-      return replaySampleLabel(task, id, group.label);
+      return replaySampleLabel(task, id, group.label, heading(id));
     });
     const description = document.createElement("p");
     description.id = "lane-description-" + i;

@@ -1,6 +1,7 @@
 import { name, selectModelVersions, attemptFraction } from './scores.mjs';
 import { providerName } from './provider-names.mjs';
 import { creditGradient } from './packs.mjs';
+import { taskTitle } from './task-headings.mjs';
 
 export const heatMetrics = ['result', 'tokens', 'latency'];
 export const heatTools = [['none', 'General'], ['jmeter', 'JMeter'], ['k6', 'k6']];
@@ -10,7 +11,7 @@ const valid = value => Number.isFinite(value) && value >= 0;
 
 export function heatmapData(models, tasks, attempts) {
   const columns = heatTools.flatMap(([tool]) => tasks.filter(task => (task.tool || 'none') === tool)
-    .map(task => ({ id: task.id, tool })));
+    .map(task => ({ id: task.id, title: taskTitle(task), category: task.category, tool })));
   const grouped = new Map();
   for (const attempt of attempts) {
     const key = JSON.stringify([attempt.provider, attempt.model, attempt.task_id]);

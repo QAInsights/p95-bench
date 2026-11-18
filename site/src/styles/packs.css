@@ -15,7 +15,12 @@
 .unit-matrix.pack-v2 { --unit-size: .625rem; --unit-gap: .1875rem; }
 .unit-matrix.pack-v2 .matrix-board { --unit-size: .625rem; }
 .pack-v2 .unit-square[data-result="partial"] { font-size: .5rem; }
-.pack-v2 .heatmap-table { min-inline-size: calc(11rem + var(--heat-columns) * 1.625rem); }
+.pack-v2 .heatmap-table { table-layout: auto; min-inline-size: calc(11rem + var(--heat-columns) * 1.625rem); }
+.task-category-list { display: flex; flex-wrap: wrap; gap: .5rem .875rem; margin-block-start: .75rem; font: .75rem/1.5 var(--mono); color: var(--mute); }
+.task-category-list > span { white-space: nowrap; }
+.task-category-list b { font-weight: 400; color: var(--ink); }
+.pack-v2 .heatmap-table .heat-category { padding: .75rem .375rem; border-block: 1px solid var(--line); white-space: nowrap; color: var(--ink); }
+.pack-v2 .heatmap-table thead th[scope="col"] { padding-block: .5rem; }
 .pack-v2 .matrix-legend::after { content: '% Partial credit · lime/red gradient'; color: var(--mute); }
 .pack-v2.explainer table { border-collapse: collapse; font: .75rem/1.6 var(--mono); width: 100%; }
 .pack-v2.explainer th, .pack-v2.explainer td { padding: .75rem; text-align: start; border-block-end: 1px solid var(--line); white-space: nowrap; }
