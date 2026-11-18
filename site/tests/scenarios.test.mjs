@@ -128,6 +128,8 @@ test('scenario content is build-time semantic markup between Model focus and Too
   assert.match(page, /id="status" class="sr" role="status" aria-live="polite"/);
   assert.match(page, /id="fullscreen-message" class="status"/);
   assert.match(client, /function fullscreenFailure\(message\)/);
+  assert.match(page, /id="dismiss-fullscreen-message"/);
+  assert.match(client, /setTimeout\(dismissFullscreenFailure, 4000\)/);
   assert.match(client, /"MODEL FOCUS",\s*"SCENARIOS",\s*"TOOLS",\s*"METHODOLOGY"/);
   assert.match(client, /scenes\.findIndex/);
   assert.match(client, /if \(all !== showingEarlier\) applyVersions\(\)/);

@@ -165,12 +165,22 @@ if (
   !CSS.supports("animation-range: 0% 100%")
 )
   document.documentElement.classList.add("scroll-fallback");
+function dismissFullscreenFailure() {
+  clearTimeout(fullscreenFailure.timer);
+  if ($("fullscreen-message").contains(document.activeElement))
+    $("fullscreen").focus({ preventScroll: true });
+  $("fullscreen-message").hidden = true;
+}
+$("dismiss-fullscreen-message").onclick = dismissFullscreenFailure;
 function fullscreenFailure(message) {
-  $("fullscreen-message").textContent = message;
+  clearTimeout(fullscreenFailure.timer);
+  $("fullscreen-message-text").textContent = message;
+  $("fullscreen-message").hidden = false;
   announce(message);
+  fullscreenFailure.timer = setTimeout(dismissFullscreenFailure, 4000);
 }
 async function fullscreen() {
-  $("fullscreen-message").textContent = "";
+  dismissFullscreenFailure();
   if (!document.fullscreenEnabled) {
     fullscreenFailure(
       "Fullscreen is unavailable in this browser. The scenes still fill the window.",
