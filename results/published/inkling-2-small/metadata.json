@@ -7,5 +7,11 @@
   "reasoning_effort": "provider default (not specified)",
   "cost_limit_usd": 0.5,
   "max_tokens": 8192,
-  "output_cap_note": "The completion cap includes reasoning tokens; null content is treated as empty answer text."
+  "output_cap_note": "The completion cap includes reasoning tokens; null content is treated as empty answer text.",
+  "k6_version": "1.0.0",
+  "k6_harness_commit": "804b79be95ec5c657efcf6a7122a177a1e00b577",
+  "k6_note": "k6 tasks were run separately with the original provider settings and unchanged system prompt, then appended and rescored. Saved scripts were locally regraded using debug request paths and VUs without additional model calls.",
+  "k6_run_date": "2026-11-18T00:52:09+00:00",
+  "k6_status": "completed",
+  "k6_estimated_cost_usd": 0.01512136
 }

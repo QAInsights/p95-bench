@@ -232,6 +232,15 @@ header {
   transform: translateX(14px);
   background: var(--bg);
 }
+.sample.unrun,
+.unrun-key {
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 3px,
+    var(--mute) 3px 4px
+  );
+  border: 1px solid var(--line);
+}
 .version-badge {
   text-transform: none;
   letter-spacing: normal;

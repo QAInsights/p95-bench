@@ -67,4 +67,7 @@ test('home uses build-time data, separate client code and preserved methodology 
   assert.match(page, /Claude Sonnet 5\.5, Opus 5\.5, GPT-6\.2 Sol and Astra/);
   assert.match(page.replace(/\s+/g, ' '), /max_completion_tokens instead of max_tokens/);
   assert.match(page, /toolScoreLabel\(m, ['"]jmeter['"]\)/);
+  assert.match(page, /toolScoreLabel\(m, ['"]k6['"]\)/);
+  assert.match(page, /\["Gatling", "Locust"\]/);
+  assert.match(page, /k6 v1\.0\.0 scripts/);
 });

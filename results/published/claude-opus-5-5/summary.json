@@ -7,10 +7,10 @@
     "correlation": 100.0,
     "workload": 100.0
   },
-  "attempts": 12,
-  "passed": 12,
-  "estimated_cost_usd": 0.325104,
-  "input_tokens": 2621,
-  "output_tokens": 15731,
-  "latency_seconds": 123.27856057399913
+  "attempts": 15,
+  "passed": 15,
+  "estimated_cost_usd": 0.398892,
+  "input_tokens": 3973,
+  "output_tokens": 19150,
+  "latency_seconds": 152.03948986998148
 }
