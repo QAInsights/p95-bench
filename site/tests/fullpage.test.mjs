@@ -1,9 +1,34 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { budgetScale, replayScore } from '../src/lib/scores.mjs';
+import { budgetScale, replayLayout, replayScore } from '../src/lib/scores.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
+
+test('replay columns align interleaved, appended and partial task orders by identity, including repeats', () => {
+  const models = [
+    ['analysis', 'k6-shop', 'shop', 'k6-session', 'session', 'analysis'],
+    ['analysis', 'shop', 'session', 'k6-shop', 'k6-session', 'analysis'],
+    ['session', 'analysis', 'shop'],
+  ].map(tasks => ({ per_task_results: tasks.map((task_id, index) => ({ task_id, passed: index % 2 === 0 })) }));
+  const { taskIds, rows } = replayLayout(models);
+  assert.deepEqual(taskIds, ['analysis', 'k6-shop', 'shop', 'k6-session', 'session', 'analysis']);
+  assert.deepEqual(rows, [[0, 1, 2, 3, 4, 5], [0, 3, 1, 4, 2, 5], [1, null, 2, null, 0, null]]);
+  rows.forEach((row, modelIndex) => row.forEach((index, column) => {
+    if (index !== null) assert.equal(models[modelIndex].per_task_results[index].task_id, taskIds[column]);
+  }));
+});
+
+test('replay columns include tasks absent from the first model, with empty slots rather than failures', () => {
+  const models = [['a', 'b'], ['b', 'c'], []].map(tasks => ({
+    per_task_results: tasks.map(task_id => ({ task_id })),
+  }));
+  assert.deepEqual(replayLayout(models), {
+    taskIds: ['a', 'b', 'c'], rows: [[0, 1, null], [null, 0, 1], [null, null, null]],
+  });
+  assert.deepEqual(replayLayout([]), { taskIds: [], rows: [] });
+  assert.deepEqual(replayLayout([{ per_task_results: [] }]), { taskIds: [], rows: [[]] });
+});
 
 test('replay scores only landed passing attempts and finishes at published weighted scores', () => {
   for (const model of published.models) {
@@ -67,4 +92,7 @@ test('home uses build-time data, separate client code and preserved methodology 
   assert.match(page, /Claude Sonnet 5\.5, Opus 5\.5, GPT-6\.2 Sol and Astra/);
   assert.match(page.replace(/\s+/g, ' '), /max_completion_tokens instead of max_tokens/);
   assert.match(page, /toolScoreLabel\(m, ['"]jmeter['"]\)/);
+  assert.match(page, /toolScoreLabel\(m, ['"]k6['"]\)/);
+  assert.match(page, /\["Gatling", "Locust"\]/);
+  assert.match(page, /k6 v1\.0\.0 scripts/);
 });

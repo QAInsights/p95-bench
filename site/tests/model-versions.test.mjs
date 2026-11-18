@@ -10,8 +10,8 @@ test('current registry shows eight latest models and restores earlier versions a
   assert.equal(all.length, 9);
   assert.ok(!latest.some(m => m.model === 'thinkingmachines/Inkling-Small'));
   assert.equal(all.find(m => m.model === 'thinkingmachines/Inkling-Small').newer_model, 'thinkingmachines/Inkling-2-Small');
-  assert.equal(latest.at(-1).model, 'thinkingmachines/Inkling');
-  assert.equal(all.at(-2).model, 'thinkingmachines/Inkling-Small');
+  assert.deepEqual(all.map(m => m.model), data.models.map(m => m.model));
+  assert.deepEqual(latest.map(m => m.model), all.filter(m => !m.newer_model).map(m => m.model));
   assert.ok(latest.every(m => m.version_status === 'Latest'));
   assert.ok(data.models.every(m => !Object.hasOwn(m, 'version_status')));
 });

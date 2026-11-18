@@ -57,12 +57,21 @@ test('published data is reproducible, redacted and matches weighted scores', asy
   for (const model of result.models) {
     const sum = contributions(model, result.weights).reduce((n, c) => n + c.points, 0);
     assert.ok(Math.abs(sum - model.overall_score) < 1e-10);
-    assert.equal(model.per_task_results.length, 12);
+    const metadata = JSON.parse(await readFile(path.join(runs.find(directory =>
+      directory.endsWith('/' + modelSlug(model.model) + '/')), 'metadata.json')));
+    assert.equal(metadata.k6_version, '1.0.0');
+    assert.ok(metadata.k6_run_date);
+    assert.match(metadata.k6_note, /separately/);
+    assert.equal(model.per_task_results.length, metadata.k6_status === 'completed' ? 15 : 12);
     assert.equal(model.category_scores.repair, undefined);
     assert.equal(model.category_scores.migration, undefined);
     assert.ok(model.run_date);
     assert.match(model.harness_commit, /^[a-f0-9]{40}$/);
-    assert.equal(toolScore(model, 'k6'), null);
+    const k6 = model.per_task_results.filter(t => t.tool === 'k6');
+    assert.equal(k6.length, metadata.k6_status === 'completed' ? 3 : 0);
+    assert.equal(toolScore(model, 'k6'), k6.length
+      ? 100 * k6.filter(t => t.passed).length / k6.length : null);
+    if (!k6.length) assert.equal(toolScoreLabel(model, 'k6'), 'Not run');
     const expectedToolScore = model.provider === 'thinkingmachines' ? 0
       : model.provider === 'deepseek' ? 200 / 3 : 100;
     assert.ok(Math.abs(toolScore(model, 'jmeter') - expectedToolScore) < 1e-10);
@@ -77,8 +86,8 @@ test('budget picker covers no budget, Flash and Pro thresholds', async () => {
   const { models } = await buildData(runs);
   assert.equal(bestWithin(models, 0), null);
   assert.equal(bestWithin([], 1), null);
-  assert.equal(bestWithin(models, .02).model, 'deepseek-flash');
-  assert.equal(bestWithin(models, .04).model, 'deepseek-v4-pro');
+  assert.equal(bestWithin(models, models.find(m => m.model === 'deepseek-flash').cost).model, 'deepseek-flash');
+  assert.equal(bestWithin(models, models.find(m => m.model === 'deepseek-v4-pro').cost).model, 'deepseek-v4-pro');
   assert.equal(bestWithin(models, 1).model, 'gpt-6.2-sol');
 });
 

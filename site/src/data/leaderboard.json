@@ -20,12 +20,12 @@
         "correlation": 100,
         "workload": 100
       },
-      "cost": 0.066556,
+      "cost": 0.07984,
       "tokens": {
-        "input": 1738,
-        "output": 6308
+        "input": 2630,
+        "output": 7458
       },
-      "latency": 82.73980524601939,
+      "latency": 100.32705740701931,
       "run_date": "2026-11-17T20:53:56Z",
       "harness_commit": "572a8d133f181ee61de2d4dd74c1ad1ecd67d612",
       "per_task_results": [
@@ -112,6 +112,27 @@
           "tool": "none",
           "passed": true,
           "detail": "numeric comparison"
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "category": "authoring",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
         }
       ]
     },
@@ -126,12 +147,12 @@
         "correlation": 100,
         "workload": 100
       },
-      "cost": 0.222904,
+      "cost": 0.26536,
       "tokens": {
-        "input": 1738,
-        "output": 5225
+        "input": 2630,
+        "output": 6108
       },
-      "latency": 79.91179368999292,
+      "latency": 95.9756153749986,
       "run_date": "2026-11-17T20:53:56Z",
       "harness_commit": "572a8d133f181ee61de2d4dd74c1ad1ecd67d612",
       "per_task_results": [
@@ -218,6 +239,27 @@
           "tool": "none",
           "passed": true,
           "detail": "numeric comparison"
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "category": "authoring",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
         }
       ]
     },
@@ -232,12 +274,12 @@
         "correlation": 100,
         "workload": 100
       },
-      "cost": 0.325104,
+      "cost": 0.398892,
       "tokens": {
-        "input": 2621,
-        "output": 15731
+        "input": 3973,
+        "output": 19150
       },
-      "latency": 123.27856057399913,
+      "latency": 152.03948986998148,
       "run_date": "2026-11-17T18:21:15Z",
       "harness_commit": "5c81ef803dbbcf39c3955b345eb3cbfbf24f6191",
       "per_task_results": [
@@ -324,26 +366,47 @@
           "tool": "none",
           "passed": true,
           "detail": "numeric comparison"
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "category": "authoring",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
         }
       ]
     },
     {
       "provider": "deepseek",
       "model": "deepseek-v4-pro",
-      "overall_score": 82.77777777777777,
+      "overall_score": 87.77777777777777,
       "category_scores": {
         "analysis": 100,
         "authoring": 100,
         "concepts": 66.66666666666667,
-        "correlation": 50,
+        "correlation": 75,
         "workload": 75
       },
-      "cost": 0.036710608,
+      "cost": 0.042002576,
       "tokens": {
-        "input": 1729,
-        "output": 8859
+        "input": 2630,
+        "output": 10060
       },
-      "latency": 91.60698783000771,
+      "latency": 100.35273389300346,
       "run_date": "2026-11-17T10:02:15Z",
       "harness_commit": "7383b4ec880b2cc9249e395c30d1200626d235a6",
       "per_task_results": [
@@ -430,26 +493,47 @@
           "tool": "none",
           "passed": false,
           "detail": "numeric comparison"
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "category": "authoring",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
         }
       ]
     },
     {
       "provider": "deepseek",
       "model": "deepseek-flash",
-      "overall_score": 80,
+      "overall_score": 85,
       "category_scores": {
         "analysis": 50,
         "authoring": 100,
         "concepts": 100,
-        "correlation": 50,
+        "correlation": 75,
         "workload": 100
       },
-      "cost": 0.012844236,
+      "cost": 0.014297772,
       "tokens": {
-        "input": 1741,
-        "output": 10331
+        "input": 2645,
+        "output": 11379
       },
-      "latency": 43.29179026699785,
+      "latency": 48.77899586199419,
       "run_date": "2026-11-17T10:01:23Z",
       "harness_commit": "7383b4ec880b2cc9249e395c30d1200626d235a6",
       "per_task_results": [
@@ -536,6 +620,27 @@
           "tool": "none",
           "passed": true,
           "detail": "numeric comparison"
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "category": "authoring",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
         }
       ]
     },
@@ -550,12 +655,12 @@
         "correlation": 100,
         "workload": 50
       },
-      "cost": 0.148032,
+      "cost": 0.189076,
       "tokens": {
-        "input": 2621,
-        "output": 14279
+        "input": 3973,
+        "output": 18113
       },
-      "latency": 86.60448307799379,
+      "latency": 110.9553824229879,
       "run_date": "2026-11-17T18:21:01Z",
       "harness_commit": "5c81ef803dbbcf39c3955b345eb3cbfbf24f6191",
       "per_task_results": [
@@ -642,26 +747,47 @@
           "tool": "none",
           "passed": false,
           "detail": "Expected only a number"
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "category": "authoring",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
         }
       ]
     },
     {
       "provider": "thinkingmachines",
       "model": "thinkingmachines/Inkling-2-Small",
-      "overall_score": 46.666666666666664,
+      "overall_score": 68.33333333333333,
       "category_scores": {
         "analysis": 100,
-        "authoring": 0,
+        "authoring": 50,
         "concepts": 100,
-        "correlation": 0,
+        "correlation": 25,
         "workload": 100
       },
-      "cost": 0.025909460000000002,
+      "cost": 0.04103082,
       "tokens": {
-        "input": 1989,
-        "output": 25451
+        "input": 3001,
+        "output": 40407
       },
-      "latency": 200.0585385489976,
+      "latency": 368.816436167981,
       "run_date": "2026-11-17T20:53:03Z",
       "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
       "per_task_results": [
@@ -748,6 +874,27 @@
           "tool": "none",
           "passed": true,
           "detail": "numeric comparison"
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "category": "authoring",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": false,
+          "detail": "No javascript code block found"
         }
       ]
     },

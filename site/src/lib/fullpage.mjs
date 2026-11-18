@@ -8,6 +8,7 @@ import {
   costFrontier,
   bestWithin,
   replayScore,
+  replayLayout,
   budgetScale,
   selectModelVersions,
 } from "./scores.mjs";
@@ -218,9 +219,9 @@ let frame = 0,
   lastTime = null,
   replayAnimations = [];
 function buildLanes() {
-  const taskShort = (models[0]?.per_task_results ?? []).map((t) =>
-    t.task_id.replaceAll("-", "").slice(0, 4).toUpperCase(),
-  );
+  const { taskIds, rows } = replayLayout(models);
+  const sampleCount = taskIds.length;
+  const taskShort = taskIds.map((id) => id.replaceAll("-", "").slice(0, 4).toUpperCase());
   $("task-heads").innerHTML = taskShort
     .map((t) => "<span>" + t + "</span>")
     .join("");
@@ -241,9 +242,12 @@ function buildLanes() {
       name(m) +
         ", inspect all " +
         m.per_task_results.length +
-        " published task results",
+        " published task results" +
+        (m.per_task_results.length < sampleCount
+          ? ", remaining tasks not run"
+          : ""),
     );
-    row.style.setProperty("--sample-count", m.per_task_results.length);
+    row.style.setProperty("--sample-count", sampleCount);
     row.innerHTML =
       '<span class="lane-index">' +
       String(i + 1).padStart(2, "0") +
@@ -254,10 +258,12 @@ function buildLanes() {
       " · " +
       versionMarkup(m) +
       '</span></span><span class="track">' +
-      m.per_task_results
-        .map(
-          (t, j) =>
-            '<span class="sample" data-task="' +
+      rows[i]
+        .map((j, column) => {
+          if (j === null) return '<span class="sample unrun" title="' +
+            escape(taskIds[column] + ': Not run') + '"></span>';
+          const t = m.per_task_results[j];
+          return '<span class="sample" data-task="' +
             j +
             '" title="' +
             escape(
@@ -267,8 +273,8 @@ function buildLanes() {
                 " · " +
                 t.detail,
             ) +
-            '"></span>',
-        )
+            '"></span>';
+        })
         .join("") +
       '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span>';
     row.onclick = () => openModel(i, row);
@@ -379,7 +385,7 @@ function startReplay() {
   });
   arrived.forEach((s) => s.clear());
   laneNodes.forEach((row) =>
-    row.querySelectorAll(".sample").forEach((c) => (c.className = "sample")),
+    row.querySelectorAll(".sample[data-task]").forEach((c) => (c.className = "sample")),
   );
   $("pause").textContent = "Pause";
   $("finish").disabled = false;

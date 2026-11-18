@@ -66,6 +66,26 @@ export function taskResult(model, taskId) {
   };
 }
 
+export function replayLayout(models) {
+  const taskIds = [], columns = new Map();
+  const rows = models.map(model => {
+    const occurrences = new Map(), row = [];
+    model.per_task_results.forEach((task, index) => {
+      const occurrence = occurrences.get(task.task_id) ?? 0;
+      occurrences.set(task.task_id, occurrence + 1);
+      if (!columns.has(task.task_id)) columns.set(task.task_id, []);
+      const slots = columns.get(task.task_id);
+      if (slots[occurrence] === undefined) {
+        slots[occurrence] = taskIds.length;
+        taskIds.push(task.task_id);
+      }
+      row[slots[occurrence]] = index;
+    });
+    return row;
+  });
+  return { taskIds, rows: rows.map(row => taskIds.map((_, column) => row[column] ?? null)) };
+}
+
 export function replayScore(model, landed, weights) {
   return contributions(model, weights).reduce((total, { category, points }) => {
     const passed = model.per_task_results.flatMap((task, index) =>

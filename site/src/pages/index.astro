@@ -49,6 +49,9 @@ const latestRun = latestDate
 const toolRanking = [...allModels].sort(
   (a, b) => (toolScore(b, "jmeter") ?? -1) - (toolScore(a, "jmeter") ?? -1),
 );
+const k6Ranking = [...allModels].sort(
+  (a, b) => (toolScore(b, "k6") ?? -1) - (toolScore(a, "k6") ?? -1),
+);
 const repo = "https://github.com/QAInsights/p95-bench";
 ---
 
@@ -152,9 +155,9 @@ const repo = "https://github.com/QAInsights/p95-bench";
           <div class="legend-inline">
             <span><i style="background:var(--lime)"></i>Pass</span><span
               ><i style="background:var(--fail)"></i>Fail ×</span
-            ><span>Press a lane to inspect ↗</span>
+            ><span><i class="unrun-key"></i>Not run</span><span>Press a lane to inspect ↗</span>
           </div><span
-            ><span data-task-count>{uniqueTasks}</span> tasks × <span data-model-count>{models.length}</span> models · Published attempts<br
+            ><span data-task-count>{uniqueTasks}</span> tasks · <span data-model-count>{models.length}</span> models · Published attempts<br
             /><b>Animated replay, not a running benchmark.</b></span>
         </div>
       </section>
@@ -388,15 +391,30 @@ const repo = "https://github.com/QAInsights/p95-bench";
                   <li data-tool-model={m.model} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
                     <>
                       <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
-                      <b>{toolScoreLabel(m, "jmeter")}</b>
+                      <b class={toolScore(m, "jmeter") === null ? 'tool-unrun' : undefined}>{toolScoreLabel(m, "jmeter")}</b>
                     </>
                   </li>
                 ))
               }
             </ol>
           </article>
+          <article class="tool-card active-tool">
+            <h3>k6</h3><div class="tool-heading">
+              Real scripts.<br />Real checkouts.
+            </div><p class="tool-note mono">Executable task pass rate</p>
+            <ol role="list">
+              {
+                k6Ranking.map((m) => (
+                  <li data-tool-model={m.model} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
+                    <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
+                    <b class={toolScore(m, "k6") === null ? 'tool-unrun' : undefined}>{toolScoreLabel(m, "k6")}</b>
+                  </li>
+                ))
+              }
+            </ol>
+          </article>
           {
-            ["k6", "Gatling", "Locust"].map((tool, i) => (
+            ["Gatling", "Locust"].map((tool, i) => (
               <article class="tool-card">
                 <>
                   <h3>{tool}</h3>
@@ -419,8 +437,9 @@ const repo = "https://github.com/QAInsights/p95-bench";
           }
         </div>
         <p class="footnote">
-          JMeter score = percentage of executable tasks passed. No scores are
-          assigned to tools without graders.
+          JMeter and k6 scores = percentage of executable tasks passed per tool. No scores are
+          assigned to tools without graders. Provider timeouts with no returned
+          attempts are shown as Not run, not counted as failures.
         </p>
       </section>
 
@@ -440,8 +459,11 @@ const repo = "https://github.com/QAInsights/p95-bench";
             every model. No routing layer.
           </p>
           <p>
-            Generated JMeter plans run against a loopback demo shop. Passing
-            requires zero sample errors and verified session-aware checkouts.
+            Generated JMeter plans and k6 v1.0.0 scripts run against a loopback
+            demo shop. Passing requires successful HTTP samples, verified
+            session-aware checkouts and distinct checkout workers for isolation.
+            Completed k6 attempts were run separately and appended to original
+            attempts, preserving the original system prompt and provider settings.
             Numeric and choice tasks use deterministic answer keys.
           </p>
           <p>
