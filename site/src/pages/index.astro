@@ -1,8 +1,10 @@
 ---
 import "@fontsource/bricolage-grotesque/latin-400.css";
 import "@fontsource/bricolage-grotesque/latin-600.css";
+import "@fontsource/bricolage-grotesque/latin-800.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/global.css";
+import "../styles/jelly-wordmark.css";
 import data from "../data/leaderboard.json";
 import { name, toolScore, toolScoreLabel, selectModelVersions } from "../lib/scores.mjs";
 import { parse } from "yaml";
@@ -526,6 +528,10 @@ const repo = "https://github.com/QAInsights/p95-bench";
           <span>Open source · MIT · P95 Bench</span><span
             >© 2026 NaveenKumar Namachivayam</span>
         </div>
+        <div class="jelly-wordmark" id="jelly-wordmark">
+          <span class="sr">P95 Bench</span>
+          <canvas aria-hidden="true"></canvas>
+        </div>
       </section>
     </main>
     <footer>
@@ -554,6 +560,8 @@ const repo = "https://github.com/QAInsights/p95-bench";
 
     <script>
       import "../lib/fullpage.mjs";
+      import { mountJellyWordmark } from "../lib/jelly-wordmark.mjs";
+      mountJellyWordmark(document.getElementById('jelly-wordmark'));
     </script>
   </body>
 </html>

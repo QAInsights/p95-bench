@@ -1,0 +1,17 @@
+.jelly-wordmark {
+  grid-column: 1 / -1;
+  position: relative;
+  margin-block-start: 1.5rem;
+  block-size: clamp(9rem, 22vw, 22rem);
+  min-inline-size: 0;
+  touch-action: pan-y;
+  cursor: crosshair;
+  overflow: hidden;
+}
+.jelly-wordmark canvas {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+}
