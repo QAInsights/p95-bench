@@ -391,7 +391,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
                   <li data-tool-model={m.model} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
                     <>
                       <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
-                      <b>{toolScoreLabel(m, "jmeter")}</b>
+                      <b class={toolScore(m, "jmeter") === null ? 'tool-unrun' : undefined}>{toolScoreLabel(m, "jmeter")}</b>
                     </>
                   </li>
                 ))
@@ -407,7 +407,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
                 k6Ranking.map((m) => (
                   <li data-tool-model={m.model} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
                     <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
-                    <b>{toolScoreLabel(m, "k6")}</b>
+                    <b class={toolScore(m, "k6") === null ? 'tool-unrun' : undefined}>{toolScoreLabel(m, "k6")}</b>
                   </li>
                 ))
               }

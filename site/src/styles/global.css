@@ -2000,6 +2000,10 @@ th {
 .tool-card li b {
   font-weight: 400;
   color: var(--lime);
+  white-space: nowrap;
+}
+.tool-card li b.tool-unrun {
+  color: var(--mute);
 }
 .mini-flame {
   margin: auto 0 25px;
