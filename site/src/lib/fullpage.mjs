@@ -1,5 +1,6 @@
 "use strict";
 import DATA from "../data/leaderboard.json";
+import { observeScenes } from "./scene-observer.mjs";
 import {
   name as modelName,
   modelSlug,
@@ -102,34 +103,22 @@ document.querySelectorAll('a[href="#method"],a[href="#tools"]').forEach(
       goScene(a.hash === "#tools" ? 4 : 5);
     }),
 );
-const observer = new IntersectionObserver(
-  (entries) => {
-    for (const e of entries) {
-      const visible =
-        e.intersectionRect.height /
-        Math.min(innerHeight, e.boundingClientRect.height);
-      if (visible > 0.55) {
-        currentScene = scenes.indexOf(e.target);
-        document
-          .querySelectorAll("[data-scene]")
-          .forEach((b, i) =>
-            b.setAttribute("aria-current", String(i === currentScene)),
-          );
-        $("scene-label").textContent =
-          "0" + (currentScene + 1) + " / " + sceneNames[currentScene];
-        document.title =
-          "P95 Bench / " + cap(sceneNames[currentScene].toLowerCase());
-        if (!e.target.classList.contains("in-view")) {
-          e.target.classList.add("points-entering");
-          setTimeout(() => e.target.classList.remove("points-entering"), 1800);
-        }
-        e.target.classList.add("in-view");
-      }
-    }
-  },
-  { root: null, threshold: [0, 0.25, 0.5, 0.6, 0.75, 1] },
-);
-scenes.forEach((s) => observer.observe(s));
+observeScenes(scenes, (scene) => {
+  currentScene = scenes.indexOf(scene);
+  document
+    .querySelectorAll("[data-scene]")
+    .forEach((b, i) =>
+      b.setAttribute("aria-current", String(i === currentScene)),
+    );
+  $("scene-label").textContent =
+    "0" + (currentScene + 1) + " / " + sceneNames[currentScene];
+  document.title = "P95 Bench / " + cap(sceneNames[currentScene].toLowerCase());
+  if (!scene.classList.contains("in-view")) {
+    scene.classList.add("points-entering");
+    setTimeout(() => scene.classList.remove("points-entering"), 1800);
+  }
+  scene.classList.add("in-view");
+});
 if (
   !CSS.supports("animation-timeline: view()") ||
   !CSS.supports("animation-range: 0% 100%")
