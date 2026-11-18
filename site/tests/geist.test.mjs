@@ -29,3 +29,10 @@ test('jelly canvas samples each word with its own face and waits for both fonts'
   assert.match(source, /document.fonts.load\('400 64px "Geist Pixel Grid"'\)/);
   assert.doesNotMatch(source, /Bricolage/);
 });
+
+test('short desktop focus scenes grow rather than hiding task results', async () => {
+  const css = await readFile(new URL('../src/styles/geist.css', import.meta.url), 'utf8');
+  assert.match(css, /max-height: 40rem[\s\S]*#scene-4\s*\{\s*block-size: auto/);
+  assert.match(css, /#scene-4 \.profile\s*\{\s*flex: none;\s*grid-template-rows: auto/);
+  assert.match(css, /#scene-4 \.task-grid\s*\{[\s\S]*min-block-size: 5\.5rem;\s*max-block-size: 16\.5rem/);
+});

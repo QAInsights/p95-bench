@@ -204,3 +204,17 @@
     padding-block-start: .5rem;
   }
 }
+@media (min-width: 47.5625rem) and (max-height: 40rem) {
+  #scene-4 {
+    block-size: auto;
+  }
+  #scene-4 .profile {
+    flex: none;
+    grid-template-rows: auto;
+  }
+  #scene-4 .task-grid {
+    flex: auto;
+    min-block-size: 5.5rem;
+    max-block-size: 16.5rem;
+  }
+}
