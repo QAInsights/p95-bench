@@ -237,6 +237,16 @@ def test_private_pack_symlink_cannot_write_into_repository(tmp_path, monkeypatch
     assert provider.calls == 0
 
 
+def test_budget_overrun_is_persisted_and_blocks_future_spend(tmp_path):
+    ledger = BudgetLedger(tmp_path / "ledger.json")
+    key = ledger.reserve(1)
+    with pytest.raises(ValueError, match="reservation"):
+        ledger.settle(key, 31)
+    assert json.loads(ledger.path.read_text())["charges"][key] == 31_000_000
+    with pytest.raises(SpendLimitExceeded):
+        BudgetLedger(ledger.path).reserve(.000001)
+
+
 def test_legacy_published_scores_bit_identical():
     for directory in (ROOT / "results/published").iterdir():
         attempts = [json.loads(l) for l in (directory / "attempts.jsonl").read_text().splitlines()]

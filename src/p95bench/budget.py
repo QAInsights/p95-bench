@@ -53,6 +53,6 @@ class BudgetLedger:
         amount = micros(actual_upper_bound)
         with self.transaction() as data:
             reserved = data["charges"][key]
-            if amount > reserved:
-                raise ValueError("Usage exceeds conservative reservation; stop and audit pricing")
             data["charges"][key] = amount
+        if amount > reserved:
+            raise ValueError("Usage exceeds conservative reservation; stop and audit pricing")
