@@ -1,11 +1,14 @@
 import json
 import re
+import socket
+import struct
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from html.parser import HTMLParser
 from http.client import RemoteDisconnected
 from http.cookiejar import CookieJar
 from urllib.error import HTTPError
+from urllib.parse import urlsplit
 from urllib.request import HTTPCookieProcessor, HTTPRedirectHandler, Request, build_opener
 
 import pytest
@@ -73,6 +76,7 @@ def test_audit_reserves_checkout_and_inflight_end_capacity(spare, inflight):
         client = Client(url)
         cookie = client.login()[2]["Set-Cookie"].split(";")[0]
         cart = client.cart()
+        shop.audit()
         earlier = shop.begin("GET", "/v2/health") if inflight else None
         shop._events.extend([{"kind": "padding"}] * (32768 - spare - len(shop._events)))
         request = None
@@ -215,6 +219,33 @@ def test_rotated_csrf_lost_response_has_one_exact_bounded_replay(expired):
                 {**headers, "X-CSRF-Token": previous})[0] == 403
             assert client.request("/v2/session/renew", "POST")[0] == 200
         assert len([event for event in shop.audit() if event["kind"] == "commit"]) == 1
+
+
+def test_reset_during_upload_ends_request_exactly_once(monkeypatch):
+    with demo_app_v2() as (shop, url):
+        started, ended, calls = threading.Event(), threading.Event(), []
+        begin, end = shop.begin, shop.end
+        def observed_begin(*args):
+            request = begin(*args)
+            started.set()
+            return request
+        def observed_end(*args, **kwargs):
+            calls.append(args[0])
+            end(*args, **kwargs)
+            ended.set()
+        monkeypatch.setattr(shop, "begin", observed_begin)
+        monkeypatch.setattr(shop, "end", observed_end)
+        target = urlsplit(url)
+        with socket.create_connection((target.hostname, target.port), timeout=2) as client:
+            client.sendall(b"POST /v2/login HTTP/1.1\r\nHost: localhost\r\nContent-Length: 1000\r\n\r\n{")
+            assert started.wait(2)
+            client.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+        assert ended.wait(2)
+        assert len(calls) == 1 and shop._pending == 0
+        assert Client(url).request("/v2/health")[0] == 200
+        audit = shop.audit()
+        assert len([event for event in audit if event["kind"] == "start"]) == 2
+        assert len([event for event in audit if event["kind"] == "end"]) == 2
 
 
 @pytest.mark.parametrize("failed", [False, True])

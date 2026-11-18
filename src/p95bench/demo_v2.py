@@ -462,21 +462,21 @@ def demo_app_v2(profile=None, seed="public-development", *, socket_path=None, cl
             request = shop.begin(self.command, self.path)
             status, lost = 400, False
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                if self.headers.get("Transfer-Encoding") or not 0 <= length <= 4096:
-                    raise ValueError("body length")
-                body = json.loads(self.rfile.read(length)) if length else {}
-                if (not isinstance(body, dict)
-                        or any(isinstance(value, (dict, list)) for value in body.values())):
-                    raise ValueError("body object")
-                service_delay = shop.service_delay(self.command, self.path, request)
-                if service_delay:
-                    time.sleep(service_delay)
-                status, payload, headers, delay, lost = shop.dispatch(
-                    self.command, self.path, self.headers, body, request)
-            except (ValueError, TimeoutError):
-                status, payload, headers, delay = 400, {"error": "invalid body"}, {}, 0
-            try:
+                try:
+                    length = int(self.headers.get("Content-Length", 0))
+                    if self.headers.get("Transfer-Encoding") or not 0 <= length <= 4096:
+                        raise ValueError("body length")
+                    body = json.loads(self.rfile.read(length)) if length else {}
+                    if (not isinstance(body, dict)
+                            or any(isinstance(value, (dict, list)) for value in body.values())):
+                        raise ValueError("body object")
+                    service_delay = shop.service_delay(self.command, self.path, request)
+                    if service_delay:
+                        time.sleep(service_delay)
+                    status, payload, headers, delay, lost = shop.dispatch(
+                        self.command, self.path, self.headers, body, request)
+                except (ValueError, TimeoutError):
+                    status, payload, headers, delay = 400, {"error": "invalid body"}, {}, 0
                 if delay:
                     time.sleep(delay)
                 if lost:
