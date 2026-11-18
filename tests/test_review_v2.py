@@ -96,3 +96,38 @@ def workload_trial(extra_starts=()):
 def test_completion_raw_ceiling_applies_to_each_scored_second(extra, expected):
     result = workload_fractions(workload_trial(extra), {"completion": True, "rate": 1, "raw_ceiling": 2})
     assert result["safety"] == expected
+
+
+@pytest.mark.parametrize("fault", ["exit", "check", "assertion", "sample"])
+def test_positive_flow_requires_clean_native_outcome(fault):
+    trial = flow_trial()
+    if fault == "exit":
+        trial.returncode = 1
+    elif fault == "check":
+        trial.points = [{"metric": "checks", "value": 0}]
+    elif fault == "assertion":
+        trial.samples[-1]["assertion_failures"] = 1
+    else:
+        trial.samples[-1]["success"] = False
+    result = flow_fractions(trial, [], {})
+    assert result["safety"] == 0
+
+
+@pytest.mark.parametrize("mode,status,error", [("expiry", 401, "expired"), ("etag", 412, "etag")])
+@pytest.mark.parametrize("assertion_failure", [0, 1])
+def test_native_positive_retry_samples_remain_allowed(mode, status, error, assertion_failure):
+    trial = flow_trial()
+    trial.events.extend([{"kind": "start", "request": "retry", "path": "/v2/orders",
+                          "method": "POST", "time": 1},
+                         {"kind": "end", "request": "retry", "outcome": status, "error": error}])
+    trial.samples.append({"request": "retry", "worker": "1", "assertion_failures": assertion_failure,
+                          "success": False, "status": str(status)})
+    for sample in trial.samples:
+        if sample["request"] != "retry":
+            trial.events.append({"kind": "renew", "request": sample["request"]})
+    if mode == "etag":
+        for commit in [event for event in trial.events if event["kind"] == "commit"]:
+            commit["quantity"] = 2
+            trial.events.extend([{"kind": "cart_conflict", "request": commit["request"]},
+                                 {"kind": "cart_update", "request": commit["request"]}])
+    assert flow_fractions(trial, [], {"mode": mode})["safety"] == 1

@@ -235,7 +235,14 @@ def flow_fractions(trial, controls, contract):
     ends = events(trial, "end")
     allowed = {401} if mode in ("expiry", "ownership", "errors", "denial") else {412} if mode == "etag" else set()
     unexpected = [event for event in ends if event["outcome"] >= 400 and event["outcome"] not in allowed]
-    safety *= float(not unexpected and trial.status == "completed" and len(ends) <= expected * 25)
+    retries = {event["request"] for event in ends if (
+        event["outcome"] == 401 and 401 in allowed and event.get("error") in ("expired", "session")
+        or event["outcome"] == 412 and 412 in allowed and event.get("error") in ("etag", "etag_conflict"))}
+    clean = (trial.returncode == 0
+             and not any(point["metric"] == "checks" and point["value"] == 0 for point in trial.points)
+             and all(not sample.get("assertion_failures", 0) and sample.get("success", True)
+                     for sample in trial.samples if sample["request"] not in retries))
+    safety *= float(clean and not unexpected and trial.status == "completed" and len(ends) <= expected * 25)
     return {"loads": float(trial.loaded), "setup": setup, "behavior": behavior, "safety": safety}
 
 
