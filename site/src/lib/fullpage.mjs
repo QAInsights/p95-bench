@@ -50,7 +50,7 @@ const escape = (s) =>
         c
       ],
   );
-const versionMarkup = (m) =>
+const versionMarkup = (m, showCoverage = true) =>
   '<span class="version-badge">' +
   m.version_status +
   "</span>" +
@@ -59,7 +59,8 @@ const versionMarkup = (m) =>
       escape(modelName(m.newer_model)) +
       "</small>"
     : "") +
-  (m.discontinued ? ' · <span class="version-badge">Discontinued</span>' : "");
+  (m.discontinued ? ' · <span class="version-badge">Discontinued</span>' : "") +
+  (showCoverage && m.coverage?.partial ? ' · <span class="partial-run">Partial · ' + escape(m.coverage.label) + '</span>' : "");
 const scenes = [...document.querySelectorAll(".scene, .reading-section")],
   sections = sectionMetadata(scenes),
   sceneNames = sections.map(section => section.label.toUpperCase());
@@ -319,7 +320,7 @@ function buildLanes() {
       '</span><span class="lane-provider">' +
       escape(m.provider) +
       " · " +
-      versionMarkup(m) +
+      versionMarkup(m, false) +
       '</span></button><span class="track">' +
       groups.map((group, groupIndex) => '<span class="sample-group" role="img" aria-label="' +
         escape(counts[groupIndex].text + ': ' + labels.slice(group.offset, group.offset + group.count).join('; ')) +
@@ -334,6 +335,7 @@ function buildLanes() {
       counts.filter(count => count.tool !== 'none').map(count =>
         '<span' + (count.attempts ? '' : ' class="tool-unrun"') + '>' + escape(count.text) + '</span>')
         .join('<span aria-hidden="true"> · </span>') +
+      (m.coverage?.partial ? '<span class="partial-run">Partial · ' + escape(m.coverage.label) + '</span>' : '') +
       '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span></span>';
     row.onclick = () => openModel(i, row);
     laneNodes.set(i, row);

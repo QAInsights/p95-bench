@@ -32,6 +32,13 @@ export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'gpt-6.2-astra' ? 'GPT-6.2 Astra' : model;
 export const modelSlug = (model) => model.replace(/^thinkingmachines\//, '').toLowerCase()
   .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+export function taskCoverage(model, tasks) {
+  const expected = new Set(tasks.map(task => task.id));
+  const run = new Set(model.per_task_results.map(task => task.task_id)
+    .filter(id => expected.has(id))).size;
+  const total = expected.size;
+  return { run, total, partial: run < total, label: `${run}/${total} tasks run` };
+}
 export function costFrontier(models) {
   const sorted = [...models].sort((a, b) => a.cost - b.cost || b.overall_score - a.overall_score);
   return sorted.filter((model, index) => index === 0

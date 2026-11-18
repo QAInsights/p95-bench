@@ -42,6 +42,7 @@ class ProviderConfig:
     prices: dict[str, Price]
     temperature: float | None = 0
     extra: dict = field(default_factory=dict)
+    timeout_seconds: float = 180
 
 
 PROVIDERS = {
@@ -64,6 +65,7 @@ PROVIDERS = {
          "thinkingmachines/Inkling-Small": Price(0.58, 0.116, 1.44),
          "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00)},
         extra={"max_tokens": 8192},
+        timeout_seconds=600,
     ),
     "openai": ProviderConfig(
         "https://api.openai.com/v1", "OPENAI_API_KEY",
@@ -92,7 +94,7 @@ class OpenAICompatible:
             data=json.dumps(body).encode() if body is not None else None,
             headers=self._headers(key),
         )
-        with urllib.request.urlopen(request, timeout=180) as response:
+        with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
             return json.load(response)
 
     def models(self) -> list[str]:

@@ -211,6 +211,12 @@
           "cost_usd": 0.003776
         }
       ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
       "per_task_results": [
         {
           "task_id": "errors",
@@ -521,6 +527,12 @@
           "cost_usd": 0.013784
         }
       ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
       "per_task_results": [
         {
           "task_id": "errors",
@@ -831,6 +843,12 @@
           "cost_usd": 0.025912
         }
       ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
       "per_task_results": [
         {
           "task_id": "errors",
@@ -1141,6 +1159,12 @@
           "cost_usd": 0.0016969039999999997
         }
       ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
       "per_task_results": [
         {
           "task_id": "errors",
@@ -1451,6 +1475,12 @@
           "cost_usd": 0.000484068
         }
       ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
       "per_task_results": [
         {
           "task_id": "errors",
@@ -1761,6 +1791,12 @@
           "cost_usd": 0.014756
         }
       ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
       "per_task_results": [
         {
           "task_id": "errors",
@@ -1845,6 +1881,322 @@
           "tool": "none",
           "passed": false,
           "detail": "Expected only a number"
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "category": "authoring",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 1/1"
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "category": "correlation",
+          "tool": "k6",
+          "passed": true,
+          "detail": "Verified completions: 2/2"
+        }
+      ]
+    },
+    {
+      "provider": "thinkingmachines",
+      "model": "thinkingmachines/Inkling",
+      "overall_score": 73.33333333333333,
+      "category_scores": {
+        "analysis": 100,
+        "authoring": 50,
+        "concepts": 100,
+        "correlation": 50,
+        "workload": 100
+      },
+      "cost": 0.154428306,
+      "tokens": {
+        "input": 2735,
+        "output": 32232
+      },
+      "latency": 160.4249980159875,
+      "run_date": "2026-11-17T20:52:43Z",
+      "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
+      "output_cap": 8192,
+      "cost_attempts": [
+        {
+          "task_id": "errors",
+          "input_tokens": 126,
+          "cached_tokens": 0,
+          "output_tokens": 63,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.0005304600000000001
+        },
+        {
+          "task_id": "mean",
+          "input_tokens": 130,
+          "cached_tokens": 0,
+          "output_tokens": 81,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.0006221800000000001
+        },
+        {
+          "task_id": "shop-flow",
+          "input_tokens": 289,
+          "cached_tokens": 0,
+          "output_tokens": 7886,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.03744690999999999
+        },
+        {
+          "task_id": "closed",
+          "input_tokens": 108,
+          "cached_tokens": 0,
+          "output_tokens": 121,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00076824
+        },
+        {
+          "task_id": "correlation",
+          "input_tokens": 103,
+          "cached_tokens": 0,
+          "output_tokens": 73,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00053425
+        },
+        {
+          "task_id": "percentile",
+          "input_tokens": 97,
+          "cached_tokens": 0,
+          "output_tokens": 35,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00034519
+        },
+        {
+          "task_id": "session-isolation",
+          "input_tokens": 298,
+          "cached_tokens": 256,
+          "output_tokens": 8136,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.03825076399999999
+        },
+        {
+          "task_id": "token-refresh",
+          "input_tokens": 302,
+          "cached_tokens": 256,
+          "output_tokens": 7373,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.034687404000000005
+        },
+        {
+          "task_id": "arrival",
+          "input_tokens": 85,
+          "cached_tokens": 0,
+          "output_tokens": 35,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00032275
+        },
+        {
+          "task_id": "concurrency",
+          "input_tokens": 88,
+          "cached_tokens": 0,
+          "output_tokens": 60,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00044535999999999995
+        },
+        {
+          "task_id": "little-law",
+          "input_tokens": 96,
+          "cached_tokens": 0,
+          "output_tokens": 50,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00041351999999999996
+        },
+        {
+          "task_id": "pacing",
+          "input_tokens": 100,
+          "cached_tokens": 0,
+          "output_tokens": 186,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.00105748
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 297,
+          "cached_tokens": 0,
+          "output_tokens": 2399,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.011782709999999998
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 306,
+          "cached_tokens": 256,
+          "output_tokens": 1791,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.008571124
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 310,
+          "cached_tokens": 256,
+          "output_tokens": 3943,
+          "price_per_million": {
+            "input": 1.87,
+            "cached": 0.374,
+            "output": 4.68
+          },
+          "cost_usd": 0.018649963999999995
+        }
+      ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
+      "per_task_results": [
+        {
+          "task_id": "errors",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "mean",
+          "category": "analysis",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "shop-flow",
+          "category": "authoring",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "JMeter exit code 1"
+        },
+        {
+          "task_id": "closed",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "correlation",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "percentile",
+          "category": "concepts",
+          "tool": "none",
+          "passed": true,
+          "detail": "exact choice comparison"
+        },
+        {
+          "task_id": "session-isolation",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "Empty run or failed samples"
+        },
+        {
+          "task_id": "token-refresh",
+          "category": "correlation",
+          "tool": "jmeter",
+          "passed": false,
+          "detail": "Empty run or failed samples"
+        },
+        {
+          "task_id": "arrival",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "concurrency",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "little-law",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
+        },
+        {
+          "task_id": "pacing",
+          "category": "workload",
+          "tool": "none",
+          "passed": true,
+          "detail": "numeric comparison"
         },
         {
           "task_id": "k6-shop-flow",
@@ -2071,6 +2423,12 @@
           "cost_usd": 0.00822578
         }
       ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
       "per_task_results": [
         {
           "task_id": "errors",
@@ -2190,12 +2548,12 @@
         "correlation": 0,
         "workload": 100
       },
-      "cost": 0.036744312,
+      "cost": 0.072425724,
       "tokens": {
-        "input": 1822,
-        "output": 24948
+        "input": 2735,
+        "output": 49524
       },
-      "latency": 357.1809215930116,
+      "latency": 837.1505776700214,
       "run_date": "2026-11-17T20:53:03Z",
       "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
       "output_cap": 8192,
@@ -2343,8 +2701,50 @@
             "output": 1.44
           },
           "cost_usd": 0.00031
+        },
+        {
+          "task_id": "k6-shop-flow",
+          "input_tokens": 297,
+          "cached_tokens": 0,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.01196874
+        },
+        {
+          "task_id": "k6-session-isolation",
+          "input_tokens": 306,
+          "cached_tokens": 256,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.011855176
+        },
+        {
+          "task_id": "k6-token-refresh",
+          "input_tokens": 310,
+          "cached_tokens": 256,
+          "output_tokens": 8192,
+          "price_per_million": {
+            "input": 0.58,
+            "cached": 0.116,
+            "output": 1.44
+          },
+          "cost_usd": 0.011857495999999999
         }
       ],
+      "coverage": {
+        "run": 15,
+        "total": 15,
+        "partial": false,
+        "label": "15/15 tasks run"
+      },
       "per_task_results": [
         {
           "task_id": "errors",
@@ -2429,259 +2829,27 @@
           "tool": "none",
           "passed": true,
           "detail": "numeric comparison"
-        }
-      ]
-    },
-    {
-      "provider": "thinkingmachines",
-      "model": "thinkingmachines/Inkling",
-      "overall_score": 46.666666666666664,
-      "category_scores": {
-        "analysis": 100,
-        "authoring": 0,
-        "concepts": 100,
-        "correlation": 0,
-        "workload": 100
-      },
-      "cost": 0.115424508,
-      "tokens": {
-        "input": 1822,
-        "output": 24099
-      },
-      "latency": 103.44006397798512,
-      "run_date": "2026-11-17T20:52:43Z",
-      "harness_commit": "635261c8d47f7838023095732f1f588f090aa686",
-      "output_cap": 8192,
-      "cost_attempts": [
-        {
-          "task_id": "errors",
-          "input_tokens": 126,
-          "cached_tokens": 0,
-          "output_tokens": 63,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.0005304600000000001
         },
         {
-          "task_id": "mean",
-          "input_tokens": 130,
-          "cached_tokens": 0,
-          "output_tokens": 81,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.0006221800000000001
-        },
-        {
-          "task_id": "shop-flow",
-          "input_tokens": 289,
-          "cached_tokens": 0,
-          "output_tokens": 7886,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.03744690999999999
-        },
-        {
-          "task_id": "closed",
-          "input_tokens": 108,
-          "cached_tokens": 0,
-          "output_tokens": 121,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.00076824
-        },
-        {
-          "task_id": "correlation",
-          "input_tokens": 103,
-          "cached_tokens": 0,
-          "output_tokens": 73,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.00053425
-        },
-        {
-          "task_id": "percentile",
-          "input_tokens": 97,
-          "cached_tokens": 0,
-          "output_tokens": 35,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.00034519
-        },
-        {
-          "task_id": "session-isolation",
-          "input_tokens": 298,
-          "cached_tokens": 256,
-          "output_tokens": 8136,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.03825076399999999
-        },
-        {
-          "task_id": "token-refresh",
-          "input_tokens": 302,
-          "cached_tokens": 256,
-          "output_tokens": 7373,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.034687404000000005
-        },
-        {
-          "task_id": "arrival",
-          "input_tokens": 85,
-          "cached_tokens": 0,
-          "output_tokens": 35,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.00032275
-        },
-        {
-          "task_id": "concurrency",
-          "input_tokens": 88,
-          "cached_tokens": 0,
-          "output_tokens": 60,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.00044535999999999995
-        },
-        {
-          "task_id": "little-law",
-          "input_tokens": 96,
-          "cached_tokens": 0,
-          "output_tokens": 50,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.00041351999999999996
-        },
-        {
-          "task_id": "pacing",
-          "input_tokens": 100,
-          "cached_tokens": 0,
-          "output_tokens": 186,
-          "price_per_million": {
-            "input": 1.87,
-            "cached": 0.374,
-            "output": 4.68
-          },
-          "cost_usd": 0.00105748
-        }
-      ],
-      "per_task_results": [
-        {
-          "task_id": "errors",
-          "category": "analysis",
-          "tool": "none",
-          "passed": true,
-          "detail": "numeric comparison"
-        },
-        {
-          "task_id": "mean",
-          "category": "analysis",
-          "tool": "none",
-          "passed": true,
-          "detail": "numeric comparison"
-        },
-        {
-          "task_id": "shop-flow",
+          "task_id": "k6-shop-flow",
           "category": "authoring",
-          "tool": "jmeter",
+          "tool": "k6",
           "passed": false,
-          "detail": "JMeter exit code 1"
+          "detail": "No javascript code block found"
         },
         {
-          "task_id": "closed",
-          "category": "concepts",
-          "tool": "none",
-          "passed": true,
-          "detail": "exact choice comparison"
-        },
-        {
-          "task_id": "correlation",
-          "category": "concepts",
-          "tool": "none",
-          "passed": true,
-          "detail": "exact choice comparison"
-        },
-        {
-          "task_id": "percentile",
-          "category": "concepts",
-          "tool": "none",
-          "passed": true,
-          "detail": "exact choice comparison"
-        },
-        {
-          "task_id": "session-isolation",
+          "task_id": "k6-session-isolation",
           "category": "correlation",
-          "tool": "jmeter",
+          "tool": "k6",
           "passed": false,
-          "detail": "Empty run or failed samples"
+          "detail": "No javascript code block found"
         },
         {
-          "task_id": "token-refresh",
+          "task_id": "k6-token-refresh",
           "category": "correlation",
-          "tool": "jmeter",
+          "tool": "k6",
           "passed": false,
-          "detail": "Empty run or failed samples"
-        },
-        {
-          "task_id": "arrival",
-          "category": "workload",
-          "tool": "none",
-          "passed": true,
-          "detail": "numeric comparison"
-        },
-        {
-          "task_id": "concurrency",
-          "category": "workload",
-          "tool": "none",
-          "passed": true,
-          "detail": "numeric comparison"
-        },
-        {
-          "task_id": "little-law",
-          "category": "workload",
-          "tool": "none",
-          "passed": true,
-          "detail": "numeric comparison"
-        },
-        {
-          "task_id": "pacing",
-          "category": "workload",
-          "tool": "none",
-          "passed": true,
-          "detail": "numeric comparison"
+          "detail": "No javascript code block found"
         }
       ]
     }

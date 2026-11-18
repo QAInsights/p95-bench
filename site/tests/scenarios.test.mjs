@@ -24,9 +24,9 @@ test('scenario catalog loads every YAML at build time with summaries, grading an
     assert.ok(scenario.passed <= scenario.attempted);
   }
   const refresh = scenarios.find(scenario => scenario.id === 'k6-token-refresh');
-  assert.equal(refresh.passLabel, '6/8 models pass');
-  assert.equal(refresh.attempted, 7);
-  assert.equal(refresh.notRun, 1);
+  assert.equal(refresh.passLabel, '7/8 models pass');
+  assert.equal(refresh.attempted, 8);
+  assert.equal(refresh.notRun, 0);
   assert.deepEqual(scenarioFilters(scenarios), [
     { tool: 'all', label: 'All' }, { tool: 'none', label: 'General' },
     { tool: 'jmeter', label: 'JMeter' }, { tool: 'k6', label: 'k6' },
