@@ -56,7 +56,7 @@ def test_efficiency_quality_gate_and_cache():
     response = {"input_tokens": 50, "output_tokens": 150,
                 "cached_tokens": 50, "response_latency_seconds": 2}
     budget = {"tokens": 100, "latency_seconds": 4}
-    assert efficiency(.8, response, budget) == pytest.approx(.6)
+    assert efficiency(.8, response, budget) == pytest.approx(.7)
     assert efficiency(0, response, budget) == 0
     assert efficiency(1, response, {"tokens": 200, "latency_seconds": 2}) == 1
     assert efficiency(1, {**response, "input_tokens": 0, "output_tokens": 0,
@@ -67,6 +67,28 @@ def test_efficiency_quality_gate_and_cache():
             efficiency(.5, invalid, budget)
     with pytest.raises(ValueError):
         efficiency(.5, response, {"tokens": 0, "latency_seconds": 1})
+
+
+@pytest.mark.parametrize("multiple,expected", [(0, 1), (.5, 1), (1, 1), (2, .5),
+                                             (3, 0), (4, 0)])
+@pytest.mark.parametrize("component", ["output_tokens", "response_latency_seconds", "both"])
+def test_efficiency_linear_component_curve(multiple, expected, component):
+    response = {"input_tokens": 1000, "output_tokens": 100, "response_latency_seconds": 10}
+    budget = {"tokens": 100, "latency_seconds": 10}
+    if component in ("output_tokens", "both"):
+        response["output_tokens"] *= multiple
+    if component in ("response_latency_seconds", "both"):
+        response["response_latency_seconds"] *= multiple
+    assert efficiency(1, response, budget) == pytest.approx(
+        expected if component == "both" else .5 + .5 * expected)
+
+
+def test_efficiency_independent_of_input_and_cached_tokens():
+    response = {"input_tokens": 0, "output_tokens": 200, "response_latency_seconds": 20}
+    budget = {"tokens": 100, "latency_seconds": 10}
+    for input_tokens, cached_tokens in [(0, 0), (100, 0), (10000, 10000)]:
+        assert efficiency(1, {**response, "input_tokens": input_tokens,
+                              "cached_tokens": cached_tokens}, budget) == .5
 
 
 def test_pack_defaults_validation():
@@ -121,8 +143,8 @@ def test_v2_run_and_offline_rescore(tmp_path, monkeypatch, repeats):
     assert provider.calls == 5 * repeats
     assert summary["pack_id"] == V2 and summary["complete"]
     assert summary["quality_score"] == 80
-    assert summary["efficiency_score"] == pytest.approx(60)
-    assert summary["overall_score"] == pytest.approx(79)
+    assert summary["efficiency_score"] == pytest.approx(80)
+    assert summary["overall_score"] == pytest.approx(80)
     assert summary == score_run(directory)
     manifest = json.loads((directory / "pack.json").read_text())
     attempts = [json.loads(l) for l in (directory / "attempts.jsonl").read_text().splitlines()]
