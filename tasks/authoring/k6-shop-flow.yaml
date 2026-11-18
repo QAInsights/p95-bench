@@ -1,6 +1,7 @@
 id: k6-shop-flow
 category: authoring
 tool: k6
+summary: Write a complete k6 script that logs in, extracts a session CSRF token, lists products, adds an item to the cart and checks out. Use one VU and one iteration with session cookies and tokens.
 prompt: >-
   Write a complete k6 script (k6 v1.0.0 JavaScript, built-in modules only: k6, k6/http).
   Read the base URL from __ENV.BASE_URL; the grader supplies it.

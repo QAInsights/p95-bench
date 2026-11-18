@@ -1,6 +1,7 @@
 id: percentile
 category: concepts
 tool: none
+summary: Identify what p95 latency means from three choices. Distinguish the percentile boundary from the arithmetic mean and the maximum latency.
 prompt: "Which describes p95 latency? A: arithmetic mean. B: 95% of observations are at or below this latency. C: maximum latency. Return one letter."
 grader: choice
 params:

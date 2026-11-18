@@ -1,6 +1,7 @@
 id: pacing
 category: workload
 tool: none
+summary: Calculate the wait time needed after each transaction to reach a target throughput with a fixed number of users and a known mean transaction time.
 prompt: "100 users each execute one transaction per cycle. Mean transaction time is 2 seconds. Target throughput is 20 transactions/second. How many seconds of wait after each transaction are needed?"
 grader: numeric
 params:

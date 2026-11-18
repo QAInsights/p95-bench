@@ -1,6 +1,7 @@
 id: little-law
 category: workload
 tool: none
+summary: Apply Little's Law to calculate mean in-flight concurrency from a steady transaction arrival rate and a mean response time.
 prompt: "Steady arrival rate is 40 transactions/second and mean response time is 0.25 seconds. By Little's Law, what is mean in-flight concurrency?"
 grader: numeric
 params:

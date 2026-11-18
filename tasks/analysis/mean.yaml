@@ -1,6 +1,7 @@
 id: mean
 category: analysis
 tool: none
+summary: Calculate the arithmetic mean request duration in milliseconds from the supplied sample data. Include failed requests in the calculation.
 prompt: "From the attached samples.csv, compute arithmetic mean elapsed milliseconds across ALL rows, including failures. Return only a number."
 grader: numeric
 params:
