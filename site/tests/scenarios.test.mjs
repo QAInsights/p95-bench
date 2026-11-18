@@ -3,12 +3,14 @@ import { readFile, readdir } from 'node:fs/promises';
 import { test } from 'node:test';
 import { loadTaskData } from '../scripts/build-data.mjs';
 import { buildScenarios, scenarioFilters, scenarioGrading } from '../src/lib/scenarios.mjs';
+import { selectModelVersions } from '../src/lib/scores.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 
 test('scenario catalog loads every YAML at build time with summaries, grading and latest-model pass rates', async () => {
   const { tasks } = await loadTaskData();
   const scenarios = buildScenarios(tasks, published.models);
+  const latest = selectModelVersions(published.models);
   const files = await readdir(new URL('../../tasks/', import.meta.url), { recursive: true });
   assert.equal(scenarios.length, files.filter(file => file.endsWith('.yaml')).length);
   assert.equal(new Set(scenarios.map(scenario => scenario.id)).size, tasks.length);
@@ -19,14 +21,16 @@ test('scenario catalog loads every YAML at build time with summaries, grading an
     assert.doesNotMatch(scenario.summary + scenario.grading, /—|undefined/);
     assert.equal(scenario.category, task.category);
     assert.equal(scenario.tool, task.tool);
-    assert.equal(scenario.total, 8);
-    assert.equal(scenario.attempted + scenario.notRun, 8);
+    assert.equal(scenario.total, latest.length);
+    assert.equal(scenario.attempted + scenario.notRun, latest.length);
     assert.ok(scenario.passed <= scenario.attempted);
   }
   const refresh = scenarios.find(scenario => scenario.id === 'k6-token-refresh');
-  assert.equal(refresh.passLabel, '7/8 models pass');
-  assert.equal(refresh.attempted, 8);
-  assert.equal(refresh.notRun, 0);
+  const attempted = latest.filter(m => m.per_task_results.some(t => t.task_id === refresh.id));
+  const passed = attempted.filter(m => m.per_task_results.filter(t => t.task_id === refresh.id).every(t => t.passed));
+  assert.equal(refresh.passLabel, `${passed.length}/${latest.length} models pass`);
+  assert.equal(refresh.attempted, attempted.length);
+  assert.equal(refresh.notRun, latest.length - attempted.length);
   assert.deepEqual(scenarioFilters(scenarios), [
     { tool: 'all', label: 'All' }, { tool: 'none', label: 'General' },
     { tool: 'jmeter', label: 'JMeter' }, { tool: 'k6', label: 'k6' },

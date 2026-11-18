@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from p95bench.graders import GRADERS, grade, jmeter_executable, k6_executable
+from p95bench.providers import ProviderUnavailable
 from p95bench.tasks import CATEGORIES
 
 SYSTEM_PROMPT = (
@@ -56,13 +57,26 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1):
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     directory = (out / run_id).resolve()
     directory.mkdir(parents=True)
+    config = getattr(provider, "config", None)
+    if config and config.cost_note:
+        metadata = {"run_date": datetime.now(UTC).isoformat(),
+                    "provider": provider_name, "model": model, "base_url": config.base_url,
+                    "cost_note": config.cost_note, "pricing_source": config.pricing_source,
+                    "temperature": config.temperature, **config.extra}
+        (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     with (directory / "attempts.jsonl").open("w") as stream:
         for index, task in enumerate(tasks):
             for repeat in range(repeats):
                 messages = [{"role": "system", "content": SYSTEM_PROMPT},
                             {"role": "user", "content": task.user_prompt()}]
-                # Provider failures abort rather than masquerading as model quality failures.
-                response = provider.send(model, messages)
+                try:
+                    response = provider.send(model, messages)
+                except ProviderUnavailable as error:
+                    with (directory / "not-run.jsonl").open("a") as skipped:
+                        skipped.write(json.dumps({"task_id": task.id, "repeat": repeat,
+                                                  "provider": provider_name, "model": model,
+                                                  "status": "not_run", "error": str(error)}) + "\n")
+                    continue
                 result = grade(task, response.text, directory / f"task-{index}-{repeat}")
                 attempt = {"task_id": task.id, "category": task.category, "repeat": repeat,
                            "provider": provider_name, "model": model,

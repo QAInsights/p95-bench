@@ -1,4 +1,7 @@
 {
+  "Qwen-Ambassador/Qwen3.8-Max": { "family": "qwen-max", "release_order": 2 },
+  "Qwen-Ambassador/Qwen3.7-Max": { "family": "qwen-max", "release_order": 1 },
+  "Qwen-Ambassador/Qwen3.8-Flash-Next": { "family": "qwen-flash", "release_order": 1 },
   "gpt-6.2-sol": { "family": "gpt-sol", "release_order": 1 },
   "gpt-6.2-astra": { "family": "gpt-astra", "release_order": 1 },
   "claude-opus-5-5": { "family": "claude-opus", "release_order": 1 },

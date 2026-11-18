@@ -104,7 +104,7 @@ function renderCost() {
     return article;
   }));
   $('ex-cost-total').textContent = `Attempt estimate: ${usd(cost.total)}`;
-  $('ex-model-cost').textContent = `${name(model.model)} · whole published run: ${usd(model.cost)} · ${number(model.tokens.input)} input + ${number(model.tokens.output)} output tokens. Individual attempts can have different price snapshots.`;
+  $('ex-model-cost').textContent = `${name(model.model)} · whole published run: ${usd(model.cost)} · ${number(model.tokens.input)} input + ${number(model.tokens.output)} output tokens. ${model.cost_note ?? 'Individual attempts can have different price snapshots.'}`;
 }
 $('ex-cost-model').onchange = () => {
   const model = data.models[Number($('ex-cost-model').value)];
