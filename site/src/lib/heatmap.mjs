@@ -28,7 +28,7 @@ export function mountHeatmap(root) {
   tip.addEventListener('pointerleave', hideTip);
   grid.addEventListener('focus', () => inspect(active ?? visibleRows()[0]?.querySelector('[data-heat-cell]')));
   grid.addEventListener('blur', hideTip);
-  grid.addEventListener('scroll', () => { if (document.activeElement === grid && active) inspect(active); else hideTip(); });
+  grid.addEventListener('scroll', () => { if (document.activeElement === grid && active && !tip.hidden) inspect(active); else hideTip(); });
   root.addEventListener('keydown', event => { if (event.key === 'Escape') hideTip(); });
   grid.addEventListener('keydown', event => {
     if (event.altKey || event.metaKey || event.shiftKey || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
