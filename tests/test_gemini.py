@@ -162,3 +162,30 @@ def test_auth_errors_do_not_retry(monkeypatch):
     monkeypatch.setattr('urllib.request.urlopen', request)
     with pytest.raises(HTTPError):
         get_provider('gemini').send('gemini-4-carbon', [])
+
+
+@pytest.mark.parametrize('completed', [0, 1])
+def test_budget_exhaustion_writes_summary_and_skips_remaining_repeats(tmp_path, completed):
+    from p95bench.providers import Response
+
+    class Budgeted:
+        calls = 0
+
+        def send(self, model, messages):
+            self.calls += 1
+            if self.calls > completed:
+                raise SpendLimitExceeded('budget exhausted')
+            return Response('10', 10, 1)
+
+    provider = Budgeted()
+    tasks = [Task(str(i), 'workload', 'none', 'prompt', 'numeric', {'answer': 10}, {})
+             for i in range(3)]
+    directory, summary = run(provider, 'gemini', 'gemini-4-carbon',
+                             PROVIDERS['gemini'].prices['gemini-4-carbon'], tasks, tmp_path, repeats=2)
+    assert provider.calls == completed + 1
+    assert summary['attempts'] == completed
+    assert json.loads((directory / 'summary.json').read_text()) == summary
+    skipped = [json.loads(line) for line in (directory / 'not-run.jsonl').read_text().splitlines()]
+    assert [(s['task_id'], s['repeat']) for s in skipped] == [
+        (str(i), repeat) for i in range(3) for repeat in range(2)][completed:]
+    assert all(s['status'] == 'not_run' and s['error'] == 'budget exhausted' for s in skipped)

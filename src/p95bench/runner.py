@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from p95bench.graders import GRADERS, grade, jmeter_executable, k6_executable
-from p95bench.providers import ProviderUnavailable
+from p95bench.providers import ProviderUnavailable, SpendLimitExceeded
 from p95bench.tasks import CATEGORIES
 
 SYSTEM_PROMPT = (
@@ -64,14 +64,19 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1):
                     "cost_note": config.cost_note, "pricing_source": config.pricing_source,
                     "temperature": config.temperature, **config.extra}
         (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    budget_error = None
     with (directory / "attempts.jsonl").open("w") as stream:
         for index, task in enumerate(tasks):
             for repeat in range(repeats):
                 messages = [{"role": "system", "content": SYSTEM_PROMPT},
                             {"role": "user", "content": task.user_prompt()}]
                 try:
+                    if budget_error is not None:
+                        raise SpendLimitExceeded(budget_error)
                     response = provider.send(model, messages)
-                except ProviderUnavailable as error:
+                except (ProviderUnavailable, SpendLimitExceeded) as error:
+                    if isinstance(error, SpendLimitExceeded):
+                        budget_error = str(error)
                     with (directory / "not-run.jsonl").open("a") as skipped:
                         skipped.write(json.dumps({"task_id": task.id, "repeat": repeat,
                                                   "provider": provider_name, "model": model,
