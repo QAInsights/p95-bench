@@ -13,6 +13,7 @@ import { buildScenarios, scenarioFilters } from "../lib/scenarios.mjs";
 import Explainer from "../components/Explainer.astro";
 import UnitMatrix from "../components/UnitMatrix.astro";
 import Heatmap from "../components/Heatmap.astro";
+import "../styles/scatter.css";
 
 const { weights } = data;
 const models = selectModelVersions(data.models);
@@ -228,14 +229,14 @@ const repo = "https://github.com/QAInsights/p95-bench";
             </p><h2 tabindex="-1">Performance.<br /> Priced in.</h2><p
               class="subcopy"
             >
-              Find the strongest run inside your budget.<br />Drag the lime
-              handle. Watch the field narrow.
+              Explore cost, output tokens and response latency. Drag the budget handle in Cost view.
             </p>
           </div><div class="value-winner">
             <p class="eyebrow">BEST WITHIN YOUR BUDGET</p><h3 id="winner-name">
             </h3><p class="winner-meta" id="winner-meta"></p>
           </div>
         </div>
+        <div class="scatter-controls" role="group" aria-label="Scatter horizontal axis">{['Cost', 'Output tokens', 'Latency'].map((label, index) => <button type="button" class="control" data-scatter-axis={['cost', 'tokens', 'latency'][index]} aria-pressed={index === 0}>{label}</button>)}</div>
         <figure class="chart-shell">
           <svg
             id="scatter"
@@ -267,23 +268,21 @@ const repo = "https://github.com/QAInsights/p95-bench";
             id="budget-hint"
             class="chart-caption"
           >
-            Logarithmic cost axis · Higher score, lower cost is better · Cost
-            estimates use returned token usage and list prices, not billing
-            invoices.
+            <b id="scatter-figure">FIG.</b> · <span id="scatter-fit"></span> · ◇ beats trend.<br />Source: published runs, n = <span id="scatter-source"></span>. Descriptive fit, not a causal claim.
           </figcaption>
         </figure>
         <details class="data-disclosure">
-          <summary>Read the chart as a data table ↗</summary><table>
+          <summary>Show data table</summary><div role="region" tabindex="0" aria-label="Scatter model data" style="overflow:auto;max-inline-size:100%"><table>
             <caption
-              ><span data-model-count>{models.length}</span> visible published runs. Score is out of 100.</caption
+              ><span data-model-count>{models.length}</span> visible published runs. Run totals; output includes reasoning. Score is out of 100. Cost is a list-price estimate, not an invoice. No confidence intervals from single runs.</caption
             ><thead
               ><tr
                 ><th scope="col">Rank</th><th scope="col">Model</th><th scope="col">Score</th><th
                   scope="col">Cost (USD)</th
-                ></tr
+                ><th scope="col">Provider</th><th scope="col">Output tokens</th><th scope="col">Latency (s)</th></tr
               ></thead
             ><tbody id="chart-table"></tbody>
-          </table>
+          </table></div>
         </details>
         <div class="scene-foot">
           <span
