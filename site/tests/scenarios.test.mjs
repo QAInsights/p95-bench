@@ -128,6 +128,8 @@ test('scenario content is build-time semantic markup between Model focus and Too
   assert.match(page, /id="status" class="sr" role="status" aria-live="polite"/);
   assert.match(client, /"MODEL FOCUS",\s*"SCENARIOS",\s*"TOOLS",\s*"METHODOLOGY"/);
   assert.match(client, /scenes\.findIndex/);
+  assert.match(client, /if \(all !== showingEarlier\) applyVersions\(\)/);
+  assert.doesNotMatch(client, /addEventListener\("popstate", applyVersions\)/);
   assert.match(client, /e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey/);
   assert.match(client, /history\.pushState\(null, "", a\.hash\)/);
 });

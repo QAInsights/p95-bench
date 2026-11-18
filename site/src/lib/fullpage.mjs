@@ -16,9 +16,10 @@ import {
   selectModelVersions,
 } from "./scores.mjs";
 const weights = DATA.weights;
+let showingEarlier = new URLSearchParams(location.search).get("versions") === "all";
 let models = selectModelVersions(
   DATA.models,
-  new URLSearchParams(location.search).get("versions") === "all",
+  showingEarlier,
 );
 const $ = (id) => document.getElementById(id),
   reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -1000,6 +1001,7 @@ function applyVersions() {
   transition?.skipTransition();
   transition = null;
   const all = new URLSearchParams(location.search).get("versions") === "all";
+  showingEarlier = all;
   $("show-versions").checked = all;
   models = selectModelVersions(DATA.models, all);
   selected = Math.max(
@@ -1045,7 +1047,12 @@ $("show-versions").onchange = () => {
   history.pushState(null, "", url);
   applyVersions();
 };
-addEventListener("popstate", applyVersions);
+addEventListener("popstate", () => {
+  const all = new URLSearchParams(location.search).get("versions") === "all";
+  if (all !== showingEarlier) applyVersions();
+  const index = location.hash ? scenes.findIndex(scene => '#' + scene.id === location.hash) : 0;
+  if (index >= 0) goScene(index, false, true);
+});
 if (!("switch" in HTMLInputElement.prototype))
   $("show-versions").classList.add("switch-fallback");
 updateVisibleCounts();
