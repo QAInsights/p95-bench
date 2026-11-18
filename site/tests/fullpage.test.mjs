@@ -1,9 +1,67 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { budgetScale, replayLayout, replayScore } from '../src/lib/scores.mjs';
+import { budgetScale, replayLayout, replayScore, replayToolLayout, replayToolCounts, replaySampleLabel } from '../src/lib/scores.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
+
+test('tool blocks sort by metadata, retain task identity and repeated occurrences, and include future and unknown tools', () => {
+  const tasks = [
+    ['load', 'k6'], ['z', 'zebra'], ['plain', 'none'], ['plan', 'jmeter'],
+    ['future', 'locust'], ['simulation', 'gatling'], ['a', 'alpha'], ['load', 'k6'],
+    ['implicit'], ['empty', ''], ['special', 'constructor'],
+  ].map(([task_id, tool]) => ({ task_id, tool, passed: true }));
+  const models = [{ per_task_results: tasks }, { per_task_results: [tasks[3], tasks[0], tasks[2]] }];
+  const layout = replayToolLayout(models);
+  assert.deepEqual(layout.groups.map(group => [group.tool, group.label, group.count]), [
+    ['none', 'General', 3], ['jmeter', 'JMeter', 1], ['k6', 'k6', 2],
+    ['gatling', 'Gatling', 1], ['locust', 'Locust', 1],
+    ['alpha', 'alpha', 1], ['constructor', 'constructor', 1], ['zebra', 'zebra', 1],
+  ]);
+  assert.deepEqual(layout.taskIds, ['plain', 'implicit', 'empty', 'plan', 'load', 'load',
+    'simulation', 'future', 'a', 'special', 'z']);
+  assert.deepEqual(layout.rows[1], [2, null, null, 0, 1, null, null, null, null, null, null]);
+  assert.deepEqual(layout.groups.map(group => group.column), [1, 5, 7, 10, 12, 14, 16, 18]);
+  layout.rows.forEach((row, i) => row.forEach((index, column) => {
+    if (index !== null) assert.equal(models[i].per_task_results[index].task_id, layout.taskIds[column]);
+  }));
+  assert.deepEqual(layout.rows[0].filter(index => tasks[index].task_id === 'load'), [0, 7]);
+});
+
+test('tool pass counts distinguish failures, partial coverage and tools with no attempts', () => {
+  const models = [
+    { per_task_results: [
+      { task_id: 'plain', passed: true }, { task_id: 'plan', tool: 'jmeter', passed: false },
+      { task_id: 'load-a', tool: 'k6', passed: true }, { task_id: 'load-b', tool: 'k6', passed: false },
+    ] },
+    { per_task_results: [{ task_id: 'plain', tool: 'none', passed: true }] },
+    { per_task_results: [{ task_id: 'load-b', tool: 'k6', passed: true }] },
+    { per_task_results: [] },
+  ];
+  const { groups } = replayToolLayout(models);
+  assert.deepEqual(replayToolCounts(models[0], groups).map(count => count.text),
+    ['General 1/1', 'JMeter 0/1', 'k6 1/2']);
+  assert.deepEqual(replayToolCounts(models[1], groups).map(count => count.text),
+    ['General 1/1', 'JMeter Not run', 'k6 Not run']);
+  assert.deepEqual(replayToolCounts(models[2], groups).at(-1),
+    { tool: 'k6', label: 'k6', passed: 1, attempts: 1, total: 2, text: 'k6 1/2' });
+  assert.ok(replayToolCounts(models[3], groups).every(count => count.text.endsWith('Not run')));
+  assert.deepEqual(replayToolLayout([]), { taskIds: [], rows: [], groups: [] });
+  assert.deepEqual(replayToolLayout([models[3]]), { taskIds: [], rows: [[]], groups: [] });
+  assert.deepEqual(replayToolCounts(models[0], []), []);
+});
+
+test('published replay tools have nine General, three JMeter and three k6 aligned columns', () => {
+  const { groups, rows } = replayToolLayout(published.models);
+  assert.deepEqual(groups.map(group => [group.label, group.count]), [['General', 9], ['JMeter', 3], ['k6', 3]]);
+  assert.equal(rows.flat().filter(index => index === null).length, 6);
+});
+
+test('sample descriptions expose task names, tools and all three result states without color', () => {
+  assert.equal(replaySampleLabel({ task_name: 'Shop flow', passed: true }, 'shop', 'k6'), 'Shop flow · k6 · Pass');
+  assert.equal(replaySampleLabel({ passed: false }, 'plan', 'JMeter'), 'plan · JMeter · Fail');
+  assert.equal(replaySampleLabel(null, 'future', 'unknown'), 'future · unknown · Not run');
+});
 
 test('replay columns align interleaved, appended and partial task orders by identity, including repeats', () => {
   const models = [

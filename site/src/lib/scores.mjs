@@ -86,6 +86,42 @@ export function replayLayout(models) {
   return { taskIds, rows: rows.map(row => taskIds.map((_, column) => row[column] ?? null)) };
 }
 
+const replayTool = (tool) => tool?.trim().toLowerCase() || 'none';
+const toolLabels = { none: 'General', jmeter: 'JMeter', k6: 'k6', gatling: 'Gatling', locust: 'Locust' };
+const toolOrder = ['none', 'jmeter', 'k6', 'gatling', 'locust'];
+
+export function replayToolLayout(models) {
+  const { taskIds, rows } = replayLayout(models);
+  const toolsByTask = new Map(models.flatMap(model => model.per_task_results
+    .map(task => [task.task_id, replayTool(task.tool)])));
+  const tools = [...new Set(taskIds.map(id => toolsByTask.get(id)))].sort((a, b) => {
+    const order = tool => toolOrder.includes(tool) ? toolOrder.indexOf(tool) : toolOrder.length;
+    return order(a) - order(b) || a.localeCompare(b, 'en');
+  });
+  const columns = [], groups = [];
+  for (const tool of tools) {
+    const indices = taskIds.flatMap((id, column) => toolsByTask.get(id) === tool ? [column] : []);
+    groups.push({ tool, label: Object.hasOwn(toolLabels, tool) ? toolLabels[tool] : tool, count: indices.length,
+      offset: columns.length, column: columns.length + groups.length + 1 });
+    columns.push(...indices);
+  }
+  return { taskIds: columns.map(column => taskIds[column]),
+    rows: rows.map(row => columns.map(column => row[column])), groups };
+}
+
+export function replayToolCounts(model, groups) {
+  return groups.map(({ tool, label, count }) => {
+    const tasks = model.per_task_results.filter(task => replayTool(task.tool) === tool);
+    const passed = tasks.filter(task => task.passed).length;
+    return { tool, label, passed, attempts: tasks.length, total: count,
+      text: `${label} ${tasks.length ? `${passed}/${count}` : 'Not run'}` };
+  });
+}
+
+export function replaySampleLabel(task, taskId, toolLabel) {
+  return `${task?.task_name ?? taskId} · ${toolLabel} · ${task == null ? 'Not run' : task.passed ? 'Pass' : 'Fail'}`;
+}
+
 export function replayScore(model, landed, weights) {
   return contributions(model, weights).reduce((total, { category, points }) => {
     const passed = model.per_task_results.flatMap((task, index) =>
