@@ -10,6 +10,11 @@
   --mono: "JetBrains Mono", monospace;
   --display: "Bricolage Grotesque", sans-serif;
 }
+::selection {
+  color: var(--bg);
+  background: var(--lime);
+}
+
 * {
   box-sizing: border-box;
 }
