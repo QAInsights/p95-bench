@@ -163,3 +163,23 @@ def test_analysis_loads_requires_recursive_keys_and_types(fault, tmp_path):
               for key, points in zip(("loads", "setup", "behavior", "safety"), (10, 25, 40, 25))]
     result = analysis(json.dumps(value), {"analysis": "thresholds", "rubric": rubric}, tmp_path, fixtures)
     assert [checkpoint.earned for checkpoint in result.checkpoints] == [0, 0, 0, 0]
+
+
+@pytest.mark.parametrize("counts,expected", [((2, 2), 1), ((3, 1), 0), ((1, 3), 0), ((4,), 0)])
+def test_journeys_are_counted_per_native_worker(counts, expected):
+    assert flow_fractions(flow_trial(counts), [], {"users": 2, "iterations": 2})["safety"] == expected
+
+
+@pytest.mark.parametrize("actors,expected", [
+    (("bench-1", "bench-2"), 1), (("bench-2", "bench-1"), 0),
+])
+@pytest.mark.parametrize("mode", ["data", "partition"])
+def test_fixture_assignment_is_bound_to_each_native_worker(actors, expected, mode):
+    trial = flow_trial(actors=actors)
+    for event in list(trial.events):
+        if event["kind"] == "commit":
+            event["quantity"] = 1 if event["actor"] == "bench-1" else 2
+            trial.events.append({"kind": "cart_update", "request": event["request"], "actor": event["actor"]})
+    records = [{"username": "bench-1", "quantity": 1}, {"username": "bench-2", "quantity": 2}]
+    result = flow_fractions(trial, [], {"mode": mode, "records": records})
+    assert result["safety"] == expected

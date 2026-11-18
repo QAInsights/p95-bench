@@ -2,6 +2,7 @@
 
 import json
 import math
+import re
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -142,22 +143,39 @@ def workload_fractions(trial, contract):
 
 
 def flow_fractions(trial, controls, contract):
-    expected = contract.get("users", 2) * contract.get("iterations", 2)
+    users, iterations = contract.get("users", 2), contract.get("iterations", 2)
+    expected = users * iterations
     logins, carts, commits = events(trial, "login"), events(trial, "cart"), events(trial, "commit")
+    native = {sample["request"]: sample.get("worker") for sample in trial.samples}
+    worker_carts = Counter(native.get(event["request"]) for event in carts)
+    worker_commits = Counter(native.get(event["request"]) for event in commits)
+    balanced = (len(worker_carts) == users and worker_carts == worker_commits
+                and all(count == iterations for count in worker_carts.values()))
+    native_iterations = defaultdict(set)
+    for sample in trial.samples:
+        if "iteration" in sample:
+            native_iterations[sample["worker"]].add(sample["iteration"])
+    iteration_counts = (not native_iterations or len(native_iterations) == users
+                        and all(len(values) == iterations for values in native_iterations.values()))
     safe = provenance(trial)
     unique = len({event["resource"] for event in commits}) == len(commits) and len(commits) <= expected
-    success = ratio(len(commits), expected) if safe and unique else 0
+    success = ratio(sum(min(count, iterations) for count in worker_commits.values()), expected) if safe and unique else 0
     paths = {event["request"]: event["path"] for event in events(trial, "start")}
     authorized_sessions = {event["session"] for event in events(trial, "mutation_authorized")
                            if paths[event["request"]] == "/v2/carts"}
     setup = min(ratio(len(logins), expected), ratio(len(authorized_sessions), expected))
     behavior = success
-    safety = float(safe and unique and len(carts) == expected and concurrent_workers(trial, contract.get("users", 2)))
+    safety = float(safe and unique and balanced and iteration_counts and concurrent_workers(trial, users))
     mode = contract.get("mode", "flow")
     records = contract.get("records", [])
     allowed_actors = {row["username"] for row in records}
     if records:
         safety *= float({event["actor"] for event in logins} <= allowed_actors)
+        if mode in ("data", "partition"):
+            for event in [*logins, *commits]:
+                worker = re.search(r"(\d+)$", native.get(event["request"]) or "")
+                row = records[(int(worker[1]) - 1) % len(records)] if worker else None
+                safety *= float(bool(row) and event["actor"] == row["username"])
     if mode in ("expiry", "ownership", "denial"):
         recoveries = [event for event in events(trial, "end") if event.get("error") == "session"] if mode == "ownership" else events(trial, "renew")
         setup = ratio(len(recoveries), expected)
@@ -213,7 +231,7 @@ def flow_fractions(trial, controls, contract):
             expected_errors = sum(event["outcome"] >= 400 and event.get("error") not in ("expired",)
                                   and event["outcome"] != 429 for event in eligible)
             behavior *= float(len(points) == len(eligible) and sum(points) == expected_errors)
-        safety = float(safe and controls and all(asserted(item) for item in controls))
+        safety = float(safe and iteration_counts and controls and all(asserted(item) for item in controls))
     if mode in ("decline", "denial", "threshold", "reservation"):
         control_ok = bool(controls) and trial.returncode == 0 and not asserted(trial)
         for item in controls:
