@@ -1,3 +1,24 @@
+import registry from '../data/model-registry.json' with { type: 'json' };
+
+export function selectModelVersions(models, showEarlier = false, versions = registry) {
+  const familyKey = (model) => Object.hasOwn(versions, model.model)
+    ? `registered:${versions[model.model].family}` : `unknown:${model.model}`;
+  const latest = new Map();
+  for (const model of models) {
+    const key = familyKey(model), order = versions[model.model]?.release_order ?? 0;
+    if (!latest.has(key) || order > latest.get(key).order) latest.set(key, { model: model.model, order });
+  }
+  return models.map((model) => {
+    const entry = versions[model.model];
+    const newer = latest.get(familyKey(model)).model;
+    return { ...model, family: entry?.family ?? model.model,
+      release_order: entry?.release_order ?? 0, discontinued: entry?.discontinued === true,
+      version_status: newer === model.model ? 'Latest' : 'Earlier version',
+      newer_model: newer === model.model ? null : newer };
+  }).filter((model) => showEarlier || model.newer_model === null)
+    .sort((a, b) => b.overall_score - a.overall_score || a.cost - b.cost || a.model.localeCompare(b.model));
+}
+
 export const score = (value) => value.toFixed(1);
 export const money = (value) => `$${value.toFixed(4)}`;
 export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
@@ -42,5 +63,25 @@ export function taskResult(model, taskId) {
     label: attempts.length === 1 ? (passed ? 'Pass' : 'Fail') : `${passed}/${attempts.length} pass`,
     detail: attempts.length === 1 ? attempts[0].detail : attempts.map((attempt, index) =>
       `Attempt ${index + 1}: ${attempt.passed ? 'Pass' : 'Fail'} · ${attempt.detail}`).join('\n'),
+  };
+}
+
+export function replayScore(model, landed, weights) {
+  return contributions(model, weights).reduce((total, { category, points }) => {
+    const passed = model.per_task_results.flatMap((task, index) =>
+      task.category === category && task.passed ? [index] : []);
+    return total + (passed.length ? points * passed.filter((index) => landed.has(index)).length / passed.length : 0);
+  }, 0);
+}
+
+export function budgetScale(models) {
+  const costs = models.map((model) => model.cost).filter((cost) => Number.isFinite(cost) && cost > 0);
+  const min = costs.length ? Math.min(...costs) * .65 : .001;
+  const max = costs.length ? Math.max(...costs) * 1.22 : 1;
+  const start = Math.log10(min), range = Math.log10(max) - start;
+  return {
+    min, max,
+    toCost: (position) => 10 ** (start + Math.max(0, Math.min(1000, position)) / 1000 * range),
+    toPosition: (cost) => cost > 0 ? Math.max(0, Math.min(1000, (Math.log10(cost) - start) / range * 1000)) : 0,
   };
 }

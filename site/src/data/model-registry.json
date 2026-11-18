@@ -1,0 +1,11 @@
+{
+  "gpt-6.2-sol": { "family": "gpt-sol", "release_order": 1 },
+  "gpt-6.2-astra": { "family": "gpt-astra", "release_order": 1 },
+  "claude-opus-5-5": { "family": "claude-opus", "release_order": 1 },
+  "claude-sonnet-5-5": { "family": "claude-sonnet", "release_order": 1 },
+  "deepseek-v4-pro": { "family": "deepseek-pro", "release_order": 1 },
+  "deepseek-flash": { "family": "deepseek-flash", "release_order": 1 },
+  "thinkingmachines/Inkling": { "family": "inkling", "release_order": 1 },
+  "thinkingmachines/Inkling-Small": { "family": "inkling-small", "release_order": 1 },
+  "thinkingmachines/Inkling-2-Small": { "family": "inkling-small", "release_order": 2 }
+}
