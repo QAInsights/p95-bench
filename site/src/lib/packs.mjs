@@ -3,7 +3,7 @@ export const packLabels = { v1: 'v1 · 15 tasks', v2: 'v2 · 50 tasks' };
 
 export function resolvePack(requested, packs) {
   if (Object.hasOwn(packs, requested)) return requested;
-  return packs.v2 ? 'v2' : 'v1';
+  return packs.v2 && packs.v2.default_view !== false ? 'v2' : 'v1';
 }
 
 export function packModels(selected, peers) {

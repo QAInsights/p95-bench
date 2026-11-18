@@ -5,7 +5,7 @@ const { pack, data } = Astro.props;
 ---
 {pack === 'v1' ? <Explainer tasks={data.tasks} /> : <section class="reading-section explainer" id="explainer" data-section-label="How scoring works">
   <p class="eyebrow">06 / OPEN THE BLACK BOX</p><h2 tabindex="-1">How v2 scoring works.</h2>
-  <p class="section-copy">Showing p95-v2.0.0 · 50-task design, {data.tasks.length} public tasks. Held-out task details are not published.</p>
+  <p class="section-copy">Showing p95-v2.0.0 · 50-task design, {data.tasks.length} public tasks. Overall and category scores include the 10 held-out tasks; task-level scenes and tool rankings show public tasks only. Held-out task details are not published. Costs are list-price estimates; ModelScope access was free.</p>
   <div class="ex-graders">
     <article><h3>Checkpoint quality</h3><p>Each task has 100 possible checkpoint points. Prerequisites cap dependent credit. Task means are weighted by category; repetitions are averaged.</p></article>
     <article><h3>Composite · 95 / 5</h3><p>Composite = 0.95 × quality + 0.05 × quality-gated efficiency. Each task's token and response-latency efficiencies are multiplied by its quality before aggregation. Efficiency cannot rescue incorrect work; grading time is excluded.</p></article>
@@ -16,4 +16,6 @@ const { pack, data } = Astro.props;
       <tbody>{selectModelVersions(data.models, true).map(model => <tr data-pack-model={model.model}><th scope="row">{name(model.model)}</th><td>{model.not_run ? 'Not run on v2' : model.quality_score.toFixed(2)}</td><td>{model.not_run ? '—' : model.efficiency_score.toFixed(2)}</td><td>{model.not_run ? '—' : model.overall_score.toFixed(2)}</td><td>{model.not_run ? '—' : model.repeats}</td></tr>)}</tbody>
     </table>
   </div>
+  {data.budget_file_sha256 && <p class="section-copy" style="overflow-wrap:anywhere">Frozen efficiency budgets · SHA256 <code>{data.budget_file_sha256}</code>. Token budgets are three times reference output length; latency budgets are 90 seconds for analysis and 180 seconds for scripts. Provider output tokens and model API latency receive full credit through budget, then linear credit to zero at three times budget.</p>}
+  {data.models.filter(model => !model.not_run && model.evaluator_segments).map(model => <p class="section-copy" data-pack-model={model.model} style="overflow-wrap:anywhere">{name(model.model)} · private evaluator SHA256: {model.evaluator_segments.map(segment => <span><code>{segment.digest}</code> ({segment.scored_attempts} scored attempts). </span>)}</p>)}
 </section>}

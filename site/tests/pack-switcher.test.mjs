@@ -8,12 +8,68 @@ import { heatmapData, heatValue, heatColor } from '../src/lib/heatmap-data.mjs';
 import { loadTaskData } from '../scripts/build-data.mjs';
 import { buildScenarios } from '../src/lib/scenarios.mjs';
 import { fakeV2 } from './fake-v2.mjs';
-import { toolRanking } from '../src/lib/tool-rankings.mjs';
+import { renderToolRankings, toolRanking } from '../src/lib/tool-rankings.mjs';
 
 const v1 = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 const v2 = fakeV2();
 const tasks = { v1: (await loadTaskData()).tasks, v2: (await loadTaskData({ packId: v2.pack_id })).tasks };
 const catalog = makePackCatalog(v1, v2, tasks, []);
+
+test('reused Tools rows refresh version labels and newer tags for v1 → v2 → v1', () => {
+  class Element {
+    constructor(tag) {
+      this.tag = tag;
+      this.children = [];
+      this.dataset = {};
+      this.classList = { toggle() {} };
+    }
+    append(...nodes) {
+      for (const node of nodes) {
+        if (typeof node !== 'string') {
+          if (node.parentNode) node.parentNode.children.splice(node.parentNode.children.indexOf(node), 1);
+          node.parentNode = this;
+        }
+        this.children.push(node);
+      }
+    }
+    replaceChildren(...nodes) { this.children = []; this.append(...nodes); }
+    set textContent(value) { this.replaceChildren(value); }
+    get textContent() { return this.children.map(node => typeof node === 'string' ? node : node.textContent).join(''); }
+    querySelector(selector) {
+      for (const child of this.children.filter(node => typeof node !== 'string')) {
+        if (selector === child.tag || selector === '.' + child.className) return child;
+        const nested = child.querySelector(selector);
+        if (nested) return nested;
+      }
+      return null;
+    }
+  }
+  const previousDocument = globalThis.document;
+  globalThis.document = { createElement: tag => new Element(tag) };
+  try {
+    for (const tool of ['jmeter', 'k6']) {
+      const list = new Element('ol');
+      list.dataset.toolRanking = tool;
+      list.previousElementSibling = new Element('p');
+      const root = { querySelectorAll: () => [list] };
+      let original;
+      for (const pack of ['v1', 'v2', 'v1']) {
+        renderToolRankings(root, catalog[pack].models, pack, true);
+        const row = list.children.find(row => row.dataset.toolModel === 'Qwen-Ambassador/Qwen3.7-Max');
+        original ??= row;
+        assert.equal(row, original);
+        const version = row.querySelector('.model-version');
+        assert.equal(version.textContent, pack === 'v2' ? 'Latest' : 'Earlier versionnewer: Qwen3.8 Max');
+        assert.equal(version.querySelector('small') !== null, pack === 'v1');
+        assert.equal(list.children.length, catalog[pack].models.length);
+      }
+    }
+    assert.doesNotThrow(() => renderToolRankings({ querySelectorAll: () => [] }, [], 'v2', false));
+  } finally {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  }
+});
 
 test('Tools rankings follow the selected pack, including missing runs and earlier versions', () => {
   const before = structuredClone(catalog);
@@ -51,13 +107,19 @@ test('only a nonempty v2 leaderboard enables v2; URLs resolve without prototype 
   assert.equal(resolvePack('v2', catalog), 'v2');
   assert.equal(resolvePack(null, catalog), 'v2');
   assert.equal(resolvePack('__proto__', catalog), 'v2');
+  const pilot = makePackCatalog(v1, { ...v2, default_view: false }, tasks, []);
+  assert.equal(resolvePack(null, pilot), 'v1');
+  assert.equal(resolvePack('unknown', pilot), 'v1');
+  assert.equal(resolvePack('v2', pilot), 'v2');
 });
 
 test('pack changes retain unrun model identities, preserve latest/earlier selection, and do not mutate v1', () => {
   const before = structuredClone(v1);
   for (const earlier of [false, true]) {
     const selected = selectModelVersions(catalog.v2.models, earlier);
-    assert.deepEqual(new Set(selected.map(model => model.model)), new Set(selectModelVersions(v1.models, earlier).map(model => model.model)));
+    const expected = selectModelVersions(v1.models, earlier).map(model =>
+      !earlier && model.model === 'Qwen-Ambassador/Qwen3.8-Max' ? 'Qwen-Ambassador/Qwen3.7-Max' : model.model);
+    assert.deepEqual(new Set(selected.map(model => model.model)), new Set(expected));
     const missing = selected.find(model => model.model === 'gpt-6.2-sol');
     assert.equal(missing.not_run, true);
     assert.equal(missing.overall_score, null);
@@ -67,7 +129,7 @@ test('pack changes retain unrun model identities, preserve latest/earlier select
   for (const model of v1.models) assert.deepEqual(catalog.v1.models.find(item => item.model === model.model), model);
   assert.deepEqual(v1, before);
   assert.equal(catalog.v2.models.filter(model => !model.not_run).length, 3);
-  assert.ok(!selectModelVersions(catalog.v2.models).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
+  assert.ok(selectModelVersions(catalog.v2.models).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
   assert.ok(selectModelVersions(catalog.v2.models, true).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
 });
 
@@ -114,8 +176,8 @@ test('v2 scenarios expose only public task rubrics and report fractional means w
   const all = buildScenarios(tasks.v2, catalog.v2.models, true);
   assert.equal(latest.length, 40);
   const repair = latest.find(task => task.id === 'v2-r01-extractor-scope');
-  assert.match(repair.passLabel, /54.0% mean quality/);
+  assert.match(repair.passLabel, /48.0% mean quality/);
   assert.match(repair.grading, /prerequisites:/);
-  assert.ok(all.find(task => task.id === repair.id).attempted > repair.attempted);
+  assert.equal(all.find(task => task.id === repair.id).attempted, repair.attempted);
   assert.match(latest.find(task => task.id === 'v2-r02-cookie-lifetime').passLabel, /Not run on v2/);
 });

@@ -4,8 +4,10 @@ export function selectModelVersions(models, showEarlier = false, versions = regi
   const familyKey = (model) => Object.hasOwn(versions, model.model)
     ? `registered:${versions[model.model].family}` : `unknown:${model.model}`;
   const latest = new Map();
+  const measuredFamilies = new Set(models.filter(model => model.pack_id === 'p95-v2.0.0' && !model.not_run).map(familyKey));
   for (const model of models) {
     const key = familyKey(model), order = versions[model.model]?.release_order ?? 0;
+    if (model.not_run && measuredFamilies.has(key)) continue;
     if (!latest.has(key) || order > latest.get(key).order) latest.set(key, { model: model.model, order });
   }
   return models.map((model) => {

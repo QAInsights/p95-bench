@@ -25,17 +25,18 @@ export function renderToolRankings(root, models, pack, showEarlier) {
         row.dataset.toolProvider = model.provider;
         const label = document.createElement('span'), version = document.createElement('span');
         version.className = 'model-version';
-        version.append(model.version_status);
-        if (model.newer_model) {
-          const newer = document.createElement('small');
-          newer.className = 'newer-tag';
-          newer.textContent = `newer: ${name(model.newer_model)}`;
-          version.append(newer);
-        }
-        if (model.discontinued) version.append(' · Discontinued');
         label.append(name(model.model), version);
         row.append(label, document.createElement('b'));
       }
+      const version = row.querySelector('.model-version');
+      version.replaceChildren(model.version_status);
+      if (model.newer_model) {
+        const newer = document.createElement('small');
+        newer.className = 'newer-tag';
+        newer.textContent = `newer: ${name(model.newer_model)}`;
+        version.append(newer);
+      }
+      if (model.discontinued) version.append(' · Discontinued');
       row.hidden = model.hidden;
       row.classList.toggle('is-discontinued', model.discontinued);
       const value = row.querySelector('b');
