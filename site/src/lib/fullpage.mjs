@@ -8,6 +8,7 @@ import {
   costFrontier,
   bestWithin,
   replayScore,
+  replayLayout,
   budgetScale,
   selectModelVersions,
 } from "./scores.mjs";
@@ -218,14 +219,9 @@ let frame = 0,
   lastTime = null,
   replayAnimations = [];
 function buildLanes() {
-  const sampleCount = Math.max(
-    0,
-    ...models.map((m) => m.per_task_results.length),
-  );
-  const taskShort = (
-    models.find((m) => m.per_task_results.length === sampleCount)
-      ?.per_task_results ?? []
-  ).map((t) => t.task_id.replaceAll("-", "").slice(0, 4).toUpperCase());
+  const { taskIds, rows } = replayLayout(models);
+  const sampleCount = taskIds.length;
+  const taskShort = taskIds.map((id) => id.replaceAll("-", "").slice(0, 4).toUpperCase());
   $("task-heads").innerHTML = taskShort
     .map((t) => "<span>" + t + "</span>")
     .join("");
@@ -262,10 +258,12 @@ function buildLanes() {
       " · " +
       versionMarkup(m) +
       '</span></span><span class="track">' +
-      m.per_task_results
-        .map(
-          (t, j) =>
-            '<span class="sample" data-task="' +
+      rows[i]
+        .map((j, column) => {
+          if (j === null) return '<span class="sample unrun" title="' +
+            escape(taskIds[column] + ': Not run') + '"></span>';
+          const t = m.per_task_results[j];
+          return '<span class="sample" data-task="' +
             j +
             '" title="' +
             escape(
@@ -275,12 +273,9 @@ function buildLanes() {
                 " · " +
                 t.detail,
             ) +
-            '"></span>',
-        )
+            '"></span>';
+        })
         .join("") +
-      '<span class="sample unrun" title="Not run"></span>'.repeat(
-        sampleCount - m.per_task_results.length,
-      ) +
       '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span>';
     row.onclick = () => openModel(i, row);
     laneNodes.set(i, row);
