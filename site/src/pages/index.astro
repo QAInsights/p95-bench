@@ -11,6 +11,7 @@ import { name, toolScore, toolScoreLabel, selectModelVersions } from "../lib/sco
 import { parse } from "yaml";
 import { buildScenarios, scenarioFilters } from "../lib/scenarios.mjs";
 import Explainer from "../components/Explainer.astro";
+import UnitMatrix from "../components/UnitMatrix.astro";
 
 const { weights } = data;
 const models = selectModelVersions(data.models);
@@ -162,6 +163,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
             /><b>Animated replay, not a running benchmark.</b></span>
         </div>
       </section>
+      <UnitMatrix models={data.models} tasks={tasks} />
       <section class="scene" id="scene-2" data-section-label="Flame stack">
         <div class="scene-head stack-top">
           <div class="scene-intro">
@@ -564,6 +566,8 @@ const repo = "https://github.com/QAInsights/p95-bench";
     <script>
       import "../lib/fullpage.mjs";
       import { mountJellyWordmark } from "../lib/jelly-wordmark.mjs";
+      import { mountUnitMatrix } from "../lib/unit-matrix.mjs";
+      mountUnitMatrix(document.getElementById('unit-matrix'));
       mountJellyWordmark(document.getElementById('jelly-wordmark'));
     </script>
   </body>

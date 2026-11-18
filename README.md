@@ -248,7 +248,16 @@ Live at https://p95.qainsights.com.
 Deploys on push to main.
 
 The static Astro showcase lives in `site/` and requires Node 22.23.4 or newer.
-Fonts are self-hosted. To regenerate the leaderboard and build:
+Fonts are self-hosted.
+
+Number keys 1–9 select the first nine sections in DOM order. The rail exposes
+every section; use it or Page Up / Page Down if more sections are added.
+The Unit matrix is built from published attempt records, retaining repeats and
+adding hatched placeholders only for missing tasks. Group pass rates exclude
+Not run. Use Left / Right, Home / End within the matrix to inspect a square,
+or open its semantic data table. Reduced motion disables regrouping animation.
+
+To regenerate the leaderboard and build:
 
 ```sh
 cd site
