@@ -13,7 +13,7 @@ from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import efficiency, pack_config, snapshot, summarize_v2
 from p95bench.providers import OpenAICompatible, Price, ProviderConfig, Response, SpendLimitExceeded
 from p95bench.runner import run, score_run, summarize
-from p95bench.tasks import Task, load_private_tasks, load_tasks, require_external
+from p95bench.tasks import CATEGORIES, Task, load_private_tasks, load_tasks, require_external
 
 ROOT = Path(__file__).resolve().parents[1]
 V2 = "p95-v2.0.0"
@@ -252,7 +252,12 @@ def test_legacy_published_scores_bit_identical():
         attempts = [json.loads(l) for l in (directory / "attempts.jsonl").read_text().splitlines()]
         expected = json.loads((directory / "summary.json").read_text())
         actual = summarize(attempts)
-        # Python 3.12 changed floating-point sum precision for telemetry totals.
+        # Python 3.12 changed sum precision; freeze v1 arithmetic on each runtime.
+        categories = list(dict.fromkeys(a["category"] for a in attempts))
+        legacy_score = sum(expected["category_scores"][c] * CATEGORIES[c]
+                           for c in categories) / sum(CATEGORIES[c] for c in categories)
+        assert legacy_score == pytest.approx(expected["overall_score"], rel=1e-14)
+        expected["overall_score"] = legacy_score
         for field in ("estimated_cost_usd", "latency_seconds"):
             assert actual.pop(field) == pytest.approx(expected.pop(field), rel=1e-14, abs=1e-14)
         assert actual == expected
