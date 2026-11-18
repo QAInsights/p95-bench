@@ -54,7 +54,7 @@ export async function buildData(directories) {
       harness_commit: metadata.harness_commit ?? first.harness_commit ?? null,
       ...(metadata.cost_note ? { cost_note: metadata.cost_note,
         pricing_source: metadata.pricing_source ?? null } : {}),
-      output_cap: metadata.max_completion_tokens ?? metadata.max_tokens ?? null,
+      output_cap: metadata.max_completion_tokens ?? metadata.max_tokens ?? metadata.maxOutputTokens ?? null,
       cost_attempts: attempts.map((attempt) => ({ task_id: attempt.task_id,
         input_tokens: attempt.response.input_tokens,
         cached_tokens: attempt.response.cached_tokens ?? 0,

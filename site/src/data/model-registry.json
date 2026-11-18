@@ -1,4 +1,8 @@
 {
+  "gemini-4-carbon": { "family": "gemini-carbon", "release_order": 1 },
+  "gemini-4-argon": { "family": "gemini-argon", "release_order": 1 },
+  "gemini-4-hydrogen": { "family": "gemini-hydrogen", "release_order": 1 },
+  "gemini-3.8-flash": { "family": "gemini-flash", "release_order": 1 },
   "Qwen-Ambassador/Qwen3.8-Max": { "family": "qwen-max", "release_order": 2 },
   "Qwen-Ambassador/Qwen3.7-Max": { "family": "qwen-max", "release_order": 1 },
   "Qwen-Ambassador/Qwen3.8-Flash-Next": { "family": "qwen-flash", "release_order": 1 },

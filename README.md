@@ -286,6 +286,45 @@ its full rank. Add increasing `release_order` values within a `family` and set
 `discontinued: true` only when the provider no longer offers a model. Unknown
 model IDs get their own latest family automatically.
 
+## Google Gemini
+
+The `gemini` provider calls the native Gemini API `generateContent` endpoint at
+`https://generativelanguage.googleapis.com/v1beta` using `GEMINI_API_KEY` in the
+`x-goog-api-key` header. Models are `gemini-4-carbon`, `gemini-4-argon`,
+`gemini-4-hydrogen`, and `gemini-3.8-flash`. Example:
+
+```sh
+p95bench run --provider gemini --model gemini-4-carbon --out results
+```
+
+Temperature is omitted, retaining the API's default of 1. Default thinking is
+unchanged. `maxOutputTokens` is 8192, shared by thinking and answer tokens.
+Published response output tokens include both `candidatesTokenCount` and
+`thoughtsTokenCount`; `thinking_tokens` and `finish_reason` are also recorded.
+Thinking text is never substituted for an answer. A thinking-only `MAX_TOKENS`
+response is an actual empty response, not a transport failure; check
+`GeminiResponse.thinking_exhausted` and stop for review before changing settings.
+
+[Standard list prices](https://ai.google.dev/gemini-api/docs/pricing), USD per
+million tokens, verified November 18, 2026:
+
+| Model | Input | Cached input | Output including thinking | Valid through |
+| --- | ---: | ---: | ---: | --- |
+| Carbon | 2.00 | 0.10 | 10.00 | November 30, 2026 |
+| Argon | 2.00 | 0.10 | 10.00 | November 30, 2026 |
+| Hydrogen | 1.50 | 0.075 | 7.50 | No expiry listed |
+| 3.8 Flash | 0.75 | 0.075 | 3.75 | December 31, 2026 |
+
+Runs snapshot prices. Carbon/Argon rates double December 1; Flash rates double
+January 1. No explicit caches, storage or grounding tools are created.
+Transient requests use bounded backoff; exhaustion is Not run. A client timeout
+of 600 seconds accommodates thinking without changing the output cap.
+`Gemini(config, spend_limit=3)` optionally bounds total estimated spend across
+models and retries. Each network attempt reserves full capped output and a
+conservative text-input allowance (request bytes plus 1024 framing tokens).
+Successful responses reconcile to returned usage; unknown outcomes retain their
+full reservation. Insufficient remaining budget stops before another request.
+
 ## License
 
 MIT. Copyright 2026 NaveenKumar Namachivayam.
