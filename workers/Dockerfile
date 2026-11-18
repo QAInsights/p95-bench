@@ -1,0 +1,17 @@
+FROM grafana/k6@sha256:f21270290d702cbf0a7d6ba5d7ed100b63bcb233b558b885ed787547b3488279 AS k6-source
+FROM eclipse-temurin@sha256:aa6381384f8db99762fa7d0d3c2b5de58874e5f12c96df4c13a1455376ae0ed1 AS java-source
+FROM python@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b AS base
+ENV PYTHONDONTWRITEBYTECODE=1
+
+FROM base AS k6
+COPY --from=k6-source /usr/bin/k6 /usr/local/bin/k6
+LABEL org.p95bench.tool="k6" org.p95bench.version="1.0.0"
+RUN k6 version
+
+FROM base AS jmeter
+COPY --from=java-source /opt/java/openjdk /opt/java/openjdk
+COPY apache-jmeter-5.6.3.tgz /tmp/jmeter.tgz
+RUN python3 -c 'import hashlib,tarfile; p="/tmp/jmeter.tgz"; assert hashlib.sha512(open(p,"rb").read()).hexdigest()=="5978a1a35edb5a7d428e270564ff49d2b1b257a65e17a759d259a9283fc17093e522fe46f474a043864aea6910683486340706d745fcdf3db1505fd71e689083"; tarfile.open(p).extractall("/opt", filter="data")' && rm /tmp/jmeter.tgz
+ENV JAVA_HOME=/opt/java/openjdk PATH=/opt/java/openjdk/bin:/opt/apache-jmeter-5.6.3/bin:/usr/local/bin:/usr/bin:/bin
+LABEL org.p95bench.tool="jmeter" org.p95bench.version="5.6.3"
+RUN java -Djava.awt.headless=true -jar /opt/apache-jmeter-5.6.3/bin/ApacheJMeter.jar --version

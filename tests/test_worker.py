@@ -36,7 +36,8 @@ def test_worker_policy_and_cleanup_on_infrastructure_failure(tmp_path):
     assert worker._docker.call_args_list[-1].args[:2] == ("rm", "--force")
 
 
-def test_kill_exception_reaps_attachment_before_container_removal(tmp_path, monkeypatch):
+@pytest.mark.parametrize("exports", [None, {"proof": 10}])
+def test_kill_exception_reaps_attachment_before_container_removal(tmp_path, monkeypatch, exports):
     worker = object.__new__(Worker)
     worker.directory, worker.public_socket = tmp_path, tmp_path / "public.sock"
     worker.image, worker.docker, worker.environment = PROBE_IMAGE, "docker", {}
@@ -46,16 +47,20 @@ def test_kill_exception_reaps_attachment_before_container_removal(tmp_path, monk
                                subprocess.TimeoutExpired("attachment", 1), 0]
     monkeypatch.setattr("p95bench.worker.subprocess.Popen", Mock(return_value=process))
     monkeypatch.setattr("p95bench.worker.selectors.DefaultSelector", MagicMock())
-    monkeypatch.setattr("p95bench.worker.time.monotonic", Mock(side_effect=[0, 2]))
+    monkeypatch.setattr("p95bench.worker.time.monotonic", Mock(side_effect=[0, *([2] * 10)]))
     def docker(*args):
         if args[0] == "kill":
             raise WorkerUnavailable("kill failed")
         if args[0] == "rm":
             assert process.wait.call_count == 3
+        if args[0] == "exec" and args[-1] == "status":
+            return subprocess.CompletedProcess([], 0, b'{"state":"done","returncode":0}', b"")
+        if args[0] == "exec" and "files" in args:
+            return subprocess.CompletedProcess([], 0, b'{"files":{},"errors":{"proof":"missing"}}', b"")
         return subprocess.CompletedProcess([], 0, b"", b"")
     worker._docker = Mock(side_effect=docker)
     with pytest.raises(WorkerUnavailable, match="kill failed"):
-        worker.execute(["python3", "-c", "pass"], timeout=1)
+        worker.execute(["python3", "-c", "pass"], timeout=1, exports=exports)
     process.terminate.assert_called_once()
     process.kill.assert_called_once()
     assert all(call.kwargs == {"timeout": 1} for call in process.wait.call_args_list)

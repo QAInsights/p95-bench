@@ -93,7 +93,7 @@ def test_audit_reserves_checkout_and_inflight_end_capacity(spare, inflight):
                 shop.end(request, 200)
             if earlier:
                 shop.end(earlier, 200)
-        expected = int(spare >= 5 + inflight)
+        expected = int(spare >= 6 + inflight)
         assert len(shop._orders) == expected
         assert sum(event["kind"] == "commit" for event in shop._events) == expected
         assert shop._pending == 0
@@ -246,6 +246,22 @@ def test_reset_during_upload_ends_request_exactly_once(monkeypatch):
         audit = shop.audit()
         assert len([event for event in audit if event["kind"] == "start"]) == 2
         assert len([event for event in audit if event["kind"] == "end"]) == 2
+
+
+def test_dynamic_etag_requires_response_correlation():
+    revisions = []
+    for seed in (11, 12):
+        with demo_app_v2(Profile(dynamic_etag=True, require_etag=True), seed=seed) as (_, url):
+            client = Client(url)
+            client.login()
+            cart = client.cart()
+            etag = client.request(f"/v2/carts/{cart}")[2]["ETag"]
+            revisions.append(etag)
+            assert client.request(f"/v2/carts/{cart}", "PATCH", {"quantity": 2},
+                                  {"If-Match": '"1"'})[0] == 412
+            assert client.request(f"/v2/carts/{cart}", "PATCH", {"quantity": 2},
+                                  {"If-Match": etag})[0] == 200
+    assert revisions[0] != revisions[1]
 
 
 @pytest.mark.parametrize("failed", [False, True])

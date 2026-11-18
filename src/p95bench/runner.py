@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from p95bench.budget import BudgetLedger
+from p95bench.capacity import prepare_workloads
 from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, grade, jmeter_executable, k6_executable
 from p95bench.packs import snapshot, summarize_v2, validate_snapshot
 from p95bench.providers import Gemini, ProviderUnavailable, SpendLimitExceeded, gemini_prices
@@ -91,6 +92,8 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
     directory = ((out / pack_id if v2 else out) / run_id).resolve()
     _output_path(directory, private)
     directory.mkdir(parents=True)
+    if v2:
+        prepare_workloads(tasks, directory / "capacity")
     _output_path(directory / "pack.json", private).write_text(
         json.dumps(manifest, indent=2) + "\n")
     config = getattr(provider, "config", None)
