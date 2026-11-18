@@ -132,9 +132,10 @@ def workload_fractions(trial, contract):
                 limits = False
             if end["outcome"] == 429:
                 last_limit[actor] = end["time"] + 1
-        raw = sum(anchor + warmup <= event["time"] < anchor + warmup + duration
-                  for event in starts.values() if event["path"] == "/v2/work")
-        limits = limits and raw / duration <= contract.get("raw_ceiling", 12)
+        raw = Counter(math.floor(event["time"] - anchor - warmup)
+                      for event in starts.values() if event["path"] == "/v2/work"
+                      and anchor + warmup <= event["time"] < anchor + warmup + duration)
+        limits = limits and all(count <= contract.get("raw_ceiling", 12) for count in raw.values())
     safe = provenance(trial)
     return {"loads": float(trial.loaded and safe), "setup": mean(rates) if safe else 0,
             "behavior": mean(smooth) if safe else 0, "safety": float(limits and safe)}

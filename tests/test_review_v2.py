@@ -1,6 +1,6 @@
 import pytest
 
-from p95bench.checkpoint_graders import flow_fractions
+from p95bench.checkpoint_graders import flow_fractions, workload_fractions
 from p95bench.execution import Trial
 
 
@@ -67,3 +67,26 @@ def test_reservation_polls_must_reference_their_reserved_job():
         if event["kind"] == "start" and event["path"].startswith("/v2/jobs/"):
             event["path"] = "/v2/jobs/unreserved"
     assert flow_fractions(trial, [reservation_control()], {"mode": "reservation"})["safety"] == 0
+
+
+def workload_trial(extra_starts=()):
+    evidence = [{"kind": "login", "request": "login", "session": "session"}]
+    samples = [{"request": "login", "worker": "1"}]
+    for index, timestamp in enumerate([*range(36), *extra_starts]):
+        evidence.extend([{"kind": "start", "request": index, "path": "/v2/work",
+                          "method": "POST", "time": timestamp},
+                         {"kind": "authenticated", "request": index, "session": "session"},
+                         {"kind": "work", "request": index, "fault": None},
+                         {"kind": "end", "request": index, "outcome": 200, "time": timestamp + .001}])
+        samples.append({"request": index, "worker": "1"})
+    evidence.sort(key=lambda event: event.get("time", -1))
+    return Trial(True, "completed", 0, evidence, samples, [])
+
+
+@pytest.mark.parametrize("extra,expected", [
+    ([], 1), ([5.2], 1), ([5.2, 5.3], 0), ([34.8, 34.9], 0),
+    ([4.8, 4.9], 1), ([35.2, 35.3], 1), ([5.9, 6.1], 1),
+])
+def test_completion_raw_ceiling_applies_to_each_scored_second(extra, expected):
+    result = workload_fractions(workload_trial(extra), {"completion": True, "rate": 1, "raw_ceiling": 2})
+    assert result["safety"] == expected
