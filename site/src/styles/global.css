@@ -1796,6 +1796,7 @@ th {
   }
   .model-controls select {
     flex: 1;
+    min-inline-size: 0;
     max-width: 230px;
   }
   .profile {
