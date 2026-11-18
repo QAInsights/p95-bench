@@ -250,7 +250,7 @@ Deploys on push to main.
 The static Astro showcase lives in `site/` and requires Node 22.23.4 or newer.
 Fonts are self-hosted.
 
-Number keys 1–9 select the first nine sections in DOM order. The rail exposes
+Number keys 1–9 select the first nine sections in DOM order; 0 selects section 10. The rail exposes
 every section; use it or Page Up / Page Down if more sections are added.
 The Unit matrix is built from published attempt records, retaining repeats and
 adding hatched placeholders only for missing tasks. Group pass rates exclude

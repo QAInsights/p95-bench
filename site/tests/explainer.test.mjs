@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import { loadTaskData } from '../scripts/build-data.mjs';
 import { scoreAttempts } from '../src/lib/scores.mjs';
 import { executionShapes, simulatorRows, setTaskState, attemptCost } from '../src/lib/explainer-data.mjs';
-import { sectionMetadata, sectionShortcut } from '../src/lib/section-navigation.mjs';
+import { sectionMetadata, sectionShortcut, sectionNumber } from '../src/lib/section-navigation.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 
@@ -74,18 +74,26 @@ test('real attempt costs reproduce list-price estimates with bounded cached toke
 });
 
 test('section rail metadata and shortcuts include every numbered section in DOM order', () => {
-  const labels = ['Live run', 'Unit matrix', 'Flame stack', 'Value frontier', 'Model focus', 'Scenarios', 'How scoring works', 'Tools', 'Methodology'];
+  const labels = ['Live run', 'Unit matrix', 'Heatmap', 'Flame stack', 'Value frontier', 'Model focus', 'Scenarios', 'How scoring works', 'Tools', 'Methodology'];
   const sections = labels.map((label, index) => ({ id: `section-${index}`, dataset: { sectionLabel: label } }));
   assert.deepEqual(sectionMetadata(sections).map(section => section.label), labels);
-  assert.deepEqual(sectionMetadata(sections).map(section => section.number), ['01', '02', '03', '04', '05', '06', '07', '08', '09']);
+  assert.deepEqual(sectionMetadata(sections).map(section => section.number), ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']);
   assert.equal(sectionShortcut('5', sections.length), 4);
   assert.equal(sectionShortcut('6', sections.length), 5);
   assert.equal(sectionShortcut('8', sections.length), 7);
   assert.equal(sectionShortcut('9', sections.length), 8);
-  for (const key of ['0', 'x', '16']) assert.equal(sectionShortcut(key, sections.length), null);
+  assert.equal(sectionShortcut('0', sections.length), 9);
+  assert.equal(sectionShortcut('0', 9), null);
+  for (const key of ['x', '16']) assert.equal(sectionShortcut(key, sections.length), null);
   assert.equal(sectionShortcut('1', 0), null);
   assert.deepEqual(sectionMetadata([]), []);
   assert.equal(sectionMetadata([{ id: 'future', dataset: {}, querySelector: () => ({ textContent: ' Future section ' }) }])[0].label, 'Future section');
+});
+
+test('footer and rail share two-digit section formatting without a third leading digit', async () => {
+  assert.deepEqual([1, 9, 10, 11].map(sectionNumber), ['01', '09', '10', '11']);
+  const source = await readFile(new URL('../src/lib/fullpage.mjs', import.meta.url), 'utf8');
+  assert.match(source, /sectionNumber\(currentScene \+ 1\) \+ " \/ "/);
 });
 
 test('explainer is a semantic long section between scenarios and tools without the supplied audit stage', async () => {
