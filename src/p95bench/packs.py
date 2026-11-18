@@ -87,10 +87,11 @@ def efficiency(quality, response, budget):
     if (not finite(budget.get("tokens"), .001)
             or not finite(budget.get("latency_seconds"), .001)):
         raise ValueError("Efficiency budgets must be finite and positive")
-    tokens = response["input_tokens"] + response["output_tokens"]
+    tokens = response["output_tokens"]
     latency = response["response_latency_seconds"]
-    return quality * (.5 * min(1, budget["tokens"] / max(1, tokens))
-                      + .5 * min(1, budget["latency_seconds"] / max(.001, latency)))
+    token_credit = max(0, min(1, (3 - tokens / budget["tokens"]) / 2))
+    latency_credit = max(0, min(1, (3 - latency / budget["latency_seconds"]) / 2))
+    return quality * (.5 * token_credit + .5 * latency_credit)
 
 
 def summarize_v2(attempts, manifest):

@@ -20,13 +20,18 @@ incomplete runs cannot enter the site data builder. An empty returned answer is 
 graded attempt; transport/budget exhaustion is Not run.
 
 V2 composite is `100 * (.95 * Q + .05 * E)`, where Q is weighted quality (0–1).
-For each trial, `e = q * (.5 * min(1, T_ref/max(1,T)) +
-.5 * min(1, L_ref/max(.001,L)))`; E aggregates e exactly like quality.
-T counts input plus output including reasoning once, without cache discounts.
+For each trial, `e = q * (.5 * credit(T/T_budget) + .5 * credit(L/L_budget))`,
+where `credit(r) = clamp((3 - r)/2, 0, 1)`; E aggregates e exactly like quality.
+Each component earns full credit at or below budget, declines linearly to 0 at
+three times budget, and stays at 0 above that. T counts provider-reported output
+tokens only, including reasoning tokens once as already counted by the provider
+adapter; input and cached tokens do not affect efficiency.
 L is accepted-response provider time, excluding retry backoff and script execution.
 Frozen task-specific efficiency budgets must be supplied with `--efficiency-budgets`
-as JSON mapping IDs to positive `tokens` and `latency_seconds` values. No calibrated
-reference budgets are claimed by this foundation.
+as JSON mapping IDs to positive `tokens` and `latency_seconds` values. Token budgets
+are three times the reference solution/answer token count using one recorded fixed
+tokenizer across the pack. Latency budgets are 90 seconds for analysis tasks and
+180 seconds for script tasks. V1 scoring and summaries are unchanged.
 
 V2 runs are stored under `OUT/p95-v2.0.0/RUN_ID`; v1 preserves `OUT/RUN_ID` for
 compatibility. Both get a hashed `pack.json` snapshot

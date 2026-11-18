@@ -29,6 +29,16 @@ provider execution still requires frozen per-task efficiency budgets and uses th
 shared $30 ledger; do not reset it between models. Repeats default to1. No cost or
 60–70 calibration claim is made without an authorized model cohort.
 
+Composite scoring is 95% quality and 5% quality-gated efficiency. Each efficiency
+component uses `clamp((3 - usage/budget)/2, 0, 1)`: full credit at or below budget,
+half at twice budget, and zero at three times budget or above. Token usage is
+provider-reported output tokens only, including reasoning tokens once as counted
+by the adapter, independent of input/cache tokens. Latency is model API response
+time, excluding retry backoff and script execution. The two component credits are
+averaged and multiplied by task quality. Frozen token budgets are three times the
+reference answer's token count using one recorded tokenizer for all tasks;
+latency budgets are 90 seconds for analysis and 180 seconds for script tasks.
+
 ## Native evidence and bounds
 
 One CPU, 768MiB RAM, 256 PIDs, 512 file descriptors, no network, no home/environment
