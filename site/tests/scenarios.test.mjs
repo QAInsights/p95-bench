@@ -131,5 +131,5 @@ test('scenario content is build-time semantic markup between Model focus and Too
   assert.match(client, /if \(all !== showingEarlier\) applyVersions\(\)/);
   assert.doesNotMatch(client, /addEventListener\("popstate", applyVersions\)/);
   assert.match(client, /e\.button !== 0 \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey \|\| e\.altKey/);
-  assert.match(client, /history\.pushState\(null, "", a\.hash\)/);
+  assert.match(client, /if \(a\.href !== location\.href\) history\.pushState\(null, "", a\.href\)/);
 });

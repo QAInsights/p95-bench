@@ -126,7 +126,7 @@ document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios
     (a.onclick = (e) => {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
-      history.pushState(null, "", a.hash);
+      if (a.href !== location.href) history.pushState(null, "", a.href);
       goScene(scenes.findIndex(scene => '#' + scene.id === a.hash));
     }),
 );
