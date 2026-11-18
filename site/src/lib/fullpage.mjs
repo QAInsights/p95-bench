@@ -227,7 +227,7 @@ document.addEventListener("keydown", (e) => {
     e.ctrlKey ||
     e.metaKey ||
     e.isComposing ||
-    e.target.closest("input,select,textarea,[contenteditable=true]")
+    e.target.closest('input,select,textarea,[contenteditable=true],[role="region"][tabindex]')
   )
     return;
   const shortcut = sectionShortcut(e.key, scenes.length);

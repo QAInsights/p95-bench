@@ -5,6 +5,7 @@ import "@fontsource/bricolage-grotesque/latin-800.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/global.css";
 import "../styles/jelly-wordmark.css";
+import "../styles/geist.css";
 import data from "../data/leaderboard.json";
 import { name, toolScore, toolScoreLabel, selectModelVersions } from "../lib/scores.mjs";
 import { parse } from "yaml";
@@ -75,6 +76,8 @@ const repo = "https://github.com/QAInsights/p95-bench";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preload" href="/fonts/GeistPixel-Square.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/GeistPixel-Grid.woff2" as="font" type="font/woff2" crossorigin />
     <title>P95 Bench · Under load</title>
   </head>
   <body>
@@ -89,7 +92,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
             alt=""
             aria-hidden="true"
           />
-          <span>P95 Bench</span></a
+          <span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a
         ><label class="version-switch" for="show-versions"><input id="show-versions" type="checkbox" switch role="switch" aria-describedby="versions-help" />Show earlier versions</label>
         <p class="sr" id="versions-help">Latest means the newest benchmarked release in each family. Earlier versions remain fully ranked when shown. Discontinued means the provider no longer offers the model.</p>
       </div><div class="header-tools">
@@ -337,7 +340,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
               <h3>Samples, not promises.</h3><span
                 class="muted"
                 id="focus-passed"></span>
-            </div><div class="task-grid" id="task-grid"></div><div
+            </div><div class="task-grid" id="task-grid" role="region" aria-label="Task results" tabindex="0"></div><div
               class="metrics"
             >
               <div>
