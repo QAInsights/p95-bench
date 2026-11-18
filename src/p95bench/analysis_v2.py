@@ -77,6 +77,18 @@ def invalid_constant(value):
     raise ValueError("Nonfinite JSON constant: " + value)
 
 
+def same_shape(actual, expected):
+    if isinstance(expected, dict):
+        return (isinstance(actual, dict) and set(actual) == set(expected)
+                and all(same_shape(actual[key], value) for key, value in expected.items()))
+    if isinstance(expected, list):
+        return (isinstance(actual, list) and len(actual) == len(expected)
+                and all(same_shape(a, b) for a, b in zip(actual, expected)))
+    if isinstance(expected, (int, float)) and not isinstance(expected, bool):
+        return isinstance(actual, (int, float)) and not isinstance(actual, bool) and math.isfinite(actual)
+    return type(actual) is type(expected)
+
+
 def analysis(text, params, workdir, fixtures):
     fractions = {}
     try:
@@ -85,7 +97,7 @@ def analysis(text, params, workdir, fixtures):
         value = json.loads(text, parse_constant=invalid_constant)
         logical = {params.get("fixture_aliases", {}).get(name, name): value for name, value in fixtures.items()}
         expected = truth(params["analysis"], logical)
-        schema = isinstance(value, dict) and set(value) == set(expected) and all(isinstance(value[key], dict) for key in expected)
+        schema = same_shape(value, expected)
         fractions = {"loads": float(schema), "setup": float(schema and equal(value["observations"], expected["observations"])),
                      "behavior": float(schema and equal(value["diagnosis"], expected["diagnosis"])),
                      "safety": float(schema and equal(value["evidence"], expected["evidence"]))}

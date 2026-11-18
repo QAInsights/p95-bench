@@ -62,9 +62,18 @@ def test_analysis_goldens_and_independent_mutations(task, tmp_path):
     aliases = task.params["fixture_aliases"]
     expected = truth(task.params["analysis"], {aliases.get(name, name): value for name, value in task.fixtures.items()})
     assert grade(task, json.dumps(expected), tmp_path, 2).score == 1
+    def corrupt(value):
+        if isinstance(value, dict):
+            return {key: corrupt(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [corrupt(item) for item in value]
+        if isinstance(value, bool):
+            return not value
+        return value + 1 if isinstance(value, (int, float)) else value + "-wrong"
+
     for index, key in enumerate(("observations", "diagnosis", "evidence"), 1):
         mutant = copy.deepcopy(expected)
-        mutant[key] = {"wrong": "injected fault"}
+        mutant[key] = corrupt(mutant[key])
         result = grade(task, json.dumps(mutant), tmp_path, 2)
         vector = [item["points"] for item in task.params["rubric"]]
         vector[index] = 0

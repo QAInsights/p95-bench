@@ -1,5 +1,9 @@
+import copy
+import json
+
 import pytest
 
+from p95bench.analysis_v2 import analysis, truth
 from p95bench.checkpoint_graders import flow_fractions, workload_fractions
 from p95bench.execution import Trial
 
@@ -131,3 +135,31 @@ def test_native_positive_retry_samples_remain_allowed(mode, status, error, asser
             trial.events.extend([{"kind": "cart_conflict", "request": commit["request"]},
                                  {"kind": "cart_update", "request": commit["request"]}])
     assert flow_fractions(trial, [], {"mode": mode})["safety"] == 1
+
+
+@pytest.mark.parametrize("fault", ["empty", "missing", "extra", "bool", "string", "array", "array_item", "length"])
+def test_analysis_loads_requires_recursive_keys_and_types(fault, tmp_path):
+    fixtures = {"summary.json": json.dumps({"limit_ms": 250, "metrics": {
+        "http_req_duration": {"values": {"p(95)": 200}},
+        "http_req_duration{route:checkout}": {"values": {"p(95)": 300}}}})}
+    value = copy.deepcopy(truth("thresholds", fixtures))
+    if fault == "empty":
+        value["observations"] = {}
+    elif fault == "missing":
+        del value["diagnosis"]["route"]
+    elif fault == "extra":
+        value["evidence"]["unknown"] = 1
+    elif fault == "bool":
+        value["observations"]["limit_ms"] = True
+    elif fault == "string":
+        value["observations"]["limit_ms"] = "250"
+    elif fault == "array":
+        value["evidence"]["keys"] = {}
+    elif fault == "array_item":
+        value["evidence"]["keys"][0] = 1
+    else:
+        value["evidence"]["keys"] = []
+    rubric = [{"id": key, "points": points, "requires": [] if key == "loads" else ["loads"]}
+              for key, points in zip(("loads", "setup", "behavior", "safety"), (10, 25, 40, 25))]
+    result = analysis(json.dumps(value), {"analysis": "thresholds", "rubric": rubric}, tmp_path, fixtures)
+    assert [checkpoint.earned for checkpoint in result.checkpoints] == [0, 0, 0, 0]
