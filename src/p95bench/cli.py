@@ -37,7 +37,8 @@ def main(argv=None):
                 if not tasks:
                     raise ValueError("No tasks match the selected tools")
             directory, summary = run(get_provider(args.provider), args.provider, args.model,
-                                     config.prices[args.model], tasks, args.out, args.repeats)
+                                     None if args.provider == "gemini" else config.prices[args.model],
+                                     tasks, args.out, args.repeats)
             print(f"Run: {directory}")
         print(json.dumps(summary, indent=2))
     except (ValueError, OSError, URLError) as error:

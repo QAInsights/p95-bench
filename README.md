@@ -319,6 +319,9 @@ Runs choose the date-effective schedule using their UTC start time, recording
 the pricing date and snapshot in metadata and attempts. Carbon/Argon rates
 double December 1; Flash rates double January 1. Published snapshots are never
 rewritten. No explicit caches, storage or grounding tools are created.
+Library callers pass `price=None` to select the dated schedule for a built-in
+Gemini model. An explicit `Price` is honored for built-in and custom models;
+custom models without a supplied price fail before any requests are sent.
 Transient requests use bounded backoff; exhaustion is Not run. A client timeout
 of 600 seconds accommodates thinking without changing the output cap.
 `Gemini(config, spend_limit=3)` optionally bounds total estimated spend across

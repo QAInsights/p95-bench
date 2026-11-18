@@ -206,8 +206,11 @@ class Gemini(OpenAICompatible):
         self.spend_limit = spend_limit
         self.spent_upper_bound = 0
 
-    def configure_run(self, run_date):
-        self.config = replace(self.config, prices={**self.config.prices, **gemini_prices(run_date)})
+    def configure_run(self, run_date, model=None, price=None):
+        prices = {**self.config.prices, **gemini_prices(run_date)}
+        if model is not None and price is not None:
+            prices[model] = price
+        self.config = replace(self.config, prices=prices)
 
     def _headers(self, key):
         return {"x-goog-api-key": key, "Content-Type": "application/json",

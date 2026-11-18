@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from p95bench.graders import GRADERS, grade, jmeter_executable, k6_executable
-from p95bench.providers import ProviderUnavailable, SpendLimitExceeded, gemini_prices
+from p95bench.providers import Gemini, ProviderUnavailable, SpendLimitExceeded, gemini_prices
 from p95bench.tasks import CATEGORIES
 
 SYSTEM_PROMPT = (
@@ -56,10 +56,12 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1):
         k6_executable()
     started = datetime.now(UTC)
     if provider_name == "gemini":
-        price = gemini_prices(started)[model]
-        configure = getattr(provider, "configure_run", None)
-        if configure:
-            configure(started)
+        if price is None:
+            price = gemini_prices(started).get(model)
+        if price is None:
+            raise ValueError(f"No verified price for {model}; supply an explicit price")
+        if isinstance(provider, Gemini):
+            provider.configure_run(started, model=model, price=price)
     run_id = started.strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     directory = (out / run_id).resolve()
     directory.mkdir(parents=True)

@@ -10,6 +10,7 @@ import pytest
 from p95bench.providers import (
     PROVIDERS,
     Gemini,
+    Price,
     ProviderUnavailable,
     Response,
     SpendLimitExceeded,
@@ -212,7 +213,7 @@ def test_run_date_selects_prices_and_records_snapshot(monkeypatch, tmp_path, mod
     provider = Gemini(PROVIDERS['gemini'])
     monkeypatch.setattr(provider, '_request', lambda *args: reply())
     task = Task('test', 'workload', 'none', 'prompt', 'numeric', {'answer': 10}, {})
-    directory, summary = run(provider, 'gemini', model, PROVIDERS['gemini'].prices[model],
+    directory, summary = run(provider, 'gemini', model, None,
                              [task], tmp_path)
     metadata = json.loads((directory / 'metadata.json').read_text())
     expected = dict(zip(['input', 'cached', 'output'], rates))
@@ -234,3 +235,21 @@ def test_schedule_uses_utc_not_local_calendar_day():
     assert gemini_prices(after)['gemini-4-hydrogen'].input == 1.5
     with pytest.raises(ValueError, match='timezone-aware'):
         gemini_prices(datetime(2026, 12, 1))
+
+
+@pytest.mark.parametrize('model', ['gemini-custom', 'gemini-4-carbon'])
+def test_explicit_gemini_price_is_preserved_for_builtin_and_custom_models(monkeypatch, tmp_path, model):
+    provider = Gemini(PROVIDERS['gemini'])
+    monkeypatch.setattr(provider, '_request', lambda *args: reply())
+    price = Price(7, .5, 30)
+    task = Task('test', 'workload', 'none', 'prompt', 'numeric', {'answer': 10}, {})
+    directory, summary = run(provider, 'gemini', model, price, [task], tmp_path)
+    assert summary['estimated_cost_usd'] == pytest.approx((40 * 7 + 60 * .5 + 42 * 30) / 1_000_000)
+    assert provider.config.prices[model] == price
+    assert json.loads((directory / 'metadata.json').read_text())['price_per_million'] == {
+        'input': 7, 'cached': .5, 'output': 30}
+
+
+def test_custom_gemini_model_without_price_has_clear_error(tmp_path):
+    with pytest.raises(ValueError, match='No verified price for gemini-custom; supply an explicit price'):
+        run(Gemini(PROVIDERS['gemini']), 'gemini', 'gemini-custom', None, [], tmp_path)
