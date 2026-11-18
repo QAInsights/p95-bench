@@ -134,20 +134,21 @@ class Worker:
         finally:
             kill_error = None
             try:
-                if status != "completed":
-                    self._docker("kill", name)
-            except BaseException as error:
-                kill_error = error
-            try:
-                self._reap_attachment(process)
-            except BaseException as error:
-                if kill_error is None:
+                try:
+                    if status != "completed":
+                        self._docker("kill", name)
+                except BaseException as error:
+                    kill_error = error
                     raise
-                kill_error.add_note("Attachment cleanup also failed: " + str(error))
             finally:
-                process.stdout.close()
-            if kill_error is not None:
-                raise kill_error
+                try:
+                    self._reap_attachment(process)
+                except BaseException as error:
+                    if kill_error is None:
+                        raise
+                    kill_error.add_note("Attachment cleanup also failed: " + str(error))
+                finally:
+                    process.stdout.close()
         code = None
         if status == "completed":
             state = self._docker("inspect", "--format", "{{json .State}}", name)
