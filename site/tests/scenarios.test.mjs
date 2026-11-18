@@ -88,21 +88,23 @@ test('future tool filters appear automatically in stable order without duplicate
 
 test('grading descriptions follow numeric and choice comparisons, not generic correctness claims', () => {
   assert.equal(scenarioGrading({ grader: 'numeric', params: { answer: 250, tolerance: .001 } }),
-    'Numeric answer: 250, with absolute tolerance 0.001. Requires a finite number only.');
+    'Numeric answer: 250, with absolute tolerance 0.001. Reply with only the bare finite number; markdown or prose fails.');
   assert.match(scenarioGrading({ grader: 'numeric', params: { answer: 1 } }), /absolute tolerance 0/);
   assert.equal(scenarioGrading({ grader: 'choice', params: { answer: 'C' } }),
-    'Exact choice: C. Letter case and surrounding whitespace are ignored.');
+    'Exact choice: C. Reply with only the bare letter; markdown or prose fails. Letter case and surrounding whitespace are ignored.');
   assert.match(scenarioGrading({ grader: 'new_grader' }), /Custom grader: new_grader/);
 });
 
 test('execution descriptions expose the actual JMeter and k6 checks, including their shape-check difference', () => {
   const jmeter = scenarioGrading({ grader: 'jmeter_exec', params: { completions: 2, min_checkout_threads: 2, timeout: 45 } });
+  assert.match(jmeter, /^Return one complete <jmeterTestPlan> XML block before execution/);
   assert.match(jmeter, /exit code 0, a nonempty sample log and all samples successful/);
   assert.match(jmeter, /Exactly 2 completed checkouts/);
   assert.match(jmeter, /At least 2 distinct checkout threads/);
   assert.match(jmeter, /Thread and iteration counts are not otherwise checked/);
   assert.match(jmeter, /Timeout: 45 seconds/);
   const isolation = scenarioGrading({ grader: 'k6_exec', params: { completions: 2, min_checkout_vus: 2 } });
+  assert.match(isolation, /^Return the script in one js\/javascript code block before execution/);
   assert.match(isolation, /expected responses and positive HTTP statuses below 400/);
   assert.match(isolation, /At least 2 distinct checkout VUs/);
   const refresh = scenarioGrading({ grader: 'k6_exec', params: { completions: 2, expected_checkout_vus: 1, min_checkout_iterations: 2 } });

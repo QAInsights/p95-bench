@@ -5,12 +5,12 @@ const labels = new Map([['none', 'General'], ['jmeter', 'JMeter'], ['k6', 'k6'],
 const toolOrder = [...labels.keys()];
 
 export function scenarioGrading({ grader, params = {} }) {
-  if (grader === 'numeric') return `Numeric answer: ${params.answer}, with absolute tolerance ${params.tolerance ?? 0}. Requires a finite number only.`;
-  if (grader === 'choice') return `Exact choice: ${params.answer}. Letter case and surrounding whitespace are ignored.`;
+  if (grader === 'numeric') return `Numeric answer: ${params.answer}, with absolute tolerance ${params.tolerance ?? 0}. Reply with only the bare finite number; markdown or prose fails.`;
+  if (grader === 'choice') return `Exact choice: ${params.answer}. Reply with only the bare letter; markdown or prose fails. Letter case and surrounding whitespace are ignored.`;
   if (grader !== 'jmeter_exec' && grader !== 'k6_exec') return `Custom grader: ${grader}. See the task definition for its checks.`;
   const checks = [grader === 'jmeter_exec'
-    ? 'Executed against the local demo shop. Requires exit code 0, a nonempty sample log and all samples successful.'
-    : 'Executed against the local demo shop. Requires exit code 0, nonempty HTTP metrics, expected responses and positive HTTP statuses below 400.'];
+    ? 'Return one complete <jmeterTestPlan> XML block before execution. Executed against the local demo shop. Requires exit code 0, a nonempty sample log and all samples successful.'
+    : 'Return the script in one js/javascript code block before execution. Executed against the local demo shop. Requires exit code 0, nonempty HTTP metrics, expected responses and positive HTTP statuses below 400.'];
   const completions = params.completions ?? 1;
   checks.push(`Exactly ${completions} completed checkout${completions === 1 ? '' : 's'}.`);
   if (grader === 'jmeter_exec') {
