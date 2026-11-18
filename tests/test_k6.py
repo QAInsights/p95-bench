@@ -12,10 +12,10 @@ from p95bench.runner import run
 from p95bench.tasks import Task, load_tasks
 
 
-def point(vu="1", status="200", expected="true", path="/checkout"):
+def point(vu="1", status="200", expected="true", path="/checkout", iteration="0"):
     return {"type": "Point", "metric": "http_reqs", "data": {"tags": {
         "status": status, "expected_response": expected,
-        "url": "http://127.0.0.1:1234" + path}, "metadata": {"vu": vu, "iter": "0"}}}
+        "url": "http://127.0.0.1:1234" + path}, "metadata": {"vu": vu, "iter": iteration}}}
 
 
 @pytest.fixture
@@ -117,6 +117,36 @@ def test_k6_preflight_before_provider(tmp_path, monkeypatch):
     assert not (tmp_path / "results").exists()
 
 
+@pytest.mark.parametrize("debug", [False, True])
+@pytest.mark.parametrize("samples,reason", [
+    ([("1", "0"), ("1", "1")], "Verified completions: 2/2"),
+    ([("1", "0"), ("2", "0")], "Checkout VUs: 2/1 expected"),
+    ([("1", "0"), ("1", "0")], "Checkout iterations: 1/2"),
+    ([("1", "0"), ("1", None)], "Missing checkout iteration metadata"),
+    ([("1", "0"), (None, "1")], "Missing checkout VU metadata"),
+    ([], "Empty run: no http_reqs points"),
+])
+def test_token_refresh_run_shape(stub, tmp_path, debug, samples, reason):
+    points = [point(vu, iteration=iteration) for vu, iteration in samples]
+    requests = None
+    if debug:
+        for sample in points:
+            sample["data"]["tags"]["url"] = "checkout"
+        requests = [{"source": "http-debug", "vu": vu, "iter": iteration,
+                     "msg": "Request:\nPOST /checkout HTTP/1.1\r\n"}
+                    for vu, iteration in samples]
+        requests.append({"source": "http-debug", "vu": 3, "iter": 9,
+                         "msg": "Request:\nGET /products HTTP/1.1\r\n"})
+    else:
+        for sample in points:
+            sample["data"]["tags"].update(sample["data"].pop("metadata"))
+    stub(points, requests=requests)
+    params = {"completions": 2, "expected_checkout_vus": 1, "min_checkout_iterations": 2}
+    result = k6_exec("```js\nx\n```", params, tmp_path / "run")
+    assert result.detail == reason
+    assert result.passed is reason.startswith("Verified")
+
+
 def test_tool_filter_and_alias(tmp_path, monkeypatch):
     selected = []
 
@@ -143,6 +173,8 @@ def test_mirrored_params_and_prompts():
         expected = dict(jmeter.params)
         if "min_checkout_threads" in expected:
             expected["min_checkout_vus"] = expected.pop("min_checkout_threads")
+        if suffix == "token-refresh":
+            expected.update(expected_checkout_vus=1, min_checkout_iterations=2)
         assert k6.params == expected
         assert k6.category == jmeter.category
         assert "__ENV.BASE_URL" in k6.prompt

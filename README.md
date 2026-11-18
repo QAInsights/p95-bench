@@ -155,6 +155,12 @@ completions. `min_checkout_vus` requires distinct checkout VUs; k6 JSON output
 stores VU/iteration system tags in point metadata. Isolation checks use actual
 request paths and VUs from `--http-debug --log-format=json`, since custom
 request names can replace the metric URL tag; URL tags are a fallback.
+The k6 refresh seed sets `expected_checkout_vus: 1` and
+`min_checkout_iterations: 2`, requiring checkout requests from exactly one VU
+in at least two distinct iterations. Missing worker/iteration metadata fails
+this check. The existing JMeter refresh grader verifies successful samples and
+two session completions but does not separately verify thread/iteration shape;
+its published grading is unchanged.
 Timeout handling kills the
 whole process group, as for JMeter. Set `K6_PATH` or put `k6` on PATH.
 

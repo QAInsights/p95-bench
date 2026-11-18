@@ -11,4 +11,6 @@ prompt: >-
 grader: k6_exec
 params:
   completions: 2
+  expected_checkout_vus: 1
+  min_checkout_iterations: 2
   timeout: 60

@@ -157,7 +157,8 @@ def k6_exec(text, params, workdir):
                         if not isinstance(tags, dict):
                             raise TypeError("Invalid k6 request tags")
                         vu = record["data"].get("metadata", {}).get("vu", tags.get("vu"))
-                        tags = {**tags, "vu": vu}
+                        iteration = record["data"].get("metadata", {}).get("iter", tags.get("iter"))
+                        tags = {**tags, "vu": vu, "iter": iteration}
                         requests.append(tags)
             if not requests:
                 return Grade(False, "Empty run: no http_reqs points")
@@ -165,10 +166,12 @@ def k6_exec(text, params, workdir):
                    or not 0 < int(tags.get("status", 0)) < 400 for tags in requests):
                 return Grade(False, "Failed HTTP samples")
             minimum = params.get("min_checkout_vus", 1)
-            checkout_vus = {tags["vu"] for tags in requests if tags.get("vu")
-                            and urlsplit(tags.get("url", "")).path == "/checkout"}
-            if minimum > 1:
-                debug_vus, debug_seen = set(), False
+            expected_vus = params.get("expected_checkout_vus")
+            minimum_iterations = params.get("min_checkout_iterations", 1)
+            checkouts = [(tags.get("vu"), tags.get("iter")) for tags in requests
+                         if urlsplit(tags.get("url", "")).path == "/checkout"]
+            if minimum > 1 or expected_vus is not None or minimum_iterations > 1:
+                debug_checkouts, debug_seen = [], False
                 for line in (workdir / "stdout.log").read_text().splitlines():
                     try:
                         record = json.loads(line)
@@ -177,14 +180,26 @@ def k6_exec(text, params, workdir):
                     if not isinstance(record, dict) or record.get("source") != "http-debug":
                         continue
                     request = re.match(r"Request:\r?\n(\S+) (\S+) HTTP/", record.get("msg", ""))
-                    if request and record.get("vu"):
+                    if request:
                         debug_seen = True
                         if request[1] == "POST" and urlsplit(request[2]).path == "/checkout":
-                            debug_vus.add(str(record["vu"]))
+                            debug_checkouts.append((record.get("vu"), record.get("iter")))
                 if debug_seen:
-                    checkout_vus = debug_vus
+                    checkouts = debug_checkouts
+            checkout_vus = {str(vu) for vu, _ in checkouts if vu is not None and str(vu)}
             if minimum > 1 and len(checkout_vus) < minimum:
                 return Grade(False, f"Checkout VUs: {len(checkout_vus)}/{minimum}")
+            if expected_vus is not None:
+                if any(vu is None or str(vu) == "" for vu, _ in checkouts):
+                    return Grade(False, "Missing checkout VU metadata")
+                if len(checkout_vus) != expected_vus:
+                    return Grade(False, f"Checkout VUs: {len(checkout_vus)}/{expected_vus} expected")
+            if minimum_iterations > 1:
+                if any(iteration is None or str(iteration) == "" for _, iteration in checkouts):
+                    return Grade(False, "Missing checkout iteration metadata")
+                iterations = {str(iteration) for _, iteration in checkouts}
+                if len(iterations) < minimum_iterations:
+                    return Grade(False, f"Checkout iterations: {len(iterations)}/{minimum_iterations}")
             request = urllib.request.Request(url + "/internal/stats", headers={"X-Admin-Key": admin})
             with urllib.request.urlopen(request, timeout=5) as response:
                 completed = json.load(response)["completions"]
