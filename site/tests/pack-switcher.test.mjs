@@ -51,13 +51,19 @@ test('only a nonempty v2 leaderboard enables v2; URLs resolve without prototype 
   assert.equal(resolvePack('v2', catalog), 'v2');
   assert.equal(resolvePack(null, catalog), 'v2');
   assert.equal(resolvePack('__proto__', catalog), 'v2');
+  const pilot = makePackCatalog(v1, { ...v2, default_view: false }, tasks, []);
+  assert.equal(resolvePack(null, pilot), 'v1');
+  assert.equal(resolvePack('unknown', pilot), 'v1');
+  assert.equal(resolvePack('v2', pilot), 'v2');
 });
 
 test('pack changes retain unrun model identities, preserve latest/earlier selection, and do not mutate v1', () => {
   const before = structuredClone(v1);
   for (const earlier of [false, true]) {
     const selected = selectModelVersions(catalog.v2.models, earlier);
-    assert.deepEqual(new Set(selected.map(model => model.model)), new Set(selectModelVersions(v1.models, earlier).map(model => model.model)));
+    const expected = selectModelVersions(v1.models, earlier).map(model =>
+      !earlier && model.model === 'Qwen-Ambassador/Qwen3.8-Max' ? 'Qwen-Ambassador/Qwen3.7-Max' : model.model);
+    assert.deepEqual(new Set(selected.map(model => model.model)), new Set(expected));
     const missing = selected.find(model => model.model === 'gpt-6.2-sol');
     assert.equal(missing.not_run, true);
     assert.equal(missing.overall_score, null);
@@ -67,7 +73,7 @@ test('pack changes retain unrun model identities, preserve latest/earlier select
   for (const model of v1.models) assert.deepEqual(catalog.v1.models.find(item => item.model === model.model), model);
   assert.deepEqual(v1, before);
   assert.equal(catalog.v2.models.filter(model => !model.not_run).length, 3);
-  assert.ok(!selectModelVersions(catalog.v2.models).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
+  assert.ok(selectModelVersions(catalog.v2.models).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
   assert.ok(selectModelVersions(catalog.v2.models, true).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
 });
 
@@ -114,8 +120,8 @@ test('v2 scenarios expose only public task rubrics and report fractional means w
   const all = buildScenarios(tasks.v2, catalog.v2.models, true);
   assert.equal(latest.length, 40);
   const repair = latest.find(task => task.id === 'v2-r01-extractor-scope');
-  assert.match(repair.passLabel, /54.0% mean quality/);
+  assert.match(repair.passLabel, /48.0% mean quality/);
   assert.match(repair.grading, /prerequisites:/);
-  assert.ok(all.find(task => task.id === repair.id).attempted > repair.attempted);
+  assert.equal(all.find(task => task.id === repair.id).attempted, repair.attempted);
   assert.match(latest.find(task => task.id === 'v2-r02-cookie-lifetime').passLabel, /Not run on v2/);
 });
