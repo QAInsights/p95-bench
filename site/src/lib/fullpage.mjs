@@ -851,6 +851,7 @@ function renderProfile() {
     )
     .join("");
   $("focus-cost").textContent = money(m.cost);
+  $("focus-cost-note").textContent = m.cost_note ?? "USD · list-price estimate";
   $("focus-tokens").textContent = fmt(m.tokens.input + m.tokens.output);
   $("focus-token-detail").textContent =
     fmt(m.tokens.input) + " in / " + fmt(m.tokens.output) + " out";

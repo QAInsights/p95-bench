@@ -57,20 +57,29 @@ test('task matrix includes every repeat and fails a cell if any attempt failed',
 });
 
 test('published data is reproducible, redacted and matches weighted scores', async () => {
-  const result = await buildData(runs);
   const committed = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
+  const publishedRuns = committed.models.map(model =>
+    new URL(`../../results/published/${modelSlug(model.model)}/`, import.meta.url).pathname);
+  const result = await buildData(publishedRuns);
   assert.deepEqual(result, committed);
-  assert.deepEqual(await buildData(runs.toReversed()), result);
-  assert.equal(result.models.length, 9);
+  assert.deepEqual(await buildData(publishedRuns.toReversed()), result);
+  assert.equal(result.models.length, publishedRuns.length);
   for (const model of result.models) {
     const sum = contributions(model, result.weights).reduce((n, c) => n + c.points, 0);
     assert.ok(Math.abs(sum - model.overall_score) < 1e-10);
-    const metadata = JSON.parse(await readFile(path.join(runs.find(directory =>
+    const metadata = JSON.parse(await readFile(path.join(publishedRuns.find(directory =>
       directory.endsWith('/' + modelSlug(model.model) + '/')), 'metadata.json')));
     assert.equal(metadata.k6_version, '1.0.0');
-    assert.ok(metadata.k6_run_date);
-    assert.match(metadata.k6_note, /separately/);
-    assert.equal(model.per_task_results.length, metadata.k6_status === 'completed' ? 15 : 12);
+    if (model.provider === 'qwen') {
+      assert.match(model.cost_note, /ModelScope free tier/);
+      assert.equal(metadata.enable_thinking, false);
+      assert.equal(metadata.max_tokens, 8192);
+      assert.equal(model.per_task_results.length, metadata.task_count);
+    } else {
+      assert.ok(metadata.k6_run_date);
+      assert.match(metadata.k6_note, /separately/);
+      assert.equal(model.per_task_results.length, metadata.k6_status === 'completed' ? 15 : 12);
+    }
     assert.equal(model.coverage.run, new Set(model.per_task_results.map(task => task.task_id)).size);
     assert.equal(model.coverage.partial, model.coverage.run < model.coverage.total);
     assert.equal(model.category_scores.repair, undefined);
@@ -78,13 +87,15 @@ test('published data is reproducible, redacted and matches weighted scores', asy
     assert.ok(model.run_date);
     assert.match(model.harness_commit, /^[a-f0-9]{40}$/);
     const k6 = model.per_task_results.filter(t => t.tool === 'k6');
-    assert.equal(k6.length, metadata.k6_status === 'completed' ? 3 : 0);
+    if (model.provider !== 'qwen') assert.equal(k6.length, metadata.k6_status === 'completed' ? 3 : 0);
     assert.equal(toolScore(model, 'k6'), k6.length
       ? 100 * k6.filter(t => t.passed).length / k6.length : null);
     if (!k6.length) assert.equal(toolScoreLabel(model, 'k6'), 'Not run');
-    const expectedToolScore = model.provider === 'thinkingmachines' ? 0
-      : model.provider === 'deepseek' ? 200 / 3 : 100;
-    assert.ok(Math.abs(toolScore(model, 'jmeter') - expectedToolScore) < 1e-10);
+    if (model.provider !== 'qwen') {
+      const expectedToolScore = model.provider === 'thinkingmachines' ? 0
+        : model.provider === 'deepseek' ? 200 / 3 : 100;
+      assert.ok(Math.abs(toolScore(model, 'jmeter') - expectedToolScore) < 1e-10);
+    }
     for (const task of model.per_task_results) {
       assert.deepEqual(Object.keys(task), ['task_id', 'category', 'tool', 'passed', 'detail']);
     }
@@ -151,6 +162,25 @@ test('generator rejects empty, duplicate and mismatched runs', async () => {
     await writeFile(path.join(directory, 'attempts.jsonl'), '{"model":"a","provider":"b"}\n');
     await writeFile(path.join(directory, 'summary.json'), '{"attempts":2}');
     await assert.rejects(buildData([directory]), /count mismatch/);
+  } finally {
+    await rm(directory, { recursive: true });
+  }
+});
+
+test('generator preserves free-tier pricing provenance without relabeling other runs', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'p95-modelscope-test-'));
+  try {
+    for (const name of ['summary.json', 'attempts.jsonl']) {
+      await writeFile(path.join(directory, name), await readFile(path.join(runs[0], name)));
+    }
+    const metadata = { cost_note: 'List-price estimate, run via ModelScope free tier.',
+      pricing_source: 'https://www.alibabacloud.com/help/en/model-studio/model-pricing' };
+    await writeFile(path.join(directory, 'metadata.json'), JSON.stringify(metadata));
+    const { models } = await buildData([directory]);
+    assert.equal(models[0].cost_note, metadata.cost_note);
+    assert.equal(models[0].pricing_source, metadata.pricing_source);
+    await writeFile(path.join(directory, 'metadata.json'), '{}');
+    assert.equal(Object.hasOwn((await buildData([directory])).models[0], 'cost_note'), false);
   } finally {
     await rm(directory, { recursive: true });
   }

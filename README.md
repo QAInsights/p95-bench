@@ -46,6 +46,31 @@ result files. Execution subprocesses do not need provider credentials.
 
 ## Providers and prices
 
+### Qwen via ModelScope
+
+Use `--provider qwen` with `MODELSCOPE_API_KEY`. The OpenAI-compatible endpoint
+is `https://api-inference.modelscope.ai/v1` (override with `QWEN_BASE_URL`).
+Models: `Qwen-Ambassador/Qwen3.8-Max`, `Qwen-Ambassador/Qwen3.8-Flash-Next`,
+and `Qwen-Ambassador/Qwen3.7-Max`. Hybrid thinking is disabled with
+`enable_thinking: false`; temperature is 0 and the output cap is 8192 tokens.
+The [Qwen API reference](https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-dashscope)
+documents thinking control for the 3.8 and 3.7 series and a temperature range
+that includes 0. ModelScope compatibility is checked by the real runs.
+
+ModelScope inference uses a free tier with daily limits. Reported costs are
+**Model Studio list-price estimates, not charges from ModelScope**. Singapore
+[list prices](https://www.alibabacloud.com/help/en/model-studio/model-pricing)
+per million input/output tokens are $2/$6 for 3.8-Max, $0.15/$0.47 for
+3.8-Flash (used as the estimate for Flash-Next), and $2.50/$7.50 for 3.7-Max.
+Cache hits use 10% of the input rate. Run metadata preserves the pricing source
+and free-tier note, which also appear in Model focus and the cost explainer.
+
+Rate limits and transient transport/server errors retry five times, using
+exponential backoff or a numeric `Retry-After`, capped at 60 seconds per wait.
+Exhausted requests are recorded in `not-run.jsonl`, not graded as failures.
+Authentication and other non-retryable errors abort the run. Published coverage
+counts only actual responses; an empty response is still a real, graded attempt.
+
 `src/p95bench/providers.py` defines a minimal `Provider.send(model, messages)`
 protocol returning text, prompt/completion/cache-hit tokens and elapsed seconds.
 `OpenAICompatible` accepts a base URL, key environment-variable name, prices,

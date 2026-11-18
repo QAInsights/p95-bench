@@ -28,6 +28,9 @@ export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'thinkingmachines/Inkling' ? 'Inkling'
   : model === 'thinkingmachines/Inkling-Small' ? 'Inkling-Small'
   : model === 'thinkingmachines/Inkling-2-Small' ? 'Inkling 2 Small'
+  : model === 'Qwen-Ambassador/Qwen3.8-Max' ? 'Qwen3.8 Max'
+  : model === 'Qwen-Ambassador/Qwen3.7-Max' ? 'Qwen3.7 Max'
+  : model === 'Qwen-Ambassador/Qwen3.8-Flash-Next' ? 'Qwen3.8 Flash Next'
   : model === 'gpt-6.2-sol' ? 'GPT-6.2 Sol'
   : model === 'gpt-6.2-astra' ? 'GPT-6.2 Astra' : model;
 export const modelSlug = (model) => model.replace(/^thinkingmachines\//, '').toLowerCase()

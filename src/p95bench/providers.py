@@ -5,8 +5,9 @@ import os
 import time
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Protocol
+from urllib.error import HTTPError, URLError
 
 
 @dataclass
@@ -20,6 +21,10 @@ class Response:
 
 class Provider(Protocol):
     def send(self, model: str, messages: list[dict[str, str]]) -> Response: ...
+
+
+class ProviderUnavailable(RuntimeError):
+    pass
 
 
 @dataclass(frozen=True)
@@ -43,9 +48,22 @@ class ProviderConfig:
     temperature: float | None = 0
     extra: dict = field(default_factory=dict)
     timeout_seconds: float = 180
+    max_retries: int = 0
+    cost_note: str | None = None
+    pricing_source: str | None = None
 
 
 PROVIDERS = {
+    "qwen": ProviderConfig(
+        "https://api-inference.modelscope.ai/v1", "MODELSCOPE_API_KEY",
+        {"Qwen-Ambassador/Qwen3.8-Max": Price(2, .2, 6),
+         "Qwen-Ambassador/Qwen3.8-Flash-Next": Price(.15, .015, .47),
+         "Qwen-Ambassador/Qwen3.7-Max": Price(2.5, .25, 7.5)},
+        extra={"enable_thinking": False, "max_tokens": 8192},
+        max_retries=5,
+        cost_note="List-price estimate, run via ModelScope free tier.",
+        pricing_source="https://www.alibabacloud.com/help/en/model-studio/model-pricing",
+    ),
     "deepseek": ProviderConfig(
         "https://api.deepseek.com", "DEEPSEEK_API_KEY",
         {"deepseek-flash": Price(0.30, 0.006, 1.20),
@@ -94,8 +112,28 @@ class OpenAICompatible:
             data=json.dumps(body).encode() if body is not None else None,
             headers=self._headers(key),
         )
-        with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
-            return json.load(response)
+        for attempt in range(self.config.max_retries + 1):
+            try:
+                with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
+                    return json.load(response)
+            except (URLError, TimeoutError) as error:
+                if not self.config.max_retries or (
+                    isinstance(error, HTTPError) and error.code not in {429, 500, 502, 503, 504}
+                ):
+                    raise
+                retry_after = error.headers.get("Retry-After") if isinstance(error, HTTPError) else None
+                status = f"HTTP {error.code}" if isinstance(error, HTTPError) else type(error).__name__
+                if isinstance(error, HTTPError):
+                    error.close()
+                if attempt == self.config.max_retries:
+                    raise ProviderUnavailable(
+                        f"No response after {attempt + 1} requests ({status})"
+                    ) from None
+                try:
+                    delay = float(retry_after) if retry_after is not None else 2 ** attempt
+                except ValueError:
+                    delay = 2 ** attempt
+                time.sleep(max(0, min(delay, 60)))
 
     def models(self) -> list[str]:
         return [item["id"] for item in self._request("/models")["data"]]
@@ -149,4 +187,7 @@ class Anthropic(OpenAICompatible):
 
 def get_provider(name: str) -> Provider:
     adapter = Anthropic if name == "anthropic" else OpenAICompatible
-    return adapter(PROVIDERS[name])
+    config = PROVIDERS[name]
+    if name == "qwen":
+        config = replace(config, base_url=os.environ.get("QWEN_BASE_URL", config.base_url))
+    return adapter(config)
