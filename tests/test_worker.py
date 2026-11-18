@@ -1,6 +1,6 @@
 import os
 import subprocess
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
@@ -33,6 +33,34 @@ def test_worker_policy_and_cleanup_on_infrastructure_failure(tmp_path):
     assert "--read-only" in command
     assert any("dst=/fixtures/input.txt,readonly" in arg for arg in command)
     assert not any("docker.sock" in arg or "dst=/home" in arg for arg in command)
+    assert worker._docker.call_args_list[-1].args[:2] == ("rm", "--force")
+
+
+def test_kill_exception_reaps_attachment_before_container_removal(tmp_path, monkeypatch):
+    worker = object.__new__(Worker)
+    worker.directory, worker.public_socket = tmp_path, tmp_path / "public.sock"
+    worker.image, worker.docker, worker.environment = PROBE_IMAGE, "docker", {}
+    process = MagicMock()
+    process.__enter__.return_value = process
+    process.wait.side_effect = [subprocess.TimeoutExpired("attachment", 1),
+                               subprocess.TimeoutExpired("attachment", 1), 0]
+    monkeypatch.setattr("p95bench.worker.subprocess.Popen", Mock(return_value=process))
+    monkeypatch.setattr("p95bench.worker.selectors.DefaultSelector", MagicMock())
+    monkeypatch.setattr("p95bench.worker.time.monotonic", Mock(side_effect=[0, 2]))
+    def docker(*args):
+        if args[0] == "kill":
+            raise WorkerUnavailable("kill failed")
+        if args[0] == "rm":
+            assert process.wait.call_count == 3
+        return subprocess.CompletedProcess([], 0, b"", b"")
+    worker._docker = Mock(side_effect=docker)
+    with pytest.raises(WorkerUnavailable, match="kill failed"):
+        worker.execute(["python3", "-c", "pass"], timeout=1)
+    process.terminate.assert_called_once()
+    process.kill.assert_called_once()
+    assert all(call.kwargs == {"timeout": 1} for call in process.wait.call_args_list)
+    process.stdout.close.assert_called_once()
+    process.__exit__.assert_not_called()
     assert worker._docker.call_args_list[-1].args[:2] == ("rm", "--force")
 
 

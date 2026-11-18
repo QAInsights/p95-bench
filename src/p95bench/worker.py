@@ -111,35 +111,43 @@ class Worker:
         started = time.monotonic()
         output = bytearray()
         status = "completed"
-        with subprocess.Popen([self.docker, "start", "--attach", name], env=self.environment,
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
+        process = subprocess.Popen([self.docker, "start", "--attach", name], env=self.environment,
+                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        try:
+            with selectors.DefaultSelector() as selector:
+                selector.register(process.stdout, selectors.EVENT_READ)
+                while True:
+                    remaining = timeout - (time.monotonic() - started)
+                    if remaining <= 0:
+                        status = "timeout"
+                        break
+                    if not selector.select(min(remaining, .1)):
+                        continue
+                    chunk = os.read(process.stdout.fileno(), min(65536, output_limit + 1))
+                    if not chunk:
+                        break
+                    output.extend(chunk)
+                    if len(output) > output_limit:
+                        del output[output_limit:]
+                        status = "output_limit"
+                        break
+        finally:
+            kill_error = None
             try:
-                with selectors.DefaultSelector() as selector:
-                    selector.register(process.stdout, selectors.EVENT_READ)
-                    while True:
-                        remaining = timeout - (time.monotonic() - started)
-                        if remaining <= 0:
-                            status = "timeout"
-                            break
-                        if not selector.select(min(remaining, .1)):
-                            continue
-                        chunk = os.read(process.stdout.fileno(), min(65536, output_limit + 1))
-                        if not chunk:
-                            break
-                        output.extend(chunk)
-                        if len(output) > output_limit:
-                            del output[output_limit:]
-                            status = "output_limit"
-                            break
-            finally:
                 if status != "completed":
                     self._docker("kill", name)
-                try:
-                    process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait()
-                    raise WorkerUnavailable("Container attachment failed to terminate") from None
+            except BaseException as error:
+                kill_error = error
+            try:
+                self._reap_attachment(process)
+            except BaseException as error:
+                if kill_error is None:
+                    raise
+                kill_error.add_note("Attachment cleanup also failed: " + str(error))
+            finally:
+                process.stdout.close()
+            if kill_error is not None:
+                raise kill_error
         code = None
         if status == "completed":
             state = self._docker("inspect", "--format", "{{json .State}}", name)
@@ -152,6 +160,21 @@ class Worker:
             if evidence["OOMKilled"]:
                 status = "resource_limit"
         return Execution(status, code, output.decode(errors="replace"), time.monotonic() - started)
+
+    @staticmethod
+    def _reap_attachment(process):
+        for action in (None, process.terminate, process.kill):
+            if action:
+                try:
+                    action()
+                except ProcessLookupError:
+                    pass
+            try:
+                process.wait(timeout=1)
+                return
+            except subprocess.TimeoutExpired:
+                pass
+        raise WorkerUnavailable("Container attachment failed to terminate")
 
 
 @contextmanager
