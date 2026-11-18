@@ -185,6 +185,38 @@ def test_lost_response_retry_and_business_decline(decline):
             assert any(e.get("response_lost") for e in shop.audit())
 
 
+@pytest.mark.parametrize("expired", [False, True])
+def test_rotated_csrf_lost_response_has_one_exact_bounded_replay(expired):
+    now = [100.0]
+    with demo_app_v2(Profile(rotate_csrf=True, lose_commit_response=True),
+                     clock=lambda: now[0]) as (shop, url):
+        client = Client(url)
+        client.login()
+        cart = client.cart()
+        previous = client.csrf
+        payload, headers = {"cart_id": cart}, {"Idempotency-Key": "lost"}
+        with pytest.raises(RemoteDisconnected):
+            client.request("/v2/orders", "POST", payload, headers)
+        assert client.request("/v2/session/renew", "POST")[0] == 403
+        assert client.request("/v2/orders", "POST", {**payload, "extra": True}, headers)[0] == 403
+        assert client.request("/v2/orders", "POST", payload,
+                              {**headers, "If-Match": '"changed"'})[0] == 403
+        other = Client(url)
+        other.login()
+        assert other.request("/v2/orders", "POST", payload,
+                             {**headers, "X-CSRF-Token": previous})[0] == 403
+        if expired:
+            now[0] += 11
+        replay = client.request("/v2/orders", "POST", payload, headers)
+        assert replay[0] == (403 if expired else 200)
+        if not expired:
+            assert replay[1]["replayed"] and client.csrf != previous
+            assert client.request("/v2/orders", "POST", payload,
+                {**headers, "X-CSRF-Token": previous})[0] == 403
+            assert client.request("/v2/session/renew", "POST")[0] == 200
+        assert len([event for event in shop.audit() if event["kind"] == "commit"]) == 1
+
+
 @pytest.mark.parametrize("failed", [False, True])
 def test_async_jobs_poll_limits_and_one_use_reservations(failed):
     now = [10.0]

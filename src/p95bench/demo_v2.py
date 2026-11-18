@@ -226,6 +226,18 @@ class Shop:
         actor = state["actor"]
         self._event(kind="authenticated", request=request, actor=actor, session=sid,
                     operation=state["operations"])
+        if path == "/v2/orders" and method == "POST":
+            saved = self._keys.get((actor, headers.get("Idempotency-Key")), {})
+            recovery = saved.get("recovery")
+            if (recovery and recovery["session"] == sid and recovery["remaining"]
+                    and self.clock() < recovery["expires"]
+                    and headers.get("X-CSRF-Token") == recovery["previous"]
+                    and state["csrf"] == recovery["current"]
+                    and headers.get("If-Match") == recovery["etag"]
+                    and json.dumps(body, sort_keys=True) == recovery["body"]):
+                recovery["remaining"] = 0
+                return reply(200, {"accepted": True, "id": saved["order"], "replayed": True,
+                                   "csrf": state["csrf"]})
         if path == "/v2/session/renew" and method == "POST":
             if headers.get("X-CSRF-Token") != state["csrf"]:
                 return reply(403, {"error": "csrf"})
@@ -385,7 +397,14 @@ class Shop:
                 job["used"] = True
             self._event(kind="commit", request=request, actor=actor, session=sid,
                         resource=cart_id, order=order, idempotency_key=key)
-            return mutation({"accepted": True, "id": order}, 201, lost=p.lose_commit_response)
+            previous = state["csrf"]
+            response = mutation({"accepted": True, "id": order}, 201, lost=p.lose_commit_response)
+            if p.rotate_csrf and p.lose_commit_response:
+                self._keys[(actor, key)]["recovery"] = {
+                    "session": sid, "previous": previous, "current": state["csrf"],
+                    "body": json.dumps(body, sort_keys=True), "etag": headers.get("If-Match"),
+                    "expires": self.clock() + 10, "remaining": 1}
+            return response
         if path in ("/v2/browse", "/v2/search", "/v2/work") and method in ("GET", "POST"):
             count = self._rates.get(path, 0) + 1
             self._rates[path] = count
