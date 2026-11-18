@@ -95,6 +95,10 @@ def analysis(text, params, workdir, fixtures):
         if not isinstance(text, str) or len(text.encode()) > 65536:
             raise ValueError("Expected an answer of at most 64 KiB")
         value = json.loads(text, parse_constant=invalid_constant)
+    except (ValueError, TypeError, RecursionError, OverflowError) as error:
+        return CheckpointGrade(award(params["rubric"], {}),
+                               f"Invalid model answer ({type(error).__name__}): {error}")
+    try:
         logical = {params.get("fixture_aliases", {}).get(name, name): value for name, value in fixtures.items()}
         expected = truth(params["analysis"], logical)
         schema = same_shape(value, expected)
