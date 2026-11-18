@@ -1,6 +1,7 @@
 id: concurrency
 category: workload
 tool: none
+summary: Calculate the mean number of in-flight requests from a request rate and a mean response time.
 prompt: "At 75 requests/second, mean response time 0.8 seconds, what mean number of requests is in flight?"
 grader: numeric
 params:

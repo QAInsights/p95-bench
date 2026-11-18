@@ -1,6 +1,7 @@
 id: closed
 category: concepts
 tool: none
+summary: Identify the closed workload model from three choices. Distinguish fixed users waiting for each iteration to finish from independently scheduled arrivals.
 prompt: "Which workload is closed? A: fixed users start their next iteration after their previous finishes and any think time. B: arrivals are independent of completion. C: every second starts exactly 10 new users regardless of completions."
 grader: choice
 params:

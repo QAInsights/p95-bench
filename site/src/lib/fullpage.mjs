@@ -1,6 +1,7 @@
 "use strict";
 import DATA from "../data/leaderboard.json";
 import { observeScenes } from "./scene-observer.mjs";
+import { scrollWithinSection } from "./section-scroll.mjs";
 import {
   name as modelName,
   modelSlug,
@@ -15,9 +16,10 @@ import {
   selectModelVersions,
 } from "./scores.mjs";
 const weights = DATA.weights;
+let showingEarlier = new URLSearchParams(location.search).get("versions") === "all";
 let models = selectModelVersions(
   DATA.models,
-  new URLSearchParams(location.search).get("versions") === "all",
+  showingEarlier,
 );
 const $ = (id) => document.getElementById(id),
   reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -63,6 +65,7 @@ const scenes = [...document.querySelectorAll(".scene, .reading-section")],
     "FLAME STACK",
     "VALUE FRONTIER",
     "MODEL FOCUS",
+    "SCENARIOS",
     "TOOLS",
     "METHODOLOGY",
   ];
@@ -118,13 +121,29 @@ document.querySelector(".wordmark").onclick = (e) => {
   e.preventDefault();
   goScene(0);
 };
-document.querySelectorAll('a[href="#method"],a[href="#tools"]').forEach(
+document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios"]').forEach(
   (a) =>
     (a.onclick = (e) => {
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
-      goScene(a.hash === "#tools" ? 4 : 5);
+      if (a.href !== location.href) history.replaceState(null, "", a.href);
+      goScene(scenes.findIndex(scene => '#' + scene.id === a.hash));
     }),
 );
+const scenarioButtons = [...document.querySelectorAll('[data-scenario-filter]')];
+scenarioButtons.forEach(button => {
+  button.onclick = () => {
+    scenarioButtons.forEach(filter => filter.setAttribute('aria-pressed', String(filter === button)));
+    const cards = [...document.querySelectorAll('[data-scenario-tool]')];
+    cards.forEach(card => {
+      card.hidden = button.dataset.scenarioFilter !== 'all' && card.dataset.scenarioTool !== button.dataset.scenarioFilter;
+    });
+    const visible = cards.filter(card => !card.hidden).length;
+    $('scenario-count').textContent = `Showing ${visible} of ${cards.length} scenarios`;
+    $('scenario-empty').hidden = visible > 0;
+    announce(`${visible} scenarios shown. ${button.textContent.trim()} filter.`);
+  };
+});
 observeScenes(scenes, (scene) => {
   currentScene = scenes.indexOf(scene);
   document
@@ -146,9 +165,24 @@ if (
   !CSS.supports("animation-range: 0% 100%")
 )
   document.documentElement.classList.add("scroll-fallback");
+function dismissFullscreenFailure() {
+  clearTimeout(fullscreenFailure.timer);
+  if ($("fullscreen-message").contains(document.activeElement))
+    $("fullscreen").focus({ preventScroll: true });
+  $("fullscreen-message").hidden = true;
+}
+$("dismiss-fullscreen-message").onclick = dismissFullscreenFailure;
+function fullscreenFailure(message) {
+  clearTimeout(fullscreenFailure.timer);
+  $("fullscreen-message-text").textContent = message;
+  $("fullscreen-message").hidden = false;
+  announce(message);
+  fullscreenFailure.timer = setTimeout(dismissFullscreenFailure, 4000);
+}
 async function fullscreen() {
+  dismissFullscreenFailure();
   if (!document.fullscreenEnabled) {
-    announce(
+    fullscreenFailure(
       "Fullscreen is unavailable in this browser. The scenes still fill the window.",
     );
     return;
@@ -157,7 +191,7 @@ async function fullscreen() {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
   } catch {
-    announce(
+    fullscreenFailure(
       "Fullscreen was blocked by the browser. Try the fullscreen button.",
     );
   }
@@ -187,6 +221,8 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     fullscreen();
   } else if (e.key === "PageDown" || e.key === "PageUp") {
+    if (scrollWithinSection(scenes[currentScene].getBoundingClientRect(), window.innerHeight,
+      e.key === "PageUp")) return;
     e.preventDefault();
     goScene(currentScene + (e.key === "PageDown" ? 1 : -1));
   } else if (
@@ -980,6 +1016,7 @@ function applyVersions() {
   transition?.skipTransition();
   transition = null;
   const all = new URLSearchParams(location.search).get("versions") === "all";
+  showingEarlier = all;
   $("show-versions").checked = all;
   models = selectModelVersions(DATA.models, all);
   selected = Math.max(
@@ -1025,7 +1062,10 @@ $("show-versions").onchange = () => {
   history.pushState(null, "", url);
   applyVersions();
 };
-addEventListener("popstate", applyVersions);
+addEventListener("popstate", () => {
+  const all = new URLSearchParams(location.search).get("versions") === "all";
+  if (all !== showingEarlier) applyVersions();
+});
 if (!("switch" in HTMLInputElement.prototype))
   $("show-versions").classList.add("switch-fallback");
 updateVisibleCounts();

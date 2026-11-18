@@ -1,6 +1,7 @@
 id: k6-token-refresh
 category: correlation
 tool: k6
+summary: Write a k6 shop flow using one VU over two iterations. Log in and extract a fresh CSRF token each iteration to complete two checkouts.
 prompt: >-
   Write a complete k6 script (k6 v1.0.0 JavaScript, built-in modules only: k6, k6/http).
   Read the base URL from __ENV.BASE_URL; the grader supplies it.
