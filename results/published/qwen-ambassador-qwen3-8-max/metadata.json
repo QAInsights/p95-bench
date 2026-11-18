@@ -1,0 +1,18 @@
+{
+  "run_date": "2026-11-18T03:47:17.567415+00:00",
+  "provider": "qwen",
+  "model": "Qwen-Ambassador/Qwen3.8-Max",
+  "base_url": "https://api-inference.modelscope.ai/v1",
+  "cost_note": "List-price estimate, run via ModelScope free tier.",
+  "pricing_source": "https://www.alibabacloud.com/help/en/model-studio/model-pricing",
+  "temperature": 0,
+  "enable_thinking": false,
+  "max_tokens": 8192,
+  "harness_commit": "df38487b41377741ea5ceb42563124ba1c266e0c",
+  "task_count": 15,
+  "k6_version": "1.0.0",
+  "jmeter_version": "5.6.3",
+  "repeats": 1,
+  "temperature_note": "Temperature 0 accepted with enable_thinking false.",
+  "output_cap_note": "Same 8192-token output cap as the other published models."
+}
