@@ -1,7 +1,8 @@
 import { unitGroups, unitSummary, passRateLabel } from './unit-matrix-data.mjs';
 import { rollNumber, rollText, announceRolling } from './rolling-numbers.mjs';
+import { creditGradient } from './packs.mjs';
 
-export function mountUnitMatrix(root) {
+export function mountUnitMatrix(root, { signal, animate = false } = {}) {
   const records = JSON.parse(root.querySelector('#matrix-records').textContent);
   const board = root.querySelector('#matrix-board');
   const squares = new Map([...board.querySelectorAll('[data-unit-id]')].map(node => [node.dataset.unitId, node]));
@@ -9,7 +10,12 @@ export function mountUnitMatrix(root) {
   const tbody = root.querySelector('tbody');
   const tooltip = root.querySelector('#matrix-tooltip');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  let mode = 'all', animations = [], described = null, hideTimer;
+  let mode = root.dataset.matrixGrouping ?? 'all', animations = [], described = null, hideTimer;
+  for (const record of records) if (record.result === 'partial') {
+    const node = squares.get(record.id);
+    node.style.background = creditGradient(record.score);
+    node.textContent = '%';
+  }
   const move = (parent, node) => parent.moveBefore && node.isConnected
     ? parent.moveBefore(node, null) : parent.append(node);
   const hideTip = () => {
@@ -44,7 +50,7 @@ export function mountUnitMatrix(root) {
   });
   tooltip.addEventListener('pointerenter', () => clearTimeout(hideTimer));
   tooltip.addEventListener('pointerleave', hideTip);
-  root.addEventListener('keydown', event => { if (event.key === 'Escape') hideTip(); });
+  root.addEventListener('keydown', event => { if (event.key === 'Escape') hideTip(); }, { signal });
   board.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
@@ -57,6 +63,7 @@ export function mountUnitMatrix(root) {
     nodes[index].scrollIntoView({ block: 'nearest', inline: 'nearest' });
   });
   function render(animate = false) {
+    root.dataset.matrixGrouping = mode;
     hideTip();
     const visible = records.filter(record => document.getElementById('show-versions').checked || record.latest);
     const before = new Map(animate && !reduced.matches
@@ -102,20 +109,22 @@ export function mountUnitMatrix(root) {
       ], { duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)' }));
     }
     const summary = unitSummary(visible);
-    rollNumber(root.querySelector('#matrix-total'), summary.measured, { animate, max: records.length });
-    rollNumber(root.querySelector('#matrix-source-count'), summary.measured, { animate, max: records.length });
-    rollText(root.querySelector('#matrix-summary'), `${summary.passed} passed · ${summary.failed} failed · ${summary.notRun} not run. ${passRateLabel(summary.passRate)}.`, { animate, max: records.length });
+    rollNumber(root.querySelector('#matrix-total'), summary.measured, { key: 'matrix:total', animate, max: records.length });
+    rollNumber(root.querySelector('#matrix-source-count'), summary.measured, { key: 'matrix:source', animate, max: records.length });
+    const partial = root.classList.contains('pack-v2') ? ` · ${summary.partial ?? 0} partial` : '';
+    rollText(root.querySelector('#matrix-summary'), `${summary.passed} passed${partial} · ${summary.failed} failed · ${summary.notRun} not run. ${passRateLabel(summary.passRate)}.`, { key: 'matrix:summary', animate, max: records.length });
     root.querySelector('#matrix-status').textContent = `Grouped by ${mode}. ${summary.count} squares in ${groups.length} groups. ${passRateLabel(summary.passRate)}.`;
-    if (animate) announceRolling(`Matrix grouped by ${mode}. ${summary.count} squares in ${groups.length} groups; ${summary.passed} passed, ${summary.failed} failed, ${summary.notRun} not run. ${passRateLabel(summary.passRate)}.`, 'matrix');
+    if (animate) announceRolling(`Matrix grouped by ${mode}. ${summary.count} squares in ${groups.length} groups; ${summary.passed} passed, ${summary.partial ?? 0} partial, ${summary.failed} failed, ${summary.notRun} not run. ${passRateLabel(summary.passRate)}.`, 'matrix');
     root.querySelectorAll('[data-matrix-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.matrixMode === mode)));
   }
   root.querySelectorAll('[data-matrix-mode]').forEach(button => button.addEventListener('click', () => {
     mode = button.dataset.matrixMode;
     render(true);
   }));
-  document.addEventListener('modelversionschange', () => render(true));
-  reduced.addEventListener('change', () => { if (reduced.matches) animations.forEach(animation => animation.cancel()); });
+  document.addEventListener('modelversionschange', () => render(true), { signal });
+  reduced.addEventListener('change', () => { if (reduced.matches) animations.forEach(animation => animation.cancel()); }, { signal });
+  signal?.addEventListener('abort', () => { hideTip(); animations.forEach(animation => animation.cancel()); }, { once: true });
   const number = [...document.querySelectorAll('.scene, .reading-section')].indexOf(root) + 1;
   root.querySelector('[data-matrix-figure]').textContent = `FIG. ${String(number).padStart(2, '0')}`;
-  render();
+  render(animate);
 }

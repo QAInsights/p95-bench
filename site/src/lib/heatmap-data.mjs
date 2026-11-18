@@ -1,5 +1,6 @@
-import { name, selectModelVersions } from './scores.mjs';
+import { name, selectModelVersions, attemptFraction } from './scores.mjs';
 import { providerName } from './provider-names.mjs';
+import { creditGradient } from './packs.mjs';
 
 export const heatMetrics = ['result', 'tokens', 'latency'];
 export const heatTools = [['none', 'General'], ['jmeter', 'JMeter'], ['k6', 'k6']];
@@ -20,9 +21,10 @@ export function heatmapData(models, tasks, attempts) {
     id: model.model, model: name(model.model), provider: providerName(model.provider), latest: model.newer_model === null,
     cells: columns.map(task => {
       const records = grouped.get(JSON.stringify([model.provider, model.model, task.id])) ?? [];
-      const measured = records.filter(record => typeof record.grade?.passed === 'boolean');
+      const measured = records.filter(record => attemptFraction(record.grade) !== null);
       return { task: task.id, attempts: records.length, measured: measured.length,
-        result: mean(measured.map(record => Number(record.grade.passed))),
+        result: mean(measured.map(record => attemptFraction(record.grade))),
+        ...(model.pack_id === 'p95-v2.0.0' ? { partial_credit: true } : {}),
         tokens: mean(measured.map(record => record.response?.output_tokens).filter(valid)),
         latency: mean(measured.map(record => record.response?.latency_seconds).filter(valid)) };
     }),
@@ -36,9 +38,10 @@ export function metricExtent(rows, metric) {
   return values.length ? { min: Math.min(...values), max: Math.max(...values) } : { min: null, max: null };
 }
 
-export function heatColor(value, metric, extent) {
+export function heatColor(value, metric, extent, partial = false) {
   if (!heatMetrics.includes(metric)) throw new RangeError(`Unknown heatmap metric: ${metric}`);
   if (!valid(value)) return null;
+  if (partial && metric === 'result' && value > 0 && value < 1) return creditGradient(value);
   if (metric === 'result') return value === 1 ? '#d4ff3a' : value === 0 ? '#c4416a'
     : `linear-gradient(to right, #d4ff3a ${value * 100}%, #c4416a ${value * 100}%)`;
   const ratio = extent.max === extent.min ? .5 : Math.max(0, Math.min(1, (value - extent.min) / (extent.max - extent.min)));
@@ -49,6 +52,6 @@ export function heatValue(cell, metric) {
   if (!heatMetrics.includes(metric)) throw new RangeError(`Unknown heatmap metric: ${metric}`);
   const value = cell[metric];
   if (!valid(value)) return metric === 'result' ? 'Not run' : 'No measurement';
-  return metric === 'result' ? value === 1 ? 'Pass' : value === 0 ? 'Fail' : `${(100 * value).toFixed(1)}% pass`
+  return metric === 'result' ? value === 1 ? 'Pass' : value === 0 ? 'Fail' : `${(100 * value).toFixed(1)}% ${cell.partial_credit ? 'credit' : 'pass'}`
     : metric === 'tokens' ? `${Number(value.toFixed(1)).toLocaleString('en-US')} tokens` : `${value.toFixed(2)} s`;
 }

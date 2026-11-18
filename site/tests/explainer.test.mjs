@@ -99,8 +99,10 @@ test('footer and rail share two-digit section formatting without a third leading
 test('explainer is a semantic long section between scenarios and tools without the supplied audit stage', async () => {
   const page = await readFile(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
   const component = await readFile(new URL('../src/components/Explainer.astro', import.meta.url), 'utf8');
-  assert.ok(page.indexOf('<Explainer tasks=') > page.indexOf('id="scenarios"'));
-  assert.ok(page.indexOf('<Explainer tasks=') < page.indexOf('id="tools"'));
+  assert.ok(page.indexOf('<PackExplainer pack=') > page.indexOf('<Scenarios pack='));
+  assert.ok(page.indexOf('<PackExplainer pack=') < page.indexOf('id="tools"'));
+  const packComponent = await readFile(new URL('../src/components/PackExplainer.astro', import.meta.url), 'utf8');
+  assert.match(packComponent, /pack === 'v1' \? <Explainer tasks=/);
   assert.match(component, /class="reading-section explainer"/);
   assert.equal((component.match(/data-ex-panel/g) ?? []).length, 4);
   assert.match(component, /aria-pressed=/);

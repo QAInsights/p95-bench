@@ -16,7 +16,8 @@ export function selectModelVersions(models, showEarlier = false, versions = regi
       version_status: newer === model.model ? 'Latest' : 'Earlier version',
       newer_model: newer === model.model ? null : newer };
   }).filter((model) => showEarlier || model.newer_model === null)
-    .sort((a, b) => b.overall_score - a.overall_score || a.cost - b.cost || a.model.localeCompare(b.model));
+    .sort((a, b) => Number(Boolean(a.not_run)) - Number(Boolean(b.not_run))
+      || b.overall_score - a.overall_score || a.cost - b.cost || a.model.localeCompare(b.model));
 }
 
 export const score = (value) => value.toFixed(1);
@@ -43,6 +44,8 @@ export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'gpt-6.2-astra' ? 'GPT-6.2 Astra' : model;
 export const modelSlug = (model) => model.replace(/^thinkingmachines\//, '').toLowerCase()
   .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+export const shortTaskLabel = id => id.match(/^v2-([a-z]\d+)(?:-|$)/i)?.[1].toUpperCase()
+  ?? id.replaceAll('-', '').slice(0, 4).toUpperCase();
 export function taskCoverage(model, tasks) {
   const expected = new Set(tasks.map(task => task.id));
   const run = new Set(model.per_task_results.map(task => task.task_id)
@@ -51,7 +54,8 @@ export function taskCoverage(model, tasks) {
   return { run, total, partial: run < total, label: `${run}/${total} tasks run` };
 }
 export function costFrontier(models) {
-  const sorted = [...models].sort((a, b) => a.cost - b.cost || b.overall_score - a.overall_score);
+  const sorted = models.filter(model => Number.isFinite(model.cost) && Number.isFinite(model.overall_score))
+    .sort((a, b) => a.cost - b.cost || b.overall_score - a.overall_score);
   return sorted.filter((model, index) => index === 0
     || model.overall_score > Math.max(...sorted.slice(0, index).map((m) => m.overall_score)));
 }
@@ -76,11 +80,16 @@ export function scoreAttempts(attempts, weights) {
   const overall_score = contributions({ category_scores }, weights).reduce((sum, row) => sum + row.points, 0);
   return { overall_score, category_scores, measured_weight };
 }
-export const bestWithin = (models, budget) => [...models].filter((m) => m.cost <= budget)
+export const bestWithin = (models, budget) => [...models].filter((m) => Number.isFinite(m.cost)
+  && Number.isFinite(m.overall_score) && m.cost <= budget)
   .sort((a, b) => b.overall_score - a.overall_score || a.cost - b.cost)[0] ?? null;
 export function toolScore(model, tool) {
-  const tasks = model.per_task_results.filter((t) => t.tool === tool);
-  return tasks.length ? 100 * tasks.filter((t) => t.passed).length / tasks.length : null;
+  const values = model.per_task_results.filter(t => t.tool === tool).map(attemptFraction).filter(value => value !== null);
+  return values.length ? 100 * values.reduce((sum, value) => sum + value, 0) / values.length : null;
+}
+export function attemptFraction(attempt) {
+  if (Number.isFinite(attempt?.score) && attempt.score >= 0 && attempt.score <= 1) return attempt.score;
+  return typeof attempt?.passed === 'boolean' ? Number(attempt.passed) : null;
 }
 export function toolScoreLabel(model, tool) {
   const value = toolScore(model, tool);
@@ -89,7 +98,14 @@ export function toolScoreLabel(model, tool) {
 export function taskResult(model, taskId) {
   const attempts = model.per_task_results.filter((task) => task.task_id === taskId);
   if (!attempts.length) return null;
-  const passed = attempts.filter((attempt) => attempt.passed).length;
+  const values = attempts.map(attemptFraction).filter(value => value !== null);
+  if (!values.length) return null;
+  const passed = values.filter(value => value === 1).length;
+  if (attempts.some(attempt => Number.isFinite(attempt.score))) {
+    const score = values.reduce((sum, value) => sum + value, 0) / values.length;
+    return { passed: passed === values.length, score, label: `${(score * 100).toFixed(1)}% credit`,
+      detail: attempts.map(attempt => attempt.detail).join('\n') };
+  }
   return {
     passed: passed === attempts.length,
     label: attempts.length === 1 ? (passed ? 'Pass' : 'Fail') : `${passed}/${attempts.length} pass`,
@@ -151,15 +167,18 @@ export function replayToolCounts(model, groups) {
 }
 
 export function replaySampleLabel(task, taskId, toolLabel) {
-  return `${task?.task_name ?? taskId} · ${toolLabel} · ${task == null ? 'Not run' : task.passed ? 'Pass' : 'Fail'}`;
+  return `${task?.task_name ?? taskId} · ${toolLabel} · ${task == null ? 'Not run' : Number.isFinite(task.score) ? `${(task.score * 100).toFixed(1)}% credit` : task.passed ? 'Pass' : 'Fail'}`;
 }
 
 export function replayScore(model, landed, weights) {
-  return contributions(model, weights).reduce((total, { category, points }) => {
-    const passed = model.per_task_results.flatMap((task, index) =>
-      task.category === category && task.passed ? [index] : []);
-    return total + (passed.length ? points * passed.filter((index) => landed.has(index)).length / passed.length : 0);
+  const quality = contributions(model, weights).reduce((total, { category, points }) => {
+    const tasks = model.per_task_results.map((task, index) => ({ task, index }))
+      .filter(({ task }) => task.category === category);
+    const sum = tasks.reduce((sum, { task }) => sum + (attemptFraction(task) ?? 0), 0);
+    const received = tasks.reduce((sum, { task, index }) => sum + (landed.has(index) ? attemptFraction(task) ?? 0 : 0), 0);
+    return total + (sum ? points * received / sum : 0);
   }, 0);
+  return model.pack_id === 'p95-v2.0.0' ? (model.quality_score ? quality * model.overall_score / model.quality_score : 0) : quality;
 }
 
 export function budgetScale(models) {

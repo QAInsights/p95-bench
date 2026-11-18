@@ -132,7 +132,8 @@ export async function buildData(directories, options = {}) {
         const task = taskMap.get(a.task_id);
         if (!task) throw new Error(`Unknown task: ${a.task_id}`);
         return { task_id: a.task_id, category: a.category, tool: task.tool,
-          ...(v2 ? { score: a.grade.score, repeat: a.repeat } : {}),
+          ...(v2 ? { score: a.grade.score, repeat: a.repeat,
+            output_tokens: a.response.output_tokens, latency_seconds: a.response.latency_seconds } : {}),
           passed: a.grade.passed, detail: String(a.grade.detail).slice(0, 180) };
       }),
     });

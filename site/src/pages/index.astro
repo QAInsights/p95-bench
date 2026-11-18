@@ -8,21 +8,20 @@ import "../styles/jelly-wordmark.css";
 import "../styles/geist.css";
 import data from "../data/leaderboard.json";
 import { name, toolScore, toolScoreLabel, selectModelVersions } from "../lib/scores.mjs";
-import { parse } from "yaml";
-import { buildScenarios, scenarioFilters } from "../lib/scenarios.mjs";
-import Explainer from "../components/Explainer.astro";
 import UnitMatrix from "../components/UnitMatrix.astro";
 import Heatmap from "../components/Heatmap.astro";
 import "../styles/scatter.css";
 import "../styles/rolling-numbers.css";
+import "../styles/packs.css";
+import { packCatalog } from "../lib/pack-catalog.mjs";
+import { packLabels } from "../lib/packs.mjs";
+import Scenarios from "../components/Scenarios.astro";
+import PackExplainer from "../components/PackExplainer.astro";
 
 const { weights } = data;
 const models = selectModelVersions(data.models);
 const allModels = selectModelVersions(data.models, true);
-const taskSources = import.meta.glob("../../../tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
-const tasks = Object.values(taskSources).map(source => parse(source));
-const scenarios = buildScenarios(tasks, data.models);
-const filters = scenarioFilters(scenarios);
+const tasks = packCatalog.v1.tasks;
 const colors = {
   authoring: "#6b2a7a",
   correlation: "#c4416a",
@@ -98,13 +97,16 @@ const repo = "https://github.com/QAInsights/p95-bench";
           />
           <span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a
         ><label class="version-switch" for="show-versions"><input id="show-versions" type="checkbox" switch role="switch" aria-describedby="versions-help" />Show earlier versions</label>
+        <div class="pack-switch" role="group" aria-label="Benchmark pack">
+          {Object.keys(packCatalog).map(pack => <button type="button" data-pack={pack} aria-pressed={String(pack === 'v1')}>{packLabels[pack]}</button>)}
+        </div>
         <p class="sr" id="versions-help">Latest means the newest benchmarked release in each family. Earlier versions remain fully ranked when shown. Discontinued means the provider no longer offers the model.</p>
       </div><div class="header-tools">
         <a class="header-link" href="#method">Method</a><a
           class="header-link"
           href={repo}>GitHub ↗</a
         ><span class="muted" id="published-date">{latestRun}</span><span class="pill"
-          ><span class="dot"></span><span data-model-count>{models.length}</span> PUBLISHED RUNS</span
+          ><span class="dot"></span><span data-run-count>{models.length}</span> PUBLISHED RUNS</span
         ><button class="control" id="fullscreen" aria-label="Enter fullscreen"
           ><span aria-hidden="true">⛶</span><span class="fullscreen-label">
             Fullscreen</span
@@ -127,8 +129,8 @@ const repo = "https://github.com/QAInsights/p95-bench";
           </div><div class="replay-stats">
             <div>
               <div class="big-counter">
-                <span id="leading-score">0.00</span><small> / 100</small>
-              </div><p class="stat-label">LEADING WEIGHTED SCORE</p>
+                <span id="leading-score">0.00</span><span id="leading-empty" hidden>—</span><small> / 100</small>
+              </div><p class="stat-label" id="leading-label">LEADING WEIGHTED SCORE</p><p class="pack-quality" id="leading-quality" hidden></p>
             </div><div>
               <div class="sample-count">
                 <span id="sample-count">0</span><small> / <span data-sample-total>{totalSamples}</span></small>
@@ -381,39 +383,8 @@ const repo = "https://github.com/QAInsights/p95-bench";
             ></span>
         </div>
       </section>
-      <section class="reading-section scenarios" id="scenarios" aria-labelledby="scenarios-title" data-section-label="Scenarios">
-        <p class="eyebrow">05 / INSIDE THE TASK PACK</p>
-        <h2 id="scenarios-title" tabindex="-1">Scenarios.<br />Every task, in the open.</h2>
-        <p class="subcopy">What models must do, how we grade it and where they succeed.
-          Pass rates always use the {models.length} latest published model families, even when earlier versions are shown.</p>
-        <div class="scenario-toolbar">
-          <div class="scenario-filters" role="group" aria-label="Filter scenarios by tool">
-            {filters.map(filter => <button class="control" type="button"
-              data-scenario-filter={filter.tool} aria-pressed={filter.tool === 'all' ? 'true' : 'false'}
-              aria-controls="scenario-list">{filter.label}</button>)}
-          </div>
-          <p class="scenario-count" id="scenario-count">Showing {scenarios.length} of {scenarios.length} scenarios</p>
-        </div>
-        <ul class="scenario-list" id="scenario-list" role="list">
-          {scenarios.map(scenario => <li class="scenario-card" data-scenario-tool={scenario.tool}>
-            <div class="scenario-tags"><span>{scenario.category}</span><span>{scenario.toolLabel}</span></div>
-            <h3>{scenario.title}</h3>
-            {scenario.title !== scenario.id && <code>{scenario.id}</code>}
-            <dl>
-              <div><dt>The task</dt><dd>{scenario.summary}</dd></div>
-              <div><dt>How it is graded</dt><dd>{scenario.grading}</dd></div>
-            </dl>
-            <div class="scenario-results">
-              <strong>{scenario.passLabel}</strong>
-              {scenario.notRun > 0 && <span>{scenario.notRun} not run</span>}
-            </div>
-          </li>)}
-        </ul>
-        <p class="scenario-empty" id="scenario-empty" hidden={scenarios.length > 0}>No scenarios match this tool.</p>
-        <p class="scenario-note">A model passes a scenario only if every published attempt passes.
-          Missing attempts are shown as not run, not failed. Descriptions come from the checked-in task definitions.</p>
-      </section>
-      <Explainer tasks={tasks} />
+      <Scenarios pack="v1" tasks={tasks} models={packCatalog.v1.models} />
+      <PackExplainer pack="v1" data={packCatalog.v1} />
       <section class="reading-section" id="tools" data-section-label="Tools">
         <p class="eyebrow">07 / PICK YOUR INSTRUMENT</p><h2 tabindex="-1">
           Built for the tools you use.
@@ -490,14 +461,15 @@ const repo = "https://github.com/QAInsights/p95-bench";
             >Explore the harness on GitHub ↗</a>
         </div>
         <div class="method-copy">
-          <p>
+          <p id="method-pack">Showing p95-v1 · 15 tasks · binary pass/fail.</p>
+          <p data-v1-method>
             Direct provider APIs. Temperature 0 where supported; omitted for
             Claude Sonnet 5.5, Opus 5.5, GPT-6.2 Sol and Astra because their
             APIs reject it. OpenAI uses max_completion_tokens instead of
             max_tokens. One fixed system prompt and identical task prompts for
             every model. No routing layer.
           </p>
-          <p>
+          <p data-v1-method>
             Generated JMeter plans and k6 v1.0.0 scripts run against a loopback
             demo shop. Passing requires successful HTTP samples, verified
             session-aware checkouts and distinct checkout workers for isolation.
@@ -505,11 +477,11 @@ const repo = "https://github.com/QAInsights/p95-bench";
             attempts, preserving the original system prompt and provider settings.
             Numeric and choice tasks use deterministic answer keys.
           </p>
-          <p>
+          <p data-v1-method>
             Category means are weighted, then renormalized over categories with
             tasks. Unmeasured categories stay unmeasured, never zero.
           </p>
-          <div class="weight-list mono">
+          <div class="weight-list mono" id="method-weights">
             {
               categories.map((c) => (
                 <span>
@@ -525,7 +497,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
             cache-hit pricing. It is not an invoice. Latency measures provider
             calls, excluding grading.
           </p>
-          <p class="small-copy">
+          <p class="small-copy" data-v1-method>
             This public seed pack is small: one run per model, not a confidence
             interval. DeepSeek thinking is disabled. Output cap: 8,192 tokens.
             Tool scores and overall scores measure different slices.
@@ -566,13 +538,16 @@ const repo = "https://github.com/QAInsights/p95-bench";
       </p></noscript
     >
 
+    <script type="application/json" id="pack-data" set:html={JSON.stringify(packCatalog).replaceAll('<', '\\u003c')} />
+    {Object.entries(packCatalog).map(([pack, dataset]) => <template id={`pack-template-${pack}`}>
+      <UnitMatrix models={dataset.models} tasks={dataset.tasks} />
+      <Heatmap models={dataset.models} tasks={dataset.tasks} attempts={dataset.attempts} />
+      <Scenarios pack={pack} tasks={dataset.tasks} models={dataset.models} />
+      <PackExplainer pack={pack} data={dataset} />
+    </template>)}
     <script>
       import "../lib/fullpage.mjs";
       import { mountJellyWordmark } from "../lib/jelly-wordmark.mjs";
-      import { mountUnitMatrix } from "../lib/unit-matrix.mjs";
-      import { mountHeatmap } from "../lib/heatmap.mjs";
-      mountUnitMatrix(document.getElementById('unit-matrix'));
-      mountHeatmap(document.getElementById('heatmap'));
       mountJellyWordmark(document.getElementById('jelly-wordmark'));
     </script>
   </body>

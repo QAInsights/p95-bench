@@ -1,8 +1,9 @@
 ---
 import { heatmapData, heatTools, heatValue, heatColor, metricExtent } from '../lib/heatmap-data.mjs';
 import '../styles/heatmap.css';
+import { shortTaskLabel } from '../lib/scores.mjs';
 const sources = import.meta.glob('../../../results/published/*/attempts.jsonl', { eager: true, query: '?raw', import: 'default' });
-const attempts = Object.values(sources).flatMap(source => source.split('\n').filter(line => line.trim()).map(line => JSON.parse(line)));
+const attempts = Astro.props.attempts ?? Object.values(sources).flatMap(source => source.split('\n').filter(line => line.trim()).map(line => JSON.parse(line)));
 const data = heatmapData(Astro.props.models, Astro.props.tasks, attempts);
 const initial = data.rows.filter(row => row.latest);
 const extent = metricExtent(initial, 'result');
@@ -17,9 +18,9 @@ const extent = metricExtent(initial, 'result');
   <p class="sr" id="heatmap-instructions">Use arrow keys to inspect neighboring cells, Home or End for the row, Control Home or End for the whole grid. Escape dismisses the tooltip. Tab leaves the grid. On narrow screens, scroll horizontally; model names remain visible.</p>
   <figure class="heatmap-figure">
     <div class="heatmap-scroll" role="grid" tabindex="0" aria-label="Model by task heatmap" aria-describedby="heatmap-summary heatmap-instructions" id="heatmap-grid">
-      <table role="presentation" class="heatmap-table">
-        <thead role="rowgroup"><tr role="row"><th role="columnheader" rowspan="2" class="heat-model">Model</th>{heatTools.map(([tool, label]) => <th role="columnheader" scope="colgroup" colspan={data.columns.filter(task => task.tool === tool).length}>{label}</th>)}</tr>
-          <tr role="row">{data.columns.map(task => <th role="columnheader" scope="col" aria-label={task.id}>{task.id.replaceAll('-', '').slice(0, 4).toUpperCase()}</th>)}</tr>
+      <table role="presentation" class="heatmap-table" style={`--heat-columns:${data.columns.length}`}>
+        <thead role="rowgroup"><tr role="row"><th role="columnheader" rowspan="2" class="heat-model">Model</th>{heatTools.filter(([tool]) => data.columns.some(task => task.tool === tool)).map(([tool, label]) => <th role="columnheader" scope="colgroup" colspan={data.columns.filter(task => task.tool === tool).length}>{label}</th>)}</tr>
+          <tr role="row">{data.columns.map(task => <th role="columnheader" scope="col" aria-label={task.id}>{shortTaskLabel(task.id)}</th>)}</tr>
         </thead>
         <tbody role="rowgroup">{data.rows.map((row, r) => <tr role="row" data-heat-row={r} hidden={!row.latest}>
           <th role="rowheader" scope="row" class="heat-model" aria-label={`${row.model}, ${row.provider}`}>{row.model}</th>

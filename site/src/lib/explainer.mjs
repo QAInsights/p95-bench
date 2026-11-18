@@ -2,6 +2,7 @@ import data from '../data/leaderboard.json';
 import { name } from './scores.mjs';
 import { simulatorRows, setTaskState, attemptCost } from './explainer-data.mjs';
 
+export function mountExplainer() {
 const root = document.getElementById('explainer');
 const config = JSON.parse(document.getElementById('ex-data').textContent);
 const $ = id => document.getElementById(id);
@@ -117,3 +118,4 @@ $('ex-cost-model').onchange = () => {
 };
 $('ex-cost-attempt').onchange = renderCost;
 renderCost();
+}
