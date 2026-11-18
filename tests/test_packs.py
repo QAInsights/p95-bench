@@ -8,12 +8,13 @@ import pytest
 
 from p95bench.budget import BudgetLedger
 from p95bench.cli import main
-from p95bench.graders import CHECKPOINT_GRADERS
+from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, Grade
 from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import efficiency, pack_config, snapshot, summarize_v2
 from p95bench.providers import OpenAICompatible, Price, ProviderConfig, Response, SpendLimitExceeded
-from p95bench.runner import run, score_run, summarize
+from p95bench.runner import _grade_response, run, score_run, summarize
 from p95bench.tasks import CATEGORIES, Task, load_private_tasks, load_tasks, require_external
+from p95bench.worker import WorkerUnavailable
 
 ROOT = Path(__file__).resolve().parents[1]
 V2 = "p95-v2.0.0"
@@ -136,6 +137,41 @@ def run_v2(tmp_path, monkeypatch, repeats=1, points=80, price=None):
     return provider, directory, summary
 
 
+@pytest.mark.parametrize("v2", [False, True])
+@pytest.mark.parametrize("error", [ValueError, RuntimeError, RecursionError, WorkerUnavailable])
+def test_grader_exception_saves_charged_response_and_continues(v2, error, tmp_path, monkeypatch):
+    rubric = [{"id": "loads", "points": 10}, {"id": "setup", "points": 30},
+              {"id": "behavior", "points": 40}, {"id": "safety", "points": 20}]
+    tasks = [Task(name, "analysis", "none", "Synthetic task", "test_checkpoint", {"rubric": rubric}, {})
+             for name in ("first", "second")]
+    successful = result(100) if v2 else Grade(True, "ok")
+    monkeypatch.setitem(CHECKPOINT_GRADERS if v2 else GRADERS, "test_checkpoint",
+                        Mock(side_effect=[error("grader failed"), successful]))
+    provider, price = FakeProvider(), Price(1, .5, 2)
+    ledger = BudgetLedger(tmp_path / "ledger.json")
+    options = {"pack_id": V2, "budget_ledger": ledger, "efficiency_budgets": {
+        task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks}} if v2 else {}
+    directory, summary = run(provider, "fake", "model", price, tasks, tmp_path, **options)
+    attempts = [json.loads(line) for line in (directory / "attempts.jsonl").read_text().splitlines()]
+    assert provider.calls == len(attempts) == 2
+    assert attempts[0]["response"]["text"] == "Synthetic response"
+    assert attempts[0]["grading_error"] == {"type": error.__name__, "message": "grader failed"}
+    assert attempts[0]["grade"]["detail"] == f"Grader error ({error.__name__}): grader failed"
+    assert not attempts[0]["grade"]["passed"] and attempts[1]["grade"]["passed"]
+    assert "grading_error" not in attempts[1]
+    assert summary["category_scores"]["analysis"] == 50
+    assert summary["overall_score"] == (7.5 if v2 else 50)
+    assert summary["estimated_cost_usd"] == pytest.approx(sum(a["cost_usd"] for a in attempts))
+    assert summary == score_run(directory)
+    if v2:
+        assert [c["earned"] for c in attempts[0]["grade"]["checkpoints"]] == [0, 0, 0, 0]
+        assert attempts[0]["grade"]["status"] == "graded"
+        assert CheckpointGrade.from_dict(attempts[0]["grade"]).score == 0
+        charges = json.loads(ledger.path.read_text())["charges"]
+        assert set(charges) == {attempt["budget_reservation"] for attempt in attempts}
+        assert not (directory / "not-run.jsonl").exists()
+
+
 @pytest.mark.parametrize("repeats", [1, 3])
 def test_v2_run_and_offline_rescore(tmp_path, monkeypatch, repeats):
     provider, directory, summary = run_v2(tmp_path, monkeypatch, repeats)
@@ -161,6 +197,23 @@ def test_v2_run_and_offline_rescore(tmp_path, monkeypatch, repeats):
     (directory / "pack.json").write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="digest"):
         score_run(directory)
+
+
+def test_grader_serialization_error_without_rubric_is_a_graded_error(tmp_path, monkeypatch):
+    invalid = Mock()
+    invalid.to_dict.side_effect = TypeError("invalid result")
+    monkeypatch.setattr("p95bench.runner.grade", Mock(return_value=invalid))
+    saved, error = _grade_response(task(), "response", tmp_path, True)
+    assert CheckpointGrade.from_dict(saved).score == 0
+    assert saved["checkpoints"] == [{"id": "grading_error", "earned": 0, "possible": 100}]
+    assert error == {"type": "TypeError", "message": "invalid result"}
+
+
+@pytest.mark.parametrize("error", [KeyboardInterrupt, SystemExit])
+def test_grading_does_not_swallow_process_cancellation(error, tmp_path, monkeypatch):
+    monkeypatch.setattr("p95bench.runner.grade", Mock(side_effect=error))
+    with pytest.raises(error):
+        _grade_response(task(), "response", tmp_path, True)
 
 
 def test_repeat_mean_not_pass_rate(tmp_path, monkeypatch):

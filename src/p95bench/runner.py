@@ -9,7 +9,16 @@ from uuid import uuid4
 
 from p95bench.budget import BudgetLedger
 from p95bench.capacity import prepare_workloads
-from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, grade, jmeter_executable, k6_executable
+from p95bench.checkpoint_graders import award
+from p95bench.graders import (
+    CHECKPOINT_GRADERS,
+    GRADERS,
+    Grade,
+    grade,
+    jmeter_executable,
+    k6_executable,
+)
+from p95bench.grades import CheckpointGrade
 from p95bench.packs import snapshot, summarize_v2, validate_snapshot
 from p95bench.providers import Gemini, ProviderUnavailable, SpendLimitExceeded, gemini_prices
 from p95bench.tasks import CATEGORIES, require_external
@@ -64,6 +73,18 @@ def score_run(directory: Path):
                                                  == "private")).write_text(
         json.dumps(summary, indent=2) + "\n")
     return summary
+
+
+def _grade_response(task, text, workdir, v2):
+    try:
+        result = grade(task, text, workdir, 2) if v2 else grade(task, text, workdir)
+        return result.to_dict(), None
+    except Exception as error:  # noqa: BLE001
+        detail = f"Grader error ({type(error).__name__}): {error}"
+        result = (CheckpointGrade(award(task.params.get("rubric", [
+            {"id": "grading_error", "points": 100}]), {}), detail)
+            if v2 else Grade(False, detail))
+        return result.to_dict(), {"type": type(error).__name__, "message": str(error)}
 
 
 def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
@@ -155,13 +176,14 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         skipped.write(json.dumps(entry) + "\n")
                     continue
                 workdir = _output_path(directory / f"task-{index}-{repeat}", private)
-                result = (grade(task, response.text, workdir, 2)
-                          if v2 else grade(task, response.text, workdir))
+                result, grading_error = _grade_response(task, response.text, workdir, v2)
                 attempt = {"task_id": task.id, "category": task.category, "repeat": repeat,
                            "provider": provider_name, "model": model,
                            "messages": messages, "grader": task.grader, "params": task.params,
                            "price_per_million": asdict(price), "response": asdict(response),
-                           "grade": result.to_dict(), "cost_usd": price.cost(response)}
+                           "grade": result, "cost_usd": price.cost(response)}
+                if grading_error is not None:
+                    attempt["grading_error"] = grading_error
                 if v2:
                     attempt.update(pack_id=pack_id, pack_digest=manifest["digest"],
                                    budget_reservation=reservation)

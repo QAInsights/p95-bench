@@ -150,7 +150,12 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
                          image=image, resources=Resources(768, 256, 512)) as (shop, worker):
         started = time.monotonic()
         result = worker.execute(native_command(tool), inputs, timeout=timeout, exports=exports)
-        events = shop.audit()
+        try:
+            events = shop.audit()
+        except RuntimeError:
+            if not shop.audit_overflow:
+                raise
+            events = []
         if shop.audit_overflow:
             raise WorkerUnavailable("Audit overflow; trial evidence is incomplete")
     for name, data in result.artifacts.items():

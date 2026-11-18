@@ -1,20 +1,22 @@
 import json
 import os
 import subprocess
+from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 from p95bench.capacity import capacity_preflight
-from p95bench.execution import Trial, artifact_source, k6_evidence
+from p95bench.demo_v2 import Profile, Shop
+from p95bench.execution import Trial, artifact_source, k6_evidence, run_artifact
 from p95bench.graders import grade
 from p95bench.images import tool_image
 from p95bench.packs import pack_config
 from p95bench.reference_plans import reference
 from p95bench.runner import run
 from p95bench.tasks import load_tasks
-from p95bench.worker import PROBE_IMAGE, Worker, WorkerUnavailable
+from p95bench.worker import PROBE_IMAGE, Execution, Worker, WorkerUnavailable
 
 ROOT = Path(__file__).resolve().parents[1]
 TASKS = load_tasks(ROOT / "packs/p95-v2.0.0/tasks", pack_config("p95-v2.0.0")["weights"])
@@ -49,6 +51,35 @@ def test_malformed_xml_zeroes_every_execution_checkpoint(tmp_path):
                 and not task.params["contract"].get("workload"))
     result = grade(task, "<jmeterTestPlan><hashTree>", tmp_path, 2)
     assert [item.earned for item in result.checkpoints] == [0, 0, 0, 0]
+
+
+@pytest.mark.parametrize("overflow", [False, True])
+def test_execution_audit_overflow_reaches_unavailable_guard(overflow, monkeypatch, tmp_path):
+    shop = Shop(Profile(), "synthetic")
+    shop.audit_overflow = overflow
+    worker = Mock()
+    worker.execute.return_value = Execution("completed", 0, "", 1)
+    monkeypatch.setattr("p95bench.execution.tool_image", lambda tool: PROBE_IMAGE)
+    monkeypatch.setattr("p95bench.execution.execution_trial", lambda *a, **k: nullcontext((shop, worker)))
+    if overflow:
+        with pytest.raises(WorkerUnavailable, match="Audit overflow; trial evidence is incomplete"):
+            run_artifact("k6", "export default function() {}", tmp_path)
+        assert not (tmp_path / "audit.json").exists()
+    else:
+        trial = run_artifact("k6", "export default function() {}", tmp_path)
+        assert trial.events == [] and not trial.loaded
+        assert json.loads((tmp_path / "audit.json").read_text()) == []
+    worker.execute.assert_called_once()
+
+
+def test_execution_nonoverflow_audit_error_is_not_reclassified(monkeypatch, tmp_path):
+    shop, worker = Mock(audit_overflow=False), Mock()
+    shop.audit.side_effect = RuntimeError("Demo requests did not drain; audit is not final")
+    worker.execute.return_value = Execution("completed", 0, "", 1)
+    monkeypatch.setattr("p95bench.execution.tool_image", lambda tool: PROBE_IMAGE)
+    monkeypatch.setattr("p95bench.execution.execution_trial", lambda *a, **k: nullcontext((shop, worker)))
+    with pytest.raises(RuntimeError, match="requests did not drain"):
+        run_artifact("k6", "export default function() {}", tmp_path)
 
 
 def test_invalid_image_state_is_infrastructure_not_model_failure(tmp_path):
