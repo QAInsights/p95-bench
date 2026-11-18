@@ -8,7 +8,9 @@ import {
   costFrontier,
   bestWithin,
   replayScore,
-  replayLayout,
+  replayToolLayout,
+  replayToolCounts,
+  replaySampleLabel,
   budgetScale,
   selectModelVersions,
 } from "./scores.mjs";
@@ -219,64 +221,68 @@ let frame = 0,
   lastTime = null,
   replayAnimations = [];
 function buildLanes() {
-  const { taskIds, rows } = replayLayout(models);
+  const { taskIds, rows, groups } = replayToolLayout(models);
   const sampleCount = taskIds.length;
-  const taskShort = taskIds.map((id) => id.replaceAll("-", "").slice(0, 4).toUpperCase());
-  $("task-heads").innerHTML = taskShort
-    .map((t) => "<span>" + t + "</span>")
+  $("scene-1").style.setProperty("--sample-columns", groups
+    .map(group => `repeat(${group.count}, minmax(0, 1fr))`).join(" var(--group-gap) ") || "none");
+  $("tool-heads").innerHTML = groups.map(group =>
+    '<span style="grid-column:' + group.column + '/span ' + group.count + '">' +
+    '<span class="tool-label">' + escape(group.label) + '</span><span class="group-size"> · ' +
+    group.count + '</span></span>').join("");
+  $("task-heads").innerHTML = groups.map(group => taskIds
+    .slice(group.offset, group.offset + group.count).map((id, index) =>
+      '<span style="grid-column:' + (group.column + index) + '" title="' +
+      escape(id + ' · ' + group.label) + '">' +
+      escape(id.replaceAll("-", "").slice(0, 4).toUpperCase()) + '</span>').join(""))
     .join("");
-  $("task-heads").style.gridTemplateColumns =
-    `repeat(${taskShort.length}, minmax(0, 1fr))`;
   $("lanes").replaceChildren();
+  $("lane-descriptions").replaceChildren();
   laneNodes.clear();
   arrived.length = 0;
   schedule.length = 0;
   models.forEach((m, i) => {
     arrived.push(new Set());
-    const row = document.createElement("button");
+    const row = document.createElement("div");
     row.className = "lane" + (m.discontinued ? " is-discontinued" : "");
     row.dataset.index = i;
     row.style.viewTransitionName = "lane-" + i;
-    row.setAttribute(
-      "aria-label",
-      name(m) +
-        ", inspect all " +
-        m.per_task_results.length +
-        " published task results" +
-        (m.per_task_results.length < sampleCount
-          ? ", remaining tasks not run"
-          : ""),
-    );
-    row.style.setProperty("--sample-count", sampleCount);
+    const counts = replayToolCounts(m, groups);
+    const labels = taskIds.map((id, column) => {
+      const task = rows[i][column] === null ? null : m.per_task_results[rows[i][column]];
+      const group = groups.find(group => column >= group.offset && column < group.offset + group.count);
+      return replaySampleLabel(task, id, group.label);
+    });
+    const description = document.createElement("p");
+    description.id = "lane-description-" + i;
+    description.textContent = counts.map(count => count.text).join(" · ") + ". " + labels.join("; ");
+    $("lane-descriptions").append(description);
     row.innerHTML =
       '<span class="lane-index">' +
       String(i + 1).padStart(2, "0") +
-      '</span><span><span class="lane-title">' +
+      '</span><button class="lane-open" aria-label="' + escape(name(m) +
+        ', inspect all ' + m.per_task_results.length + ' published task results' +
+        (m.per_task_results.length < sampleCount ? ', remaining tasks not run' : '')) +
+      '" aria-describedby="' + description.id + '"><span class="lane-title">' +
       escape(name(m)) +
       '</span><span class="lane-provider">' +
       escape(m.provider) +
       " · " +
       versionMarkup(m) +
-      '</span></span><span class="track">' +
-      rows[i]
-        .map((j, column) => {
-          if (j === null) return '<span class="sample unrun" title="' +
-            escape(taskIds[column] + ': Not run') + '"></span>';
-          const t = m.per_task_results[j];
-          return '<span class="sample" data-task="' +
-            j +
-            '" title="' +
-            escape(
-              t.task_id +
-                ": " +
-                (t.passed ? "Pass" : "Fail") +
-                " · " +
-                t.detail,
-            ) +
-            '"></span>';
-        })
-        .join("") +
-      '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span>';
+      '</span></button><span class="track">' +
+      groups.map((group, groupIndex) => '<span class="sample-group" role="img" aria-label="' +
+        escape(counts[groupIndex].text + ': ' + labels.slice(group.offset, group.offset + group.count).join('; ')) +
+        '" style="grid-column:' + group.column + '/span ' + group.count + ';--group-count:' + group.count + '">' +
+        rows[i].slice(group.offset, group.offset + group.count).map((j, index) => {
+          const label = labels[group.offset + index];
+          if (j === null) return '<span class="sample unrun" title="' + escape(label) + '"></span>';
+          return '<span class="sample" data-task="' + j + '" title="' +
+            escape(label + ' · ' + m.per_task_results[j].detail) + '"></span>';
+        }).join("") + '</span>').join("") +
+      '</span><span class="lane-result"><span class="lane-tool-counts">' +
+      counts.filter(count => count.tool !== 'none').map(count =>
+        '<span' + (count.attempts ? '' : ' class="tool-unrun"') + '>' + escape(count.text) + '</span>')
+        .join('<span aria-hidden="true"> · </span>') +
+      '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span></span>';
     row.onclick = () => openModel(i, row);
     laneNodes.set(i, row);
     m.per_task_results.forEach((t, j) =>
