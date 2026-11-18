@@ -315,8 +315,10 @@ million tokens, verified November 18, 2026:
 | Hydrogen | 1.50 | 0.075 | 7.50 | No expiry listed |
 | 3.8 Flash | 0.75 | 0.075 | 3.75 | December 31, 2026 |
 
-Runs snapshot prices. Carbon/Argon rates double December 1; Flash rates double
-January 1. No explicit caches, storage or grounding tools are created.
+Runs choose the date-effective schedule using their UTC start time, recording
+the pricing date and snapshot in metadata and attempts. Carbon/Argon rates
+double December 1; Flash rates double January 1. Published snapshots are never
+rewritten. No explicit caches, storage or grounding tools are created.
 Transient requests use bounded backoff; exhaustion is Not run. A client timeout
 of 600 seconds accommodates thinking without changing the output cap.
 `Gemini(config, spend_limit=3)` optionally bounds total estimated spend across

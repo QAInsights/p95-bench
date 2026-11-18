@@ -6,6 +6,7 @@ import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime
 from http.client import HTTPException
 from typing import Protocol
 from urllib.error import HTTPError, URLError
@@ -123,6 +124,19 @@ PROVIDERS = {
 }
 
 
+def gemini_prices(run_date: datetime) -> dict[str, Price]:
+    if run_date.tzinfo is None or run_date.utcoffset() is None:
+        raise ValueError("run_date must be timezone-aware")
+    day = run_date.astimezone(UTC).date().isoformat()
+    prices = dict(PROVIDERS["gemini"].prices)
+    if day >= "2026-12-01":
+        prices.update({"gemini-4-carbon": Price(4, .2, 20),
+                       "gemini-4-argon": Price(4, .2, 20)})
+    if day >= "2027-01-01":
+        prices["gemini-3.8-flash"] = Price(1.5, .15, 7.5)
+    return prices
+
+
 class OpenAICompatible:
     def __init__(self, config: ProviderConfig):
         self.config = config
@@ -186,10 +200,14 @@ class OpenAICompatible:
 class Gemini(OpenAICompatible):
     def __init__(self, config, spend_limit=None):
         super().__init__(config)
+        self.configure_run(datetime.now(UTC))
         if spend_limit is not None and spend_limit <= 0:
             raise ValueError("spend_limit must be positive")
         self.spend_limit = spend_limit
         self.spent_upper_bound = 0
+
+    def configure_run(self, run_date):
+        self.config = replace(self.config, prices={**self.config.prices, **gemini_prices(run_date)})
 
     def _headers(self, key):
         return {"x-goog-api-key": key, "Content-Type": "application/json",

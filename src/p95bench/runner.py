@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from p95bench.graders import GRADERS, grade, jmeter_executable, k6_executable
-from p95bench.providers import ProviderUnavailable, SpendLimitExceeded
+from p95bench.providers import ProviderUnavailable, SpendLimitExceeded, gemini_prices
 from p95bench.tasks import CATEGORIES
 
 SYSTEM_PROMPT = (
@@ -54,15 +54,24 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1):
         jmeter_executable()
     if any(task.grader == "k6_exec" for task in tasks):
         k6_executable()
-    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
+    started = datetime.now(UTC)
+    if provider_name == "gemini":
+        price = gemini_prices(started)[model]
+        configure = getattr(provider, "configure_run", None)
+        if configure:
+            configure(started)
+    run_id = started.strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     directory = (out / run_id).resolve()
     directory.mkdir(parents=True)
     config = getattr(provider, "config", None)
     if config and config.cost_note:
-        metadata = {"run_date": datetime.now(UTC).isoformat(),
+        metadata = {"run_date": started.isoformat(),
                     "provider": provider_name, "model": model, "base_url": config.base_url,
                     "cost_note": config.cost_note, "pricing_source": config.pricing_source,
                     "temperature": config.temperature, **config.extra}
+        if provider_name == "gemini":
+            metadata.update(pricing_date_utc=started.date().isoformat(),
+                            price_per_million=asdict(price))
         (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     budget_error = None
     with (directory / "attempts.jsonl").open("w") as stream:

@@ -1,6 +1,7 @@
 import io
 import json
 from dataclasses import replace
+from datetime import datetime, timedelta, timezone
 from http.client import IncompleteRead
 from urllib.error import HTTPError, URLError
 
@@ -10,7 +11,9 @@ from p95bench.providers import (
     PROVIDERS,
     Gemini,
     ProviderUnavailable,
+    Response,
     SpendLimitExceeded,
+    gemini_prices,
     get_provider,
 )
 from p95bench.runner import run
@@ -166,8 +169,6 @@ def test_auth_errors_do_not_retry(monkeypatch):
 
 @pytest.mark.parametrize('completed', [0, 1])
 def test_budget_exhaustion_writes_summary_and_skips_remaining_repeats(tmp_path, completed):
-    from p95bench.providers import Response
-
     class Budgeted:
         calls = 0
 
@@ -189,3 +190,47 @@ def test_budget_exhaustion_writes_summary_and_skips_remaining_repeats(tmp_path, 
     assert [(s['task_id'], s['repeat']) for s in skipped] == [
         (str(i), repeat) for i in range(3) for repeat in range(2)][completed:]
     assert all(s['status'] == 'not_run' and s['error'] == 'budget exhausted' for s in skipped)
+
+
+@pytest.mark.parametrize('model,day,rates', [
+    ('gemini-4-carbon', '2026-11-30T23:59:59+00:00', (2, .1, 10)),
+    ('gemini-4-carbon', '2026-12-01T00:00:00+00:00', (4, .2, 20)),
+    ('gemini-4-argon', '2026-11-30T23:59:59+00:00', (2, .1, 10)),
+    ('gemini-4-argon', '2026-12-01T00:00:00+00:00', (4, .2, 20)),
+    ('gemini-3.8-flash', '2026-12-31T23:59:59+00:00', (.75, .075, 3.75)),
+    ('gemini-3.8-flash', '2027-01-01T00:00:00+00:00', (1.5, .15, 7.5)),
+])
+def test_run_date_selects_prices_and_records_snapshot(monkeypatch, tmp_path, model, day, rates):
+    when = datetime.fromisoformat(day)
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return when
+
+    monkeypatch.setattr('p95bench.runner.datetime', Clock)
+    provider = Gemini(PROVIDERS['gemini'])
+    monkeypatch.setattr(provider, '_request', lambda *args: reply())
+    task = Task('test', 'workload', 'none', 'prompt', 'numeric', {'answer': 10}, {})
+    directory, summary = run(provider, 'gemini', model, PROVIDERS['gemini'].prices[model],
+                             [task], tmp_path)
+    metadata = json.loads((directory / 'metadata.json').read_text())
+    expected = dict(zip(['input', 'cached', 'output'], rates))
+    assert metadata['price_per_million'] == expected
+    assert metadata['pricing_date_utc'] == when.date().isoformat()
+    assert metadata['run_date'] == when.isoformat()
+    attempt = json.loads((directory / 'attempts.jsonl').read_text())
+    assert attempt['price_per_million'] == expected
+    assert summary['estimated_cost_usd'] == pytest.approx((40 * rates[0] + 60 * rates[1]
+                                                         + 42 * rates[2]) / 1_000_000)
+    assert provider.config.prices[model] == gemini_prices(when)[model]
+
+
+def test_schedule_uses_utc_not_local_calendar_day():
+    before = datetime(2026, 12, 1, tzinfo=timezone(timedelta(hours=1)))
+    after = datetime(2026, 11, 30, 23, tzinfo=timezone(timedelta(hours=-1)))
+    assert gemini_prices(before)['gemini-4-carbon'].input == 2
+    assert gemini_prices(after)['gemini-4-carbon'].input == 4
+    assert gemini_prices(after)['gemini-4-hydrogen'].input == 1.5
+    with pytest.raises(ValueError, match='timezone-aware'):
+        gemini_prices(datetime(2026, 12, 1))
