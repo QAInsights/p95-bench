@@ -27,6 +27,15 @@ test('Qwen Max groups the earlier 3.7 release under 3.8 and Flash stays independ
   assert.equal(selectModelVersions(models, true)[0].newer_model, models[1].model);
 });
 
+test('Gemini Carbon, Argon, Hydrogen and Flash have independent latest families', () => {
+  const models = ['gemini-4-carbon', 'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-3.8-flash']
+    .map(model => ({ model, overall_score: 100, cost: 1 }));
+  const latest = selectModelVersions(models);
+  assert.equal(latest.length, 4);
+  assert.equal(new Set(latest.map(model => model.family)).size, 4);
+  assert.ok(latest.every(model => model.version_status === 'Latest'));
+});
+
 test('release order, not score, chooses latest; earlier and discontinued runs stay fully ranked when included', () => {
   const models = [{ model: 'old', overall_score: 100, cost: 1 }, { model: 'new', overall_score: 50, cost: 1 }];
   const registry = { old: { family: 'a', release_order: 1 }, new: { family: 'a', release_order: 2, discontinued: true } };

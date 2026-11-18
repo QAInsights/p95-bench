@@ -75,6 +75,11 @@ test('published data is reproducible, redacted and matches weighted scores', asy
       assert.equal(metadata.enable_thinking, false);
       assert.equal(metadata.max_tokens, 8192);
       assert.equal(model.per_task_results.length, metadata.task_count);
+    } else if (model.provider === 'gemini') {
+      assert.match(model.cost_note, /thinking tokens/);
+      assert.equal(metadata.temperature, null);
+      assert.equal(model.output_cap, 8192);
+      assert.equal(model.per_task_results.length, metadata.task_count);
     } else {
       assert.ok(metadata.k6_run_date);
       assert.match(metadata.k6_note, /separately/);
@@ -87,11 +92,11 @@ test('published data is reproducible, redacted and matches weighted scores', asy
     assert.ok(model.run_date);
     assert.match(model.harness_commit, /^[a-f0-9]{40}$/);
     const k6 = model.per_task_results.filter(t => t.tool === 'k6');
-    if (model.provider !== 'qwen') assert.equal(k6.length, metadata.k6_status === 'completed' ? 3 : 0);
+    if (!['qwen', 'gemini'].includes(model.provider)) assert.equal(k6.length, metadata.k6_status === 'completed' ? 3 : 0);
     assert.equal(toolScore(model, 'k6'), k6.length
       ? 100 * k6.filter(t => t.passed).length / k6.length : null);
     if (!k6.length) assert.equal(toolScoreLabel(model, 'k6'), 'Not run');
-    if (model.provider !== 'qwen') {
+    if (!['qwen', 'gemini'].includes(model.provider)) {
       const expectedToolScore = model.provider === 'thinkingmachines' ? 0
         : model.provider === 'deepseek' ? 200 / 3 : 100;
       assert.ok(Math.abs(toolScore(model, 'jmeter') - expectedToolScore) < 1e-10);
@@ -167,7 +172,7 @@ test('generator rejects empty, duplicate and mismatched runs', async () => {
   }
 });
 
-test('generator preserves free-tier pricing provenance without relabeling other runs', async () => {
+test('generator preserves pricing provenance and native output caps without relabeling other runs', async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'p95-modelscope-test-'));
   try {
     for (const name of ['summary.json', 'attempts.jsonl']) {
@@ -179,6 +184,8 @@ test('generator preserves free-tier pricing provenance without relabeling other 
     const { models } = await buildData([directory]);
     assert.equal(models[0].cost_note, metadata.cost_note);
     assert.equal(models[0].pricing_source, metadata.pricing_source);
+    await writeFile(path.join(directory, 'metadata.json'), JSON.stringify({ maxOutputTokens: 8192 }));
+    assert.equal((await buildData([directory])).models[0].output_cap, 8192);
     await writeFile(path.join(directory, 'metadata.json'), '{}');
     assert.equal(Object.hasOwn((await buildData([directory])).models[0], 'cost_note'), false);
   } finally {

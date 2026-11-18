@@ -31,6 +31,10 @@ export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'Qwen-Ambassador/Qwen3.8-Max' ? 'Qwen3.8 Max'
   : model === 'Qwen-Ambassador/Qwen3.7-Max' ? 'Qwen3.7 Max'
   : model === 'Qwen-Ambassador/Qwen3.8-Flash-Next' ? 'Qwen3.8 Flash Next'
+  : model === 'gemini-4-carbon' ? 'Gemini 4 Carbon'
+  : model === 'gemini-4-argon' ? 'Gemini 4 Argon'
+  : model === 'gemini-4-hydrogen' ? 'Gemini 4 Hydrogen'
+  : model === 'gemini-3.8-flash' ? 'Gemini 3.8 Flash'
   : model === 'gpt-6.2-sol' ? 'GPT-6.2 Sol'
   : model === 'gpt-6.2-astra' ? 'GPT-6.2 Astra' : model;
 export const modelSlug = (model) => model.replace(/^thinkingmachines\//, '').toLowerCase()

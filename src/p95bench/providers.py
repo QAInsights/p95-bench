@@ -6,6 +6,7 @@ import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime
 from http.client import HTTPException
 from typing import Protocol
 from urllib.error import HTTPError, URLError
@@ -26,6 +27,20 @@ class Provider(Protocol):
 
 class ProviderUnavailable(RuntimeError):
     pass
+
+
+class SpendLimitExceeded(RuntimeError):
+    pass
+
+
+@dataclass
+class GeminiResponse(Response):
+    thinking_tokens: int = 0
+    finish_reason: str = ""
+
+    @property
+    def thinking_exhausted(self):
+        return not self.text.strip() and self.thinking_tokens > 0 and self.finish_reason == "MAX_TOKENS"
 
 
 @dataclass(frozen=True)
@@ -55,6 +70,19 @@ class ProviderConfig:
 
 
 PROVIDERS = {
+    "gemini": ProviderConfig(
+        "https://generativelanguage.googleapis.com/v1beta", "GEMINI_API_KEY",
+        {"gemini-4-carbon": Price(2, .1, 10),
+         "gemini-4-argon": Price(2, .1, 10),
+         "gemini-4-hydrogen": Price(1.5, .075, 7.5),
+         "gemini-3.8-flash": Price(.75, .075, 3.75)},
+        temperature=None,
+        extra={"maxOutputTokens": 8192},
+        timeout_seconds=600,
+        max_retries=5,
+        cost_note="USD · list-price estimate (includes thinking tokens).",
+        pricing_source="https://ai.google.dev/gemini-api/docs/pricing",
+    ),
     "qwen": ProviderConfig(
         "https://api-inference.modelscope.ai/v1", "MODELSCOPE_API_KEY",
         {"Qwen-Ambassador/Qwen3.8-Max": Price(2, .2, 6),
@@ -96,6 +124,19 @@ PROVIDERS = {
 }
 
 
+def gemini_prices(run_date: datetime) -> dict[str, Price]:
+    if run_date.tzinfo is None or run_date.utcoffset() is None:
+        raise ValueError("run_date must be timezone-aware")
+    day = run_date.astimezone(UTC).date().isoformat()
+    prices = dict(PROVIDERS["gemini"].prices)
+    if day >= "2026-12-01":
+        prices.update({"gemini-4-carbon": Price(4, .2, 20),
+                       "gemini-4-argon": Price(4, .2, 20)})
+    if day >= "2027-01-01":
+        prices["gemini-3.8-flash"] = Price(1.5, .15, 7.5)
+    return prices
+
+
 class OpenAICompatible:
     def __init__(self, config: ProviderConfig):
         self.config = config
@@ -103,6 +144,10 @@ class OpenAICompatible:
     def _headers(self, key: str) -> dict[str, str]:
         return {"Authorization": f"Bearer {key}", "Content-Type": "application/json",
                 "User-Agent": "p95bench/0.1.0"}
+
+    def _request_once(self, request):
+        with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
+            return json.load(response)
 
     def _request(self, path: str, body: dict | None = None) -> dict:
         key = os.environ.get(self.config.key_env)
@@ -115,8 +160,7 @@ class OpenAICompatible:
         )
         for attempt in range(self.config.max_retries + 1):
             try:
-                with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
-                    return json.load(response)
+                return self._request_once(request)
             except (URLError, TimeoutError, HTTPException, ConnectionResetError) as error:
                 if not self.config.max_retries or (
                     isinstance(error, HTTPError) and error.code not in {429, 500, 502, 503, 504}
@@ -153,6 +197,83 @@ class OpenAICompatible:
                         usage["prompt_tokens"], usage["completion_tokens"], cached, elapsed)
 
 
+class Gemini(OpenAICompatible):
+    def __init__(self, config, spend_limit=None):
+        super().__init__(config)
+        self.configure_run(datetime.now(UTC))
+        if spend_limit is not None and spend_limit <= 0:
+            raise ValueError("spend_limit must be positive")
+        self.spend_limit = spend_limit
+        self.spent_upper_bound = 0
+
+    def configure_run(self, run_date, model=None, price=None):
+        prices = {**self.config.prices, **gemini_prices(run_date)}
+        if model is not None and price is not None:
+            prices[model] = price
+        self.config = replace(self.config, prices=prices)
+
+    def _headers(self, key):
+        return {"x-goog-api-key": key, "Content-Type": "application/json",
+                "User-Agent": "p95bench/0.1.0"}
+
+    @staticmethod
+    def _usage(data):
+        usage = data["usageMetadata"]
+        thinking = usage.get("thoughtsTokenCount", 0) or 0
+        return (usage["promptTokenCount"],
+                (usage.get("candidatesTokenCount", 0) or 0) + thinking,
+                usage.get("cachedContentTokenCount", 0) or 0, thinking)
+
+    def _request_once(self, request):
+        if self.spend_limit is None or not request.full_url.endswith(":generateContent"):
+            return super()._request_once(request)
+        model = urllib.parse.unquote(request.full_url.rsplit("/", 1)[1].split(":")[0])
+        price = self.config.prices[model]
+        body = json.loads(request.data)
+        maximum = price.cost(Response("", len(request.data) + 1024,
+                                      body["generationConfig"]["maxOutputTokens"]))
+        if self.spent_upper_bound + maximum > self.spend_limit:
+            raise SpendLimitExceeded("Insufficient budget for another maximum-sized response")
+        self.spent_upper_bound += maximum
+        data = super()._request_once(request)
+        input_tokens, output_tokens, cached_tokens, _ = self._usage(data)
+        actual = price.cost(Response("", input_tokens, output_tokens, cached_tokens))
+        self.spent_upper_bound += actual - maximum
+        return data
+
+    def models(self):
+        models, path = [], "/models"
+        while True:
+            data = self._request(path)
+            models.extend(item["name"].removeprefix("models/") for item in data["models"])
+            if not data.get("nextPageToken"):
+                return models
+            path = "/models?" + urllib.parse.urlencode({"pageToken": data["nextPageToken"]})
+
+    def send(self, model, messages):
+        config = dict(self.config.extra)
+        if self.config.temperature is not None:
+            config["temperature"] = self.config.temperature
+        body = {"contents": [{"role": "model" if m["role"] == "assistant" else "user",
+                              "parts": [{"text": m["content"]}]}
+                             for m in messages if m["role"] != "system"],
+                "generationConfig": config}
+        system = [m["content"] for m in messages if m["role"] == "system"]
+        if system:
+            body["systemInstruction"] = {"parts": [{"text": "\n\n".join(system)}]}
+        start = time.perf_counter()
+        data = self._request("/models/" + urllib.parse.quote(model, safe="") + ":generateContent",
+                             body)
+        elapsed = time.perf_counter() - start
+        candidate = (data.get("candidates") or [{}])[0]
+        parts = (candidate.get("content") or {}).get("parts") or []
+        text = "".join(part["text"] for part in parts
+                       if isinstance(part.get("text"), str) and not part.get("thought"))
+        input_tokens, output_tokens, cached_tokens, thinking = self._usage(data)
+        return GeminiResponse(text, input_tokens, output_tokens, cached_tokens, elapsed,
+                              thinking, candidate.get("finishReason", ""))
+
+
 class Anthropic(OpenAICompatible):
     def _headers(self, key: str) -> dict[str, str]:
         return {"x-api-key": key, "anthropic-version": "2023-06-01",
@@ -187,7 +308,7 @@ class Anthropic(OpenAICompatible):
 
 
 def get_provider(name: str) -> Provider:
-    adapter = Anthropic if name == "anthropic" else OpenAICompatible
+    adapter = {"anthropic": Anthropic, "gemini": Gemini}.get(name, OpenAICompatible)
     config = PROVIDERS[name]
     if name == "qwen":
         config = replace(config, base_url=os.environ.get("QWEN_BASE_URL", config.base_url))

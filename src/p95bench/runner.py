@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from p95bench.graders import GRADERS, grade, jmeter_executable, k6_executable
-from p95bench.providers import ProviderUnavailable
+from p95bench.providers import Gemini, ProviderUnavailable, SpendLimitExceeded, gemini_prices
 from p95bench.tasks import CATEGORIES
 
 SYSTEM_PROMPT = (
@@ -54,24 +54,40 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1):
         jmeter_executable()
     if any(task.grader == "k6_exec" for task in tasks):
         k6_executable()
-    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
+    started = datetime.now(UTC)
+    if provider_name == "gemini":
+        if price is None:
+            price = gemini_prices(started).get(model)
+        if price is None:
+            raise ValueError(f"No verified price for {model}; supply an explicit price")
+        if isinstance(provider, Gemini):
+            provider.configure_run(started, model=model, price=price)
+    run_id = started.strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     directory = (out / run_id).resolve()
     directory.mkdir(parents=True)
     config = getattr(provider, "config", None)
     if config and config.cost_note:
-        metadata = {"run_date": datetime.now(UTC).isoformat(),
+        metadata = {"run_date": started.isoformat(),
                     "provider": provider_name, "model": model, "base_url": config.base_url,
                     "cost_note": config.cost_note, "pricing_source": config.pricing_source,
                     "temperature": config.temperature, **config.extra}
+        if provider_name == "gemini":
+            metadata.update(pricing_date_utc=started.date().isoformat(),
+                            price_per_million=asdict(price))
         (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    budget_error = None
     with (directory / "attempts.jsonl").open("w") as stream:
         for index, task in enumerate(tasks):
             for repeat in range(repeats):
                 messages = [{"role": "system", "content": SYSTEM_PROMPT},
                             {"role": "user", "content": task.user_prompt()}]
                 try:
+                    if budget_error is not None:
+                        raise SpendLimitExceeded(budget_error)
                     response = provider.send(model, messages)
-                except ProviderUnavailable as error:
+                except (ProviderUnavailable, SpendLimitExceeded) as error:
+                    if isinstance(error, SpendLimitExceeded):
+                        budget_error = str(error)
                     with (directory / "not-run.jsonl").open("a") as skipped:
                         skipped.write(json.dumps({"task_id": task.id, "repeat": repeat,
                                                   "provider": provider_name, "model": model,
