@@ -30,7 +30,7 @@ const extent = metricExtent(initial, 'result');
     <figcaption><span><b data-heat-figure>FIG. 03</b> · Mean per model/task; output includes reasoning. Latency is provider response time.</span><span>Source: published attempts, n = <span id="heatmap-source">{initial.flatMap(row => row.cells).reduce((sum, cell) => sum + cell.attempts, 0)}</span></span></figcaption>
   </figure>
   <details class="heatmap-data"><summary>Show data table</summary><div role="region" tabindex="0" aria-label="Heatmap values" class="heat-data-scroll"><table><caption>All metrics, mean of measured repetitions. Missing values are not zero.</caption><thead><tr>{['Model', 'Provider', 'Task', 'Result', 'Output tokens', 'Latency', 'Attempts'].map(label => <th scope="col">{label}</th>)}</tr></thead><tbody>{data.rows.flatMap((row, r) => row.cells.map(cell => <tr data-heat-data-row={r} hidden={!row.latest}><th scope="row">{row.model}</th><td>{row.provider}</td><td>{cell.task}</td><td>{heatValue(cell, 'result')}</td><td>{heatValue(cell, 'tokens')}</td><td>{heatValue(cell, 'latency')}</td><td>{cell.measured}/{cell.attempts} measured</td></tr>))}</tbody></table></div></details>
-  <p class="sr" role="status" aria-atomic="true" id="heatmap-status"></p>
+  <p class="sr" id="heatmap-status"></p>
   <div id="heatmap-tooltip" role="tooltip" hidden></div>
   <script type="application/json" id="heatmap-records" set:html={JSON.stringify(data).replaceAll('<', '\\u003c')} />
 </section>

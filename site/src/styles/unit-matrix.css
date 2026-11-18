@@ -15,7 +15,7 @@
 .matrix-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .75rem; max-block-size: 43dvh; overflow: auto; padding: .25rem; scrollbar-gutter: stable; }
 .matrix-group { min-inline-size: 0; padding: .875rem; border: .0625rem solid var(--line); background: #111016; }
 .matrix-group h3 { font: 400 .75rem/1.5 var(--mono); margin: 0 0 .875rem; overflow-wrap: anywhere; }
-.matrix-group h3 span { display: block; color: var(--mute); }
+.matrix-group h3 > span { display: block; color: var(--mute); }
 .matrix-squares { display: grid; grid-template-columns: repeat(auto-fill, var(--unit-size, 1rem)); gap: var(--unit-gap, .3125rem); align-content: start; }
 .unit-square, .matrix-key { inline-size: 1rem; block-size: 1rem; border: .0625rem solid #ffffff35; }
 .unit-square { inline-size: var(--unit-size, 1rem); block-size: var(--unit-size, 1rem); display: grid; place-items: center; font: 400 .75rem/1 var(--mono); color: white; }

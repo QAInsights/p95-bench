@@ -1,4 +1,5 @@
 import { metricExtent, heatColor, heatValue } from './heatmap-data.mjs';
+import { rollNumber, rollText, announceRolling } from './rolling-numbers.mjs';
 
 export function mountHeatmap(root) {
   const data = JSON.parse(root.querySelector('#heatmap-records').textContent);
@@ -49,7 +50,7 @@ export function mountHeatmap(root) {
     if (rect.left < left) grid.scrollLeft -= left - rect.left;
     inspect(next);
   });
-  function render() {
+  function render(animate = false) {
     hideTip();
     const showEarlier = document.getElementById('show-versions').checked;
     const rows = data.rows.filter(row => showEarlier || row.latest), extent = metricExtent(rows, metric);
@@ -84,14 +85,16 @@ export function mountHeatmap(root) {
       swatch('No measurement', 'repeating-linear-gradient(-45deg, transparent 0 .1875rem, #99919f .1875rem .25rem)');
     }
     const count = rows.flatMap(row => row.cells).reduce((sum, cell) => sum + cell.attempts, 0);
-    root.querySelector('#heatmap-source').textContent = count;
-    root.querySelector('#heatmap-summary').textContent = `${rows.length} models · ${data.columns.length} tasks. Repeated attempts show means; Not run is excluded.`;
-    root.querySelector('#heatmap-status').textContent = `${metric} metric. ${rows.length} models. ${legend.textContent}`;
+    rollNumber(root.querySelector('#heatmap-source'), count, { animate, max: data.rows.flatMap(row => row.cells).reduce((sum, cell) => sum + cell.attempts, 0) });
+    rollText(root.querySelector('#heatmap-summary'), `${rows.length} models · ${data.columns.length} tasks. Repeated attempts show means; Not run is excluded.`, { animate, max: Math.max(data.rows.length, data.columns.length) });
+    const legendLabel = [...legend.querySelectorAll('span')].map(node => node.textContent).join('. ') || legend.textContent;
+    root.querySelector('#heatmap-status').textContent = `${metric} metric. ${rows.length} models. ${legendLabel}`;
+    if (animate) announceRolling(`Heatmap ${metric} metric. ${rows.length} models, ${data.columns.length} tasks, ${count} published attempts. ${legendLabel}`, 'heatmap');
     root.querySelectorAll('[data-heat-metric]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.heatMetric === metric)));
     if (document.activeElement === grid) inspect(visibleRows()[0]?.querySelector('[data-heat-cell]'));
   }
-  root.querySelectorAll('[data-heat-metric]').forEach(button => button.addEventListener('click', () => { metric = button.dataset.heatMetric; render(); }));
-  document.addEventListener('modelversionschange', render);
+  root.querySelectorAll('[data-heat-metric]').forEach(button => button.addEventListener('click', () => { metric = button.dataset.heatMetric; render(true); }));
+  document.addEventListener('modelversionschange', () => render(true));
   root.querySelector('[data-heat-figure]').textContent = `FIG. ${String([...document.querySelectorAll('.scene, .reading-section')].indexOf(root) + 1).padStart(2, '0')}`;
   render();
 }
