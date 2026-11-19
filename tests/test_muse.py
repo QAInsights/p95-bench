@@ -34,7 +34,7 @@ def test_muse_payload_and_reasoning_inclusive_price(monkeypatch, model, rates):
     def request(req, timeout):
         assert req.full_url == 'https://api.meta.ai/v1/chat/completions'
         assert req.get_header('Authorization') == 'Bearer test-key'
-        assert json.loads(req.data) == {'model': model, 'messages': messages, 'max_completion_tokens': 8192}
+        assert json.loads(req.data) == {'model': model, 'messages': messages, 'max_completion_tokens': 16384}
         assert timeout == 600
         return io.BytesIO(json.dumps(reply()).encode())
 

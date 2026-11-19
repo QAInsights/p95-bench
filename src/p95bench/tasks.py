@@ -54,12 +54,3 @@ def load_tasks(root: Path, categories=None) -> list[Task]:
         raise ValueError(f"No YAML tasks found in {root}")
     return tasks
 
-
-def require_external(path: Path, repository: Path):
-    if path.resolve().is_relative_to(repository.resolve()):
-        raise ValueError("Private tasks and outputs must be outside the repository")
-
-
-def load_private_tasks(root: Path, repository: Path, categories=None):
-    require_external(root, repository)
-    return load_tasks(root, categories)

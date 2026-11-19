@@ -1,5 +1,5 @@
 export const packIds = { v1: 'p95-v1', v2: 'p95-v2.0.0' };
-export const packLabels = { v1: 'v1 · 15 tasks', v2: 'v2 · 50 tasks' };
+export const packLabels = { v1: 'v1 · 15 tasks', v2: 'v2 · 40 tasks' };
 
 export function resolvePack(requested, packs) {
   if (Object.hasOwn(packs, requested)) return requested;

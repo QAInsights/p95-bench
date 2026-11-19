@@ -1,4 +1,4 @@
-"""Versioned scoring contracts; no task content or held-out data lives here."""
+"""Versioned scoring contracts; no task content lives here."""
 
 import hashlib
 import json
@@ -20,7 +20,7 @@ def pack_config(pack_id):
     return config
 
 
-def snapshot(pack_id, tasks, repeats=1, budgets=None, private=False):
+def snapshot(pack_id, tasks, repeats=1, budgets=None):
     config = pack_config(pack_id)
     if not isinstance(repeats, int) or isinstance(repeats, bool) or repeats < 1:
         raise ValueError("repeats must be a positive integer")
@@ -44,7 +44,7 @@ def snapshot(pack_id, tasks, repeats=1, budgets=None, private=False):
                     or not finite(values.get("latency_seconds"), .001)):
                 raise ValueError("Efficiency budgets must be finite and positive")
     result = {"pack_id": pack_id, **config, "tasks": inventory, "repeats": repeats,
-              "efficiency_budgets": budgets, "visibility": "private" if private else "public"}
+              "efficiency_budgets": budgets, "visibility": "public"}
     return {**result, "digest": digest(result)}
 
 

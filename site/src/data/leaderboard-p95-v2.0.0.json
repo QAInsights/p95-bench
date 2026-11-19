@@ -1,5 +1,6 @@
 {
   "pack_id": "p95-v2.0.0",
+  "pack_digest": "84c75267639898753789c04b100fdea1805006d9aa102eec1f789ac524345b7d",
   "weights": {
     "repair": 25,
     "migration": 15,
@@ -7,1136 +8,1926 @@
     "workload": 20,
     "analysis": 15
   },
-  "budget_file_sha256": "09ca8ed77cd7cb0eebea6a3618ae13c0fdb55496dd14d438745234a0b4a05bc7",
-  "publication_note": "50-task overall/category aggregates; per-task results contain only the 40 public tasks. Costs use reported token usage at registry prices, not provider invoices. Qwen3.7 Max used free ModelScope access.",
+  "budget_file_sha256": "2375e3bd11758aa5cd71964f291572ed47b034a08cb346558707ed874fe349b7",
+  "publication_note": "40 public tasks, no held-out tasks; every model uses the same budgets and a 16,384-token output cap. Costs use reported token usage at registry prices, not provider invoices.",
   "models": [
     {
-      "provider": "qwen",
-      "model": "Qwen-Ambassador/Qwen3.7-Max",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "overall_score": 38.70113636363636,
       "pack_id": "p95-v2.0.0",
-      "pack_digest": "565b9d2f57481d149e2a32bd85b3cba9a3fcb3db08941add13c09d703e5153bb",
+      "pack_digest": "84c75267639898753789c04b100fdea1805006d9aa102eec1f789ac524345b7d",
+      "quality_score": 38.70113636363636,
+      "efficiency_score": 38.70113636363636,
       "repeats": 1,
-      "quality_score": 34.916220238095235,
-      "efficiency_score": 34.916220238095235,
-      "overall_score": 34.916220238095235,
       "category_scores": {
-        "repair": 56.785714285714285,
-        "migration": 39.0625,
-        "correlation": 21.041666666666668,
-        "workload": 8.0,
-        "analysis": 53.333333333333336
+        "repair": 50.45454545454545,
+        "migration": 55,
+        "correlation": 28.75,
+        "workload": 11.25,
+        "analysis": 56
       },
-      "cost": 1.8389935,
-      "cost_note": "USD list-price estimate for the 50 saved responses. ModelScope access was free; actual provider charge $0. Retry reservations and the interrupted response are excluded.",
-      "pricing_source": "Frozen provider list-price snapshot in saved attempts",
+      "cost": 0.2045397,
       "tokens": {
-        "input": 310255,
-        "output": 145928
+        "input": 168719,
+        "output": 128270
       },
-      "latency": 2192.3581907089974,
-      "run_date": "2026-11-18T21:12:34.852274+00:00",
-      "harness_commit": "211c546b2e269169f710ff75fa1020d0c8ac7e52",
-      "budget_file_sha256": "09ca8ed77cd7cb0eebea6a3618ae13c0fdb55496dd14d438745234a0b4a05bc7",
-      "evaluator_segments": [
+      "latency": 398.6352564649999,
+      "run_date": "2026-11-19T21:44:32.453489+00:00",
+      "harness_commit": null,
+      "output_cap": 16384,
+      "cost_attempts": [
         {
-          "digest": "3cf4408783eff3a59852548e7166df9e06cbf0417585c36b3c3f25ba9d54d1a2",
-          "scored_attempts": 46
+          "task_id": "v2-a01-jtl-endpoints",
+          "input_tokens": 461,
+          "cached_tokens": 0,
+          "output_tokens": 86,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0002415
         },
         {
-          "digest": "7269750950b80ba91d13439f133742d60549e60d0cbfa22ecd6d544cec9451ab",
-          "scored_attempts": 4
+          "task_id": "v2-a02-k6-thresholds",
+          "input_tokens": 411,
+          "cached_tokens": 0,
+          "output_tokens": 83,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00022289999999999997
+        },
+        {
+          "task_id": "v2-a04-k6-errors",
+          "input_tokens": 514,
+          "cached_tokens": 0,
+          "output_tokens": 76,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0002454
+        },
+        {
+          "task_id": "v2-a05-jtl-omission",
+          "input_tokens": 547,
+          "cached_tokens": 0,
+          "output_tokens": 105,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0002901
+        },
+        {
+          "task_id": "v2-a06-k6-decomposition",
+          "input_tokens": 548,
+          "cached_tokens": 0,
+          "output_tokens": 69,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0002472
+        },
+        {
+          "task_id": "v2-c01-html-csrf",
+          "input_tokens": 1163,
+          "cached_tokens": 0,
+          "output_tokens": 2829,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0037437
+        },
+        {
+          "task_id": "v2-c02-html-csrf",
+          "input_tokens": 1157,
+          "cached_tokens": 0,
+          "output_tokens": 2696,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0035822999999999996
+        },
+        {
+          "task_id": "v2-c03-json-parent-child",
+          "input_tokens": 1146,
+          "cached_tokens": 0,
+          "output_tokens": 1901,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.002625
+        },
+        {
+          "task_id": "v2-c04-json-pagination",
+          "input_tokens": 1147,
+          "cached_tokens": 0,
+          "output_tokens": 2655,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0035301
+        },
+        {
+          "task_id": "v2-c06-etag-update",
+          "input_tokens": 1203,
+          "cached_tokens": 0,
+          "output_tokens": 1494,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0021536999999999997
+        },
+        {
+          "task_id": "v2-c07-rotating-csrf",
+          "input_tokens": 1160,
+          "cached_tokens": 0,
+          "output_tokens": 2881,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0038052
+        },
+        {
+          "task_id": "v2-c08-expiry-resume",
+          "input_tokens": 1163,
+          "cached_tokens": 0,
+          "output_tokens": 3093,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0040605
+        },
+        {
+          "task_id": "v2-c09-async-reservation",
+          "input_tokens": 1205,
+          "cached_tokens": 0,
+          "output_tokens": 2954,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0039063
+        },
+        {
+          "task_id": "v2-c10-html-json-bridge",
+          "input_tokens": 1160,
+          "cached_tokens": 0,
+          "output_tokens": 2596,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0034631999999999996
+        },
+        {
+          "task_id": "v2-c11-session-ownership",
+          "input_tokens": 1361,
+          "cached_tokens": 0,
+          "output_tokens": 4946,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0063435
+        },
+        {
+          "task_id": "v2-m01-basic-flow",
+          "input_tokens": 8818,
+          "cached_tokens": 0,
+          "output_tokens": 1414,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0043422
+        },
+        {
+          "task_id": "v2-m03-redirect-token",
+          "input_tokens": 8825,
+          "cached_tokens": 0,
+          "output_tokens": 1796,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0048027
+        },
+        {
+          "task_id": "v2-m04-data-driven",
+          "input_tokens": 16384,
+          "cached_tokens": 0,
+          "output_tokens": 2564,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.007992
+        },
+        {
+          "task_id": "v2-m05-pacing-semantics",
+          "input_tokens": 9206,
+          "cached_tokens": 0,
+          "output_tokens": 3360,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006793799999999999
+        },
+        {
+          "task_id": "v2-m06-assertions-metrics",
+          "input_tokens": 8803,
+          "cached_tokens": 0,
+          "output_tokens": 2960,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0061928999999999994
+        },
+        {
+          "task_id": "v2-m07-conditional-retry",
+          "input_tokens": 15266,
+          "cached_tokens": 0,
+          "output_tokens": 3326,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.008571
+        },
+        {
+          "task_id": "v2-r01-extractor-scope",
+          "input_tokens": 8802,
+          "cached_tokens": 0,
+          "output_tokens": 4555,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0081066
+        },
+        {
+          "task_id": "v2-r02-cookie-lifetime",
+          "input_tokens": 2872,
+          "cached_tokens": 0,
+          "output_tokens": 1721,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0029268
+        },
+        {
+          "task_id": "v2-r04-status-recovery",
+          "input_tokens": 2898,
+          "cached_tokens": 0,
+          "output_tokens": 1888,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.003135
+        },
+        {
+          "task_id": "v2-r05-business-assertion",
+          "input_tokens": 8795,
+          "cached_tokens": 0,
+          "output_tokens": 6038,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.009884099999999998
+        },
+        {
+          "task_id": "v2-r06-threshold-tags",
+          "input_tokens": 2960,
+          "cached_tokens": 0,
+          "output_tokens": 1757,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0029964
+        },
+        {
+          "task_id": "v2-r07-controller-reset",
+          "input_tokens": 15319,
+          "cached_tokens": 0,
+          "output_tokens": 6139,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0119625
+        },
+        {
+          "task_id": "v2-r08-arrival-options",
+          "input_tokens": 3275,
+          "cached_tokens": 0,
+          "output_tokens": 2129,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0035372999999999997
+        },
+        {
+          "task_id": "v2-r10-user-partition",
+          "input_tokens": 2722,
+          "cached_tokens": 0,
+          "output_tokens": 1419,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0025194
+        },
+        {
+          "task_id": "v2-r11-timer-scope",
+          "input_tokens": 9196,
+          "cached_tokens": 0,
+          "output_tokens": 4680,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0083748
+        },
+        {
+          "task_id": "v2-r12-error-metric",
+          "input_tokens": 2879,
+          "cached_tokens": 0,
+          "output_tokens": 1907,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0031520999999999997
+        },
+        {
+          "task_id": "v2-r13-expiry-controller",
+          "input_tokens": 15278,
+          "cached_tokens": 0,
+          "output_tokens": 6800,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0127434
+        },
+        {
+          "task_id": "v2-w01-steady-starts",
+          "input_tokens": 1463,
+          "cached_tokens": 0,
+          "output_tokens": 1305,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0020049
+        },
+        {
+          "task_id": "v2-w02-open-arrivals",
+          "input_tokens": 1479,
+          "cached_tokens": 0,
+          "output_tokens": 2480,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0034197
+        },
+        {
+          "task_id": "v2-w03-slow-service",
+          "input_tokens": 1481,
+          "cached_tokens": 0,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.020105099999999997
+        },
+        {
+          "task_id": "v2-w04-three-phases",
+          "input_tokens": 1473,
+          "cached_tokens": 0,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0201027
+        },
+        {
+          "task_id": "v2-w06-backoff-throughput",
+          "input_tokens": 1547,
+          "cached_tokens": 0,
+          "output_tokens": 1806,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0026312999999999996
+        },
+        {
+          "task_id": "v2-w07-burst-control",
+          "input_tokens": 1461,
+          "cached_tokens": 0,
+          "output_tokens": 1489,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0022251
+        },
+        {
+          "task_id": "v2-w08-capacity-step",
+          "input_tokens": 1529,
+          "cached_tokens": 0,
+          "output_tokens": 1356,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0020859
+        },
+        {
+          "task_id": "v2-w09-isolated-pools",
+          "input_tokens": 1642,
+          "cached_tokens": 0,
+          "output_tokens": 4149,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0054714
         }
       ],
       "coverage": {
-        "run": 50,
-        "total": 50,
+        "run": 40,
+        "total": 40,
         "partial": false,
-        "label": "50/50 tasks run \u00b7 40 public + 10 held-out"
+        "label": "40/40 tasks run"
       },
-      "private_aggregates": {
-        "task_count": 10,
-        "category_scores": {
-          "repair": {
-            "task_count": 3,
-            "quality_score": 33.333333333333336,
-            "efficiency_score": 33.333333333333336
-          },
-          "migration": {
-            "task_count": 2,
-            "quality_score": 17.5,
-            "efficiency_score": 17.5
-          },
-          "correlation": {
-            "task_count": 2,
-            "quality_score": 5.0,
-            "efficiency_score": 5.0
-          },
-          "workload": {
-            "task_count": 2,
-            "quality_score": 0.0,
-            "efficiency_score": 0.0
-          },
-          "analysis": {
-            "task_count": 1,
-            "quality_score": 40.0,
-            "efficiency_score": 40.0
-          }
-        }
-      },
-      "cost_attempts": [],
       "per_task_results": [
         {
           "task_id": "v2-a01-jtl-endpoints",
           "category": "analysis",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 165,
-          "latency_seconds": 4.2249175689939875,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 86,
+          "latency_seconds": 0.8071339729999636,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
         },
         {
           "task_id": "v2-a02-k6-thresholds",
           "category": "analysis",
           "tool": "k6",
           "score": 0.8,
-          "efficiency_score": 0.8,
-          "passed": false,
           "repeat": 0,
-          "output_tokens": 130,
-          "latency_seconds": 3.4723155130050145,
-          "detail": "Checkpoint credit: 80.00/100"
+          "output_tokens": 83,
+          "latency_seconds": 0.7409508360000245,
+          "passed": false,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "v2-a04-k6-errors",
           "category": "analysis",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 133,
-          "latency_seconds": 3.5539039660070557,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 76,
+          "latency_seconds": 0.7838240190000079,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "v2-a05-jtl-omission",
           "category": "analysis",
           "tool": "jmeter",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 147,
-          "latency_seconds": 3.762977801001398,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 105,
+          "latency_seconds": 1.2235463030000346,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "v2-a06-k6-decomposition",
           "category": "analysis",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 129,
-          "latency_seconds": 3.09236374500324,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 69,
+          "latency_seconds": 0.8148394849999931,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
         },
         {
           "task_id": "v2-c01-html-csrf",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 3500,
-          "latency_seconds": 52.44931001501391,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 2829,
+          "latency_seconds": 8.781284117000041,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-c02-html-csrf",
           "category": "correlation",
           "tool": "k6",
-          "score": 0.75,
-          "efficiency_score": 0.75,
-          "passed": false,
+          "score": 0.675,
           "repeat": 0,
-          "output_tokens": 2872,
-          "latency_seconds": 42.050080276007066,
-          "detail": "Checkpoint credit: 75.00/100"
+          "output_tokens": 2696,
+          "latency_seconds": 8.291848536000089,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c03-json-parent-child",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 2192,
-          "latency_seconds": 30.945293641008902,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 1901,
+          "latency_seconds": 6.457191469999998,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-c04-json-pagination",
           "category": "correlation",
           "tool": "k6",
           "score": 0.1,
-          "efficiency_score": 0.1,
-          "passed": false,
           "repeat": 0,
-          "output_tokens": 2881,
-          "latency_seconds": 42.17919830000028,
-          "detail": "Checkpoint credit: 10.00/100"
+          "output_tokens": 2655,
+          "latency_seconds": 8.264353546999928,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c06-etag-update",
           "category": "correlation",
           "tool": "k6",
-          "score": 0.675,
-          "efficiency_score": 0.675,
-          "passed": false,
+          "score": 0.35,
           "repeat": 0,
-          "output_tokens": 2182,
-          "latency_seconds": 30.642289592011366,
-          "detail": "Checkpoint credit: 67.50/100"
+          "output_tokens": 1494,
+          "latency_seconds": 5.302134290000026,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c07-rotating-csrf",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 2020,
-          "latency_seconds": 29.65241784902173,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 2881,
+          "latency_seconds": 8.734640225000021,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-c08-expiry-resume",
           "category": "correlation",
           "tool": "k6",
-          "score": 0.225,
-          "efficiency_score": 0.225,
-          "passed": false,
+          "score": 0.75,
           "repeat": 0,
-          "output_tokens": 3740,
-          "latency_seconds": 54.13874904200202,
-          "detail": "Checkpoint credit: 22.50/100"
+          "output_tokens": 3093,
+          "latency_seconds": 9.706439291999914,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c09-async-reservation",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 2550,
-          "latency_seconds": 41.022271552006714,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 2954,
+          "latency_seconds": 9.454860547000067,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-c10-html-json-bridge",
           "category": "correlation",
           "tool": "k6",
-          "score": 0.675,
-          "efficiency_score": 0.675,
-          "passed": false,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 2989,
-          "latency_seconds": 45.49324281999725,
-          "detail": "Checkpoint credit: 67.50/100"
+          "output_tokens": 2596,
+          "latency_seconds": 8.011893243000031,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c11-session-ownership",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 2911,
-          "latency_seconds": 42.936609425989445,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 4946,
+          "latency_seconds": 16.092989690999957,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-m01-basic-flow",
           "category": "migration",
           "tool": "k6",
-          "score": 0.425,
-          "efficiency_score": 0.425,
-          "passed": false,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 1511,
-          "latency_seconds": 23.4745732480078,
-          "detail": "Checkpoint credit: 42.50/100"
+          "output_tokens": 1414,
+          "latency_seconds": 5.272143620999941,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m03-redirect-token",
           "category": "migration",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 1531,
-          "latency_seconds": 21.130779471015558,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1796,
+          "latency_seconds": 6.102135517999955,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m04-data-driven",
           "category": "migration",
           "tool": "k6",
-          "score": 0.425,
-          "efficiency_score": 0.425,
-          "passed": false,
+          "score": 0.1,
           "repeat": 0,
-          "output_tokens": 2260,
-          "latency_seconds": 31.9209851520136,
-          "detail": "Checkpoint credit: 42.50/100"
+          "output_tokens": 2564,
+          "latency_seconds": 8.34010066999997,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m05-pacing-semantics",
           "category": "migration",
           "tool": "k6",
-          "score": 0.35,
-          "efficiency_score": 0.35,
-          "passed": false,
+          "score": 0.1,
           "repeat": 0,
-          "output_tokens": 2060,
-          "latency_seconds": 29.067078452004353,
-          "detail": "Checkpoint credit: 35.00/100"
+          "output_tokens": 3360,
+          "latency_seconds": 10.014542529000096,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m06-assertions-metrics",
           "category": "migration",
           "tool": "k6",
           "score": 0.35,
-          "efficiency_score": 0.35,
-          "passed": false,
           "repeat": 0,
-          "output_tokens": 2151,
-          "latency_seconds": 31.151655396010028,
-          "detail": "Checkpoint credit: 35.00/100"
+          "output_tokens": 2960,
+          "latency_seconds": 9.818777344999944,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m07-conditional-retry",
           "category": "migration",
           "tool": "k6",
-          "score": 0.225,
-          "efficiency_score": 0.225,
-          "passed": false,
+          "score": 0.75,
           "repeat": 0,
-          "output_tokens": 2461,
-          "latency_seconds": 35.34142964499188,
-          "detail": "Checkpoint credit: 22.50/100"
+          "output_tokens": 3326,
+          "latency_seconds": 10.312720256000148,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r01-extractor-scope",
           "category": "repair",
           "tool": "jmeter",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 6573,
-          "latency_seconds": 84.0585097130097,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 4555,
+          "latency_seconds": 12.556444908999993,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r02-cookie-lifetime",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 3108,
-          "latency_seconds": 40.36606659498648,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1721,
+          "latency_seconds": 4.990166170000066,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r04-status-recovery",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 2807,
-          "latency_seconds": 37.76529311601189,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1888,
+          "latency_seconds": 5.658848140999908,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r05-business-assertion",
           "category": "repair",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 105.71710942900972,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 6038,
+          "latency_seconds": 18.384371400999953,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r06-threshold-tags",
           "category": "repair",
           "tool": "k6",
           "score": 0.1,
-          "efficiency_score": 0.1,
-          "passed": false,
           "repeat": 0,
-          "output_tokens": 2226,
-          "latency_seconds": 29.239856469997903,
-          "detail": "Checkpoint credit: 10.00/100"
+          "output_tokens": 1757,
+          "latency_seconds": 5.342063733000032,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r07-controller-reset",
           "category": "repair",
           "tool": "jmeter",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 7992,
-          "latency_seconds": 99.9404401939828,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 6139,
+          "latency_seconds": 16.368616254000017,
+          "passed": false,
+          "detail": "Invalid model artifact (ParseError): mismatched tag: line 1, column 3033"
         },
         {
           "task_id": "v2-r08-arrival-options",
           "category": "repair",
           "tool": "k6",
-          "score": 0.75,
-          "efficiency_score": 0.75,
-          "passed": false,
+          "score": 0.1,
           "repeat": 0,
-          "output_tokens": 2495,
-          "latency_seconds": 35.38696370201069,
-          "detail": "Checkpoint credit: 75.00/100"
+          "output_tokens": 2129,
+          "latency_seconds": 6.08339650500011,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r10-user-partition",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 2092,
-          "latency_seconds": 30.59754958099802,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1419,
+          "latency_seconds": 4.524234003000174,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r11-timer-scope",
           "category": "repair",
           "tool": "jmeter",
-          "score": 0.1,
-          "efficiency_score": 0.1,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 6270,
-          "latency_seconds": 78.78860434700618,
-          "detail": "Checkpoint credit: 10.00/100"
+          "output_tokens": 4680,
+          "latency_seconds": 12.43792313699987,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX testclass must match its element"
         },
         {
           "task_id": "v2-r12-error-metric",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 0.35,
           "repeat": 0,
-          "output_tokens": 2370,
-          "latency_seconds": 32.774264634994324,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1907,
+          "latency_seconds": 5.750652040999967,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r13-expiry-controller",
           "category": "repair",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 120.04714910199982,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 6800,
+          "latency_seconds": 18.812877352999976,
+          "passed": false,
+          "detail": "Invalid model artifact (ParseError): mismatched tag: line 1, column 2813"
         },
         {
           "task_id": "v2-w01-steady-starts",
           "category": "workload",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 1176,
-          "latency_seconds": 20.16039602199453,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 1305,
+          "latency_seconds": 4.8672507280000445,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-w02-open-arrivals",
           "category": "workload",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 1441,
-          "latency_seconds": 22.050449402013328,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 2480,
+          "latency_seconds": 8.016758337000056,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-w03-slow-service",
           "category": "workload",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 1331,
-          "latency_seconds": 23.721306272986112,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 40.31162990099983,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-w04-three-phases",
           "category": "workload",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 1607,
-          "latency_seconds": 25.491175826988183,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 61.8585692260001,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-w06-backoff-throughput",
           "category": "workload",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0.1,
           "repeat": 0,
-          "output_tokens": 1226,
-          "latency_seconds": 19.333694244007347,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 1806,
+          "latency_seconds": 6.551707714999793,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-w07-burst-control",
           "category": "workload",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 2153,
-          "latency_seconds": 33.983851913013496,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 1489,
+          "latency_seconds": 5.495882048999874,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-w08-capacity-step",
           "category": "workload",
           "tool": "k6",
           "score": 0.8,
-          "efficiency_score": 0.8,
-          "passed": false,
           "repeat": 0,
-          "output_tokens": 1537,
-          "latency_seconds": 23.57061379699735,
-          "detail": "Checkpoint credit: 80.00/100"
+          "output_tokens": 1356,
+          "latency_seconds": 5.017899106999948,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-w09-isolated-pools",
           "category": "workload",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 3121,
-          "latency_seconds": 43.87386947899358,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 4149,
+          "latency_seconds": 12.277616242000022,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         }
-      ]
+      ],
+      "budget_file_sha256": "2375e3bd11758aa5cd71964f291572ed47b034a08cb346558707ed874fe349b7",
+      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 40 responses. Not an invoice.",
+      "pricing_source": "Frozen provider list-price snapshot in saved attempts"
     },
     {
       "provider": "deepseek",
       "model": "deepseek-v4-pro",
+      "overall_score": 36.981818181818184,
       "pack_id": "p95-v2.0.0",
-      "pack_digest": "565b9d2f57481d149e2a32bd85b3cba9a3fcb3db08941add13c09d703e5153bb",
+      "pack_digest": "84c75267639898753789c04b100fdea1805006d9aa102eec1f789ac524345b7d",
+      "quality_score": 36.981818181818184,
+      "efficiency_score": 36.981818181818184,
       "repeats": 1,
-      "quality_score": 28.44791666666667,
-      "efficiency_score": 28.376702279202277,
-      "overall_score": 28.44435594729345,
       "category_scores": {
-        "repair": 50.0,
-        "migration": 24.375,
-        "correlation": 9.166666666666668,
-        "workload": 0.0,
-        "analysis": 66.66666666666667
+        "repair": 82.72727272727273,
+        "migration": 36.66666666666667,
+        "correlation": 0,
+        "workload": 0,
+        "analysis": 72
       },
-      "cost": 1.33790052,
-      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 50 responses, including the audit-overflow zero. Not an invoice; paid-ledger micro-dollar rounding is excluded.",
-      "pricing_source": "Frozen DeepSeek registry prices in saved attempts: input $1.32, cached input $0.044, output $3.96 per million tokens.",
+      "cost": 1.0175142560000001,
       "tokens": {
-        "input": 328904,
-        "output": 228219
+        "input": 168679,
+        "output": 254257
       },
-      "latency": 1235.4623078870063,
-      "run_date": "2026-11-18T23:00:26.466779+00:00",
-      "harness_commit": "5eef9974debc17f83eb6041978277d1d463ce527",
-      "budget_file_sha256": "09ca8ed77cd7cb0eebea6a3618ae13c0fdb55496dd14d438745234a0b4a05bc7",
-      "evaluator_segments": [
+      "latency": 1124.6340824719987,
+      "run_date": "2026-11-19T21:58:27.210615+00:00",
+      "harness_commit": null,
+      "output_cap": 16384,
+      "cost_attempts": [
         {
-          "label": "Original",
-          "digest": "3220ece2ecf9cab054e6ceb8f1eb2232362437e8830b60829be0246235b57d51",
-          "public_harness_digest": "867fbd0ab205ec7c0347c891a70d9c8ece06223dbff2789e34c4b32a293bba98",
-          "public_harness_commit": "5eef9974debc17f83eb6041978277d1d463ce527",
-          "scored_attempts": 44
+          "task_id": "v2-a01-jtl-endpoints",
+          "input_tokens": 460,
+          "cached_tokens": 384,
+          "output_tokens": 132,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000639936
         },
         {
-          "label": "Offline regrade",
-          "digest": "3220ece2ecf9cab054e6ceb8f1eb2232362437e8830b60829be0246235b57d51",
-          "public_harness_digest": "dba0e68dfb9c019c26e41a0a126b7a4c8569741ca41cb71afdd4a4242e1d50e0",
-          "public_harness_commit": "701b0a5f4fd75f7eeaf414b20fe0ede7e4d424f9",
-          "scored_attempts": 1
+          "task_id": "v2-a02-k6-thresholds",
+          "input_tokens": 410,
+          "cached_tokens": 384,
+          "output_tokens": 120,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0005264159999999999
         },
         {
-          "label": "Continuation",
-          "digest": "affbe99548486e4fd7219f2fd3ba05935c282f604a988ad3230997875c7c6849",
-          "public_harness_digest": "fbac81b1b7363c9db79a775a7aaed05ff811f8ff6058a87db7373121419f1788",
-          "public_harness_commit": "84d84b13f45ded9286b590cf21d0ba54bd7ced7e",
-          "scored_attempts": 5
+          "task_id": "v2-a04-k6-errors",
+          "input_tokens": 513,
+          "cached_tokens": 512,
+          "output_tokens": 111,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000463408
+        },
+        {
+          "task_id": "v2-a05-jtl-omission",
+          "input_tokens": 546,
+          "cached_tokens": 512,
+          "output_tokens": 128,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0005742880000000001
+        },
+        {
+          "task_id": "v2-a06-k6-decomposition",
+          "input_tokens": 547,
+          "cached_tokens": 512,
+          "output_tokens": 98,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000456808
+        },
+        {
+          "task_id": "v2-c01-html-csrf",
+          "input_tokens": 1162,
+          "cached_tokens": 1152,
+          "output_tokens": 5257,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.020881608
+        },
+        {
+          "task_id": "v2-c02-html-csrf",
+          "input_tokens": 1156,
+          "cached_tokens": 1152,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.064936608
+        },
+        {
+          "task_id": "v2-c03-json-parent-child",
+          "input_tokens": 1145,
+          "cached_tokens": 1024,
+          "output_tokens": 10287,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.040941295999999995
+        },
+        {
+          "task_id": "v2-c04-json-pagination",
+          "input_tokens": 1146,
+          "cached_tokens": 1024,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.06508673599999999
+        },
+        {
+          "task_id": "v2-c06-etag-update",
+          "input_tokens": 1202,
+          "cached_tokens": 1152,
+          "output_tokens": 3964,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.015814128
+        },
+        {
+          "task_id": "v2-c07-rotating-csrf",
+          "input_tokens": 1159,
+          "cached_tokens": 1152,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.064940568
+        },
+        {
+          "task_id": "v2-c08-expiry-resume",
+          "input_tokens": 1162,
+          "cached_tokens": 1152,
+          "output_tokens": 6657,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.026425608
+        },
+        {
+          "task_id": "v2-c09-async-reservation",
+          "input_tokens": 1204,
+          "cached_tokens": 1152,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.064999968
+        },
+        {
+          "task_id": "v2-c10-html-json-bridge",
+          "input_tokens": 1159,
+          "cached_tokens": 1152,
+          "output_tokens": 9110,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.036135528
+        },
+        {
+          "task_id": "v2-c11-session-ownership",
+          "input_tokens": 1360,
+          "cached_tokens": 1280,
+          "output_tokens": 7949,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.03163996
+        },
+        {
+          "task_id": "v2-m01-basic-flow",
+          "input_tokens": 8817,
+          "cached_tokens": 8704,
+          "output_tokens": 1829,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.007774976
+        },
+        {
+          "task_id": "v2-m03-redirect-token",
+          "input_tokens": 8824,
+          "cached_tokens": 8704,
+          "output_tokens": 1519,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.006556616
+        },
+        {
+          "task_id": "v2-m04-data-driven",
+          "input_tokens": 16383,
+          "cached_tokens": 16256,
+          "output_tokens": 1947,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.008593024
+        },
+        {
+          "task_id": "v2-m05-pacing-semantics",
+          "input_tokens": 9205,
+          "cached_tokens": 9088,
+          "output_tokens": 4105,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.016810112000000002
+        },
+        {
+          "task_id": "v2-m06-assertions-metrics",
+          "input_tokens": 8802,
+          "cached_tokens": 8704,
+          "output_tokens": 2641,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.010970696
+        },
+        {
+          "task_id": "v2-m07-conditional-retry",
+          "input_tokens": 15265,
+          "cached_tokens": 15232,
+          "output_tokens": 2613,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.011061248
+        },
+        {
+          "task_id": "v2-r01-extractor-scope",
+          "input_tokens": 8801,
+          "cached_tokens": 8704,
+          "output_tokens": 7542,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.030377335999999998
+        },
+        {
+          "task_id": "v2-r02-cookie-lifetime",
+          "input_tokens": 2871,
+          "cached_tokens": 2816,
+          "output_tokens": 2154,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.008726344
+        },
+        {
+          "task_id": "v2-r04-status-recovery",
+          "input_tokens": 2897,
+          "cached_tokens": 2816,
+          "output_tokens": 1892,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0077231439999999995
+        },
+        {
+          "task_id": "v2-r05-business-assertion",
+          "input_tokens": 8794,
+          "cached_tokens": 8704,
+          "output_tokens": 8785,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.035290376
+        },
+        {
+          "task_id": "v2-r06-threshold-tags",
+          "input_tokens": 2959,
+          "cached_tokens": 2944,
+          "output_tokens": 1942,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.007839656
+        },
+        {
+          "task_id": "v2-r07-controller-reset",
+          "input_tokens": 15318,
+          "cached_tokens": 15232,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.065664368
+        },
+        {
+          "task_id": "v2-r08-arrival-options",
+          "input_tokens": 3274,
+          "cached_tokens": 3200,
+          "output_tokens": 1935,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.00790108
+        },
+        {
+          "task_id": "v2-r10-user-partition",
+          "input_tokens": 2721,
+          "cached_tokens": 2688,
+          "output_tokens": 1548,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.006291912
+        },
+        {
+          "task_id": "v2-r11-timer-scope",
+          "input_tokens": 9195,
+          "cached_tokens": 9088,
+          "output_tokens": 8607,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.034624832
+        },
+        {
+          "task_id": "v2-r12-error-metric",
+          "input_tokens": 2878,
+          "cached_tokens": 2816,
+          "output_tokens": 1954,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.007943584
+        },
+        {
+          "task_id": "v2-r13-expiry-controller",
+          "input_tokens": 15277,
+          "cached_tokens": 15232,
+          "output_tokens": 16011,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.064133168
+        },
+        {
+          "task_id": "v2-w01-steady-starts",
+          "input_tokens": 1462,
+          "cached_tokens": 1408,
+          "output_tokens": 2978,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.011926111999999999
+        },
+        {
+          "task_id": "v2-w02-open-arrivals",
+          "input_tokens": 1478,
+          "cached_tokens": 1408,
+          "output_tokens": 7966,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.031699712
+        },
+        {
+          "task_id": "v2-w03-slow-service",
+          "input_tokens": 1480,
+          "cached_tokens": 1408,
+          "output_tokens": 4882,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.019489712
+        },
+        {
+          "task_id": "v2-w04-three-phases",
+          "input_tokens": 1472,
+          "cached_tokens": 1408,
+          "output_tokens": 4793,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.019126712
+        },
+        {
+          "task_id": "v2-w06-backoff-throughput",
+          "input_tokens": 1546,
+          "cached_tokens": 1536,
+          "output_tokens": 2139,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.008551224
+        },
+        {
+          "task_id": "v2-w07-burst-control",
+          "input_tokens": 1460,
+          "cached_tokens": 1408,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.065011232
+        },
+        {
+          "task_id": "v2-w08-capacity-step",
+          "input_tokens": 1528,
+          "cached_tokens": 1408,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.065100992
+        },
+        {
+          "task_id": "v2-w09-isolated-pools",
+          "input_tokens": 1641,
+          "cached_tokens": 1536,
+          "output_tokens": 5974,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.023863224000000002
         }
       ],
-      "grading_note": "Includes one audit-overflow zero (0/100), recovered by offline regrade: the script exceeded the audit evidence limit, leaving trial evidence incomplete. No API call or additional charge was made for the regrade. Its missing per-request latency uses the saved end-to-end latency as an upper bound; zero quality means this cannot affect the composite score.",
       "coverage": {
-        "run": 50,
-        "total": 50,
+        "run": 40,
+        "total": 40,
         "partial": false,
-        "label": "50/50 tasks run \u00b7 40 public + 10 held-out"
+        "label": "40/40 tasks run"
       },
-      "private_aggregates": {
-        "task_count": 10,
-        "category_scores": {
-          "repair": {
-            "task_count": 3,
-            "quality_score": 33.333333333333336,
-            "efficiency_score": 33.333333333333336
-          },
-          "migration": {
-            "task_count": 2,
-            "quality_score": 37.5,
-            "efficiency_score": 37.5
-          },
-          "correlation": {
-            "task_count": 2,
-            "quality_score": 5.0,
-            "efficiency_score": 4.513076923076923
-          },
-          "workload": {
-            "task_count": 2,
-            "quality_score": 0.0,
-            "efficiency_score": 0.0
-          },
-          "analysis": {
-            "task_count": 1,
-            "quality_score": 40.0,
-            "efficiency_score": 40.0
-          }
-        }
-      },
-      "cost_attempts": [],
       "per_task_results": [
         {
           "task_id": "v2-a01-jtl-endpoints",
           "category": "analysis",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
           "output_tokens": 132,
-          "latency_seconds": 6.625305033987388,
-          "detail": "Checkpoint credit: 0.00/100"
+          "latency_seconds": 7.470093215999896,
+          "passed": false,
+          "detail": "Invalid model answer (JSONDecodeError): Expecting value: line 1 column 1 (char 0)"
         },
         {
           "task_id": "v2-a02-k6-thresholds",
           "category": "analysis",
           "tool": "k6",
           "score": 0.8,
-          "efficiency_score": 0.8,
-          "passed": false,
           "repeat": 0,
           "output_tokens": 120,
-          "latency_seconds": 6.862358546000905,
-          "detail": "Checkpoint credit: 80.00/100"
+          "latency_seconds": 6.364060180000024,
+          "passed": false,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "v2-a04-k6-errors",
           "category": "analysis",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
           "output_tokens": 111,
-          "latency_seconds": 6.586013649997767,
-          "detail": "Checkpoint credit: 100.00/100"
+          "latency_seconds": 7.430498286000102,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "v2-a05-jtl-omission",
           "category": "analysis",
           "tool": "jmeter",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 120,
-          "latency_seconds": 7.379094921023352,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 128,
+          "latency_seconds": 6.55165498700012,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "v2-a06-k6-decomposition",
           "category": "analysis",
           "tool": "k6",
           "score": 0.8,
-          "efficiency_score": 0.8,
-          "passed": false,
           "repeat": 0,
           "output_tokens": 98,
-          "latency_seconds": 6.907084962993395,
-          "detail": "Checkpoint credit: 80.00/100"
+          "latency_seconds": 7.586603534999995,
+          "passed": false,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "v2-c01-html-csrf",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 5363,
-          "latency_seconds": 32.01882777901483,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 5257,
+          "latency_seconds": 30.183070316000112,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-c02-html-csrf",
           "category": "correlation",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 6329,
-          "latency_seconds": 36.59711694199359,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 73.06589658400003,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c03-json-parent-child",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 41.489719773991965,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 10287,
+          "latency_seconds": 44.809544247000076,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-c04-json-pagination",
           "category": "correlation",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 5960,
-          "latency_seconds": 29.91195470301318,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 64.28771908499994,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c06-etag-update",
           "category": "correlation",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 0.9755555555555555,
-          "passed": true,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 5187,
-          "latency_seconds": 27.44917561102193,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 3964,
+          "latency_seconds": 18.309064656999908,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c07-rotating-csrf",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 5245,
-          "latency_seconds": 26.15352779798559,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 64.2041038289999,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-c08-expiry-resume",
           "category": "correlation",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 39.19723240000894,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 6657,
+          "latency_seconds": 29.626681220000137,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c09-async-reservation",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 5770,
-          "latency_seconds": 27.973696946020937,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 64.88624480699991,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-c10-html-json-bridge",
           "category": "correlation",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 7191,
-          "latency_seconds": 34.875347777007846,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 9110,
+          "latency_seconds": 40.26046994499984,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-c11-session-ownership",
           "category": "correlation",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 5033,
-          "latency_seconds": 26.33287124999333,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 7949,
+          "latency_seconds": 36.615326260000074,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-m01-basic-flow",
           "category": "migration",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 2350,
-          "latency_seconds": 12.541460823005764,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1829,
+          "latency_seconds": 9.720598385999892,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m03-redirect-token",
           "category": "migration",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 2703,
-          "latency_seconds": 15.091575909988023,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 1519,
+          "latency_seconds": 8.548093193000113,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m04-data-driven",
           "category": "migration",
           "tool": "k6",
           "score": 0.1,
-          "efficiency_score": 0.1,
-          "passed": false,
           "repeat": 0,
-          "output_tokens": 2477,
-          "latency_seconds": 13.58997420500964,
-          "detail": "Checkpoint credit: 10.00/100"
+          "output_tokens": 1947,
+          "latency_seconds": 10.606075750999935,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m05-pacing-semantics",
           "category": "migration",
           "tool": "k6",
-          "score": 0.1,
-          "efficiency_score": 0.1,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 2716,
-          "latency_seconds": 14.861669673002325,
-          "detail": "Checkpoint credit: 10.00/100"
+          "output_tokens": 4105,
+          "latency_seconds": 20.086863399999856,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m06-assertions-metrics",
           "category": "migration",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0.35,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 37.51033931600978,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 2641,
+          "latency_seconds": 13.513832396999987,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-m07-conditional-retry",
           "category": "migration",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0.75,
           "repeat": 0,
-          "output_tokens": 2019,
-          "latency_seconds": 11.650175801012665,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 2613,
+          "latency_seconds": 13.022187669999767,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r01-extractor-scope",
           "category": "repair",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 36.531152152019786,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 7542,
+          "latency_seconds": 30.902617558999737,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r02-cookie-lifetime",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 2137,
-          "latency_seconds": 10.708294388023205,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 2154,
+          "latency_seconds": 9.788635343000351,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r04-status-recovery",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 1907,
-          "latency_seconds": 9.082381045998773,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1892,
+          "latency_seconds": 8.418818641999678,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r05-business-assertion",
           "category": "repair",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 35.541569105000235,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 8785,
+          "latency_seconds": 34.12227494699982,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r06-threshold-tags",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 1946,
-          "latency_seconds": 9.416833327995846,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1942,
+          "latency_seconds": 8.924267249999957,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r07-controller-reset",
           "category": "repair",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 36.711136903002625,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 67.30140396099978,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r08-arrival-options",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 1917,
-          "latency_seconds": 9.629255762003595,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1935,
+          "latency_seconds": 8.825460705000296,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r10-user-partition",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
           "output_tokens": 1548,
-          "latency_seconds": 7.5979421049996745,
-          "detail": "Checkpoint credit: 100.00/100"
+          "latency_seconds": 7.208729706000213,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r11-timer-scope",
           "category": "repair",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0.1,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 35.512063730013324,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 8607,
+          "latency_seconds": 33.48984771200003,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r12-error-metric",
           "category": "repair",
           "tool": "k6",
-          "score": 1.0,
-          "efficiency_score": 1.0,
-          "passed": true,
+          "score": 1,
           "repeat": 0,
-          "output_tokens": 1966,
-          "latency_seconds": 9.40839518001303,
-          "detail": "Checkpoint credit: 100.00/100"
+          "output_tokens": 1954,
+          "latency_seconds": 8.535513257000275,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-r13-expiry-controller",
           "category": "repair",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 38.96288716100389,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16011,
+          "latency_seconds": 63.80038688900004,
+          "passed": false,
+          "detail": "Invalid model artifact (ParseError): mismatched tag: line 444, column 10"
         },
         {
           "task_id": "v2-w01-steady-starts",
           "category": "workload",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 38.75991376201273,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 2978,
+          "latency_seconds": 14.940515781999693,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-w02-open-arrivals",
           "category": "workload",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 3283,
-          "latency_seconds": 17.54496519098757,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 7966,
+          "latency_seconds": 35.5715971489999,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-w03-slow-service",
           "category": "workload",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 1578,
-          "latency_seconds": 9.227064786013216,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 4882,
+          "latency_seconds": 22.069756838000103,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-w04-three-phases",
           "category": "workload",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 1837,
-          "latency_seconds": 10.434566078998614,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 4793,
+          "latency_seconds": 21.275527832999614,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-w06-backoff-throughput",
           "category": "workload",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 3319,
-          "latency_seconds": 17.47844948701095,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 2139,
+          "latency_seconds": 11.196119497999916,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-w07-burst-control",
           "category": "workload",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 40.1301200830203,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 66.62544075799997,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         },
         {
           "task_id": "v2-w08-capacity-step",
           "category": "workload",
           "tool": "k6",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 4409,
-          "latency_seconds": 20.96120860800147,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 16384,
+          "latency_seconds": 67.38948072899984,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "v2-w09-isolated-pools",
           "category": "workload",
           "tool": "jmeter",
-          "score": 0.0,
-          "efficiency_score": 0.0,
-          "passed": false,
+          "score": 0,
           "repeat": 0,
-          "output_tokens": 8192,
-          "latency_seconds": 37.190734901989345,
-          "detail": "Checkpoint credit: 0.00/100"
+          "output_tokens": 5974,
+          "latency_seconds": 27.099005962999854,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
         }
-      ]
+      ],
+      "budget_file_sha256": "2375e3bd11758aa5cd71964f291572ed47b034a08cb346558707ed874fe349b7",
+      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 40 responses. Not an invoice.",
+      "pricing_source": "Frozen provider list-price snapshot in saved attempts"
     }
   ]
 }

@@ -7,7 +7,7 @@ from urllib.error import URLError
 from p95bench.packs import PACKS, pack_config
 from p95bench.providers import PROVIDERS, get_provider
 from p95bench.runner import run, score_run
-from p95bench.tasks import TOOLS, load_private_tasks, load_tasks
+from p95bench.tasks import TOOLS, load_tasks
 from p95bench.worker import WorkerUnavailable
 
 
@@ -22,7 +22,6 @@ def main(argv=None):
     execute.add_argument("--repeats", type=int, default=1)
     execute.add_argument("--pack", choices=PACKS, default="p95-v1")
     execute.add_argument("--efficiency-budgets", type=Path)
-    execute.add_argument("--private-tasks", type=Path)
     execute.add_argument("--tool", choices=sorted(TOOLS), action="append")
     score = commands.add_parser("score")
     score.add_argument("directory", type=Path)
@@ -39,19 +38,14 @@ def main(argv=None):
             categories = pack_config(args.pack)["weights"]
             tasks = load_tasks(args.tasks or (Path("tasks") if args.pack == "p95-v1" else
                                              Path("packs") / args.pack / "tasks"), categories)
-            if args.private_tasks:
-                if args.pack == "p95-v1":
-                    raise ValueError("Private task loading requires a versioned v2 pack")
-                tasks += load_private_tasks(args.private_tasks,
-                                            Path(__file__).resolve().parents[2], categories)
             budgets = (json.loads(args.efficiency_budgets.read_text())
                        if args.efficiency_budgets else None)
             if args.tool:
                 tasks = [task for task in tasks if task.tool in args.tool]
                 if not tasks:
                     raise ValueError("No tasks match the selected tools")
-            options = ({"pack_id": args.pack, "efficiency_budgets": budgets,
-                        "private": bool(args.private_tasks)} if args.pack != "p95-v1" else {})
+            options = ({"pack_id": args.pack, "efficiency_budgets": budgets}
+                       if args.pack != "p95-v1" else {})
             if args.pack == "p95-v1" and budgets is not None:
                 raise ValueError("Efficiency budgets require a v2 pack")
             directory, summary = run(get_provider(args.provider), args.provider, args.model,

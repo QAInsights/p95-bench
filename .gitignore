@@ -5,6 +5,7 @@ __pycache__/
 .ruff_cache/
 results/*
 !results/published/
+!results/p95-v2.0.0/
 site/node_modules/
 site/.astro/
 build/

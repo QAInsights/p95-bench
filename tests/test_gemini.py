@@ -46,7 +46,7 @@ def test_native_payload_usage_and_prices(monkeypatch, model, rates):
         assert json.loads(req.data) == {'systemInstruction': {'parts': [{'text': 'system'}]},
             'contents': [{'role': 'user', 'parts': [{'text': 'prompt'}]},
                          {'role': 'model', 'parts': [{'text': 'previous'}]}],
-            'generationConfig': {'maxOutputTokens': 8192}}
+            'generationConfig': {'maxOutputTokens': 16384}}
         return io.BytesIO(json.dumps(reply()).encode())
 
     monkeypatch.setattr('urllib.request.urlopen', request)

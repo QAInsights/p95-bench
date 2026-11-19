@@ -3,8 +3,7 @@
 Exactly **40 public tasks**: repair11, migration6, correlation10, workload8, analysis5.
 Thirty-five execute native scripts; five compare structured analysis with deterministic
 CSV/JSON evidence. There are no model API calls in the reference or mutation tests.
-Private task content is not distributed. Keep external private roots and outputs outside
-the checkout; do not publish their prompts, fixtures or raw artifacts.
+The pack is public-only: every scored task is checked in and there are no held-out tasks.
 
 ## Prepare the evaluator
 
@@ -25,7 +24,8 @@ Build/download is an explicit preparation step; execution never pulls an image a
 has no host-engine fallback. Native-version tests check actual engine output.
 
 The CLI selects this task root by default when `--pack p95-v2.0.0` is chosen. Real
-provider execution still requires frozen per-task efficiency budgets and uses the
+provider execution still requires frozen per-task efficiency budgets
+(`efficiency-budgets.json` in this directory) and uses the
 shared $30 ledger; do not reset it between models. Repeats default to1. No cost or
 60–70 calibration claim is made without an authorized model cohort.
 

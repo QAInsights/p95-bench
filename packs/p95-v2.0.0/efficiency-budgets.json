@@ -1,0 +1,162 @@
+{
+  "v2-a01-jtl-endpoints": {
+    "latency_seconds": 90,
+    "tokens": 258
+  },
+  "v2-a02-k6-thresholds": {
+    "latency_seconds": 90,
+    "tokens": 291
+  },
+  "v2-a04-k6-errors": {
+    "latency_seconds": 90,
+    "tokens": 252
+  },
+  "v2-a05-jtl-omission": {
+    "latency_seconds": 90,
+    "tokens": 291
+  },
+  "v2-a06-k6-decomposition": {
+    "latency_seconds": 90,
+    "tokens": 225
+  },
+  "v2-c01-html-csrf": {
+    "latency_seconds": 180,
+    "tokens": 21009
+  },
+  "v2-c02-html-csrf": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-c03-json-parent-child": {
+    "latency_seconds": 180,
+    "tokens": 21009
+  },
+  "v2-c04-json-pagination": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-c06-etag-update": {
+    "latency_seconds": 180,
+    "tokens": 4737
+  },
+  "v2-c07-rotating-csrf": {
+    "latency_seconds": 180,
+    "tokens": 21009
+  },
+  "v2-c08-expiry-resume": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-c09-async-reservation": {
+    "latency_seconds": 180,
+    "tokens": 28263
+  },
+  "v2-c10-html-json-bridge": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-c11-session-ownership": {
+    "latency_seconds": 180,
+    "tokens": 58956
+  },
+  "v2-m01-basic-flow": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-m03-redirect-token": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-m04-data-driven": {
+    "latency_seconds": 180,
+    "tokens": 3780
+  },
+  "v2-m05-pacing-semantics": {
+    "latency_seconds": 180,
+    "tokens": 4956
+  },
+  "v2-m06-assertions-metrics": {
+    "latency_seconds": 180,
+    "tokens": 4722
+  },
+  "v2-m07-conditional-retry": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-r01-extractor-scope": {
+    "latency_seconds": 180,
+    "tokens": 21009
+  },
+  "v2-r02-cookie-lifetime": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-r04-status-recovery": {
+    "latency_seconds": 180,
+    "tokens": 4722
+  },
+  "v2-r05-business-assertion": {
+    "latency_seconds": 180,
+    "tokens": 21009
+  },
+  "v2-r06-threshold-tags": {
+    "latency_seconds": 180,
+    "tokens": 4812
+  },
+  "v2-r07-controller-reset": {
+    "latency_seconds": 180,
+    "tokens": 38670
+  },
+  "v2-r08-arrival-options": {
+    "latency_seconds": 180,
+    "tokens": 4887
+  },
+  "v2-r10-user-partition": {
+    "latency_seconds": 180,
+    "tokens": 3780
+  },
+  "v2-r11-timer-scope": {
+    "latency_seconds": 180,
+    "tokens": 21228
+  },
+  "v2-r12-error-metric": {
+    "latency_seconds": 180,
+    "tokens": 4719
+  },
+  "v2-r13-expiry-controller": {
+    "latency_seconds": 180,
+    "tokens": 38670
+  },
+  "v2-w01-steady-starts": {
+    "latency_seconds": 180,
+    "tokens": 32454
+  },
+  "v2-w02-open-arrivals": {
+    "latency_seconds": 180,
+    "tokens": 4887
+  },
+  "v2-w03-slow-service": {
+    "latency_seconds": 180,
+    "tokens": 32454
+  },
+  "v2-w04-three-phases": {
+    "latency_seconds": 180,
+    "tokens": 5319
+  },
+  "v2-w06-backoff-throughput": {
+    "latency_seconds": 180,
+    "tokens": 4926
+  },
+  "v2-w07-burst-control": {
+    "latency_seconds": 180,
+    "tokens": 32454
+  },
+  "v2-w08-capacity-step": {
+    "latency_seconds": 180,
+    "tokens": 4887
+  },
+  "v2-w09-isolated-pools": {
+    "latency_seconds": 180,
+    "tokens": 51651
+  }
+}
