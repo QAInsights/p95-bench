@@ -59,6 +59,8 @@ def main(argv=None):
                                      tasks, args.out, args.repeats, **options)
             print(f"Run: {directory}")
         print(json.dumps(summary, indent=2))
+        if summary.get("stop_reason"):
+            raise ValueError("Run stopped: " + summary["stop_reason"])
     except (ValueError, OSError, URLError, WorkerUnavailable) as error:
         print(f"p95bench: {error}", file=sys.stderr)
         return 1

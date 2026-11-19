@@ -140,8 +140,8 @@ def run_v2(tmp_path, monkeypatch, repeats=1, points=80, price=None):
 
 
 @pytest.mark.parametrize("v2", [False, True])
-@pytest.mark.parametrize("error", [ValueError, RuntimeError, RecursionError, AuditOverflow])
-def test_grader_exception_saves_charged_response_and_continues(v2, error, tmp_path, monkeypatch):
+@pytest.mark.parametrize("error", [AuditOverflow])
+def test_script_audit_overflow_saves_graded_zero_and_continues(v2, error, tmp_path, monkeypatch):
     rubric = [{"id": "loads", "points": 10}, {"id": "setup", "points": 30},
               {"id": "behavior", "points": 40}, {"id": "safety", "points": 20}]
     tasks = [Task(name, "analysis", "none", "Synthetic task", "test_checkpoint", {"rubric": rubric}, {})
@@ -238,7 +238,7 @@ def test_grader_serialization_error_without_rubric_is_a_graded_error(tmp_path, m
     saved, error = _grade_response(task(), "response", tmp_path, True)
     assert CheckpointGrade.from_dict(saved).score == 0
     assert saved["checkpoints"] == [{"id": "grading_error", "earned": 0, "possible": 100}]
-    assert error == {"type": "TypeError", "message": "invalid result"}
+    assert error == {"type": "TypeError", "message": "invalid result", "stop_run": True}
 
 
 @pytest.mark.parametrize("rubric", [[{"id": "behavior", "points": 99}], [], None,
@@ -443,3 +443,38 @@ def test_cli_formats_capacity_audit_overflow_as_worker_failure(tmp_path, monkeyp
                  "--pack", V2, "--out", str(tmp_path)]) == 1
     assert "p95bench: capacity audit overflow" in capsys.readouterr().err
     assert provider.calls == 0
+
+
+@pytest.mark.parametrize("v2, failure", [(False, WorkerUnavailable), (True, WorkerUnavailable),
+    (False, RuntimeError), (True, RuntimeError), (True, RecursionError), (True, ValueError),
+    (True, "rubric"), (False, AuditOverflow), (True, AuditOverflow), (False, None), (True, None)])
+def test_cli_grading_stops_exit_nonzero_after_saving_summary(v2, failure, tmp_path, monkeypatch, capsys):
+    rubric = [{"id": "behavior", "points": 99 if failure == "rubric" else 100}]
+    tasks = [replace(task("analysis"), id=name, params={"rubric": rubric}) for name in ("first", "second")]
+    provider = FakeProvider()
+    monkeypatch.setattr("p95bench.cli.get_provider", lambda _: provider)
+    monkeypatch.setattr("p95bench.cli.load_tasks", lambda *args: tasks)
+    monkeypatch.setattr("p95bench.runner.BudgetLedger", lambda: BudgetLedger(tmp_path / "ledger.json"))
+    error = ValueError if failure == "rubric" else failure
+    grader = (Mock(side_effect=error("synthetic grading failure")) if error else
+              lambda *args: result(100) if v2 else Grade(True, "valid"))
+    monkeypatch.setitem(CHECKPOINT_GRADERS if v2 else GRADERS, "test_checkpoint", grader)
+    stopped = failure is not None and failure is not AuditOverflow
+    assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash", "--out", str(tmp_path),
+                 "--pack", V2 if v2 else "p95-v1"]) == int(stopped)
+    output = capsys.readouterr()
+    summary_file = next(tmp_path.rglob("summary.json"))
+    summary = json.loads(summary_file.read_text())
+    assert ("stop_reason" in summary) is stopped
+    assert provider.calls == (1 if stopped else 2)
+    assert "Run:" in output.out
+    if stopped:
+        assert "p95bench: Run stopped: Grader error" in output.err
+        assert "synthetic grading failure" in summary["stop_reason"]
+        assert summary["attempts"] == 0 and summary["not_run"] == 2
+        assert summary["estimated_cost_usd"] > 0
+    else:
+        assert output.err == ""
+        assert summary["attempts"] == 2
+    assert main(["score", str(summary_file.parent)]) == int(stopped)
+    assert score_run(summary_file.parent) == summary

@@ -78,6 +78,11 @@ def score_run(directory: Path):
         summary["estimated_cost_usd"] += entry.get("cost_usd", 0)
         for key in ("input_tokens", "output_tokens", "latency_seconds"):
             summary[key] += entry.get("response", {}).get(key, 0)
+        if entry.get("grading_error") and "stop_reason" not in summary:
+            summary["stop_reason"] = entry.get("error", entry["grading_error"]["message"])
+            fallback = entry["grading_error"].get("fallback_error")
+            if fallback:
+                summary["stop_reason"] += f"; fallback error ({fallback['type']}): {fallback['message']}"
     _output_path(directory / "summary.json", bool(manifest and manifest.get("visibility")
                                                  == "private")).write_text(
         json.dumps(summary, indent=2) + "\n")
@@ -94,6 +99,8 @@ def _grade_response(task, text, workdir, v2):
         if (isinstance(error, (WorkerUnavailable, OSError, subprocess.SubprocessError))
                 and not isinstance(error, AuditOverflow)):
             return {"status": "not_run", "detail": detail}, metadata
+        if not isinstance(error, AuditOverflow):
+            metadata["stop_run"] = True
         try:
             result = (CheckpointGrade(award(task.params.get("rubric", [
                 {"id": "grading_error", "points": 100}]), {}), detail)
