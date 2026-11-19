@@ -1,4 +1,5 @@
 import json
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from pathlib import Path
@@ -8,12 +9,14 @@ import pytest
 
 from p95bench.budget import BudgetLedger
 from p95bench.cli import main
-from p95bench.graders import CHECKPOINT_GRADERS
+from p95bench.execution import AuditOverflow
+from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, Grade
 from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import efficiency, pack_config, snapshot, summarize_v2
 from p95bench.providers import OpenAICompatible, Price, ProviderConfig, Response, SpendLimitExceeded
-from p95bench.runner import run, score_run, summarize
+from p95bench.runner import _grade_response, run, score_run, summarize
 from p95bench.tasks import CATEGORIES, Task, load_private_tasks, load_tasks, require_external
+from p95bench.worker import WorkerUnavailable
 
 ROOT = Path(__file__).resolve().parents[1]
 V2 = "p95-v2.0.0"
@@ -136,6 +139,71 @@ def run_v2(tmp_path, monkeypatch, repeats=1, points=80, price=None):
     return provider, directory, summary
 
 
+@pytest.mark.parametrize("v2", [False, True])
+@pytest.mark.parametrize("error", [AuditOverflow])
+def test_script_audit_overflow_saves_graded_zero_and_continues(v2, error, tmp_path, monkeypatch):
+    rubric = [{"id": "loads", "points": 10}, {"id": "setup", "points": 30},
+              {"id": "behavior", "points": 40}, {"id": "safety", "points": 20}]
+    tasks = [Task(name, "analysis", "none", "Synthetic task", "test_checkpoint", {"rubric": rubric}, {})
+             for name in ("first", "second")]
+    successful = result(100) if v2 else Grade(True, "ok")
+    monkeypatch.setitem(CHECKPOINT_GRADERS if v2 else GRADERS, "test_checkpoint",
+                        Mock(side_effect=[error("grader failed"), successful]))
+    provider, price = FakeProvider(), Price(1, .5, 2)
+    ledger = BudgetLedger(tmp_path / "ledger.json")
+    options = {"pack_id": V2, "budget_ledger": ledger, "efficiency_budgets": {
+        task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks}} if v2 else {}
+    directory, summary = run(provider, "fake", "model", price, tasks, tmp_path, **options)
+    attempts = [json.loads(line) for line in (directory / "attempts.jsonl").read_text().splitlines()]
+    assert provider.calls == len(attempts) == 2
+    assert attempts[0]["response"]["text"] == "Synthetic response"
+    assert attempts[0]["grading_error"] == {"type": error.__name__, "message": "grader failed"}
+    assert attempts[0]["grade"]["detail"] == f"Grader error ({error.__name__}): grader failed"
+    assert not attempts[0]["grade"]["passed"] and attempts[1]["grade"]["passed"]
+    assert "grading_error" not in attempts[1]
+    assert summary["category_scores"]["analysis"] == 50
+    assert summary["overall_score"] == (7.5 if v2 else 50)
+    assert summary["estimated_cost_usd"] == pytest.approx(sum(a["cost_usd"] for a in attempts))
+    assert summary == score_run(directory)
+    if v2:
+        assert [c["earned"] for c in attempts[0]["grade"]["checkpoints"]] == [0, 0, 0, 0]
+        assert attempts[0]["grade"]["status"] == "graded"
+        assert CheckpointGrade.from_dict(attempts[0]["grade"]).score == 0
+        charges = json.loads(ledger.path.read_text())["charges"]
+        assert set(charges) == {attempt["budget_reservation"] for attempt in attempts}
+        assert not (directory / "not-run.jsonl").exists()
+
+
+@pytest.mark.parametrize("v2", [False, True])
+@pytest.mark.parametrize("error", [WorkerUnavailable("Docker cleanup failed"),
+    OSError("Docker unavailable"), subprocess.CalledProcessError(1, "docker"),
+    subprocess.TimeoutExpired("docker", 1)])
+def test_grading_infrastructure_preserves_response_without_scoring_or_more_calls(v2, error, tmp_path, monkeypatch):
+    tasks = [replace(task("analysis"), id=name) for name in ("first", "second")]
+    monkeypatch.setitem(CHECKPOINT_GRADERS if v2 else GRADERS, "test_checkpoint",
+                        Mock(side_effect=error))
+    provider, price = FakeProvider(), Price(1, .5, 2)
+    ledger = BudgetLedger(tmp_path / "ledger.json")
+    options = {"pack_id": V2, "budget_ledger": ledger, "efficiency_budgets": {
+        task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks}} if v2 else {}
+    directory, summary = run(provider, "fake", "model", price, tasks, tmp_path, repeats=2, **options)
+    entries = [json.loads(line) for line in (directory / "not-run.jsonl").read_text().splitlines()]
+    assert provider.calls == 1
+    assert summary["attempts"] == 0 and summary["not_run"] == len(entries) == 4
+    assert summary["passed"] == 0
+    assert (directory / "attempts.jsonl").read_text() == ""
+    assert all(entry["status"] == "not_run" for entry in entries)
+    assert entries[0]["response"]["text"] == "Synthetic response"
+    assert entries[0]["grading_error"]["type"] == type(error).__name__
+    assert entries[0]["grade"]["status"] == "not_run"
+    assert all("response" not in entry for entry in entries[1:])
+    assert summary["estimated_cost_usd"] == entries[0]["cost_usd"] > 0
+    assert summary == score_run(directory)
+    if v2:
+        assert not summary["complete"]
+        assert list(json.loads(ledger.path.read_text())["charges"]) == [entries[0]["budget_reservation"]]
+
+
 @pytest.mark.parametrize("repeats", [1, 3])
 def test_v2_run_and_offline_rescore(tmp_path, monkeypatch, repeats):
     provider, directory, summary = run_v2(tmp_path, monkeypatch, repeats)
@@ -161,6 +229,50 @@ def test_v2_run_and_offline_rescore(tmp_path, monkeypatch, repeats):
     (directory / "pack.json").write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="digest"):
         score_run(directory)
+
+
+def test_grader_serialization_error_without_rubric_is_a_graded_error(tmp_path, monkeypatch):
+    invalid = Mock()
+    invalid.to_dict.side_effect = TypeError("invalid result")
+    monkeypatch.setattr("p95bench.runner.grade", Mock(return_value=invalid))
+    saved, error = _grade_response(task(), "response", tmp_path, True)
+    assert CheckpointGrade.from_dict(saved).score == 0
+    assert saved["checkpoints"] == [{"id": "grading_error", "earned": 0, "possible": 100}]
+    assert error == {"type": "TypeError", "message": "invalid result", "stop_run": True}
+
+
+@pytest.mark.parametrize("rubric", [[{"id": "behavior", "points": 99}], [], None,
+    [{"id": "same", "points": 50}, {"id": "same", "points": 50}], [{"id": "missing_points"}]])
+def test_invalid_rubric_saves_minimal_error_grade_and_stops(rubric, tmp_path, monkeypatch):
+    tasks = [replace(task("analysis"), id=name, params={"rubric": rubric})
+             for name in ("first", "second")]
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint", Mock(side_effect=ValueError("grader failed")))
+    provider, ledger = FakeProvider(), BudgetLedger(tmp_path / "ledger.json")
+    directory, summary = run(provider, "fake", "model", Price(1, .5, 2), tasks, tmp_path,
+        pack_id=V2, budget_ledger=ledger, efficiency_budgets={
+            task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks})
+    entries = [json.loads(line) for line in (directory / "not-run.jsonl").read_text().splitlines()]
+    assert provider.calls == 1
+    assert entries[0]["status"] == "not_run"
+    assert entries[0]["response"]["text"] == "Synthetic response"
+    assert entries[0]["grading_error"]["stop_run"] is True
+    assert "fallback_error" in entries[0]["grading_error"]
+    grade = CheckpointGrade.from_dict(entries[0]["grade"])
+    assert grade.score == 0 and grade.checkpoints == (Checkpoint("grading_error", 0, 100),)
+    assert "grader failed" in grade.detail
+    assert summary["attempts"] == 0 and summary["not_run"] == len(entries) == 2
+    assert not summary["complete"]
+    assert (directory / "attempts.jsonl").read_text() == ""
+    assert summary["estimated_cost_usd"] == entries[0]["cost_usd"] > 0
+    assert len(json.loads(ledger.path.read_text())["charges"]) == 1
+    assert summary == score_run(directory)
+
+
+@pytest.mark.parametrize("error", [KeyboardInterrupt, SystemExit])
+def test_grading_does_not_swallow_process_cancellation(error, tmp_path, monkeypatch):
+    monkeypatch.setattr("p95bench.runner.grade", Mock(side_effect=error))
+    with pytest.raises(error):
+        _grade_response(task(), "response", tmp_path, True)
 
 
 def test_repeat_mean_not_pass_rate(tmp_path, monkeypatch):
@@ -319,3 +431,58 @@ def test_cli_invalid_pack_and_repeat_no_calls(capsys):
     assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash",
                  "--repeats", "0"]) == 1
     assert "positive" in capsys.readouterr().err
+
+
+def test_cli_formats_capacity_audit_overflow_as_worker_failure(tmp_path, monkeypatch, capsys):
+    provider = FakeProvider()
+    tasks = load_tasks(ROOT / "packs" / V2 / "tasks", pack_config(V2)["weights"])
+    budgets = tmp_path / "efficiency.json"
+    budgets.write_text(json.dumps({task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks}))
+    monkeypatch.setattr("p95bench.cli.get_provider", lambda _: provider)
+    monkeypatch.setattr("p95bench.capacity.QUALIFIED", {})
+    monkeypatch.setattr("p95bench.capacity.tool_image", lambda _: "sha256:" + "0" * 64)
+    monkeypatch.setattr("p95bench.capacity.run_artifact", Mock(side_effect=AuditOverflow("capacity audit overflow")))
+    assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash",
+                 "--pack", V2, "--out", str(tmp_path), "--efficiency-budgets", str(budgets)]) == 1
+    assert "p95bench: capacity audit overflow" in capsys.readouterr().err
+    assert provider.calls == 0
+
+
+@pytest.mark.parametrize("v2, failure", [(False, WorkerUnavailable), (True, WorkerUnavailable),
+    (False, RuntimeError), (True, RuntimeError), (True, RecursionError), (True, ValueError),
+    (True, "rubric"), (False, AuditOverflow), (True, AuditOverflow), (False, None), (True, None)])
+def test_cli_grading_stops_exit_nonzero_after_saving_summary(v2, failure, tmp_path, monkeypatch, capsys):
+    rubric = [{"id": "behavior", "points": 99 if failure == "rubric" else 100}]
+    tasks = [replace(task("analysis"), id=name, params={"rubric": rubric}) for name in ("first", "second")]
+    provider = FakeProvider()
+    monkeypatch.setattr("p95bench.cli.get_provider", lambda _: provider)
+    monkeypatch.setattr("p95bench.cli.load_tasks", lambda *args: tasks)
+    monkeypatch.setattr("p95bench.runner.BudgetLedger", lambda: BudgetLedger(tmp_path / "ledger.json"))
+    error = ValueError if failure == "rubric" else failure
+    grader = (Mock(side_effect=error("synthetic grading failure")) if error else
+              lambda *args: result(100) if v2 else Grade(True, "valid"))
+    monkeypatch.setitem(CHECKPOINT_GRADERS if v2 else GRADERS, "test_checkpoint", grader)
+    stopped = failure is not None and failure is not AuditOverflow
+    options = []
+    if v2:
+        budgets = tmp_path / "efficiency.json"
+        budgets.write_text(json.dumps({task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks}))
+        options = ["--efficiency-budgets", str(budgets)]
+    assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash", "--out", str(tmp_path),
+                 "--pack", V2 if v2 else "p95-v1", *options]) == int(stopped)
+    output = capsys.readouterr()
+    summary_file = next(tmp_path.rglob("summary.json"))
+    summary = json.loads(summary_file.read_text())
+    assert ("stop_reason" in summary) is stopped
+    assert provider.calls == (1 if stopped else 2)
+    assert "Run:" in output.out
+    if stopped:
+        assert "p95bench: Run stopped: Grader error" in output.err
+        assert "synthetic grading failure" in summary["stop_reason"]
+        assert summary["attempts"] == 0 and summary["not_run"] == 2
+        assert summary["estimated_cost_usd"] > 0
+    else:
+        assert output.err == ""
+        assert summary["attempts"] == 2
+    assert main(["score", str(summary_file.parent)]) == int(stopped)
+    assert score_run(summary_file.parent) == summary

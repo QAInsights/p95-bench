@@ -1,20 +1,22 @@
 import json
 import os
 import subprocess
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 from p95bench.capacity import capacity_preflight
-from p95bench.execution import Trial, artifact_source, k6_evidence
+from p95bench.demo_v2 import Profile, Shop
+from p95bench.execution import AuditOverflow, Trial, artifact_source, k6_evidence, run_artifact
 from p95bench.graders import grade
 from p95bench.images import tool_image
 from p95bench.packs import pack_config
 from p95bench.reference_plans import reference
 from p95bench.runner import run
 from p95bench.tasks import load_tasks
-from p95bench.worker import PROBE_IMAGE, Worker, WorkerUnavailable
+from p95bench.worker import PROBE_IMAGE, Execution, Worker, WorkerUnavailable, execution_trial
 
 ROOT = Path(__file__).resolve().parents[1]
 TASKS = load_tasks(ROOT / "packs/p95-v2.0.0/tasks", pack_config("p95-v2.0.0")["weights"])
@@ -49,6 +51,74 @@ def test_malformed_xml_zeroes_every_execution_checkpoint(tmp_path):
                 and not task.params["contract"].get("workload"))
     result = grade(task, "<jmeterTestPlan><hashTree>", tmp_path, 2)
     assert [item.earned for item in result.checkpoints] == [0, 0, 0, 0]
+
+
+@pytest.mark.parametrize("error", [OverflowError, RecursionError])
+def test_native_model_evidence_conversion_errors_are_graded_zero(error, monkeypatch, tmp_path):
+    task = next(task for task in TASKS if task.grader == "v2_exec" and not task.params["contract"].get("workload"))
+    monkeypatch.setattr("p95bench.checkpoint_graders.run_artifact", Mock(side_effect=error("invalid model evidence")))
+    result = grade(task, "model artifact", tmp_path, 2)
+    assert result.score == 0 and all(item.earned == 0 for item in result.checkpoints)
+    assert result.detail == f"Invalid model artifact ({error.__name__}): invalid model evidence"
+
+
+@pytest.mark.parametrize("overflow", [False, True])
+def test_execution_audit_overflow_preserves_bounded_native_evidence(overflow, monkeypatch, tmp_path):
+    shop = Shop(Profile(), "synthetic")
+    shop.audit_overflow = overflow
+    worker = Mock()
+    artifacts = {"http.log": b'{"source":"console","msg":"native diagnostic"}\n', "points.json": b""}
+    worker.execute.return_value = Execution("completed", 0, "native output", 1, artifacts,
+                                             {"optional": "missing"})
+    monkeypatch.setattr("p95bench.execution.tool_image", lambda tool: PROBE_IMAGE)
+    monkeypatch.setattr("p95bench.execution.execution_trial", lambda *a, **k: nullcontext((shop, worker)))
+    if overflow:
+        with pytest.raises(AuditOverflow, match="script exceeded the request evidence limit"):
+            run_artifact("k6", "export default function() {}", tmp_path)
+    else:
+        trial = run_artifact("k6", "export default function() {}", tmp_path)
+        assert trial.events == [] and not trial.loaded
+        assert json.loads((tmp_path / "audit.json").read_text()) == []
+    worker.execute.assert_called_once()
+    options = worker.execute.call_args.kwargs
+    assert options["output_limit"] == 1048576
+    assert options["exports"] == {"points.json": 8 * 1048576, "http.log": 8 * 1048576}
+    assert all((tmp_path / name).read_bytes() == value for name, value in artifacts.items())
+    metadata = json.loads((tmp_path / "execution.json").read_text())
+    assert metadata["output"] == "native output"
+    assert metadata["status"] == "completed" and metadata["returncode"] == 0
+    assert metadata["artifact_errors"] == {"optional": "missing"}
+    assert metadata["audit_overflow"] is overflow
+    assert json.loads((tmp_path / "audit.json").read_text()) == []
+
+
+@pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1", reason="Opt-in native Docker tests")
+def test_native_audit_overflow_retains_engine_output(monkeypatch, tmp_path):
+    @contextmanager
+    def overflow_trial(*args, **kwargs):
+        with execution_trial(*args, **kwargs) as (shop, worker):
+            shop.audit_overflow = True
+            yield shop, worker
+    monkeypatch.setattr("p95bench.execution.execution_trial", overflow_trial)
+    with pytest.raises(AuditOverflow, match="script exceeded"):
+        run_artifact("k6", "export default function() { console.log('native diagnostic'); }", tmp_path)
+    metadata = json.loads((tmp_path / "execution.json").read_text())
+    assert metadata["audit_overflow"] is True
+    assert metadata["status"] == "completed" and metadata["returncode"] == 0
+    assert "native diagnostic" in (tmp_path / "http.log").read_text()
+    for name in ("points.json", "http.log"):
+        assert (tmp_path / name).stat().st_size <= 8 * 1048576
+    assert len(metadata["output"].encode()) <= 3 * 1048576
+
+
+def test_execution_nonoverflow_audit_error_is_infrastructure(monkeypatch, tmp_path):
+    shop, worker = Mock(audit_overflow=False), Mock()
+    shop.audit.side_effect = RuntimeError("Demo requests did not drain; audit is not final")
+    worker.execute.return_value = Execution("completed", 0, "", 1)
+    monkeypatch.setattr("p95bench.execution.tool_image", lambda tool: PROBE_IMAGE)
+    monkeypatch.setattr("p95bench.execution.execution_trial", lambda *a, **k: nullcontext((shop, worker)))
+    with pytest.raises(WorkerUnavailable, match="requests did not drain"):
+        run_artifact("k6", "export default function() {}", tmp_path)
 
 
 def test_invalid_image_state_is_infrastructure_not_model_failure(tmp_path):

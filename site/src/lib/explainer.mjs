@@ -1,6 +1,6 @@
 import data from '../data/leaderboard.json';
 import { name } from './scores.mjs';
-import { simulatorRows, setTaskState, attemptCost } from './explainer-data.mjs';
+import { simulatorRows, setTaskState, attemptCost, costAttemptLabel } from './explainer-data.mjs';
 
 export function mountExplainer() {
 const root = document.getElementById('explainer');
@@ -104,13 +104,13 @@ function renderCost() {
       element('p', `$${part.rate} / million`), element('p', usd(part.cost)));
     return article;
   }));
-  $('ex-cost-total').textContent = `Attempt estimate: ${usd(cost.total)}`;
+  $('ex-cost-total').textContent = `${costAttemptLabel(attempt)} · Attempt estimate: ${usd(cost.total)}`;
   $('ex-model-cost').textContent = `${name(model.model)} · whole published run: ${usd(model.cost)} · ${number(model.tokens.input)} input + ${number(model.tokens.output)} output tokens. ${model.cost_note ?? 'Individual attempts can have different price snapshots.'}`;
 }
 $('ex-cost-model').onchange = () => {
   const model = data.models[Number($('ex-cost-model').value)];
   $('ex-cost-attempt').replaceChildren(...model.cost_attempts.map((attempt, index) => {
-    const option = element('option', `${index + 1}. ${attempt.task_id}`);
+    const option = element('option', `${index + 1}. ${costAttemptLabel(attempt)}`);
     option.value = index;
     return option;
   }));

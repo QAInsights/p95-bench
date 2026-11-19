@@ -2,7 +2,7 @@
 import data from '../data/leaderboard.json';
 import weights from '../../../src/p95bench/category-weights.json';
 import { name } from '../lib/scores.mjs';
-import { executionShapes, simulatorRows, attemptCost } from '../lib/explainer-data.mjs';
+import { executionShapes, simulatorRows, attemptCost, costAttemptLabel } from '../lib/explainer-data.mjs';
 import '../styles/explainer.css';
 
 const { tasks } = Astro.props;
@@ -91,7 +91,7 @@ const cost = attemptCost(initial.cost_attempts[0]);
   <div class="ex-panel" id="ex-panel-3" data-ex-panel>
     <h3>Tokens in. List-price estimate out.</h3>
     <p class="ex-copy">Inspect a real attempt, not an invented example. Reasoning tokens count as output when the provider includes them in completion usage. A failed answer still costs money.</p>
-    <div class="ex-controls"><label for="ex-cost-model">Published model</label><select id="ex-cost-model">{data.models.map((model, index) => <option value={index}>{name(model.model)}</option>)}</select><label for="ex-cost-attempt">Attempt</label><select id="ex-cost-attempt">{initial.cost_attempts.map((attempt, index) => <option value={index}>{attempt.task_id}</option>)}</select></div>
+    <div class="ex-controls"><label for="ex-cost-model">Published model</label><select id="ex-cost-model">{data.models.map((model, index) => <option value={index}>{name(model.model)}</option>)}</select><label for="ex-cost-attempt">Attempt</label><select id="ex-cost-attempt">{initial.cost_attempts.map((attempt, index) => <option value={index}>{costAttemptLabel(attempt)}</option>)}</select></div>
     <p class="ex-formula">Cost = ((input − cached) × input price + cached × cached price + output × output price) ÷ 1,000,000</p>
     <div class="ex-cost-parts" id="ex-cost-parts">{cost.parts.map(part => <article><h4>{part.label}</h4><strong>{part.tokens.toLocaleString('en-US')} tokens</strong><p>${part.rate} / million</p><p>${part.cost.toFixed(6)}</p></article>)}</div>
     <p class="ex-cost-total" id="ex-cost-total">Attempt estimate: ${cost.total.toFixed(6)}</p><p class="ex-copy" id="ex-model-cost"></p>

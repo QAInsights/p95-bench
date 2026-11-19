@@ -1,6 +1,7 @@
 """Benchmark orchestration and reproducible scoring from saved attempts."""
 
 import json
+import subprocess
 from collections import defaultdict
 from dataclasses import asdict
 from datetime import UTC, datetime
@@ -9,10 +10,21 @@ from uuid import uuid4
 
 from p95bench.budget import BudgetLedger
 from p95bench.capacity import prepare_workloads
-from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, grade, jmeter_executable, k6_executable
+from p95bench.checkpoint_graders import award
+from p95bench.execution import AuditOverflow
+from p95bench.graders import (
+    CHECKPOINT_GRADERS,
+    GRADERS,
+    Grade,
+    grade,
+    jmeter_executable,
+    k6_executable,
+)
+from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import snapshot, summarize_v2, validate_snapshot
 from p95bench.providers import Gemini, ProviderUnavailable, SpendLimitExceeded, gemini_prices
 from p95bench.tasks import CATEGORIES, require_external
+from p95bench.worker import WorkerUnavailable
 
 SYSTEM_PROMPT = (
     "You are a performance test engineer. Solve the task exactly as specified. "
@@ -57,13 +69,47 @@ def score_run(directory: Path):
         raise ValueError("Mixed pack input or missing pack snapshot")
     summary = (summarize_v2(attempts, manifest)
                if manifest and manifest["grade_schema_version"] == 2 else summarize(attempts))
-    if manifest and manifest["grade_schema_version"] == 2:
-        skipped = directory / "not-run.jsonl"
-        summary["not_run"] = (len(skipped.read_text().splitlines()) if skipped.exists() else 0)
+    skipped = directory / "not-run.jsonl"
+    not_run = [json.loads(line) for line in skipped.read_text().splitlines()
+               if line.strip()] if skipped.exists() else []
+    if not_run or manifest and manifest["grade_schema_version"] == 2:
+        summary["not_run"] = len(not_run)
+    for entry in not_run:
+        summary["estimated_cost_usd"] += entry.get("cost_usd", 0)
+        for key in ("input_tokens", "output_tokens", "latency_seconds"):
+            summary[key] += entry.get("response", {}).get(key, 0)
+        if entry.get("grading_error") and "stop_reason" not in summary:
+            summary["stop_reason"] = entry.get("error", entry["grading_error"]["message"])
+            fallback = entry["grading_error"].get("fallback_error")
+            if fallback:
+                summary["stop_reason"] += f"; fallback error ({fallback['type']}): {fallback['message']}"
     _output_path(directory / "summary.json", bool(manifest and manifest.get("visibility")
                                                  == "private")).write_text(
         json.dumps(summary, indent=2) + "\n")
     return summary
+
+
+def _grade_response(task, text, workdir, v2):
+    try:
+        result = grade(task, text, workdir, 2) if v2 else grade(task, text, workdir)
+        return result.to_dict(), None
+    except Exception as error:  # noqa: BLE001
+        detail = f"Grader error ({type(error).__name__}): {error}"
+        metadata = {"type": type(error).__name__, "message": str(error)}
+        if (isinstance(error, (WorkerUnavailable, OSError, subprocess.SubprocessError))
+                and not isinstance(error, AuditOverflow)):
+            return {"status": "not_run", "detail": detail}, metadata
+        if not isinstance(error, AuditOverflow):
+            metadata["stop_run"] = True
+        try:
+            result = (CheckpointGrade(award(task.params.get("rubric", [
+                {"id": "grading_error", "points": 100}]), {}), detail)
+                if v2 else Grade(False, detail))
+        except Exception as fallback_error:  # noqa: BLE001
+            result = CheckpointGrade((Checkpoint("grading_error", 0, 100),), detail)
+            metadata.update(stop_run=True, fallback_error={
+                "type": type(fallback_error).__name__, "message": str(fallback_error)})
+        return result.to_dict(), metadata
 
 
 def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
@@ -116,6 +162,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
         _output_path(directory / "metadata.json", private).write_text(
             json.dumps(metadata, indent=2) + "\n")
     budget_error = None
+    grading_stop = None
     with _output_path(directory / "attempts.jsonl", private).open("w") as stream:
         for index, task in enumerate(tasks):
             for repeat in range(repeats):
@@ -125,6 +172,8 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                 messages = [{"role": "system", "content": system},
                             {"role": "user", "content": task.user_prompt()}]
                 try:
+                    if grading_stop is not None:
+                        raise ProviderUnavailable(grading_stop)
                     if budget_error is not None:
                         raise SpendLimitExceeded(budget_error)
                     if ledger:
@@ -155,13 +204,14 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         skipped.write(json.dumps(entry) + "\n")
                     continue
                 workdir = _output_path(directory / f"task-{index}-{repeat}", private)
-                result = (grade(task, response.text, workdir, 2)
-                          if v2 else grade(task, response.text, workdir))
+                result, grading_error = _grade_response(task, response.text, workdir, v2)
                 attempt = {"task_id": task.id, "category": task.category, "repeat": repeat,
                            "provider": provider_name, "model": model,
                            "messages": messages, "grader": task.grader, "params": task.params,
                            "price_per_million": asdict(price), "response": asdict(response),
-                           "grade": result.to_dict(), "cost_usd": price.cost(response)}
+                           "grade": result, "cost_usd": price.cost(response)}
+                if grading_error is not None:
+                    attempt["grading_error"] = grading_error
                 if v2:
                     attempt.update(pack_id=pack_id, pack_digest=manifest["digest"],
                                    budget_reservation=reservation)
@@ -171,6 +221,12 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                                                   else latency),
                         transport_attempts=requests,
                         backoff_seconds=getattr(provider, "backoff_seconds", 0))
+                if result.get("status") == "not_run" or grading_error and grading_error.get("stop_run"):
+                    attempt.update(status="not_run", error=result["detail"])
+                    with _output_path(directory / "not-run.jsonl", private).open("a") as skipped:
+                        skipped.write(json.dumps(attempt) + "\n")
+                    grading_stop = "Grading stopped: " + result["detail"]
+                    continue
                 stream.write(json.dumps(attempt) + "\n")
                 stream.flush()
     return directory, score_run(directory)

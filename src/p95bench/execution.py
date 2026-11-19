@@ -11,6 +11,10 @@ from p95bench.demo_v2 import Profile
 from p95bench.images import tool_image
 from p95bench.worker import Resources, WorkerUnavailable, execution_trial
 
+
+class AuditOverflow(WorkerUnavailable):
+    pass
+
 COMPONENTS = {"jmeterTestPlan", "hashTree", "TestPlan", "ThreadGroup", "LoopController",
               "OnceOnlyController", "IfController", "WhileController", "GenericController",
               "TransactionController", "HTTPSamplerProxy", "CookieManager", "HeaderManager",
@@ -149,22 +153,30 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
     with execution_trial(directory, profile=Profile(**(profile or {})), seed=seed,
                          image=image, resources=Resources(768, 256, 512)) as (shop, worker):
         started = time.monotonic()
-        result = worker.execute(native_command(tool), inputs, timeout=timeout, exports=exports)
-        events = shop.audit()
-        if shop.audit_overflow:
-            raise WorkerUnavailable("Audit overflow; trial evidence is incomplete")
+        result = worker.execute(native_command(tool), inputs, timeout=timeout,
+                                output_limit=1048576, exports=exports)
+        try:
+            events = shop.audit()
+        except RuntimeError as error:
+            if not shop.audit_overflow:
+                raise WorkerUnavailable(str(error)) from error
+            events = shop.audit(wait=False)
+        overflow = shop.audit_overflow
     for name, data in result.artifacts.items():
         (directory / name).write_bytes(data)
     (directory / "audit.json").write_text(json.dumps(events, indent=2) + "\n")
     (directory / "execution.json").write_text(json.dumps({"image": image,
         "status": result.status, "returncode": result.returncode,
         "duration_seconds": result.duration_seconds, "artifact_errors": result.artifact_errors,
-        "output": result.output, "seed": seed, "profile": profile or {}}, indent=2) + "\n")
+        "output": result.output, "seed": seed, "profile": profile or {},
+        "audit_overflow": overflow}, indent=2) + "\n")
+    if overflow:
+        raise AuditOverflow("Audit overflow; script exceeded the request evidence limit")
     try:
         samples, points = (k6_evidence(result.artifacts) if tool == "k6" else
                            jmeter_evidence(result.artifacts))
         loaded = bool(result.artifacts.get("points.json") if tool == "k6" else
                       result.artifacts.get("samples.jtl"))
-    except (ValueError, KeyError, TypeError, UnicodeDecodeError, ET.ParseError):
+    except (ValueError, KeyError, TypeError, OverflowError, RecursionError, UnicodeDecodeError, ET.ParseError):
         loaded, samples, points = False, [], []
     return Trial(loaded, result.status, result.returncode, events, samples, points, started)
