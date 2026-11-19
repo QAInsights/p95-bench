@@ -435,12 +435,15 @@ def test_cli_invalid_pack_and_repeat_no_calls(capsys):
 
 def test_cli_formats_capacity_audit_overflow_as_worker_failure(tmp_path, monkeypatch, capsys):
     provider = FakeProvider()
+    tasks = load_tasks(ROOT / "packs" / V2 / "tasks", pack_config(V2)["weights"])
+    budgets = tmp_path / "efficiency.json"
+    budgets.write_text(json.dumps({task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks}))
     monkeypatch.setattr("p95bench.cli.get_provider", lambda _: provider)
     monkeypatch.setattr("p95bench.capacity.QUALIFIED", {})
     monkeypatch.setattr("p95bench.capacity.tool_image", lambda _: "sha256:" + "0" * 64)
     monkeypatch.setattr("p95bench.capacity.run_artifact", Mock(side_effect=AuditOverflow("capacity audit overflow")))
     assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash",
-                 "--pack", V2, "--out", str(tmp_path)]) == 1
+                 "--pack", V2, "--out", str(tmp_path), "--efficiency-budgets", str(budgets)]) == 1
     assert "p95bench: capacity audit overflow" in capsys.readouterr().err
     assert provider.calls == 0
 
@@ -460,8 +463,13 @@ def test_cli_grading_stops_exit_nonzero_after_saving_summary(v2, failure, tmp_pa
               lambda *args: result(100) if v2 else Grade(True, "valid"))
     monkeypatch.setitem(CHECKPOINT_GRADERS if v2 else GRADERS, "test_checkpoint", grader)
     stopped = failure is not None and failure is not AuditOverflow
+    options = []
+    if v2:
+        budgets = tmp_path / "efficiency.json"
+        budgets.write_text(json.dumps({task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks}))
+        options = ["--efficiency-budgets", str(budgets)]
     assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash", "--out", str(tmp_path),
-                 "--pack", V2 if v2 else "p95-v1"]) == int(stopped)
+                 "--pack", V2 if v2 else "p95-v1", *options]) == int(stopped)
     output = capsys.readouterr()
     summary_file = next(tmp_path.rglob("summary.json"))
     summary = json.loads(summary_file.read_text())
