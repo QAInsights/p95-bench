@@ -8,7 +8,7 @@
     "analysis": 15
   },
   "budget_file_sha256": "09ca8ed77cd7cb0eebea6a3618ae13c0fdb55496dd14d438745234a0b4a05bc7",
-  "publication_note": "50-task overall/category aggregates; per-task results contain only the 40 public tasks. Costs are estimated list prices, not actual ModelScope charges.",
+  "publication_note": "50-task overall/category aggregates; per-task results contain only the 40 public tasks. Costs use reported token usage at registry prices, not provider invoices. Qwen3.7 Max used free ModelScope access.",
   "models": [
     {
       "provider": "qwen",
@@ -563,6 +563,577 @@
           "repeat": 0,
           "output_tokens": 3121,
           "latency_seconds": 43.87386947899358,
+          "detail": "Checkpoint credit: 0.00/100"
+        }
+      ]
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-pro",
+      "pack_id": "p95-v2.0.0",
+      "pack_digest": "565b9d2f57481d149e2a32bd85b3cba9a3fcb3db08941add13c09d703e5153bb",
+      "repeats": 1,
+      "quality_score": 28.44791666666667,
+      "efficiency_score": 28.376702279202277,
+      "overall_score": 28.44435594729345,
+      "category_scores": {
+        "repair": 50.0,
+        "migration": 24.375,
+        "correlation": 9.166666666666668,
+        "workload": 0.0,
+        "analysis": 66.66666666666667
+      },
+      "cost": 1.33790052,
+      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 50 responses, including the audit-overflow zero. Not an invoice; paid-ledger micro-dollar rounding is excluded.",
+      "pricing_source": "Frozen DeepSeek registry prices in saved attempts: input $1.32, cached input $0.044, output $3.96 per million tokens.",
+      "tokens": {
+        "input": 328904,
+        "output": 228219
+      },
+      "latency": 1235.4623078870063,
+      "run_date": "2026-11-18T23:00:26.466779+00:00",
+      "harness_commit": "5eef9974debc17f83eb6041978277d1d463ce527",
+      "budget_file_sha256": "09ca8ed77cd7cb0eebea6a3618ae13c0fdb55496dd14d438745234a0b4a05bc7",
+      "evaluator_segments": [
+        {
+          "label": "Original",
+          "digest": "3220ece2ecf9cab054e6ceb8f1eb2232362437e8830b60829be0246235b57d51",
+          "public_harness_digest": "867fbd0ab205ec7c0347c891a70d9c8ece06223dbff2789e34c4b32a293bba98",
+          "public_harness_commit": "5eef9974debc17f83eb6041978277d1d463ce527",
+          "scored_attempts": 44
+        },
+        {
+          "label": "Offline regrade",
+          "digest": "3220ece2ecf9cab054e6ceb8f1eb2232362437e8830b60829be0246235b57d51",
+          "public_harness_digest": "dba0e68dfb9c019c26e41a0a126b7a4c8569741ca41cb71afdd4a4242e1d50e0",
+          "public_harness_commit": "701b0a5f4fd75f7eeaf414b20fe0ede7e4d424f9",
+          "scored_attempts": 1
+        },
+        {
+          "label": "Continuation",
+          "digest": "affbe99548486e4fd7219f2fd3ba05935c282f604a988ad3230997875c7c6849",
+          "public_harness_digest": "fbac81b1b7363c9db79a775a7aaed05ff811f8ff6058a87db7373121419f1788",
+          "public_harness_commit": "84d84b13f45ded9286b590cf21d0ba54bd7ced7e",
+          "scored_attempts": 5
+        }
+      ],
+      "grading_note": "Includes one audit-overflow zero (0/100), recovered by offline regrade: the script exceeded the audit evidence limit, leaving trial evidence incomplete. No API call or additional charge was made for the regrade. Its missing per-request latency uses the saved end-to-end latency as an upper bound; zero quality means this cannot affect the composite score.",
+      "coverage": {
+        "run": 50,
+        "total": 50,
+        "partial": false,
+        "label": "50/50 tasks run \u00b7 40 public + 10 held-out"
+      },
+      "private_aggregates": {
+        "task_count": 10,
+        "category_scores": {
+          "repair": {
+            "task_count": 3,
+            "quality_score": 33.333333333333336,
+            "efficiency_score": 33.333333333333336
+          },
+          "migration": {
+            "task_count": 2,
+            "quality_score": 37.5,
+            "efficiency_score": 37.5
+          },
+          "correlation": {
+            "task_count": 2,
+            "quality_score": 5.0,
+            "efficiency_score": 4.513076923076923
+          },
+          "workload": {
+            "task_count": 2,
+            "quality_score": 0.0,
+            "efficiency_score": 0.0
+          },
+          "analysis": {
+            "task_count": 1,
+            "quality_score": 40.0,
+            "efficiency_score": 40.0
+          }
+        }
+      },
+      "cost_attempts": [],
+      "per_task_results": [
+        {
+          "task_id": "v2-a01-jtl-endpoints",
+          "category": "analysis",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 132,
+          "latency_seconds": 6.625305033987388,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-a02-k6-thresholds",
+          "category": "analysis",
+          "tool": "k6",
+          "score": 0.8,
+          "efficiency_score": 0.8,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 120,
+          "latency_seconds": 6.862358546000905,
+          "detail": "Checkpoint credit: 80.00/100"
+        },
+        {
+          "task_id": "v2-a04-k6-errors",
+          "category": "analysis",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 111,
+          "latency_seconds": 6.586013649997767,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-a05-jtl-omission",
+          "category": "analysis",
+          "tool": "jmeter",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 120,
+          "latency_seconds": 7.379094921023352,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-a06-k6-decomposition",
+          "category": "analysis",
+          "tool": "k6",
+          "score": 0.8,
+          "efficiency_score": 0.8,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 98,
+          "latency_seconds": 6.907084962993395,
+          "detail": "Checkpoint credit: 80.00/100"
+        },
+        {
+          "task_id": "v2-c01-html-csrf",
+          "category": "correlation",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 5363,
+          "latency_seconds": 32.01882777901483,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-c02-html-csrf",
+          "category": "correlation",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 6329,
+          "latency_seconds": 36.59711694199359,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-c03-json-parent-child",
+          "category": "correlation",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 41.489719773991965,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-c04-json-pagination",
+          "category": "correlation",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 5960,
+          "latency_seconds": 29.91195470301318,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-c06-etag-update",
+          "category": "correlation",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 0.9755555555555555,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 5187,
+          "latency_seconds": 27.44917561102193,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-c07-rotating-csrf",
+          "category": "correlation",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 5245,
+          "latency_seconds": 26.15352779798559,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-c08-expiry-resume",
+          "category": "correlation",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 39.19723240000894,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-c09-async-reservation",
+          "category": "correlation",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 5770,
+          "latency_seconds": 27.973696946020937,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-c10-html-json-bridge",
+          "category": "correlation",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 7191,
+          "latency_seconds": 34.875347777007846,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-c11-session-ownership",
+          "category": "correlation",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 5033,
+          "latency_seconds": 26.33287124999333,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-m01-basic-flow",
+          "category": "migration",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 2350,
+          "latency_seconds": 12.541460823005764,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-m03-redirect-token",
+          "category": "migration",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 2703,
+          "latency_seconds": 15.091575909988023,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-m04-data-driven",
+          "category": "migration",
+          "tool": "k6",
+          "score": 0.1,
+          "efficiency_score": 0.1,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 2477,
+          "latency_seconds": 13.58997420500964,
+          "detail": "Checkpoint credit: 10.00/100"
+        },
+        {
+          "task_id": "v2-m05-pacing-semantics",
+          "category": "migration",
+          "tool": "k6",
+          "score": 0.1,
+          "efficiency_score": 0.1,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 2716,
+          "latency_seconds": 14.861669673002325,
+          "detail": "Checkpoint credit: 10.00/100"
+        },
+        {
+          "task_id": "v2-m06-assertions-metrics",
+          "category": "migration",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 37.51033931600978,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-m07-conditional-retry",
+          "category": "migration",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 2019,
+          "latency_seconds": 11.650175801012665,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-r01-extractor-scope",
+          "category": "repair",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 36.531152152019786,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-r02-cookie-lifetime",
+          "category": "repair",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 2137,
+          "latency_seconds": 10.708294388023205,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-r04-status-recovery",
+          "category": "repair",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 1907,
+          "latency_seconds": 9.082381045998773,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-r05-business-assertion",
+          "category": "repair",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 35.541569105000235,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-r06-threshold-tags",
+          "category": "repair",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 1946,
+          "latency_seconds": 9.416833327995846,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-r07-controller-reset",
+          "category": "repair",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 36.711136903002625,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-r08-arrival-options",
+          "category": "repair",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 1917,
+          "latency_seconds": 9.629255762003595,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-r10-user-partition",
+          "category": "repair",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 1548,
+          "latency_seconds": 7.5979421049996745,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-r11-timer-scope",
+          "category": "repair",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 35.512063730013324,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-r12-error-metric",
+          "category": "repair",
+          "tool": "k6",
+          "score": 1.0,
+          "efficiency_score": 1.0,
+          "passed": true,
+          "repeat": 0,
+          "output_tokens": 1966,
+          "latency_seconds": 9.40839518001303,
+          "detail": "Checkpoint credit: 100.00/100"
+        },
+        {
+          "task_id": "v2-r13-expiry-controller",
+          "category": "repair",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 38.96288716100389,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-w01-steady-starts",
+          "category": "workload",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 38.75991376201273,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-w02-open-arrivals",
+          "category": "workload",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 3283,
+          "latency_seconds": 17.54496519098757,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-w03-slow-service",
+          "category": "workload",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 1578,
+          "latency_seconds": 9.227064786013216,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-w04-three-phases",
+          "category": "workload",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 1837,
+          "latency_seconds": 10.434566078998614,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-w06-backoff-throughput",
+          "category": "workload",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 3319,
+          "latency_seconds": 17.47844948701095,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-w07-burst-control",
+          "category": "workload",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 40.1301200830203,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-w08-capacity-step",
+          "category": "workload",
+          "tool": "k6",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 4409,
+          "latency_seconds": 20.96120860800147,
+          "detail": "Checkpoint credit: 0.00/100"
+        },
+        {
+          "task_id": "v2-w09-isolated-pools",
+          "category": "workload",
+          "tool": "jmeter",
+          "score": 0.0,
+          "efficiency_score": 0.0,
+          "passed": false,
+          "repeat": 0,
+          "output_tokens": 8192,
+          "latency_seconds": 37.190734901989345,
           "detail": "Checkpoint credit: 0.00/100"
         }
       ]
