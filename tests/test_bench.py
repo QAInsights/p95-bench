@@ -272,7 +272,10 @@ def test_timeout_kills_launcher_and_child(tmp_path):
     child = int(pidfile.read_text())
     for _ in range(100):
         stat = Path(f"/proc/{child}/stat")
-        if not stat.exists() or stat.read_text().split()[2] == "Z":
+        try:
+            if not stat.exists() or stat.read_text().split()[2] == "Z":
+                break
+        except (FileNotFoundError, ProcessLookupError):
             break
         time.sleep(.01)
     else:
