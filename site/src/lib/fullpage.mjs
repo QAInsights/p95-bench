@@ -1,8 +1,8 @@
 "use strict";
-import { resolvePack, creditGradient } from './packs.mjs';
+import { resolvePack } from './packs.mjs';
 import { mountPackScenes } from './pack-scenes.mjs';
 import { renderToolRankings } from './tool-rankings.mjs';
-import { taskCategoryGroups, taskHeading, replayTaskColumns } from './task-headings.mjs';
+import { taskCategoryGroups } from './task-headings.mjs';
 import { buildScenarios } from './scenarios.mjs';
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
@@ -17,12 +17,13 @@ import {
   costFrontier,
   bestWithin,
   replayScore,
-  replayToolLayout,
-  replayToolCounts,
-  replaySampleLabel,
+  replayTools,
+  replayToolLabel,
+  replayToolStats,
+  replayCellLabel,
+  replayToolDescription,
   selectModelVersions,
   attemptFraction,
-  shortTaskLabel,
 } from "./scores.mjs";
 const PACKS = JSON.parse(document.getElementById('pack-data').textContent);
 let pack = resolvePack(new URLSearchParams(location.search).get('pack'), PACKS);
@@ -301,34 +302,57 @@ let frame = 0,
   elapsed = 0,
   lastTime = null,
   replayAnimations = [];
+let tools = [],
+  showUnrun = false,
+  profileTool = 'all',
+  laneOrder = [],
+  summaryLane = null;
+function cellBar(stats) {
+  const seg = (cls, n) => n ? '<i class="' + cls + '" style="width:' + (100 * n / stats.total).toFixed(2) + '%"></i>' : '';
+  return '<span class="bar" aria-hidden="true">' + seg('seg-pass', stats.pass) + seg('seg-partial', stats.partial) +
+    seg('seg-fail', stats.fail) + seg('seg-notrun', stats.notrun) + '</span><span class="cell-count">' +
+    escape(replayCellLabel(stats)) + '</span>';
+}
+function refreshCell(i, tool) {
+  const cell = laneNodes.get(i).querySelector('.run-cell[data-tool="' + tool + '"]');
+  if (!cell) return;
+  const stats = replayToolStats(models[i], DATA.tasks, tool, arrived[i]);
+  cell.innerHTML = cellBar(stats);
+  cell.dataset.empty = String(stats.notrun === stats.total);
+  cell.setAttribute('aria-label', escape(name(models[i]) + ' · ' + replayToolDescription(models[i], DATA.tasks, tool) + '. Press to inspect.'));
+}
+function refreshCells() {
+  models.forEach((m, i) => tools.forEach(tool => refreshCell(i, tool)));
+}
+function placeLanes(order) {
+  laneOrder = order;
+  const lanes = $("lanes"),
+    measured = order.filter(i => !models[i].not_run),
+    unrun = order.filter(i => models[i].not_run);
+  lanes.replaceChildren();
+  measured.forEach(i => lanes.append(laneNodes.get(i)));
+  if (unrun.length && summaryLane) {
+    summaryLane.setAttribute('aria-expanded', String(showUnrun));
+    summaryLane.innerHTML = '<span><b>' + unrun.length + ' MODELS</b> · NOT RUN ON ' + escape(pack.toUpperCase()) +
+      '</span><span>' + (showUnrun ? 'Collapse −' : 'Show lanes +') + '</span>';
+    lanes.append(summaryLane);
+    if (showUnrun) unrun.forEach(i => lanes.append(laneNodes.get(i)));
+  }
+}
 function buildLanes() {
-  const { taskIds, rows, groups } = replayToolLayout(models);
-  const tasksById = new Map(DATA.tasks.map(task => [task.id, task]));
-  const heading = id => taskHeading(tasksById.get(id) ?? { id });
-  const sampleCount = taskIds.length;
+  tools = replayTools(models, DATA.tasks);
+  profileTool = 'all';
+  showUnrun = false;
   $('scene-1').classList.toggle('replay-v2', pack === 'v2');
-  $('scene-1').style.setProperty('--replay-columns', sampleCount);
-  $('replay-task-description').hidden = pack !== 'v2';
-  $('replay-task-description').textContent = 'Focus or select a numbered column to inspect its task. Scroll horizontally for all columns.';
-  $("scene-1").style.setProperty("--sample-columns", groups
-    .map(group => `repeat(${group.count}, minmax(0, 1fr))`).join(" var(--group-gap) ") || "none");
-  $("tool-heads").innerHTML = groups.map(group =>
-    '<span style="grid-column:' + group.column + '/span ' + group.count + '">' +
-    '<span class="tool-label">' + escape(group.label) + '</span><span class="group-size"> · ' +
-    group.count + '</span>' + (pack === 'v2' ? '<span class="task-category-list">' +
-      taskCategoryGroups(taskIds.slice(group.offset, group.offset + group.count).map(id => tasksById.get(id) ?? { id }))
+  $('scene-1').style.setProperty('--tool-columns', 'repeat(' + Math.max(1, tools.length) + ', minmax(0, 1fr))');
+  $("tool-heads").innerHTML = tools.map(tool => {
+    const inventory = DATA.tasks.filter(task => (task.tool || 'none') === tool);
+    return '<span><span class="tool-label">' + escape(replayToolLabel(tool)) + '</span><span class="group-size"> · ' +
+      inventory.length + '</span>' + (pack === 'v2' && inventory.length ? '<span class="task-category-list">' +
+      taskCategoryGroups(inventory)
         .map(category => '<span>' + escape(category.label) + ' <b>' + category.count + '</b></span>').join('') +
-      '</span>' : '') + '</span>').join("");
-  $("task-heads").innerHTML = pack === 'v2' ? replayTaskColumns(taskIds, groups).map(column =>
-    '<button type="button" class="replay-task-heading" style="grid-column:' + column.column +
-    '" aria-controls="replay-task-description" aria-label="' +
-    escape('Column ' + column.ordinal + ': ' + heading(column.id) + ' · ' + column.tool) +
-    '" title="' + escape(heading(column.id) + ' · ' + column.tool) + '">' + column.ordinal + '</button>').join('') : groups.map(group => taskIds
-    .slice(group.offset, group.offset + group.count).map((id, index) =>
-      '<span style="grid-column:' + (group.column + index) + '" title="' +
-      escape(heading(id) + ' · ' + group.label) + '">' +
-      escape(shortTaskLabel(id)) + '</span>').join(""))
-    .join("");
+      '</span>' : '') + '</span>';
+  }).join('');
   $("lanes").replaceChildren();
   $("lane-descriptions").replaceChildren();
   laneNodes.clear();
@@ -340,22 +364,16 @@ function buildLanes() {
     row.className = "lane" + (m.discontinued ? " is-discontinued" : "");
     row.dataset.index = i;
     row.style.viewTransitionName = "lane-" + i;
-    const counts = replayToolCounts(m, groups);
-    const labels = taskIds.map((id, column) => {
-      const task = rows[i][column] === null ? null : m.per_task_results[rows[i][column]];
-      const group = groups.find(group => column >= group.offset && column < group.offset + group.count);
-      return replaySampleLabel(task, id, group.label, heading(id));
-    });
     const description = document.createElement("p");
     description.id = "lane-description-" + i;
-    description.textContent = counts.map(count => count.text).join(" · ") + ". " + labels.join("; ");
+    description.textContent = tools.map(tool => replayToolDescription(m, DATA.tasks, tool)).join('. ');
     $("lane-descriptions").append(description);
     row.innerHTML =
       '<span class="lane-index">' +
       String(i + 1).padStart(2, "0") +
       '</span><button class="lane-open" aria-label="' + escape(name(m) +
         ', inspect all ' + m.per_task_results.length + ' published task results' +
-        (m.per_task_results.length < sampleCount ? ', remaining tasks not run' : '')) +
+        (m.per_task_results.length < DATA.tasks.length ? ', remaining tasks not run' : '')) +
       '" aria-describedby="' + description.id + '"><span class="lane-title">' +
       escape(name(m)) +
       '</span><span class="lane-provider">' +
@@ -363,22 +381,22 @@ function buildLanes() {
       " · " +
       versionMarkup(m, false) +
       '</span></button><span class="track">' +
-      groups.map((group, groupIndex) => '<span class="sample-group" role="img" aria-label="' +
-        escape(counts[groupIndex].text + ': ' + labels.slice(group.offset, group.offset + group.count).join('; ')) +
-        '" style="grid-column:' + group.column + '/span ' + group.count + ';--group-count:' + group.count + '">' +
-        rows[i].slice(group.offset, group.offset + group.count).map((j, index) => {
-          const label = labels[group.offset + index];
-          if (j === null) return '<span class="sample unrun" title="' + escape(label) + '"></span>';
-          return '<span class="sample" data-task="' + j + '" title="' +
-            escape(label + ' · ' + m.per_task_results[j].detail) + '"></span>';
-        }).join("") + '</span>').join("") +
-      '</span><span class="lane-result"><span class="lane-tool-counts">' +
-      counts.filter(count => count.tool !== 'none').map(count =>
-        '<span' + (count.attempts ? '' : ' class="tool-unrun"') + '>' + escape(count.text) + '</span>')
-        .join('<span aria-hidden="true"> · </span>') +
+      tools.map(tool => '<button type="button" class="run-cell" data-tool="' + escape(tool) + '"></button>').join('') +
+      '</span><span class="lane-result">' +
       (m.coverage?.partial ? '<span class="partial-run">Partial · ' + escape(m.coverage.label) + '</span>' : '') +
-      '</span><span class="lane-score"><span class="score-number">0</span> <small>/100</small></span></span>';
+      '<span class="lane-score"><span class="score-number">0</span> <small>/100</small></span></span>';
     row.onclick = () => openModel(i, row);
+    row.querySelectorAll('.run-cell').forEach(cell => {
+      const tool = cell.dataset.tool;
+      cell.onclick = event => {
+        event.stopPropagation();
+        openModel(i, row, tool);
+      };
+      cell.addEventListener('pointerenter', () => showRunTip(cell, i, tool));
+      cell.addEventListener('pointerleave', hideRunTip);
+      cell.addEventListener('focus', () => showRunTip(cell, i, tool));
+      cell.addEventListener('blur', hideRunTip);
+    });
     laneNodes.set(i, row);
     m.per_task_results.forEach((t, j) =>
       schedule.push({
@@ -391,18 +409,39 @@ function buildLanes() {
       }),
     );
   });
-  [...models.keys()]
-    .sort((a, b) => name(models[a]).localeCompare(name(models[b])))
-    .forEach((i) => $("lanes").append(laneNodes.get(i)));
+  summaryLane = document.createElement('button');
+  summaryLane.type = 'button';
+  summaryLane.className = 'summary-lane';
+  summaryLane.id = 'unrun-toggle';
+  summaryLane.onclick = () => {
+    showUnrun = !showUnrun;
+    placeLanes(laneOrder);
+    announce(showUnrun ? 'Not-run model lanes expanded.' : 'Not-run model lanes collapsed.');
+  };
+  placeLanes([...models.keys()].sort((a, b) => name(models[a]).localeCompare(name(models[b]))));
+  refreshCells();
 }
 buildLanes();
-const inspectReplayTask = event => {
-  const heading = event.target.closest('.replay-task-heading');
-  if (heading) $('replay-task-description').textContent = heading.title;
-};
-$('task-heads').addEventListener('focusin', inspectReplayTask);
-$('task-heads').addEventListener('click', inspectReplayTask);
-$('task-heads').addEventListener('pointerover', inspectReplayTask);
+function showRunTip(cell, i, tool) {
+  const stats = replayToolStats(models[i], DATA.tasks, tool, arrived[i]),
+    tip = $('run-tip'),
+    cats = Object.keys(stats.cats).sort()
+      .map(category => cap(category) + ' ' + stats.cats[category].pass + '/' + stats.cats[category].total).join(' · ');
+  tip.innerHTML = '<b>' + escape(replayToolLabel(tool)) + ' · ' + escape(name(models[i])) + '</b><br />' +
+    stats.pass + ' pass · ' + stats.partial + ' partial · ' + stats.fail + ' fail · ' + stats.notrun + ' not run' +
+    (cats ? '<br /><span class="tip-cats">' + escape(cats) + '</span>' : '');
+  tip.hidden = false;
+  const scene = $('scene-1'),
+    sr = scene.getBoundingClientRect(),
+    cr = cell.getBoundingClientRect();
+  tip.style.left = Math.max(8, Math.min(cr.left - sr.left, sr.width - tip.offsetWidth - 8)) + 'px';
+  let top = cr.bottom - sr.top + 6;
+  if (top + tip.offsetHeight > scene.offsetHeight - 4) top = cr.top - sr.top - tip.offsetHeight - 6;
+  tip.style.top = Math.max(4, top) + 'px';
+}
+function hideRunTip() {
+  $('run-tip').hidden = true;
+}
 function partialScore(i) {
   return replayScore(models[i], arrived[i], weights);
 }
@@ -430,18 +469,23 @@ function land(s) {
   if (s.done) return;
   s.done = true;
   arrived[s.i].add(s.j);
-  const t = models[s.i].per_task_results[s.j],
-    cell = laneNodes.get(s.i).querySelector('[data-task="' + s.j + '"]');
-  const fraction = attemptFraction(t) ?? 0;
-  cell.classList.add('landed', fraction === 1 ? 'pass' : fraction > 0 ? 'partial' : 'fail');
-  if (fraction > 0 && fraction < 1) cell.style.background = creditGradient(fraction);
-  if (fraction === 0 && !reduced.matches) cell.classList.add('glitch');
+  const attempt = models[s.i].per_task_results[s.j],
+    tool = (attempt.tool || 'none').trim().toLowerCase();
+  refreshCell(s.i, tool);
+  const fraction = attemptFraction(attempt) ?? 0;
+  if (fraction === 0 && !reduced.matches) {
+    const cell = laneNodes.get(s.i).querySelector('.run-cell[data-tool="' + tool + '"]');
+    cell.classList.remove('glitch');
+    void cell.offsetWidth;
+    cell.classList.add('glitch');
+  }
 }
 function send(s) {
   s.sent = true;
   const row = laneNodes.get(s.i),
     track = row.querySelector(".track"),
-    target = track.querySelector('[data-task="' + s.j + '"]');
+    tool = (models[s.i].per_task_results[s.j].tool || 'none').trim().toLowerCase(),
+    target = track.querySelector('.run-cell[data-tool="' + tool + '"]');
   const p = document.createElement("span");
   p.className =
     "puck" + (models[s.i].per_task_results[s.j].passed ? "" : " fail");
@@ -467,13 +511,14 @@ function settle(animate = true) {
   replayAnimations.forEach((a) => a.cancel());
   replayAnimations = [];
   updateCounters();
-  const update = () =>
+  const update = () => {
+    placeLanes([...models.keys()]);
     models.forEach((m, i) => {
-      $("lanes").append(laneNodes.get(i));
       laneNodes.get(i).querySelector(".lane-index").textContent = String(
         i + 1,
       ).padStart(2, "0");
     });
+  };
   if (animate) change(update);
   else update();
   $("run-state").textContent = models.some(model => !model.not_run)
@@ -504,8 +549,9 @@ function startReplay() {
   });
   arrived.forEach((s) => s.clear());
   laneNodes.forEach((row) =>
-    row.querySelectorAll(".sample[data-task]").forEach((c) => (c.className = "sample")),
+    row.querySelectorAll(".run-cell").forEach((c) => c.classList.remove("glitch")),
   );
+  refreshCells();
   $("pause").textContent = "Pause";
   $("finish").disabled = false;
   $("run-state").textContent = "REPLAYING PUBLISHED SAMPLES";
@@ -946,9 +992,23 @@ function renderProfile() {
     " / " +
     m.per_task_results.length +
     " PASS";
-  $("task-grid").innerHTML = m.per_task_results
+  const profileTools = replayTools([m], DATA.tasks);
+  if (!profileTools.includes(profileTool)) profileTool = 'all';
+  $("profile-tools").innerHTML = ['all', ...profileTools].map(tool =>
+    '<button type="button" data-profile-tool="' + escape(tool) + '" aria-pressed="' +
+    String(tool === profileTool) + '">' + (tool === 'all' ? 'All tools' : escape(replayToolLabel(tool))) + '</button>').join('');
+  $("profile-tools").querySelectorAll('button').forEach(button => {
+    button.onclick = () => {
+      profileTool = button.dataset.profileTool;
+      renderProfile();
+    };
+  });
+  const entries = m.per_task_results
+    .map((t, i) => ({ t, i }))
+    .filter(({ t }) => profileTool === 'all' || (t.tool || 'none').trim().toLowerCase() === profileTool);
+  $("task-grid").innerHTML = entries
     .map(
-      (t, i) =>
+      ({ t, i }) =>
         '<article class="task ' +
         (attemptFraction(t) === 1 ? 'pass' : attemptFraction(t) > 0 ? 'partial' : 'fail') +
         '"><div class="task-top"><span>' +
@@ -964,6 +1024,7 @@ function renderProfile() {
         "</p></article>",
     )
     .join("");
+  if (!entries.length && !m.not_run) $('task-grid').innerHTML = `<p class="pack-not-run">No published ${escape(replayToolLabel(profileTool))} tasks for this model.</p>`;
   if (m.not_run) $('task-grid').innerHTML = `<p class="pack-not-run">Not run on ${pack}. No task scores, usage or artifacts are available.</p>`;
   $("task-grid").scrollTop = 0;
   $("focus-cost").textContent = money(m.cost);
@@ -1066,8 +1127,9 @@ function renderProfile() {
       ". Unmeasured categories are listed as not run.",
   );
 }
-function openModel(i, source) {
+function openModel(i, source, tool = 'all') {
   const heading = $("focus-name");
+  profileTool = tool;
   if (source) {
     settle(false);
     source.style.viewTransitionName = "model-focus";

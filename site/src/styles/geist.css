@@ -133,6 +133,16 @@
     min-block-size: 1.875rem;
     padding-block: .0625rem;
   }
+  .run-cell {
+    min-block-size: 26px;
+    padding-block: 2px;
+  }
+  .run-cell .bar {
+    height: 6px;
+  }
+  .cell-count {
+    margin-block-start: 2px;
+  }
   .lane-open {
     min-block-size: 0;
   }

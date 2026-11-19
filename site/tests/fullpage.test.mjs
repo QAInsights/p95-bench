@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { budgetScale, replayLayout, replayScore, replayToolLayout, replayToolCounts, replaySampleLabel } from '../src/lib/scores.mjs';
+import { budgetScale, replayScore, replayTools, replayToolStats, replayCellLabel, replayToolDescription } from '../src/lib/scores.mjs';
 import { taskCoverage } from '../src/lib/scores.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
@@ -18,7 +18,7 @@ test('stack and replay score cells reserve tabular single-line widths at every b
   const columns = [...css.matchAll(/\.flame-row\s*\{[^}]*grid-template-columns: ([^;]+)/g)];
   assert.equal(columns.length, 3);
   for (const [, tracks] of columns) assert.match(tracks, /minmax\(0, 1fr\) max-content$/);
-  assert.match(css, /@media \(max-width: 1000px\)[\s\S]*?\.sample-head,\s*\.lane\s*\{\s*grid-template-columns: 24px 170px minmax\(0, 1fr\) 17rem/);
+  assert.match(css, /@media \(max-width: 1000px\)[\s\S]*?\.sample-head,\s*\.lane\s*\{\s*grid-template-columns: 24px 170px minmax\(0, 1fr\) 9rem/);
 });
 
 test('task coverage marks missing tasks as partial without counting duplicates or unknown ids', () => {
@@ -30,87 +30,67 @@ test('task coverage marks missing tasks as partial without counting duplicates o
   assert.deepEqual(taskCoverage(model, []), { run: 0, total: 0, partial: false, label: '0/0 tasks run' });
 });
 
-test('tool blocks sort by metadata, retain task identity and repeated occurrences, and include future and unknown tools', () => {
+test('replay tools union inventory and results in canonical order with unknown tools appended', () => {
+  const tasks = [{ id: 't1', tool: 'k6' }, { id: 't2', tool: 'gatling' }];
+  const models = [{ per_task_results: [
+    { task_id: 'x', tool: 'JMeter ' }, { task_id: 'y', tool: 'zebra' },
+    { task_id: 'z' }, { task_id: 'w', tool: 'locust' },
+  ] }];
+  assert.deepEqual(replayTools(models, tasks), ['none', 'jmeter', 'k6', 'gatling', 'locust', 'zebra']);
+  assert.deepEqual(replayTools([], []), []);
+  assert.deepEqual(replayTools([{ per_task_results: [] }], [{ id: 't', tool: 'locust' }]), ['locust']);
+});
+
+test('tool cells collate repeats per task, count partial credit and gate on landed attempts', () => {
   const tasks = [
-    ['load', 'k6'], ['z', 'zebra'], ['plain', 'none'], ['plan', 'jmeter'],
-    ['future', 'locust'], ['simulation', 'gatling'], ['a', 'alpha'], ['load', 'k6'],
-    ['implicit'], ['empty', ''], ['special', 'constructor'],
-  ].map(([task_id, tool]) => ({ task_id, tool, passed: true }));
-  const models = [{ per_task_results: tasks }, { per_task_results: [tasks[3], tasks[0], tasks[2]] }];
-  const layout = replayToolLayout(models);
-  assert.deepEqual(layout.groups.map(group => [group.tool, group.label, group.count]), [
-    ['none', 'General', 3], ['jmeter', 'JMeter', 1], ['k6', 'k6', 2],
-    ['gatling', 'Gatling', 1], ['locust', 'Locust', 1],
-    ['alpha', 'alpha', 1], ['constructor', 'constructor', 1], ['zebra', 'zebra', 1],
-  ]);
-  assert.deepEqual(layout.taskIds, ['plain', 'implicit', 'empty', 'plan', 'load', 'load',
-    'simulation', 'future', 'a', 'special', 'z']);
-  assert.deepEqual(layout.rows[1], [2, null, null, 0, 1, null, null, null, null, null, null]);
-  assert.deepEqual(layout.groups.map(group => group.column), [1, 5, 7, 10, 12, 14, 16, 18]);
-  layout.rows.forEach((row, i) => row.forEach((index, column) => {
-    if (index !== null) assert.equal(models[i].per_task_results[index].task_id, layout.taskIds[column]);
-  }));
-  assert.deepEqual(layout.rows[0].filter(index => tasks[index].task_id === 'load'), [0, 7]);
-});
-
-test('tool pass counts distinguish failures, partial coverage and tools with no attempts', () => {
-  const models = [
-    { per_task_results: [
-      { task_id: 'plain', passed: true }, { task_id: 'plan', tool: 'jmeter', passed: false },
-      { task_id: 'load-a', tool: 'k6', passed: true }, { task_id: 'load-b', tool: 'k6', passed: false },
-    ] },
-    { per_task_results: [{ task_id: 'plain', tool: 'none', passed: true }] },
-    { per_task_results: [{ task_id: 'load-b', tool: 'k6', passed: true }] },
-    { per_task_results: [] },
+    { id: 'g1', category: 'analysis', tool: 'none' },
+    { id: 'g2', category: 'analysis', tool: 'none' },
+    { id: 'j1', category: 'scripting', tool: 'jmeter' },
+    { id: 'k1', category: 'workload', tool: 'k6' },
   ];
-  const { groups } = replayToolLayout(models);
-  assert.deepEqual(replayToolCounts(models[0], groups).map(count => count.text),
-    ['General 1/1', 'JMeter 0/1', 'k6 1/2']);
-  assert.deepEqual(replayToolCounts(models[1], groups).map(count => count.text),
-    ['General 1/1', 'JMeter Not run', 'k6 Not run']);
-  assert.deepEqual(replayToolCounts(models[2], groups).at(-1),
-    { tool: 'k6', label: 'k6', passed: 1, attempts: 1, total: 2, text: 'k6 1/2' });
-  assert.ok(replayToolCounts(models[3], groups).every(count => count.text.endsWith('Not run')));
-  assert.deepEqual(replayToolLayout([]), { taskIds: [], rows: [], groups: [] });
-  assert.deepEqual(replayToolLayout([models[3]]), { taskIds: [], rows: [[]], groups: [] });
-  assert.deepEqual(replayToolCounts(models[0], []), []);
+  const model = { per_task_results: [
+    { task_id: 'g1', category: 'analysis', passed: true },
+    { task_id: 'g1', category: 'analysis', passed: false },
+    { task_id: 'g2', category: 'analysis', passed: false },
+    { task_id: 'j1', category: 'scripting', tool: 'jmeter', passed: true },
+    { task_id: 'k1', category: 'workload', tool: 'k6', score: 0.5 },
+  ] };
+  const general = replayToolStats(model, tasks, 'none');
+  assert.deepEqual([general.pass, general.partial, general.fail, general.notrun, general.total], [0, 1, 1, 0, 2]);
+  assert.deepEqual(general.cats, { analysis: { pass: 0, total: 2 } });
+  assert.deepEqual(replayToolStats(model, [], 'none'), general);
+  const gated = replayToolStats(model, tasks, 'none', new Set([0, 2, 3, 4]));
+  assert.deepEqual([gated.pass, gated.partial, gated.fail, gated.notrun], [0, 0, 1, 1]);
+  const landed = new Set(model.per_task_results.keys());
+  assert.equal(replayCellLabel(replayToolStats(model, tasks, 'jmeter', landed)), '1/1 pass');
+  const k6 = replayToolStats(model, tasks, 'k6');
+  assert.deepEqual([k6.pass, k6.partial, k6.fail], [0, 1, 0]);
+  assert.equal(replayCellLabel(replayToolStats(model, tasks, 'locust')), 'No tasks yet');
+  assert.equal(replayCellLabel(replayToolStats({ per_task_results: [] }, tasks, 'jmeter')), 'Not run');
 });
 
-test('published replay tools have nine General, three JMeter and three k6 aligned columns', () => {
-  const { groups, rows } = replayToolLayout(published.models);
-  assert.deepEqual(groups.map(group => [group.label, group.count]), [['General', 9], ['JMeter', 3], ['k6', 3]]);
-  assert.equal(rows.flat().filter(index => index === null).length, 0);
+test('tool descriptions expose counts and category breakdowns without color', () => {
+  const tasks = [
+    { id: 'g1', category: 'analysis', tool: 'none' },
+    { id: 'g2', category: 'analysis', tool: 'none' },
+  ];
+  const model = { per_task_results: [
+    { task_id: 'g1', category: 'analysis', passed: true },
+    { task_id: 'g1', category: 'analysis', passed: false },
+    { task_id: 'g2', category: 'analysis', passed: false },
+  ] };
+  assert.equal(replayToolDescription(model, tasks, 'none'),
+    'General 0/2 pass: 0 pass, 1 partial, 1 fail, 0 not run. Analysis 0/2');
 });
 
-test('sample descriptions expose task names, tools and all three result states without color', () => {
-  assert.equal(replaySampleLabel({ task_name: 'Shop flow', passed: true }, 'shop', 'k6'), 'Shop flow · k6 · Pass');
-  assert.equal(replaySampleLabel({ passed: false }, 'plan', 'JMeter'), 'plan · JMeter · Fail');
-  assert.equal(replaySampleLabel(null, 'future', 'unknown'), 'future · unknown · Not run');
-});
-
-test('replay columns align interleaved, appended and partial task orders by identity, including repeats', () => {
-  const models = [
-    ['analysis', 'k6-shop', 'shop', 'k6-session', 'session', 'analysis'],
-    ['analysis', 'shop', 'session', 'k6-shop', 'k6-session', 'analysis'],
-    ['session', 'analysis', 'shop'],
-  ].map(tasks => ({ per_task_results: tasks.map((task_id, index) => ({ task_id, passed: index % 2 === 0 })) }));
-  const { taskIds, rows } = replayLayout(models);
-  assert.deepEqual(taskIds, ['analysis', 'k6-shop', 'shop', 'k6-session', 'session', 'analysis']);
-  assert.deepEqual(rows, [[0, 1, 2, 3, 4, 5], [0, 3, 1, 4, 2, 5], [1, null, 2, null, 0, null]]);
-  rows.forEach((row, modelIndex) => row.forEach((index, column) => {
-    if (index !== null) assert.equal(models[modelIndex].per_task_results[index].task_id, taskIds[column]);
-  }));
-});
-
-test('replay columns include tasks absent from the first model, with empty slots rather than failures', () => {
-  const models = [['a', 'b'], ['b', 'c'], []].map(tasks => ({
-    per_task_results: tasks.map(task_id => ({ task_id })),
-  }));
-  assert.deepEqual(replayLayout(models), {
-    taskIds: ['a', 'b', 'c'], rows: [[0, 1, null], [null, 0, 1], [null, null, null]],
-  });
-  assert.deepEqual(replayLayout([]), { taskIds: [], rows: [] });
-  assert.deepEqual(replayLayout([{ per_task_results: [] }]), { taskIds: [], rows: [[]] });
+test('published replay board collates every model into General, JMeter and k6 cells', () => {
+  const tools = replayTools(published.models);
+  assert.deepEqual(tools, ['none', 'jmeter', 'k6']);
+  for (const model of published.models) {
+    const stats = tools.map(tool => replayToolStats(model, [], tool));
+    assert.deepEqual(stats.map(stat => stat.total), [9, 3, 3]);
+    assert.ok(stats.every(stat => stat.notrun === 0));
+  }
 });
 
 test('replay scores only landed passing attempts and finishes at published weighted scores', () => {

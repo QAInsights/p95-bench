@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { mkdtemp, mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { buildData, costBreakdown, loadTaskData, snapshotDigest } from '../scripts/build-data.mjs';
 
 const packId = 'p95-v2.0.0';
@@ -14,7 +15,7 @@ test('pack weights are versioned and legacy leaderboard stays identical', async 
   assert.deepEqual((await loadTaskData({ packId })).weights, packs[packId].weights);
   await assert.rejects(loadTaskData({ packId: 'missing' }), /Unknown pack/);
   const base = new URL('../../results/published/', import.meta.url);
-  const runs = (await readdir(base)).map(name => new URL(name + '/', base).pathname);
+  const runs = (await readdir(base)).map(name => fileURLToPath(new URL(name + '/', base)));
   const saved = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
   assert.deepEqual(await buildData(runs), saved);
 });
