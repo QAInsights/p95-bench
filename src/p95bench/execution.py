@@ -12,7 +12,7 @@ from p95bench.images import tool_image
 from p95bench.worker import Resources, WorkerUnavailable, execution_trial
 
 
-class AuditOverflow(RuntimeError):
+class AuditOverflow(WorkerUnavailable):
     pass
 
 COMPONENTS = {"jmeterTestPlan", "hashTree", "TestPlan", "ThreadGroup", "LoopController",

@@ -431,3 +431,15 @@ def test_cli_invalid_pack_and_repeat_no_calls(capsys):
     assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash",
                  "--repeats", "0"]) == 1
     assert "positive" in capsys.readouterr().err
+
+
+def test_cli_formats_capacity_audit_overflow_as_worker_failure(tmp_path, monkeypatch, capsys):
+    provider = FakeProvider()
+    monkeypatch.setattr("p95bench.cli.get_provider", lambda _: provider)
+    monkeypatch.setattr("p95bench.capacity.QUALIFIED", {})
+    monkeypatch.setattr("p95bench.capacity.tool_image", lambda _: "sha256:" + "0" * 64)
+    monkeypatch.setattr("p95bench.capacity.run_artifact", Mock(side_effect=AuditOverflow("capacity audit overflow")))
+    assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash",
+                 "--pack", V2, "--out", str(tmp_path)]) == 1
+    assert "p95bench: capacity audit overflow" in capsys.readouterr().err
+    assert provider.calls == 0

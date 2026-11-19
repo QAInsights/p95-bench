@@ -11,6 +11,7 @@ from uuid import uuid4
 from p95bench.budget import BudgetLedger
 from p95bench.capacity import prepare_workloads
 from p95bench.checkpoint_graders import award
+from p95bench.execution import AuditOverflow
 from p95bench.graders import (
     CHECKPOINT_GRADERS,
     GRADERS,
@@ -90,7 +91,8 @@ def _grade_response(task, text, workdir, v2):
     except Exception as error:  # noqa: BLE001
         detail = f"Grader error ({type(error).__name__}): {error}"
         metadata = {"type": type(error).__name__, "message": str(error)}
-        if isinstance(error, (WorkerUnavailable, OSError, subprocess.SubprocessError)):
+        if (isinstance(error, (WorkerUnavailable, OSError, subprocess.SubprocessError))
+                and not isinstance(error, AuditOverflow)):
             return {"status": "not_run", "detail": detail}, metadata
         try:
             result = (CheckpointGrade(award(task.params.get("rubric", [
