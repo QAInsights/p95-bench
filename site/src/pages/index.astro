@@ -147,25 +147,21 @@ const repo = "https://github.com/QAInsights/p95-bench";
               id="finish">Settle results ↗</button>
           </div>
         </div>
-        <p id="replay-task-description" hidden></p>
-        <div class="replay-scroll"><div class="replay-board">
-        <div class="sample-head tool-group-head">
-          <div class="tool-heads" id="tool-heads"></div>
-        </div>
-        <div class="sample-head task-index-head">
+        <div class="run-board">
+        <div class="sample-head run-head">
           <span>#</span><span>MODEL / PROVIDER</span><div
-            class="task-heads"
-            id="task-heads"
-          >
-          </div><span style="text-align:right">TOOL PASSES · SCORE</span>
+            class="tool-heads"
+            id="tool-heads"
+          ></div><span style="text-align:right">SCORE</span>
         </div><div class="lanes" id="lanes"></div>
-        </div></div>
+        </div>
+        <div id="run-tip" role="tooltip" hidden></div>
         <div class="sr" id="lane-descriptions"></div>
         <div class="scene-foot">
           <div class="legend-inline">
             <span><i style="background:var(--lime)"></i>Pass</span><span
               ><i style="background:var(--fail)"></i>Fail ×</span
-            ><span><i class="unrun-key"></i>Not run</span><span>Press a lane to inspect ↗</span>
+            ><span class="partial-key"><i style="background:color-mix(in srgb, var(--lime) 50%, var(--fail))"></i>Partial</span><span><i class="unrun-key"></i>Not run</span><span>Hover a tool cell for details · press a cell or lane to inspect ↗</span>
           </div><span
             ><span data-task-count>{uniqueTasks}</span> tasks · <span data-model-count>{models.length}</span> models · Published attempts<br
             /><b>Animated replay, not a running benchmark.</b></span>
@@ -349,7 +345,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
               <h3>Samples, not promises.</h3><span
                 class="muted"
                 id="focus-passed"></span>
-            </div><div class="task-grid" id="task-grid" role="region" aria-label="Task results" tabindex="0"></div><div
+            </div><div class="profile-tools" id="profile-tools" role="group" aria-label="Filter task results by tool"></div><div class="task-grid" id="task-grid" role="region" aria-label="Task results" tabindex="0"></div><div
               class="metrics"
             >
               <div>

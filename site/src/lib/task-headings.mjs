@@ -6,12 +6,6 @@ export function taskHeading(task) {
   return `${task.id} · ${taskTitle(task)}`;
 }
 
-export function replayTaskColumns(taskIds, groups) {
-  return groups.flatMap(group => taskIds.slice(group.offset, group.offset + group.count)
-    .map((id, index) => ({ id, column: group.column + index,
-      ordinal: group.offset + index + 1, tool: group.label })));
-}
-
 export function taskCategoryGroups(tasks) {
   const groups = [];
   for (const task of tasks) {

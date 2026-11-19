@@ -3,12 +3,13 @@ import { test } from 'node:test';
 import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { buildData } from '../scripts/build-data.mjs';
 import { contributions, bestWithin, toolScore, toolScoreLabel, taskResult, costFrontier, modelSlug } from '../src/lib/scores.mjs';
 
 const runs = ['deepseek-flash', 'deepseek-v4-pro', 'claude-sonnet-5-5', 'claude-opus-5-5',
   'inkling', 'inkling-small', 'inkling-2-small', 'gpt-6-2-sol', 'gpt-6-2-astra'].map((m) =>
-  new URL(`../../results/published/${m}/`, import.meta.url).pathname);
+  fileURLToPath(new URL(`../../results/published/${m}/`, import.meta.url)));
 
 test('site weights come from the same packaged JSON as the Python scorer', async () => {
   const shared = JSON.parse(await readFile(new URL('../../src/p95bench/category-weights.json', import.meta.url)));
@@ -59,7 +60,7 @@ test('task matrix includes every repeat and fails a cell if any attempt failed',
 test('published data is reproducible, redacted and matches weighted scores', async () => {
   const committed = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
   const publishedRuns = committed.models.map(model =>
-    new URL(`../../results/published/${modelSlug(model.model)}/`, import.meta.url).pathname);
+    fileURLToPath(new URL(`../../results/published/${modelSlug(model.model)}/`, import.meta.url)));
   const result = await buildData(publishedRuns);
   assert.deepEqual(result, committed);
   assert.deepEqual(await buildData(publishedRuns.toReversed()), result);
@@ -68,7 +69,7 @@ test('published data is reproducible, redacted and matches weighted scores', asy
     const sum = contributions(model, result.weights).reduce((n, c) => n + c.points, 0);
     assert.ok(Math.abs(sum - model.overall_score) < 1e-10);
     const metadata = JSON.parse(await readFile(path.join(publishedRuns.find(directory =>
-      directory.endsWith('/' + modelSlug(model.model) + '/')), 'metadata.json')));
+      directory.replaceAll('\\', '/').endsWith('/' + modelSlug(model.model) + '/')), 'metadata.json')));
     assert.equal(metadata.k6_version, '1.0.0');
     if (model.provider === 'qwen') {
       assert.match(model.cost_note, /ModelScope free tier/);

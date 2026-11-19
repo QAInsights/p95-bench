@@ -3,31 +3,27 @@ import { test } from 'node:test';
 import { readFile, readdir } from 'node:fs/promises';
 import { selectModelVersions } from '../src/lib/scores.mjs';
 import { heatmapData, metricExtent, heatColor, heatValue, flameScale } from '../src/lib/heatmap-data.mjs';
-import { taskCategoryGroups, taskHeading, taskTitle, replayTaskColumns } from '../src/lib/task-headings.mjs';
-import { replayToolLayout } from '../src/lib/scores.mjs';
+import { taskCategoryGroups, taskHeading, taskTitle } from '../src/lib/task-headings.mjs';
+import { replayTools, replayToolStats } from '../src/lib/scores.mjs';
 import { loadTaskData } from '../scripts/build-data.mjs';
 const models = [{ model: 'test', provider: 'gemini', overall_score: 50, cost: 1 }];
 const tasks = [{ id: 'k', tool: 'k6' }, { id: 'a', tool: 'none' }, { id: 'j', tool: 'jmeter' }];
 const record = (passed, tokens, latency) => ({ provider: 'gemini', model: 'test', task_id: 'a', grade: { passed },
   response: { output_tokens: tokens, latency_seconds: latency } });
 
-test('v2 replay keeps all 40 ordinals aligned with heatmap columns and keyboard task descriptions', async () => {
+test('v2 replay collates every task into tool cells while the heatmap keeps all 40 ordinals', async () => {
   const data = JSON.parse(await readFile(new URL('../src/data/leaderboard-p95-v2.0.0.json', import.meta.url), 'utf8'));
   const { tasks } = await loadTaskData({ packId: 'p95-v2.0.0' });
   const { columns } = heatmapData([], tasks.toSorted((a, b) => a.id.localeCompare(b.id)), []);
-  const layout = replayToolLayout(data.models);
-  const headings = replayTaskColumns(layout.taskIds, layout.groups);
-  assert.equal(headings.length, 40);
-  assert.deepEqual(headings.map(heading => heading.ordinal), columns.map((_, index) => index + 1));
-  assert.deepEqual(headings.map(heading => heading.id), columns.map(column => column.id));
-  assert.equal(headings[16].column, headings[15].column + 2);
-  assert.deepEqual(replayTaskColumns([], []), []);
+  assert.equal(columns.length, 40);
+  const tools = replayTools(data.models, tasks);
+  const stats = tools.map(tool => replayToolStats(data.models[0], tasks, tool));
+  assert.equal(stats.reduce((sum, stat) => sum + stat.total, 0), 40);
   const replay = await readFile(new URL('../src/lib/fullpage.mjs', import.meta.url), 'utf8');
-  assert.ok(replay.includes('type="button" class="replay-task-heading"'));
-  assert.ok(replay.includes('aria-controls="replay-task-description" aria-label="'));
-  assert.ok(replay.includes("addEventListener('focusin', inspectReplayTask)"));
-  assert.ok(replay.includes("$('replay-task-description').textContent = heading.title"));
-  assert.ok(replay.includes('escape(shortTaskLabel(id))'));
+  assert.ok(replay.includes('type="button" class="run-cell"'));
+  assert.ok(replay.includes("cell.addEventListener('pointerenter', () => showRunTip(cell, i, tool))"));
+  assert.ok(replay.includes("cell.addEventListener('focus', () => showRunTip(cell, i, tool))"));
+  assert.ok(replay.includes('replayToolDescription(models[i], DATA.tasks, tool)'));
 });
 
 test('v2 task headings group all 40 columns by tool/category and retain full IDs and titles', async () => {
@@ -56,7 +52,7 @@ test('v2 task headings group all 40 columns by tool/category and retain full IDs
   assert.ok(component.includes('v2 ? index + 1 : shortTaskLabel(task.id)'));
   assert.ok(client.includes('taskHeading(data.columns[Number(node.dataset.column)])'));
   assert.ok(replay.includes('class="task-category-list"'));
-  assert.ok(replay.includes('replaySampleLabel(task, id, group.label, heading(id))'));
+  assert.ok(replay.includes('replayToolStats(models[i], DATA.tasks, tool, arrived[i])'));
 });
 
 test('heatmap groups task columns by tool, preserves ranking, averages repeated measured attempts and shares provider names', () => {
