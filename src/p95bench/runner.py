@@ -51,16 +51,21 @@ def summarize(attempts):
     }
 
 
-def harness_revision():
-    root = Path(__file__).resolve().parents[2]
+def harness_revision(root=None):
+    root = (root or Path(__file__).resolve().parents[2]).resolve()
+    unknown = {"harness_commit": None, "harness_dirty": None}
     try:
+        toplevel = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+                                  capture_output=True, text=True, check=True).stdout.strip()
+        if Path(toplevel).resolve() != root:
+            return unknown
         commit = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True,
                                 text=True, check=True).stdout.strip()
         dirty = bool(subprocess.run(["git", "-C", str(root), "status", "--porcelain",
                                      "--untracked-files=no"], capture_output=True, text=True,
                                     check=True).stdout.strip())
     except (OSError, subprocess.CalledProcessError):
-        return {"harness_commit": None, "harness_dirty": None}
+        return unknown
     return {"harness_commit": commit, "harness_dirty": dirty}
 
 

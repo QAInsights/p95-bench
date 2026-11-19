@@ -14,7 +14,7 @@ from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, Grade
 from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import efficiency, pack_config, snapshot, summarize_v2
 from p95bench.providers import OpenAICompatible, Price, ProviderConfig, Response, SpendLimitExceeded
-from p95bench.runner import _grade_response, run, score_run, summarize
+from p95bench.runner import _grade_response, harness_revision, run, score_run, summarize
 from p95bench.tasks import CATEGORIES, Task, load_tasks
 from p95bench.worker import WorkerUnavailable
 
@@ -345,6 +345,13 @@ def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
                           text=True, check=False).stdout.strip()
     assert metadata["harness_commit"] == (head or None)
     assert isinstance(metadata["harness_dirty"], bool) or not head
+
+
+def test_harness_revision_ignores_enclosing_repository(tmp_path):
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    installed = tmp_path / ".venv" / "lib" / "python3" / "site-packages"
+    installed.mkdir(parents=True)
+    assert harness_revision(installed) == {"harness_commit": None, "harness_dirty": None}
 
 
 def test_budget_overrun_is_persisted_and_blocks_future_spend(tmp_path):
