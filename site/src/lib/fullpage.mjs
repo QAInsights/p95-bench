@@ -319,7 +319,7 @@ function refreshCell(i, tool) {
   const stats = replayToolStats(models[i], DATA.tasks, tool, arrived[i]);
   cell.innerHTML = cellBar(stats);
   cell.dataset.empty = String(stats.notrun === stats.total);
-  cell.setAttribute('aria-label', escape(name(models[i]) + ' · ' + replayToolDescription(models[i], DATA.tasks, tool) + '. Press to inspect.'));
+  cell.setAttribute('aria-label', name(models[i]) + ' · ' + replayToolDescription(models[i], DATA.tasks, tool) + '. Press to inspect.');
 }
 function refreshCells() {
   models.forEach((m, i) => tools.forEach(tool => refreshCell(i, tool)));
