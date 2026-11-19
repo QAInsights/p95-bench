@@ -5,6 +5,7 @@ const { pack, data } = Astro.props;
 ---
 {pack === 'v1' ? <Explainer tasks={data.tasks} /> : <section class="reading-section explainer" id="explainer" data-section-label="How scoring works">
   <p class="eyebrow">06 / OPEN THE BLACK BOX</p><h2 tabindex="-1">How v2 scoring works.</h2>
+  <p class="section-copy">V2 is the default landing view. Select v1 in the header for the legacy board.</p>
   <p class="section-copy">Showing p95-v2.0.0 · 50-task design, {data.tasks.length} public tasks. Overall and category scores include the 10 held-out tasks; task-level scenes and tool rankings show public tasks only. Held-out task details are not published. Costs are list-price estimates; ModelScope access was free.</p>
   <div class="ex-graders">
     <article><h3>Checkpoint quality</h3><p>Each task has 100 possible checkpoint points. Prerequisites cap dependent credit. Task means are weighted by category; repetitions are averaged.</p></article>

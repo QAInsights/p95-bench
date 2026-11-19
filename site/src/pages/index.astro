@@ -14,7 +14,7 @@ import "../styles/scatter.css";
 import "../styles/rolling-numbers.css";
 import "../styles/packs.css";
 import { packCatalog } from "../lib/pack-catalog.mjs";
-import { packLabels } from "../lib/packs.mjs";
+import { packLabels, resolvePack } from "../lib/packs.mjs";
 import Scenarios from "../components/Scenarios.astro";
 import PackExplainer from "../components/PackExplainer.astro";
 
@@ -87,7 +87,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
     <a class="skip" href="#opening-title">Skip to experience</a>
     <header>
       <div class="brand-group">
-        <a class="wordmark" href="#scene-1" aria-label="P95 Bench, first scene"
+        <a class="wordmark" href="/" aria-label="P95 Bench, home"
           ><img
             src="/favicon.svg"
             width="27"
@@ -98,7 +98,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
           <span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a
         ><label class="version-switch" for="show-versions"><input id="show-versions" type="checkbox" switch role="switch" aria-describedby="versions-help" />Show earlier versions</label>
         <div class="pack-switch" role="group" aria-label="Benchmark pack">
-          {Object.keys(packCatalog).map(pack => <button type="button" data-pack={pack} aria-pressed={String(pack === 'v1')}>{packLabels[pack]}</button>)}
+          {Object.keys(packCatalog).map(pack => <button type="button" data-pack={pack} aria-pressed={String(pack === resolvePack(null, packCatalog))}>{packLabels[pack]}</button>)}
         </div>
         <p class="sr" id="versions-help">Latest means the newest benchmarked release in each family. Earlier versions remain fully ranked when shown. Discontinued means the provider no longer offers the model.</p>
       </div><div class="header-tools">
@@ -147,6 +147,8 @@ const repo = "https://github.com/QAInsights/p95-bench";
               id="finish">Settle results ↗</button>
           </div>
         </div>
+        <p id="replay-task-description" hidden></p>
+        <div class="replay-scroll"><div class="replay-board">
         <div class="sample-head tool-group-head">
           <div class="tool-heads" id="tool-heads"></div>
         </div>
@@ -157,6 +159,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
           >
           </div><span style="text-align:right">TOOL PASSES · SCORE</span>
         </div><div class="lanes" id="lanes"></div>
+        </div></div>
         <div class="sr" id="lane-descriptions"></div>
         <div class="scene-foot">
           <div class="legend-inline">

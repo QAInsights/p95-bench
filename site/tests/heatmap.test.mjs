@@ -3,10 +3,61 @@ import { test } from 'node:test';
 import { readFile, readdir } from 'node:fs/promises';
 import { selectModelVersions } from '../src/lib/scores.mjs';
 import { heatmapData, metricExtent, heatColor, heatValue, flameScale } from '../src/lib/heatmap-data.mjs';
+import { taskCategoryGroups, taskHeading, taskTitle, replayTaskColumns } from '../src/lib/task-headings.mjs';
+import { replayToolLayout } from '../src/lib/scores.mjs';
+import { loadTaskData } from '../scripts/build-data.mjs';
 const models = [{ model: 'test', provider: 'gemini', overall_score: 50, cost: 1 }];
 const tasks = [{ id: 'k', tool: 'k6' }, { id: 'a', tool: 'none' }, { id: 'j', tool: 'jmeter' }];
 const record = (passed, tokens, latency) => ({ provider: 'gemini', model: 'test', task_id: 'a', grade: { passed },
   response: { output_tokens: tokens, latency_seconds: latency } });
+
+test('v2 replay keeps all 40 ordinals aligned with heatmap columns and keyboard task descriptions', async () => {
+  const data = JSON.parse(await readFile(new URL('../src/data/leaderboard-p95-v2.0.0.json', import.meta.url), 'utf8'));
+  const { tasks } = await loadTaskData({ packId: 'p95-v2.0.0' });
+  const { columns } = heatmapData([], tasks.toSorted((a, b) => a.id.localeCompare(b.id)), []);
+  const layout = replayToolLayout(data.models);
+  const headings = replayTaskColumns(layout.taskIds, layout.groups);
+  assert.equal(headings.length, 40);
+  assert.deepEqual(headings.map(heading => heading.ordinal), columns.map((_, index) => index + 1));
+  assert.deepEqual(headings.map(heading => heading.id), columns.map(column => column.id));
+  assert.equal(headings[16].column, headings[15].column + 2);
+  assert.deepEqual(replayTaskColumns([], []), []);
+  const replay = await readFile(new URL('../src/lib/fullpage.mjs', import.meta.url), 'utf8');
+  assert.ok(replay.includes('type="button" class="replay-task-heading"'));
+  assert.ok(replay.includes('aria-controls="replay-task-description" aria-label="'));
+  assert.ok(replay.includes("addEventListener('focusin', inspectReplayTask)"));
+  assert.ok(replay.includes("$('replay-task-description').textContent = heading.title"));
+  assert.ok(replay.includes('escape(shortTaskLabel(id))'));
+});
+
+test('v2 task headings group all 40 columns by tool/category and retain full IDs and titles', async () => {
+  const { tasks } = await loadTaskData({ packId: 'p95-v2.0.0' });
+  const { columns } = heatmapData([], tasks, []);
+  const groups = taskCategoryGroups(columns);
+  assert.equal(columns.length, 40);
+  assert.equal(groups.reduce((sum, group) => sum + group.count, 0), 40);
+  assert.deepEqual(new Set(groups.map(group => group.label)), new Set(['Analysis', 'Correlation', 'Migration', 'Repair', 'Workload']));
+  let offset = 0;
+  for (const group of groups) {
+    assert.ok(columns.slice(offset, offset + group.count).every(task => task.tool === group.tool && task.category === group.category));
+    offset += group.count;
+  }
+  assert.ok(columns.every(task => taskHeading(task).includes(task.id) && task.title.length > 0));
+  assert.equal(taskHeading({ id: 'v2-r01-extractor-scope' }), 'v2-r01-extractor-scope · extractor scope');
+  assert.equal(taskTitle({ id: 'a', title: 'Endpoint report', name: 'Other' }), 'Endpoint report');
+  assert.equal(taskTitle({ id: 'a', name: 'Endpoint report' }), 'Endpoint report');
+  assert.deepEqual(taskCategoryGroups([]), []);
+  assert.deepEqual(taskCategoryGroups([{ id: 'a' }]).map(group => group.label), ['Tasks']);
+  const component = await readFile(new URL('../src/components/Heatmap.astro', import.meta.url), 'utf8');
+  const client = await readFile(new URL('../src/lib/heatmap.mjs', import.meta.url), 'utf8');
+  const replay = await readFile(new URL('../src/lib/fullpage.mjs', import.meta.url), 'utf8');
+  assert.ok(component.includes('taskCategoryGroups(data.columns)'));
+  assert.ok(component.includes('title={taskHeading(task)} aria-label={taskHeading(task)}'));
+  assert.ok(component.includes('v2 ? index + 1 : shortTaskLabel(task.id)'));
+  assert.ok(client.includes('taskHeading(data.columns[Number(node.dataset.column)])'));
+  assert.ok(replay.includes('class="task-category-list"'));
+  assert.ok(replay.includes('replaySampleLabel(task, id, group.label, heading(id))'));
+});
 
 test('heatmap groups task columns by tool, preserves ranking, averages repeated measured attempts and shares provider names', () => {
   const { columns, rows } = heatmapData(models, tasks, [record(true, 10, 2), record(false, 30, 6), record(null, 0, 0)]);

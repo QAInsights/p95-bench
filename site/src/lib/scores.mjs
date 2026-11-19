@@ -168,8 +168,8 @@ export function replayToolCounts(model, groups) {
   });
 }
 
-export function replaySampleLabel(task, taskId, toolLabel) {
-  return `${task?.task_name ?? taskId} · ${toolLabel} · ${task == null ? 'Not run' : Number.isFinite(task.score) ? `${(task.score * 100).toFixed(1)}% credit` : task.passed ? 'Pass' : 'Fail'}`;
+export function replaySampleLabel(task, taskId, toolLabel, title = task?.task_name ?? taskId) {
+  return `${title} · ${toolLabel} · ${task == null ? 'Not run' : Number.isFinite(task.score) ? `${(task.score * 100).toFixed(1)}% credit` : task.passed ? 'Pass' : 'Fail'}`;
 }
 
 export function replayScore(model, landed, weights) {

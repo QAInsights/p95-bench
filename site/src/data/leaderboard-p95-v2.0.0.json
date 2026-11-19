@@ -1,6 +1,5 @@
 {
   "pack_id": "p95-v2.0.0",
-  "default_view": false,
   "weights": {
     "repair": 25,
     "migration": 15,

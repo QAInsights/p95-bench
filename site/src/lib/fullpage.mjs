@@ -2,6 +2,7 @@
 import { resolvePack, creditGradient } from './packs.mjs';
 import { mountPackScenes } from './pack-scenes.mjs';
 import { renderToolRankings } from './tool-rankings.mjs';
+import { taskCategoryGroups, taskHeading, replayTaskColumns } from './task-headings.mjs';
 import { buildScenarios } from './scenarios.mjs';
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
@@ -36,8 +37,10 @@ const $ = (id) => document.getElementById(id),
 $('show-versions').checked = showingEarlier;
 mountPackScenes(pack);
 const initialURL = new URL(location.href);
-initialURL.searchParams.set('pack', pack);
-history.replaceState(null, '', initialURL);
+if (initialURL.searchParams.has('pack')) {
+  initialURL.searchParams.set('pack', pack);
+  history.replaceState(null, '', initialURL);
+}
 let categories = Object.keys(weights).filter((c) =>
   models.some((m) => m.category_scores[c] !== undefined),
 );
@@ -149,10 +152,6 @@ document
     goScene(Number(b.dataset.scene));
   }));
 $("next-scene").onclick = () => goScene(currentScene + 1);
-document.querySelector(".wordmark").onclick = (e) => {
-  e.preventDefault();
-  goScene(0);
-};
 document.querySelectorAll('a[href="#method"],a[href="#tools"],a[href="#scenarios"],a[href="#explainer"]').forEach(
   (a) =>
     (a.onclick = (e) => {
@@ -304,17 +303,30 @@ let frame = 0,
   replayAnimations = [];
 function buildLanes() {
   const { taskIds, rows, groups } = replayToolLayout(models);
+  const tasksById = new Map(DATA.tasks.map(task => [task.id, task]));
+  const heading = id => taskHeading(tasksById.get(id) ?? { id });
   const sampleCount = taskIds.length;
+  $('scene-1').classList.toggle('replay-v2', pack === 'v2');
+  $('scene-1').style.setProperty('--replay-columns', sampleCount);
+  $('replay-task-description').hidden = pack !== 'v2';
+  $('replay-task-description').textContent = 'Focus or select a numbered column to inspect its task. Scroll horizontally for all columns.';
   $("scene-1").style.setProperty("--sample-columns", groups
     .map(group => `repeat(${group.count}, minmax(0, 1fr))`).join(" var(--group-gap) ") || "none");
   $("tool-heads").innerHTML = groups.map(group =>
     '<span style="grid-column:' + group.column + '/span ' + group.count + '">' +
     '<span class="tool-label">' + escape(group.label) + '</span><span class="group-size"> · ' +
-    group.count + '</span></span>').join("");
-  $("task-heads").innerHTML = groups.map(group => taskIds
+    group.count + '</span>' + (pack === 'v2' ? '<span class="task-category-list">' +
+      taskCategoryGroups(taskIds.slice(group.offset, group.offset + group.count).map(id => tasksById.get(id) ?? { id }))
+        .map(category => '<span>' + escape(category.label) + ' <b>' + category.count + '</b></span>').join('') +
+      '</span>' : '') + '</span>').join("");
+  $("task-heads").innerHTML = pack === 'v2' ? replayTaskColumns(taskIds, groups).map(column =>
+    '<button type="button" class="replay-task-heading" style="grid-column:' + column.column +
+    '" aria-controls="replay-task-description" aria-label="' +
+    escape('Column ' + column.ordinal + ': ' + heading(column.id) + ' · ' + column.tool) +
+    '" title="' + escape(heading(column.id) + ' · ' + column.tool) + '">' + column.ordinal + '</button>').join('') : groups.map(group => taskIds
     .slice(group.offset, group.offset + group.count).map((id, index) =>
       '<span style="grid-column:' + (group.column + index) + '" title="' +
-      escape(id + ' · ' + group.label) + '">' +
+      escape(heading(id) + ' · ' + group.label) + '">' +
       escape(shortTaskLabel(id)) + '</span>').join(""))
     .join("");
   $("lanes").replaceChildren();
@@ -332,7 +344,7 @@ function buildLanes() {
     const labels = taskIds.map((id, column) => {
       const task = rows[i][column] === null ? null : m.per_task_results[rows[i][column]];
       const group = groups.find(group => column >= group.offset && column < group.offset + group.count);
-      return replaySampleLabel(task, id, group.label);
+      return replaySampleLabel(task, id, group.label, heading(id));
     });
     const description = document.createElement("p");
     description.id = "lane-description-" + i;
@@ -384,6 +396,13 @@ function buildLanes() {
     .forEach((i) => $("lanes").append(laneNodes.get(i)));
 }
 buildLanes();
+const inspectReplayTask = event => {
+  const heading = event.target.closest('.replay-task-heading');
+  if (heading) $('replay-task-description').textContent = heading.title;
+};
+$('task-heads').addEventListener('focusin', inspectReplayTask);
+$('task-heads').addEventListener('click', inspectReplayTask);
+$('task-heads').addEventListener('pointerover', inspectReplayTask);
 function partialScore(i) {
   return replayScore(models[i], arrived[i], weights);
 }
@@ -1088,8 +1107,8 @@ function updateVisibleCounts(animate = false) {
   document.querySelectorAll('[data-pack-model]').forEach(row => { row.hidden = !models.some(model => model.model === row.dataset.packModel); });
   $('leading-label').textContent = pack === 'v2' ? 'LEADING COMPOSITE · 95/5' : 'LEADING WEIGHTED SCORE';
   $('method-pack').textContent = pack === 'v2'
-    ? `Showing ${DATA.pack_id} · 50-task design, ${DATA.tasks.length} public tasks. Composite = 95% quality + 5% quality-gated efficiency. Checkpoints total 100 possible points per task; prerequisites gate dependent credit. Repetitions are averaged; first publication defaults to one. Pinned workers, independent server audit evidence and workload capacity preflights verify execution. Private task details are never published.`
-    : 'Showing p95-v1 · 15 tasks · binary pass/fail. Weighted category pass rates retain their original scoring.';
+    ? `Showing ${DATA.pack_id} · 50-task design, ${DATA.tasks.length} public tasks. V2 is the default landing view; select v1 for the legacy board. Composite = 95% quality + 5% quality-gated efficiency. Checkpoints total 100 possible points per task; prerequisites gate dependent credit. Repetitions are averaged; first publication defaults to one. Pinned workers, independent server audit evidence and workload capacity preflights verify execution. Private task details are never published.`
+    : 'Showing p95-v1 · 15 tasks · binary pass/fail. Weighted category pass rates retain their original scoring. V2 is the default landing view.';
   document.querySelectorAll('[data-v1-method]').forEach(node => { node.hidden = pack !== 'v1'; });
   $('method-weights').innerHTML = Object.entries(weights).map(([category, weight]) =>
     `<span><i style="background:${colors[category]}"></i>${escape(category)}<b>${weight}</b></span>`).join('');

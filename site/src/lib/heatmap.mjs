@@ -1,5 +1,6 @@
 import { metricExtent, heatColor, heatValue } from './heatmap-data.mjs';
 import { rollNumber, rollText, announceRolling } from './rolling-numbers.mjs';
+import { taskHeading } from './task-headings.mjs';
 
 export function mountHeatmap(root, { signal, animate = false } = {}) {
   const data = JSON.parse(root.querySelector('#heatmap-records').textContent);
@@ -62,7 +63,7 @@ export function mountHeatmap(root, { signal, animate = false } = {}) {
       const row = data.rows[Number(node.dataset.row)], cell = row.cells[Number(node.dataset.column)];
       const color = heatColor(cell[metric], metric, extent, cell.partial_credit);
       node.style.setProperty('--heat-color', color ?? 'repeating-linear-gradient(-45deg, transparent 0 .1875rem, #99919f .1875rem .25rem)');
-      node.setAttribute('aria-label', `${row.model} · ${row.provider} · ${cell.task} · ${heatValue(cell, metric)} · ${cell.measured}/${cell.attempts} measured attempts (mean)`);
+      node.setAttribute('aria-label', `${row.model} · ${row.provider} · ${taskHeading(data.columns[Number(node.dataset.column)])} · ${heatValue(cell, metric)} · ${cell.measured}/${cell.attempts} measured attempts (mean)`);
       node.firstElementChild.textContent = metric === 'result' && cell.result === 0 ? '×' : cell[metric] === null ? '—' : metric === 'result' && cell.result !== 1 ? '%' : '';
     });
     active = null;
