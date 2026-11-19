@@ -51,6 +51,19 @@ def summarize(attempts):
     }
 
 
+def harness_revision():
+    root = Path(__file__).resolve().parents[2]
+    try:
+        commit = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True,
+                                text=True, check=True).stdout.strip()
+        dirty = bool(subprocess.run(["git", "-C", str(root), "status", "--porcelain",
+                                     "--untracked-files=no"], capture_output=True, text=True,
+                                    check=True).stdout.strip())
+    except (OSError, subprocess.CalledProcessError):
+        return {"harness_commit": None, "harness_dirty": None}
+    return {"harness_commit": commit, "harness_dirty": dirty}
+
+
 def score_run(directory: Path):
     attempts = [json.loads(line) for line in (directory / "attempts.jsonl").read_text().splitlines()
                 if line.strip()]
@@ -149,6 +162,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                             price_per_million=asdict(price))
         if v2:
             metadata["spend_cap_usd"] = ledger.limit / 1_000_000
+            metadata.update(harness_revision())
         (directory / "metadata.json").write_text(
             json.dumps(metadata, indent=2) + "\n")
     budget_error = None

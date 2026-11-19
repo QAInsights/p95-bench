@@ -335,6 +335,18 @@ def test_concurrent_budget_reservations(tmp_path):
         assert sum(pool.map(reserve, range(8))) == 6
 
 
+def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint", lambda *args: result(80))
+    directory, _ = run(FakeProvider(), "fake", "model", Price(1, 1, 1), [task()], tmp_path,
+                       pack_id=V2, efficiency_budgets={"repair": {"tokens": 100, "latency_seconds": 1}},
+                       budget_ledger=BudgetLedger(tmp_path / "ledger.json"))
+    metadata = json.loads((directory / "metadata.json").read_text())
+    head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True,
+                          text=True, check=False).stdout.strip()
+    assert metadata["harness_commit"] == (head or None)
+    assert isinstance(metadata["harness_dirty"], bool) or not head
+
+
 def test_budget_overrun_is_persisted_and_blocks_future_spend(tmp_path):
     ledger = BudgetLedger(tmp_path / "ledger.json")
     key = ledger.reserve(1)

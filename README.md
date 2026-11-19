@@ -38,6 +38,7 @@ summaries are unchanged.
 V2 runs are stored under `OUT/p95-v2.0.0/RUN_ID`; v1 preserves `OUT/RUN_ID` for
 compatibility. Both get a hashed `pack.json` snapshot
 containing scoring rules, task inventory, efficiency budgets and repeat count.
+V2 `metadata.json` records `harness_commit` and `harness_dirty` (tracked changes present).
 Offline `p95bench score DIRECTORY` dispatches by that snapshot. Old directories
 without a snapshot are v1. Mixed pack inputs and altered snapshots are rejected.
 Site data generation preserves the unchanged v1 `leaderboard.json`; the public
