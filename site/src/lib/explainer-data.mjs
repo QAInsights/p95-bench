@@ -1,5 +1,9 @@
 import { scoreAttempts } from './scores.mjs';
 
+export function costAttemptLabel(attempt) {
+  return attempt.task_id + (attempt.status === 'not_run' ? ' · Not run (charged)' : '');
+}
+
 export function executionShapes(tasks) {
   return tasks.filter(task => task.grader === 'k6_exec').map(task => {
     const vus = task.params.expected_checkout_vus ?? task.params.min_checkout_vus ?? 1;

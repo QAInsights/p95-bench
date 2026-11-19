@@ -3,10 +3,15 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { loadTaskData } from '../scripts/build-data.mjs';
 import { scoreAttempts } from '../src/lib/scores.mjs';
-import { executionShapes, simulatorRows, setTaskState, attemptCost } from '../src/lib/explainer-data.mjs';
+import { executionShapes, simulatorRows, setTaskState, attemptCost, costAttemptLabel } from '../src/lib/explainer-data.mjs';
 import { sectionMetadata, sectionShortcut, sectionNumber } from '../src/lib/section-navigation.mjs';
 
 const published = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
+
+test('charged ungraded responses have an explicit accessible cost label', () => {
+  assert.equal(costAttemptLabel({ task_id: 'sample' }), 'sample');
+  assert.equal(costAttemptLabel({ task_id: 'sample', status: 'not_run' }), 'sample · Not run (charged)');
+});
 
 test('simulator uses shared scoring and reproduces every published overall and category score', async () => {
   const { tasks, weights } = await loadTaskData();

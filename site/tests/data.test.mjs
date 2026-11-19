@@ -172,6 +172,34 @@ test('generator rejects empty, duplicate and mismatched runs', async () => {
   }
 });
 
+test('v1 cost breakdown includes charged not-run usage without grading it', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'p95-not-run-'));
+  try {
+    const text = await readFile(path.join(runs[0], 'attempts.jsonl'), 'utf8');
+    const attempts = text.trim().split('\n').map(JSON.parse);
+    const summary = JSON.parse(await readFile(path.join(runs[0], 'summary.json'), 'utf8'));
+    const charged = { ...attempts[0], status: 'not_run', grade: { status: 'not_run' } };
+    summary.estimated_cost_usd += charged.cost_usd;
+    await writeFile(path.join(directory, 'attempts.jsonl'), text);
+    await writeFile(path.join(directory, 'summary.json'), JSON.stringify(summary));
+    await writeFile(path.join(directory, 'not-run.jsonl'), [charged,
+      { status: 'not_run', task_id: charged.task_id }].map(JSON.stringify).join('\n'));
+    const model = (await buildData([directory])).models[0];
+    assert.equal(model.per_task_results.length, attempts.length);
+    assert.equal(model.cost_attempts.length, attempts.length + 1);
+    assert.equal(model.cost_attempts.at(-1).status, 'not_run');
+    assert.equal(model.cost_attempts.at(-1).cost_usd, charged.cost_usd);
+    assert.ok(Math.abs(model.cost_attempts.reduce((sum, a) => sum + a.cost_usd, 0) - model.cost) < 1e-9);
+    assert.doesNotMatch(JSON.stringify(model), /"(?:response|messages|text)":/);
+    await writeFile(path.join(directory, 'summary.json'), JSON.stringify({ ...summary, estimated_cost_usd: 99 }));
+    await assert.rejects(buildData([directory]), /Cost breakdown total mismatch/);
+    await writeFile(path.join(directory, 'not-run.jsonl'), JSON.stringify({ ...charged, task_id: 'unknown' }));
+    await assert.rejects(buildData([directory]), /Invalid charged not-run/);
+  } finally {
+    await rm(directory, { recursive: true });
+  }
+});
+
 test('generator preserves pricing provenance and native output caps without relabeling other runs', async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'p95-modelscope-test-'));
   try {

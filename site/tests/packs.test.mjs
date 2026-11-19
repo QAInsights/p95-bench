@@ -55,6 +55,18 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     assert.equal(data.models[0].per_task_results[0].repeat, 0);
     assert.equal(data.models[0].per_task_results[0].output_tokens, 20);
     assert.equal(data.models[0].per_task_results[0].latency_seconds, 2);
+    await save('not-run.jsonl', { ...attempt, status: 'not_run', cost_usd: .02,
+      grade: { status: 'not_run' } });
+    await save('summary.json', { ...summary, estimated_cost_usd: .03 });
+    const charged = (await buildData([directory], options)).models[0];
+    assert.equal(charged.per_task_results.length, 1);
+    assert.equal(charged.cost_attempts.length, 2);
+    assert.equal(charged.cost_attempts[1].status, 'not_run');
+    assert.equal(charged.cost_attempts.reduce((sum, a) => sum + a.cost_usd, 0), charged.cost);
+    await save('summary.json', { ...summary, complete: false });
+    await assert.rejects(buildData([directory], options), /Incomplete/);
+    await rm(path.join(directory, 'not-run.jsonl'));
+    await save('summary.json', summary);
     await save('pack.json', { ...manifest, repeats: 2 });
     await assert.rejects(buildData([directory], options), /digest/);
     await save('pack.json', manifest);
