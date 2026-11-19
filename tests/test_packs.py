@@ -349,6 +349,8 @@ def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
 
 def test_harness_revision_ignores_enclosing_repository(tmp_path):
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=t", "-c", "user.email=t@t",
+                    "commit", "-q", "--allow-empty", "-m", "init"], check=True)
     installed = tmp_path / ".venv" / "lib" / "python3" / "site-packages"
     installed.mkdir(parents=True)
     assert harness_revision(installed) == {"harness_commit": None, "harness_dirty": None}
