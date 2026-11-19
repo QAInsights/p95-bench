@@ -286,8 +286,9 @@ def executable(text, params, workdir, fixtures):
                          else flow_fractions(trial, controls, {
                              **contract, "poll_interval": case.get("profile", {}).get("poll_interval", 0)}))
             values.append(award(rubric, fractions))
-    except (ValueError, KeyError, TypeError, ET.ParseError) as error:
-        return CheckpointGrade(award(rubric, {}), str(error))
+    except (ValueError, KeyError, TypeError, OverflowError, RecursionError, ET.ParseError) as error:
+        return CheckpointGrade(award(rubric, {}),
+                               f"Invalid model artifact ({type(error).__name__}): {error}")
     checkpoints = tuple(Checkpoint(item["id"], mean(case[index].earned for case in values), item["points"])
                         for index, item in enumerate(rubric))
     return CheckpointGrade(checkpoints, "Per-case credit capped by prerequisites; see native artifacts and owner audit")

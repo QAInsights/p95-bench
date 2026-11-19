@@ -98,13 +98,16 @@ def analysis(text, params, workdir, fixtures):
     except (ValueError, TypeError, RecursionError, OverflowError) as error:
         return CheckpointGrade(award(params["rubric"], {}),
                                f"Invalid model answer ({type(error).__name__}): {error}")
+    logical = {params.get("fixture_aliases", {}).get(name, name): value for name, value in fixtures.items()}
+    expected = truth(params["analysis"], logical)
     try:
-        logical = {params.get("fixture_aliases", {}).get(name, name): value for name, value in fixtures.items()}
-        expected = truth(params["analysis"], logical)
         schema = same_shape(value, expected)
+        if not schema:
+            raise ValueError("Expected the answer schema with finite numeric values")
         fractions = {"loads": float(schema), "setup": float(schema and equal(value["observations"], expected["observations"])),
                      "behavior": float(schema and equal(value["diagnosis"], expected["diagnosis"])),
                      "safety": float(schema and equal(value["evidence"], expected["evidence"]))}
-    except (ValueError, TypeError, KeyError):
-        pass
+    except (ArithmeticError, ValueError, TypeError, KeyError, RecursionError) as error:
+        return CheckpointGrade(award(params["rubric"], {}),
+                               f"Invalid model answer ({type(error).__name__}): {error}")
     return CheckpointGrade(award(params["rubric"], fractions), "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6")

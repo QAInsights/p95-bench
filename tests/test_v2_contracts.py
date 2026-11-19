@@ -53,6 +53,15 @@ def test_malformed_xml_zeroes_every_execution_checkpoint(tmp_path):
     assert [item.earned for item in result.checkpoints] == [0, 0, 0, 0]
 
 
+@pytest.mark.parametrize("error", [OverflowError, RecursionError])
+def test_native_model_evidence_conversion_errors_are_graded_zero(error, monkeypatch, tmp_path):
+    task = next(task for task in TASKS if task.grader == "v2_exec" and not task.params["contract"].get("workload"))
+    monkeypatch.setattr("p95bench.checkpoint_graders.run_artifact", Mock(side_effect=error("invalid model evidence")))
+    result = grade(task, "model artifact", tmp_path, 2)
+    assert result.score == 0 and all(item.earned == 0 for item in result.checkpoints)
+    assert result.detail == f"Invalid model artifact ({error.__name__}): invalid model evidence"
+
+
 @pytest.mark.parametrize("overflow", [False, True])
 def test_execution_audit_overflow_preserves_bounded_native_evidence(overflow, monkeypatch, tmp_path):
     shop = Shop(Profile(), "synthetic")

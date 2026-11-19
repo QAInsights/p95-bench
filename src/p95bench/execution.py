@@ -177,6 +177,6 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
                            jmeter_evidence(result.artifacts))
         loaded = bool(result.artifacts.get("points.json") if tool == "k6" else
                       result.artifacts.get("samples.jtl"))
-    except (ValueError, KeyError, TypeError, UnicodeDecodeError, ET.ParseError):
+    except (ValueError, KeyError, TypeError, OverflowError, RecursionError, UnicodeDecodeError, ET.ParseError):
         loaded, samples, points = False, [], []
     return Trial(loaded, result.status, result.returncode, events, samples, points, started)
