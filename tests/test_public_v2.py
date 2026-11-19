@@ -172,8 +172,18 @@ def test_bad_analysis_number_is_graded_and_does_not_stop_provider_calls(tmp_path
     assert provider.calls == 2
     assert [attempt["grade"]["score"] for attempt in attempts] == [0, 1]
     assert all("grading_error" not in attempt for attempt in attempts)
-    assert summary["complete"] and "stop_reason" not in summary
+    assert summary["attempts"] == 2 and summary["not_run"] == 0
+    assert "stop_reason" not in summary
     assert not (directory / "not-run.jsonl").exists()
+
+
+@pytest.mark.parametrize("error", [ValueError, OverflowError])
+def test_analysis_does_not_misclassify_trusted_fixture_failures(error, monkeypatch, tmp_path):
+    def fail(*args):
+        raise error("invalid trusted fixture")
+    monkeypatch.setattr(analysis_v2, "truth", fail)
+    with pytest.raises(error, match="invalid trusted fixture"):
+        grade(ANALYSIS[0], "{}", tmp_path, 2)
 
 
 @pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1", reason="Opt-in native Docker tests")
