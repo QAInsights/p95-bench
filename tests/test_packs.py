@@ -241,6 +241,33 @@ def test_grader_serialization_error_without_rubric_is_a_graded_error(tmp_path, m
     assert error == {"type": "TypeError", "message": "invalid result"}
 
 
+@pytest.mark.parametrize("rubric", [[{"id": "behavior", "points": 99}], [], None,
+    [{"id": "same", "points": 50}, {"id": "same", "points": 50}], [{"id": "missing_points"}]])
+def test_invalid_rubric_saves_minimal_error_grade_and_stops(rubric, tmp_path, monkeypatch):
+    tasks = [replace(task("analysis"), id=name, params={"rubric": rubric})
+             for name in ("first", "second")]
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint", Mock(side_effect=ValueError("grader failed")))
+    provider, ledger = FakeProvider(), BudgetLedger(tmp_path / "ledger.json")
+    directory, summary = run(provider, "fake", "model", Price(1, .5, 2), tasks, tmp_path,
+        pack_id=V2, budget_ledger=ledger, efficiency_budgets={
+            task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks})
+    entries = [json.loads(line) for line in (directory / "not-run.jsonl").read_text().splitlines()]
+    assert provider.calls == 1
+    assert entries[0]["status"] == "not_run"
+    assert entries[0]["response"]["text"] == "Synthetic response"
+    assert entries[0]["grading_error"]["stop_run"] is True
+    assert "fallback_error" in entries[0]["grading_error"]
+    grade = CheckpointGrade.from_dict(entries[0]["grade"])
+    assert grade.score == 0 and grade.checkpoints == (Checkpoint("grading_error", 0, 100),)
+    assert "grader failed" in grade.detail
+    assert summary["attempts"] == 0 and summary["not_run"] == len(entries) == 2
+    assert not summary["complete"]
+    assert (directory / "attempts.jsonl").read_text() == ""
+    assert summary["estimated_cost_usd"] == entries[0]["cost_usd"] > 0
+    assert len(json.loads(ledger.path.read_text())["charges"]) == 1
+    assert summary == score_run(directory)
+
+
 @pytest.mark.parametrize("error", [KeyboardInterrupt, SystemExit])
 def test_grading_does_not_swallow_process_cancellation(error, tmp_path, monkeypatch):
     monkeypatch.setattr("p95bench.runner.grade", Mock(side_effect=error))

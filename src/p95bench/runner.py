@@ -19,7 +19,7 @@ from p95bench.graders import (
     jmeter_executable,
     k6_executable,
 )
-from p95bench.grades import CheckpointGrade
+from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import snapshot, summarize_v2, validate_snapshot
 from p95bench.providers import Gemini, ProviderUnavailable, SpendLimitExceeded, gemini_prices
 from p95bench.tasks import CATEGORIES, require_external
@@ -92,9 +92,14 @@ def _grade_response(task, text, workdir, v2):
         metadata = {"type": type(error).__name__, "message": str(error)}
         if isinstance(error, (WorkerUnavailable, OSError, subprocess.SubprocessError)):
             return {"status": "not_run", "detail": detail}, metadata
-        result = (CheckpointGrade(award(task.params.get("rubric", [
-            {"id": "grading_error", "points": 100}]), {}), detail)
-            if v2 else Grade(False, detail))
+        try:
+            result = (CheckpointGrade(award(task.params.get("rubric", [
+                {"id": "grading_error", "points": 100}]), {}), detail)
+                if v2 else Grade(False, detail))
+        except Exception as fallback_error:  # noqa: BLE001
+            result = CheckpointGrade((Checkpoint("grading_error", 0, 100),), detail)
+            metadata.update(stop_run=True, fallback_error={
+                "type": type(fallback_error).__name__, "message": str(fallback_error)})
         return result.to_dict(), metadata
 
 
@@ -207,7 +212,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                                                   else latency),
                         transport_attempts=requests,
                         backoff_seconds=getattr(provider, "backoff_seconds", 0))
-                if result.get("status") == "not_run":
+                if result.get("status") == "not_run" or grading_error and grading_error.get("stop_run"):
                     attempt.update(status="not_run", error=result["detail"])
                     with _output_path(directory / "not-run.jsonl", private).open("a") as skipped:
                         skipped.write(json.dumps(attempt) + "\n")
