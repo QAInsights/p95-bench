@@ -2,7 +2,7 @@
 import { resolvePack, creditGradient } from './packs.mjs';
 import { mountPackScenes } from './pack-scenes.mjs';
 import { renderToolRankings } from './tool-rankings.mjs';
-import { taskCategoryGroups, taskHeading } from './task-headings.mjs';
+import { taskCategoryGroups, taskHeading, replayTaskColumns } from './task-headings.mjs';
 import { buildScenarios } from './scenarios.mjs';
 import { observeScenes } from "./scene-observer.mjs";
 import { scrollWithinSection, regionNeedsScrollKey } from "./section-scroll.mjs";
@@ -306,6 +306,10 @@ function buildLanes() {
   const tasksById = new Map(DATA.tasks.map(task => [task.id, task]));
   const heading = id => taskHeading(tasksById.get(id) ?? { id });
   const sampleCount = taskIds.length;
+  $('scene-1').classList.toggle('replay-v2', pack === 'v2');
+  $('scene-1').style.setProperty('--replay-columns', sampleCount);
+  $('replay-task-description').hidden = pack !== 'v2';
+  $('replay-task-description').textContent = 'Focus or select a numbered column to inspect its task. Scroll horizontally for all columns.';
   $("scene-1").style.setProperty("--sample-columns", groups
     .map(group => `repeat(${group.count}, minmax(0, 1fr))`).join(" var(--group-gap) ") || "none");
   $("tool-heads").innerHTML = groups.map(group =>
@@ -315,7 +319,11 @@ function buildLanes() {
       taskCategoryGroups(taskIds.slice(group.offset, group.offset + group.count).map(id => tasksById.get(id) ?? { id }))
         .map(category => '<span>' + escape(category.label) + ' <b>' + category.count + '</b></span>').join('') +
       '</span>' : '') + '</span>').join("");
-  $("task-heads").innerHTML = pack === 'v2' ? '' : groups.map(group => taskIds
+  $("task-heads").innerHTML = pack === 'v2' ? replayTaskColumns(taskIds, groups).map(column =>
+    '<button type="button" class="replay-task-heading" style="grid-column:' + column.column +
+    '" aria-controls="replay-task-description" aria-label="' +
+    escape('Column ' + column.ordinal + ': ' + heading(column.id) + ' · ' + column.tool) +
+    '" title="' + escape(heading(column.id) + ' · ' + column.tool) + '">' + column.ordinal + '</button>').join('') : groups.map(group => taskIds
     .slice(group.offset, group.offset + group.count).map((id, index) =>
       '<span style="grid-column:' + (group.column + index) + '" title="' +
       escape(heading(id) + ' · ' + group.label) + '">' +
@@ -388,6 +396,13 @@ function buildLanes() {
     .forEach((i) => $("lanes").append(laneNodes.get(i)));
 }
 buildLanes();
+const inspectReplayTask = event => {
+  const heading = event.target.closest('.replay-task-heading');
+  if (heading) $('replay-task-description').textContent = heading.title;
+};
+$('task-heads').addEventListener('focusin', inspectReplayTask);
+$('task-heads').addEventListener('click', inspectReplayTask);
+$('task-heads').addEventListener('pointerover', inspectReplayTask);
 function partialScore(i) {
   return replayScore(models[i], arrived[i], weights);
 }

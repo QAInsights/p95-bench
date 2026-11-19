@@ -3,12 +3,32 @@ import { test } from 'node:test';
 import { readFile, readdir } from 'node:fs/promises';
 import { selectModelVersions } from '../src/lib/scores.mjs';
 import { heatmapData, metricExtent, heatColor, heatValue, flameScale } from '../src/lib/heatmap-data.mjs';
-import { taskCategoryGroups, taskHeading, taskTitle } from '../src/lib/task-headings.mjs';
+import { taskCategoryGroups, taskHeading, taskTitle, replayTaskColumns } from '../src/lib/task-headings.mjs';
+import { replayToolLayout } from '../src/lib/scores.mjs';
 import { loadTaskData } from '../scripts/build-data.mjs';
 const models = [{ model: 'test', provider: 'gemini', overall_score: 50, cost: 1 }];
 const tasks = [{ id: 'k', tool: 'k6' }, { id: 'a', tool: 'none' }, { id: 'j', tool: 'jmeter' }];
 const record = (passed, tokens, latency) => ({ provider: 'gemini', model: 'test', task_id: 'a', grade: { passed },
   response: { output_tokens: tokens, latency_seconds: latency } });
+
+test('v2 replay keeps all 40 ordinals aligned with heatmap columns and keyboard task descriptions', async () => {
+  const data = JSON.parse(await readFile(new URL('../src/data/leaderboard-p95-v2.0.0.json', import.meta.url), 'utf8'));
+  const { tasks } = await loadTaskData({ packId: 'p95-v2.0.0' });
+  const { columns } = heatmapData([], tasks.toSorted((a, b) => a.id.localeCompare(b.id)), []);
+  const layout = replayToolLayout(data.models);
+  const headings = replayTaskColumns(layout.taskIds, layout.groups);
+  assert.equal(headings.length, 40);
+  assert.deepEqual(headings.map(heading => heading.ordinal), columns.map((_, index) => index + 1));
+  assert.deepEqual(headings.map(heading => heading.id), columns.map(column => column.id));
+  assert.equal(headings[16].column, headings[15].column + 2);
+  assert.deepEqual(replayTaskColumns([], []), []);
+  const replay = await readFile(new URL('../src/lib/fullpage.mjs', import.meta.url), 'utf8');
+  assert.ok(replay.includes('type="button" class="replay-task-heading"'));
+  assert.ok(replay.includes('aria-controls="replay-task-description" aria-label="'));
+  assert.ok(replay.includes("addEventListener('focusin', inspectReplayTask)"));
+  assert.ok(replay.includes("$('replay-task-description').textContent = heading.title"));
+  assert.ok(replay.includes('escape(shortTaskLabel(id))'));
+});
 
 test('v2 task headings group all 40 columns by tool/category and retain full IDs and titles', async () => {
   const { tasks } = await loadTaskData({ packId: 'p95-v2.0.0' });
