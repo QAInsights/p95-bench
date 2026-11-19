@@ -28,6 +28,28 @@ export function snapshotDigest(value) {
   return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
 }
 
+export function costBreakdown(attempts, skipped, { packId, taskMap, total }) {
+  const first = attempts[0];
+  const charged = skipped.filter(attempt => attempt.response != null);
+  if (charged.some(a => a.status !== 'not_run' || a.model !== first.model
+    || a.provider !== first.provider || (a.pack_id ?? 'p95-v1') !== packId
+    || !taskMap.has(a.task_id) || !Number.isFinite(a.cost_usd) || a.cost_usd < 0
+    || ![a.response.input_tokens, a.response.output_tokens].every(n => Number.isFinite(n) && n >= 0))) {
+    throw new Error('Invalid charged not-run response');
+  }
+  const result = [...attempts, ...charged].map(attempt => ({ task_id: attempt.task_id,
+    input_tokens: attempt.response.input_tokens,
+    cached_tokens: attempt.response.cached_tokens ?? 0,
+    output_tokens: attempt.response.output_tokens,
+    price_per_million: attempt.price_per_million, cost_usd: attempt.cost_usd,
+    ...(attempt.status === 'not_run' ? { status: 'not_run' } : {}) }));
+  if (charged.length && (!Number.isFinite(total)
+    || Math.abs(result.reduce((sum, a) => sum + a.cost_usd, 0) - total) > 1e-9)) {
+    throw new Error('Cost breakdown total mismatch');
+  }
+  return result;
+}
+
 export async function loadTaskData({ packId = 'p95-v1', tasksRoot } = {}) {
   const packs = await readJSON(path.join(root, 'src/p95bench/packs.json'));
   if (!Object.hasOwn(packs, packId)) throw new Error('Unknown pack: ' + packId);
@@ -111,23 +133,9 @@ export async function buildData(directories, options = {}) {
       if (error.code !== 'ENOENT') throw error;
       return '';
     });
-    const charged = skipped.split('\n').filter(line => line.trim()).map(JSON.parse)
-      .filter(attempt => attempt.response != null);
-    if (charged.some(a => a.status !== 'not_run' || a.model !== first.model
-      || a.provider !== first.provider || (a.pack_id ?? 'p95-v1') !== packId
-      || !taskMap.has(a.task_id) || !Number.isFinite(a.cost_usd) || a.cost_usd < 0
-      || ![a.response.input_tokens, a.response.output_tokens].every(n => Number.isFinite(n) && n >= 0))) {
-      throw new Error('Invalid charged not-run response');
-    }
-    const costAttempts = [...attempts, ...charged].map(attempt => ({ task_id: attempt.task_id,
-      input_tokens: attempt.response.input_tokens,
-      cached_tokens: attempt.response.cached_tokens ?? 0,
-      output_tokens: attempt.response.output_tokens,
-      price_per_million: attempt.price_per_million, cost_usd: attempt.cost_usd,
-      ...(attempt.status === 'not_run' ? { status: 'not_run' } : {}) }));
-    if (charged.length && (!Number.isFinite(summary.estimated_cost_usd)
-      || Math.abs(costAttempts.reduce((total, a) => total + a.cost_usd, 0)
-        - summary.estimated_cost_usd) > 1e-9)) throw new Error('Cost breakdown total mismatch');
+    const costAttempts = costBreakdown(attempts,
+      skipped.split('\n').filter(line => line.trim()).map(JSON.parse),
+      { packId, taskMap, total: summary.estimated_cost_usd });
     const stamp = path.basename(directory).match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/);
     const runDate = metadata.run_date ?? (stamp
       ? `${stamp[1]}-${stamp[2]}-${stamp[3]}T${stamp[4]}:${stamp[5]}:${stamp[6]}Z` : null);

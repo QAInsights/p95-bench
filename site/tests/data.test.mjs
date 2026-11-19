@@ -175,20 +175,25 @@ test('generator rejects empty, duplicate and mismatched runs', async () => {
 test('v1 cost breakdown includes charged not-run usage without grading it', async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'p95-not-run-'));
   try {
-    const text = await readFile(path.join(runs[0], 'attempts.jsonl'), 'utf8');
-    const attempts = text.trim().split('\n').map(JSON.parse);
-    const summary = JSON.parse(await readFile(path.join(runs[0], 'summary.json'), 'utf8'));
-    const charged = { ...attempts[0], status: 'not_run', grade: { status: 'not_run' } };
-    summary.estimated_cost_usd += charged.cost_usd;
+    const original = (await readFile(path.join(runs[0], 'attempts.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
+    const attempts = [original[0]];
+    const text = attempts.map(JSON.stringify).join('\n');
+    const charged = { ...attempts[0], repeat: 1, status: 'not_run', grade: { status: 'not_run' } };
+    const summary = { attempts: 1, not_run: 2, overall_score: attempts[0].grade.passed ? 100 : 0,
+      category_scores: { [attempts[0].category]: attempts[0].grade.passed ? 100 : 0 },
+      estimated_cost_usd: attempts[0].cost_usd + charged.cost_usd,
+      input_tokens: attempts[0].response.input_tokens * 2, output_tokens: attempts[0].response.output_tokens * 2,
+      latency_seconds: attempts[0].response.latency_seconds * 2 };
     await writeFile(path.join(directory, 'attempts.jsonl'), text);
     await writeFile(path.join(directory, 'summary.json'), JSON.stringify(summary));
     await writeFile(path.join(directory, 'not-run.jsonl'), [charged,
-      { status: 'not_run', task_id: charged.task_id }].map(JSON.stringify).join('\n'));
+      { status: 'not_run', task_id: charged.task_id, repeat: 2 }].map(JSON.stringify).join('\n'));
     const model = (await buildData([directory])).models[0];
     assert.equal(model.per_task_results.length, attempts.length);
     assert.equal(model.cost_attempts.length, attempts.length + 1);
     assert.equal(model.cost_attempts.at(-1).status, 'not_run');
     assert.equal(model.cost_attempts.at(-1).cost_usd, charged.cost_usd);
+    assert.notEqual(attempts[0].repeat, charged.repeat);
     assert.ok(Math.abs(model.cost_attempts.reduce((sum, a) => sum + a.cost_usd, 0) - model.cost) < 1e-9);
     assert.doesNotMatch(JSON.stringify(model), /"(?:response|messages|text)":/);
     await writeFile(path.join(directory, 'summary.json'), JSON.stringify({ ...summary, estimated_cost_usd: 99 }));
