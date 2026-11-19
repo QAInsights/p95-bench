@@ -102,13 +102,13 @@ def test_native_audit_overflow_retains_engine_output(monkeypatch, tmp_path):
     assert len(metadata["output"].encode()) <= 3 * 1048576
 
 
-def test_execution_nonoverflow_audit_error_is_not_reclassified(monkeypatch, tmp_path):
+def test_execution_nonoverflow_audit_error_is_infrastructure(monkeypatch, tmp_path):
     shop, worker = Mock(audit_overflow=False), Mock()
     shop.audit.side_effect = RuntimeError("Demo requests did not drain; audit is not final")
     worker.execute.return_value = Execution("completed", 0, "", 1)
     monkeypatch.setattr("p95bench.execution.tool_image", lambda tool: PROBE_IMAGE)
     monkeypatch.setattr("p95bench.execution.execution_trial", lambda *a, **k: nullcontext((shop, worker)))
-    with pytest.raises(RuntimeError, match="requests did not drain"):
+    with pytest.raises(WorkerUnavailable, match="requests did not drain"):
         run_artifact("k6", "export default function() {}", tmp_path)
 
 

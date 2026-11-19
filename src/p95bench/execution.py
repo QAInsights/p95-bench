@@ -9,7 +9,7 @@ from pathlib import Path
 
 from p95bench.demo_v2 import Profile
 from p95bench.images import tool_image
-from p95bench.worker import Resources, execution_trial
+from p95bench.worker import Resources, WorkerUnavailable, execution_trial
 
 
 class AuditOverflow(RuntimeError):
@@ -157,9 +157,9 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
                                 output_limit=1048576, exports=exports)
         try:
             events = shop.audit()
-        except RuntimeError:
+        except RuntimeError as error:
             if not shop.audit_overflow:
-                raise
+                raise WorkerUnavailable(str(error)) from error
             events = shop.audit(wait=False)
         overflow = shop.audit_overflow
     for name, data in result.artifacts.items():
