@@ -9,7 +9,7 @@ import pytest
 
 from p95bench.capacity import capacity_preflight
 from p95bench.demo_v2 import Profile, Shop
-from p95bench.execution import Trial, artifact_source, k6_evidence, run_artifact
+from p95bench.execution import AuditOverflow, Trial, artifact_source, k6_evidence, run_artifact
 from p95bench.graders import grade
 from p95bench.images import tool_image
 from p95bench.packs import pack_config
@@ -62,7 +62,7 @@ def test_execution_audit_overflow_reaches_unavailable_guard(overflow, monkeypatc
     monkeypatch.setattr("p95bench.execution.tool_image", lambda tool: PROBE_IMAGE)
     monkeypatch.setattr("p95bench.execution.execution_trial", lambda *a, **k: nullcontext((shop, worker)))
     if overflow:
-        with pytest.raises(WorkerUnavailable, match="Audit overflow; trial evidence is incomplete"):
+        with pytest.raises(AuditOverflow, match="script exceeded the request evidence limit"):
             run_artifact("k6", "export default function() {}", tmp_path)
         assert not (tmp_path / "audit.json").exists()
     else:

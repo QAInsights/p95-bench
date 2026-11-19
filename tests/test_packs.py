@@ -1,4 +1,5 @@
 import json
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from pathlib import Path
@@ -8,6 +9,7 @@ import pytest
 
 from p95bench.budget import BudgetLedger
 from p95bench.cli import main
+from p95bench.execution import AuditOverflow
 from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, Grade
 from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import efficiency, pack_config, snapshot, summarize_v2
@@ -138,7 +140,7 @@ def run_v2(tmp_path, monkeypatch, repeats=1, points=80, price=None):
 
 
 @pytest.mark.parametrize("v2", [False, True])
-@pytest.mark.parametrize("error", [ValueError, RuntimeError, RecursionError, WorkerUnavailable])
+@pytest.mark.parametrize("error", [ValueError, RuntimeError, RecursionError, AuditOverflow])
 def test_grader_exception_saves_charged_response_and_continues(v2, error, tmp_path, monkeypatch):
     rubric = [{"id": "loads", "points": 10}, {"id": "setup", "points": 30},
               {"id": "behavior", "points": 40}, {"id": "safety", "points": 20}]
@@ -170,6 +172,36 @@ def test_grader_exception_saves_charged_response_and_continues(v2, error, tmp_pa
         charges = json.loads(ledger.path.read_text())["charges"]
         assert set(charges) == {attempt["budget_reservation"] for attempt in attempts}
         assert not (directory / "not-run.jsonl").exists()
+
+
+@pytest.mark.parametrize("v2", [False, True])
+@pytest.mark.parametrize("error", [WorkerUnavailable("Docker cleanup failed"),
+    OSError("Docker unavailable"), subprocess.CalledProcessError(1, "docker"),
+    subprocess.TimeoutExpired("docker", 1)])
+def test_grading_infrastructure_preserves_response_without_scoring_or_more_calls(v2, error, tmp_path, monkeypatch):
+    tasks = [replace(task("analysis"), id=name) for name in ("first", "second")]
+    monkeypatch.setitem(CHECKPOINT_GRADERS if v2 else GRADERS, "test_checkpoint",
+                        Mock(side_effect=error))
+    provider, price = FakeProvider(), Price(1, .5, 2)
+    ledger = BudgetLedger(tmp_path / "ledger.json")
+    options = {"pack_id": V2, "budget_ledger": ledger, "efficiency_budgets": {
+        task.id: {"tokens": 100, "latency_seconds": 10} for task in tasks}} if v2 else {}
+    directory, summary = run(provider, "fake", "model", price, tasks, tmp_path, repeats=2, **options)
+    entries = [json.loads(line) for line in (directory / "not-run.jsonl").read_text().splitlines()]
+    assert provider.calls == 1
+    assert summary["attempts"] == 0 and summary["not_run"] == len(entries) == 4
+    assert summary["passed"] == 0
+    assert (directory / "attempts.jsonl").read_text() == ""
+    assert all(entry["status"] == "not_run" for entry in entries)
+    assert entries[0]["response"]["text"] == "Synthetic response"
+    assert entries[0]["grading_error"]["type"] == type(error).__name__
+    assert entries[0]["grade"]["status"] == "not_run"
+    assert all("response" not in entry for entry in entries[1:])
+    assert summary["estimated_cost_usd"] == entries[0]["cost_usd"] > 0
+    assert summary == score_run(directory)
+    if v2:
+        assert not summary["complete"]
+        assert list(json.loads(ledger.path.read_text())["charges"]) == [entries[0]["budget_reservation"]]
 
 
 @pytest.mark.parametrize("repeats", [1, 3])

@@ -9,7 +9,11 @@ from pathlib import Path
 
 from p95bench.demo_v2 import Profile
 from p95bench.images import tool_image
-from p95bench.worker import Resources, WorkerUnavailable, execution_trial
+from p95bench.worker import Resources, execution_trial
+
+
+class AuditOverflow(RuntimeError):
+    pass
 
 COMPONENTS = {"jmeterTestPlan", "hashTree", "TestPlan", "ThreadGroup", "LoopController",
               "OnceOnlyController", "IfController", "WhileController", "GenericController",
@@ -157,7 +161,7 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
                 raise
             events = []
         if shop.audit_overflow:
-            raise WorkerUnavailable("Audit overflow; trial evidence is incomplete")
+            raise AuditOverflow("Audit overflow; script exceeded the request evidence limit")
     for name, data in result.artifacts.items():
         (directory / name).write_bytes(data)
     (directory / "audit.json").write_text(json.dumps(events, indent=2) + "\n")
