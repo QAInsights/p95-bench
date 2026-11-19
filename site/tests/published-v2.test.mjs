@@ -10,11 +10,11 @@ const v1 = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', imp
 const { tasks } = await loadTaskData({ packId: 'p95-v2.0.0' });
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 
-test('published v2 Qwen results expose only public per-task records and aggregate the full 50', () => {
+test('published v2 results expose only public per-task records and aggregate the full 50', () => {
   assert.equal(data.pack_id, 'p95-v2.0.0');
   assert.equal(data.budget_file_sha256, '09ca8ed77cd7cb0eebea6a3618ae13c0fdb55496dd14d438745234a0b4a05bc7');
   assert.deepEqual(new Set(data.models.map(model => model.model)),
-    new Set(['Qwen-Ambassador/Qwen3.7-Max']));
+    new Set(['Qwen-Ambassador/Qwen3.7-Max', 'deepseek-v4-pro']));
   for (const model of data.models) {
     assert.equal(model.repeats, 1);
     assert.equal(model.coverage.run, 50);
@@ -60,7 +60,37 @@ test('published v2 Qwen results expose only public per-task records and aggregat
   }
 });
 
-test('v2 is the default even with one model and selects the latest family model with results', () => {
+test('DeepSeek publishes usage-priced costs, three provenance segments and an aggregate audit-overflow note', async () => {
+  const model = data.models.find(model => model.model === 'deepseek-v4-pro');
+  near(model.quality_score, 28.44791666666667);
+  near(model.overall_score, 28.44435594729345);
+  near(model.cost, 1.33790052);
+  assert.match(model.cost_note, /reported token usage at frozen registry prices/);
+  assert.match(model.grading_note, /one audit-overflow zero \(0\/100\)/);
+  assert.match(model.grading_note, /No API call or additional charge/);
+  assert.deepEqual(model.cost_attempts, []);
+  assert.deepEqual(model.evaluator_segments, [
+    { label: 'Original', scored_attempts: 44,
+      digest: '3220ece2ecf9cab054e6ceb8f1eb2232362437e8830b60829be0246235b57d51',
+      public_harness_digest: '867fbd0ab205ec7c0347c891a70d9c8ece06223dbff2789e34c4b32a293bba98',
+      public_harness_commit: '5eef9974debc17f83eb6041978277d1d463ce527' },
+    { label: 'Offline regrade', scored_attempts: 1,
+      digest: '3220ece2ecf9cab054e6ceb8f1eb2232362437e8830b60829be0246235b57d51',
+      public_harness_digest: 'dba0e68dfb9c019c26e41a0a126b7a4c8569741ca41cb71afdd4a4242e1d50e0',
+      public_harness_commit: '701b0a5f4fd75f7eeaf414b20fe0ede7e4d424f9' },
+    { label: 'Continuation', scored_attempts: 5,
+      digest: 'affbe99548486e4fd7219f2fd3ba05935c282f604a988ad3230997875c7c6849',
+      public_harness_digest: 'fbac81b1b7363c9db79a775a7aaed05ff811f8ff6058a87db7373121419f1788',
+      public_harness_commit: '84d84b13f45ded9286b590cf21d0ba54bd7ced7e' },
+  ]);
+  const component = await readFile(new URL('../src/components/PackExplainer.astro', import.meta.url), 'utf8');
+  for (const field of ['segment.label', 'segment.scored_attempts', 'segment.digest',
+    'segment.public_harness_digest', 'segment.public_harness_commit', 'model.grading_note']) {
+    assert.ok(component.includes(field), `Provenance must render ${field}`);
+  }
+});
+
+test('v2 is the default and selects the latest family model with results', () => {
   const catalog = makePackCatalog(v1, data, { v1: [], v2: tasks }, []);
   assert.equal(resolvePack(null, catalog), 'v2');
   assert.equal(resolvePack('invalid', catalog), 'v2');
@@ -71,6 +101,7 @@ test('v2 is the default even with one model and selects the latest family model 
   const qwen = latest.find(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max');
   assert.equal(qwen.version_status, 'Latest');
   assert.equal(qwen.not_run, undefined);
+  assert.equal(latest.find(model => model.model === 'deepseek-v4-pro').not_run, undefined);
   assert.ok(selectModelVersions(catalog.v2.models, true).some(model => model.model === 'Qwen-Ambassador/Qwen3.8-Max' && model.not_run));
   assert.ok(!selectModelVersions(catalog.v1.models).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
 });
