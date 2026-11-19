@@ -23,6 +23,7 @@ test('published v2 results cover the 40 public tasks with no held-out aggregates
     assert.equal(model.evaluator_segments, undefined);
     assert.deepEqual(model.coverage, { run: 40, total: 40, partial: false, label: '40/40 tasks run' });
     assert.match(model.cost_note, /list-price estimate/);
+    assert.match(model.harness_commit, /^[0-9a-f]{40}$/);
     assert.ok(Number.isFinite(model.cost) && model.cost >= 0);
     assert.equal(model.per_task_results.length, 40);
     assert.deepEqual(new Set(model.per_task_results.map(task => task.task_id)), new Set(tasks.map(task => task.id)));

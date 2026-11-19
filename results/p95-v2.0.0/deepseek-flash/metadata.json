@@ -1,5 +1,5 @@
 {
-  "run_date": "2026-11-19T21:44:32.453489+00:00",
+  "run_date": "2026-11-19T22:54:59.226263+00:00",
   "pack_id": "p95-v2.0.0",
   "pack_digest": "84c75267639898753789c04b100fdea1805006d9aa102eec1f789ac524345b7d",
   "visibility": "public",
@@ -13,5 +13,7 @@
     "type": "disabled"
   },
   "max_tokens": 16384,
-  "spend_cap_usd": 30.0
+  "spend_cap_usd": 30.0,
+  "harness_commit": "808834c2f57ac3ef41175c0a3c7fcc40dde4b691",
+  "harness_dirty": false
 }
