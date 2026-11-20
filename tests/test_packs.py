@@ -14,8 +14,8 @@ from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, Grade
 from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import efficiency, pack_config, snapshot, summarize_v2
 from p95bench.providers import OpenAICompatible, Price, ProviderConfig, Response, SpendLimitExceeded
-from p95bench.runner import _grade_response, run, score_run, summarize
-from p95bench.tasks import CATEGORIES, Task, load_private_tasks, load_tasks, require_external
+from p95bench.runner import _grade_response, harness_revision, run, score_run, summarize
+from p95bench.tasks import CATEGORIES, Task, load_tasks
 from p95bench.worker import WorkerUnavailable
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -335,40 +335,25 @@ def test_concurrent_budget_reservations(tmp_path):
         assert sum(pool.map(reserve, range(8))) == 6
 
 
-def test_external_private_loading_and_output_guard(tmp_path):
-    root = tmp_path / "restricted"
-    root.mkdir()
-    (root / "sample.yaml").write_text(
-        "id: sample\ncategory: repair\ntool: none\nprompt: Synthetic\ngrader: test_checkpoint\n")
-    assert len(load_private_tasks(root, ROOT)) == 1
-    with pytest.raises(ValueError, match="outside"):
-        load_private_tasks(ROOT / "tasks", ROOT)
-    alias = tmp_path / "alias"
-    alias.symlink_to(ROOT / "tasks")
-    with pytest.raises(ValueError, match="outside"):
-        require_external(alias, ROOT)
-    with pytest.raises(ValueError, match="outside"):
-        run(FakeProvider(), "fake", "model", Price(1, 1, 1), [task()], ROOT / "results",
-            private=True)
-
-
-def test_private_pack_symlink_cannot_write_into_repository(tmp_path, monkeypatch):
-    repository = tmp_path / "repository"
-    repository.mkdir()
-    output = tmp_path / "output"
-    output.mkdir()
-    (output / V2).symlink_to(repository, target_is_directory=True)
-    monkeypatch.setattr("p95bench.runner.require_external",
-                        lambda path, _: require_external(path, repository))
+def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
     monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint", lambda *args: result(80))
-    provider = FakeProvider()
-    with pytest.raises(ValueError, match="outside"):
-        run(provider, "fake", "model", Price(1, 1, 1), [task()], output,
-            pack_id=V2, private=True,
-            efficiency_budgets={"repair": {"tokens": 100, "latency_seconds": 1}},
-            budget_ledger=BudgetLedger(tmp_path / "ledger.json"))
-    assert not list(repository.iterdir())
-    assert provider.calls == 0
+    directory, _ = run(FakeProvider(), "fake", "model", Price(1, 1, 1), [task()], tmp_path,
+                       pack_id=V2, efficiency_budgets={"repair": {"tokens": 100, "latency_seconds": 1}},
+                       budget_ledger=BudgetLedger(tmp_path / "ledger.json"))
+    metadata = json.loads((directory / "metadata.json").read_text())
+    head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True,
+                          text=True, check=False).stdout.strip()
+    assert metadata["harness_commit"] == (head or None)
+    assert isinstance(metadata["harness_dirty"], bool) or not head
+
+
+def test_harness_revision_ignores_enclosing_repository(tmp_path):
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=t", "-c", "user.email=t@t",
+                    "commit", "-q", "--allow-empty", "-m", "init"], check=True)
+    installed = tmp_path / ".venv" / "lib" / "python3" / "site-packages"
+    installed.mkdir(parents=True)
+    assert harness_revision(installed) == {"harness_commit": None, "harness_dirty": None}
 
 
 def test_budget_overrun_is_persisted_and_blocks_future_spend(tmp_path):

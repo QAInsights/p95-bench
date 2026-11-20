@@ -49,7 +49,7 @@ def test_transport(monkeypatch, model, rates, content):
         assert req.get_header('Authorization') == 'Bearer test-key'
         assert timeout == 180
         assert json.loads(req.data) == {
-            'model': model, 'messages': messages, 'max_completion_tokens': 8192,
+            'model': model, 'messages': messages, 'max_completion_tokens': 16384,
         }
         return io.BytesIO(json.dumps({
             'choices': [{'message': {'content': content}}],

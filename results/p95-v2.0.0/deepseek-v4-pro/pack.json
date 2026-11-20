@@ -1,0 +1,380 @@
+{
+  "pack_id": "p95-v2.0.0",
+  "grade_schema_version": 2,
+  "default_repeats": 1,
+  "efficiency_weight": 0.05,
+  "weights": {
+    "repair": 25,
+    "migration": 15,
+    "correlation": 25,
+    "workload": 20,
+    "analysis": 15
+  },
+  "tasks": [
+    {
+      "id": "v2-a01-jtl-endpoints",
+      "category": "analysis",
+      "task_digest": "fcfc3d817d3b240a86a506289016fc90f236a6e6a112ce16d15f135ea2a09daf"
+    },
+    {
+      "id": "v2-a02-k6-thresholds",
+      "category": "analysis",
+      "task_digest": "3548d6c4e04a407071ddfef4076e5e22c4b5dce1601bc112a54cb33397b6797e"
+    },
+    {
+      "id": "v2-a04-k6-errors",
+      "category": "analysis",
+      "task_digest": "71ee3c2b7456de54896738b51e590320c03c15368f0e072f8d029011f059782a"
+    },
+    {
+      "id": "v2-a05-jtl-omission",
+      "category": "analysis",
+      "task_digest": "f49cafab248a85ded731515f027f8dcd1e5c3e6e454015d50aaa6c95527a6ab7"
+    },
+    {
+      "id": "v2-a06-k6-decomposition",
+      "category": "analysis",
+      "task_digest": "2c04a7838256092e1d3c1fdb7b46e0044f8438e2417681b7c78de26f8c9772cd"
+    },
+    {
+      "id": "v2-c01-html-csrf",
+      "category": "correlation",
+      "task_digest": "abf84a16cd63b6d8dfeee2f36995ae21bc1798854dd15291c040a56f9d11c4c4"
+    },
+    {
+      "id": "v2-c02-html-csrf",
+      "category": "correlation",
+      "task_digest": "8cc03e9a12511776e1b63a1388ba87fa96828fdfde36deb0e8722fbd6b57549f"
+    },
+    {
+      "id": "v2-c03-json-parent-child",
+      "category": "correlation",
+      "task_digest": "7a62fa7433da7d5090fc983a2c682e3cb9f2a70eb27f37033bc3e2fde17a54a0"
+    },
+    {
+      "id": "v2-c04-json-pagination",
+      "category": "correlation",
+      "task_digest": "19ae604a7d6f17403f12e757ed3fd961ffc48f0420655d30a1969bb5683c2093"
+    },
+    {
+      "id": "v2-c06-etag-update",
+      "category": "correlation",
+      "task_digest": "e5efc4d2316809aab99246417003a8e8f220db268ca8da2dd756293577aab840"
+    },
+    {
+      "id": "v2-c07-rotating-csrf",
+      "category": "correlation",
+      "task_digest": "ea8e197c0c0448e3770ee3d035083139fd971f019d24a9355831cc037619b838"
+    },
+    {
+      "id": "v2-c08-expiry-resume",
+      "category": "correlation",
+      "task_digest": "0c13eaabb9432adbb299991b196a65185a061320d212566833f173b43561c80e"
+    },
+    {
+      "id": "v2-c09-async-reservation",
+      "category": "correlation",
+      "task_digest": "2228f04efecb1dd41faacad80f20ddec61b9cf4661914c305ad7a13e82954a12"
+    },
+    {
+      "id": "v2-c10-html-json-bridge",
+      "category": "correlation",
+      "task_digest": "5a0b4d865bc27bfb19e7715492eff9d65badf394ab5c198239413fd7505820a9"
+    },
+    {
+      "id": "v2-c11-session-ownership",
+      "category": "correlation",
+      "task_digest": "14b7c06858ae4709767fbd33964c8493285b38654d7b2b00e51dfaf9b52b32bf"
+    },
+    {
+      "id": "v2-m01-basic-flow",
+      "category": "migration",
+      "task_digest": "6c68e38c8c42d3282dd9bfabded530122b6146ed3bb1b2243248a89c74c9e7da"
+    },
+    {
+      "id": "v2-m03-redirect-token",
+      "category": "migration",
+      "task_digest": "dc86c32984ef9b248e82726af5f20566a7cce57dd0cbfd746bb3fa6e2f2c1167"
+    },
+    {
+      "id": "v2-m04-data-driven",
+      "category": "migration",
+      "task_digest": "1e2c1723216b209487c3225ad8e602db9b1d21d947576031d51311c8a7d9e3c0"
+    },
+    {
+      "id": "v2-m05-pacing-semantics",
+      "category": "migration",
+      "task_digest": "a7eebb2854870443d6bba33fb97d3a5fbd6432e1e2dddfb5e7385e7de5d2e43b"
+    },
+    {
+      "id": "v2-m06-assertions-metrics",
+      "category": "migration",
+      "task_digest": "b0f4dd6ec4bf711c08267d5e2754dd7b80cf71115b866519bc70d12834bc5c67"
+    },
+    {
+      "id": "v2-m07-conditional-retry",
+      "category": "migration",
+      "task_digest": "0c8ca9ca18d1d21c6b4b65c70e2be8f2ac8a8493df8c9665b4174faf75db1c29"
+    },
+    {
+      "id": "v2-r01-extractor-scope",
+      "category": "repair",
+      "task_digest": "0e2e4ce92fda99154e0cc1e7c488ad5bbb2390969f54f8821ac1f1dd5a581ac2"
+    },
+    {
+      "id": "v2-r02-cookie-lifetime",
+      "category": "repair",
+      "task_digest": "a5dba32dc52e4ca3370eda1b1ee90314ac47245020bb1fdebc4bbd23b8f05a6e"
+    },
+    {
+      "id": "v2-r04-status-recovery",
+      "category": "repair",
+      "task_digest": "bf0ea67d27758f9be88367bbb6e9b9950d815e51debf2402b6e249c7d3c62db1"
+    },
+    {
+      "id": "v2-r05-business-assertion",
+      "category": "repair",
+      "task_digest": "2f16400f7e803f8d07a4d757dce23e7945921d70de83ddd58223cddd2ed0c5e5"
+    },
+    {
+      "id": "v2-r06-threshold-tags",
+      "category": "repair",
+      "task_digest": "f7e5cffe77225c512618b529b6ff9ee49de8c6e4355b4a6f29e42481e6ae3d2f"
+    },
+    {
+      "id": "v2-r07-controller-reset",
+      "category": "repair",
+      "task_digest": "09b75191adfc37f383115ef1d5df5cf500e99547f8e4486638607d4db05cb9e2"
+    },
+    {
+      "id": "v2-r08-arrival-options",
+      "category": "repair",
+      "task_digest": "8eac4b0901e3ce1f4f15f3a24edd745a343c2575966c2dafab05618c6930a552"
+    },
+    {
+      "id": "v2-r10-user-partition",
+      "category": "repair",
+      "task_digest": "7d6b0075eb6084050cf68c9c5544e526097d3e3172e1e2d03cbaa4438bfec34a"
+    },
+    {
+      "id": "v2-r11-timer-scope",
+      "category": "repair",
+      "task_digest": "8813dfd3b236358ea8817ed51668b5a94ed3427d5b5f5df5a6c10c985e1feea0"
+    },
+    {
+      "id": "v2-r12-error-metric",
+      "category": "repair",
+      "task_digest": "80c96c5b2b7b8e25aae0bfaee31a9931f14ebb08b04a948c1130a9e1b86530f6"
+    },
+    {
+      "id": "v2-r13-expiry-controller",
+      "category": "repair",
+      "task_digest": "57425fd931206dc13e108219f13c4faac0e4e602e71aa4def18e04c6834d0e55"
+    },
+    {
+      "id": "v2-w01-steady-starts",
+      "category": "workload",
+      "task_digest": "eb5adc70c3570b3675762167906bca91177c29e2a13a610786cf6635abc75f96"
+    },
+    {
+      "id": "v2-w02-open-arrivals",
+      "category": "workload",
+      "task_digest": "29fb942ee68f03ecb80abbb3830814b6c913d7b3107c2aabde249b0c95f8e06d"
+    },
+    {
+      "id": "v2-w03-slow-service",
+      "category": "workload",
+      "task_digest": "2a31c4cde9ff221f263bb705fdecc6d6aa4d85ab72c11c9b9f85dd7f33006b99"
+    },
+    {
+      "id": "v2-w04-three-phases",
+      "category": "workload",
+      "task_digest": "115d8167f316a773bd2ffc371f9d7321985c18ee8e7cde7fab00c810b05a06b2"
+    },
+    {
+      "id": "v2-w06-backoff-throughput",
+      "category": "workload",
+      "task_digest": "b6fe72f84cc33a146e5cdc8bb4a2d3e8b596b05e4125ec00db149dbec79a9508"
+    },
+    {
+      "id": "v2-w07-burst-control",
+      "category": "workload",
+      "task_digest": "6a91c034c2714b049002ced28732d2fc19ff3bc0c126dcace46074286a0895f3"
+    },
+    {
+      "id": "v2-w08-capacity-step",
+      "category": "workload",
+      "task_digest": "899f4ba2c3f75b2d4a7d8df89cc659332030292b829917fc7d469a02d010061e"
+    },
+    {
+      "id": "v2-w09-isolated-pools",
+      "category": "workload",
+      "task_digest": "973d74a4216fd4aaecdd8caf3a8b7d241cf819ffc7c748b80ddfe36bd6a41f35"
+    }
+  ],
+  "repeats": 1,
+  "efficiency_budgets": {
+    "v2-a01-jtl-endpoints": {
+      "latency_seconds": 90,
+      "tokens": 258
+    },
+    "v2-a02-k6-thresholds": {
+      "latency_seconds": 90,
+      "tokens": 291
+    },
+    "v2-a04-k6-errors": {
+      "latency_seconds": 90,
+      "tokens": 252
+    },
+    "v2-a05-jtl-omission": {
+      "latency_seconds": 90,
+      "tokens": 291
+    },
+    "v2-a06-k6-decomposition": {
+      "latency_seconds": 90,
+      "tokens": 225
+    },
+    "v2-c01-html-csrf": {
+      "latency_seconds": 180,
+      "tokens": 21009
+    },
+    "v2-c02-html-csrf": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-c03-json-parent-child": {
+      "latency_seconds": 180,
+      "tokens": 21009
+    },
+    "v2-c04-json-pagination": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-c06-etag-update": {
+      "latency_seconds": 180,
+      "tokens": 4737
+    },
+    "v2-c07-rotating-csrf": {
+      "latency_seconds": 180,
+      "tokens": 21009
+    },
+    "v2-c08-expiry-resume": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-c09-async-reservation": {
+      "latency_seconds": 180,
+      "tokens": 28263
+    },
+    "v2-c10-html-json-bridge": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-c11-session-ownership": {
+      "latency_seconds": 180,
+      "tokens": 58956
+    },
+    "v2-m01-basic-flow": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-m03-redirect-token": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-m04-data-driven": {
+      "latency_seconds": 180,
+      "tokens": 3780
+    },
+    "v2-m05-pacing-semantics": {
+      "latency_seconds": 180,
+      "tokens": 4956
+    },
+    "v2-m06-assertions-metrics": {
+      "latency_seconds": 180,
+      "tokens": 4722
+    },
+    "v2-m07-conditional-retry": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-r01-extractor-scope": {
+      "latency_seconds": 180,
+      "tokens": 21009
+    },
+    "v2-r02-cookie-lifetime": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-r04-status-recovery": {
+      "latency_seconds": 180,
+      "tokens": 4722
+    },
+    "v2-r05-business-assertion": {
+      "latency_seconds": 180,
+      "tokens": 21009
+    },
+    "v2-r06-threshold-tags": {
+      "latency_seconds": 180,
+      "tokens": 4812
+    },
+    "v2-r07-controller-reset": {
+      "latency_seconds": 180,
+      "tokens": 38670
+    },
+    "v2-r08-arrival-options": {
+      "latency_seconds": 180,
+      "tokens": 4887
+    },
+    "v2-r10-user-partition": {
+      "latency_seconds": 180,
+      "tokens": 3780
+    },
+    "v2-r11-timer-scope": {
+      "latency_seconds": 180,
+      "tokens": 21228
+    },
+    "v2-r12-error-metric": {
+      "latency_seconds": 180,
+      "tokens": 4719
+    },
+    "v2-r13-expiry-controller": {
+      "latency_seconds": 180,
+      "tokens": 38670
+    },
+    "v2-w01-steady-starts": {
+      "latency_seconds": 180,
+      "tokens": 32454
+    },
+    "v2-w02-open-arrivals": {
+      "latency_seconds": 180,
+      "tokens": 4887
+    },
+    "v2-w03-slow-service": {
+      "latency_seconds": 180,
+      "tokens": 32454
+    },
+    "v2-w04-three-phases": {
+      "latency_seconds": 180,
+      "tokens": 5319
+    },
+    "v2-w06-backoff-throughput": {
+      "latency_seconds": 180,
+      "tokens": 4926
+    },
+    "v2-w07-burst-control": {
+      "latency_seconds": 180,
+      "tokens": 32454
+    },
+    "v2-w08-capacity-step": {
+      "latency_seconds": 180,
+      "tokens": 4887
+    },
+    "v2-w09-isolated-pools": {
+      "latency_seconds": 180,
+      "tokens": 51651
+    }
+  },
+  "visibility": "public",
+  "digest": "84c75267639898753789c04b100fdea1805006d9aa102eec1f789ac524345b7d"
+}

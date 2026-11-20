@@ -23,7 +23,7 @@ from p95bench.graders import (
 from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import snapshot, summarize_v2, validate_snapshot
 from p95bench.providers import Gemini, ProviderUnavailable, SpendLimitExceeded, gemini_prices
-from p95bench.tasks import CATEGORIES, require_external
+from p95bench.tasks import CATEGORIES
 from p95bench.worker import WorkerUnavailable
 
 SYSTEM_PROMPT = (
@@ -51,10 +51,22 @@ def summarize(attempts):
     }
 
 
-def _output_path(path, private):
-    if private:
-        require_external(path, Path(__file__).resolve().parents[2])
-    return path
+def harness_revision(root=None):
+    root = (root or Path(__file__).resolve().parents[2]).resolve()
+    unknown = {"harness_commit": None, "harness_dirty": None}
+    try:
+        toplevel = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+                                  capture_output=True, text=True, check=True).stdout.strip()
+        if Path(toplevel).resolve() != root:
+            return unknown
+        commit = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True,
+                                text=True, check=True).stdout.strip()
+        dirty = bool(subprocess.run(["git", "-C", str(root), "status", "--porcelain",
+                                     "--untracked-files=no"], capture_output=True, text=True,
+                                    check=True).stdout.strip())
+    except (OSError, subprocess.CalledProcessError):
+        return unknown
+    return {"harness_commit": commit, "harness_dirty": dirty}
 
 
 def score_run(directory: Path):
@@ -83,8 +95,7 @@ def score_run(directory: Path):
             fallback = entry["grading_error"].get("fallback_error")
             if fallback:
                 summary["stop_reason"] += f"; fallback error ({fallback['type']}): {fallback['message']}"
-    _output_path(directory / "summary.json", bool(manifest and manifest.get("visibility")
-                                                 == "private")).write_text(
+    (directory / "summary.json").write_text(
         json.dumps(summary, indent=2) + "\n")
     return summary
 
@@ -113,11 +124,9 @@ def _grade_response(task, text, workdir, v2):
 
 
 def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
-        pack_id="p95-v1", efficiency_budgets=None, private=False, budget_ledger=None):
-    manifest = snapshot(pack_id, tasks, repeats, efficiency_budgets, private)
+        pack_id="p95-v1", efficiency_budgets=None, budget_ledger=None):
+    manifest = snapshot(pack_id, tasks, repeats, efficiency_budgets)
     v2 = manifest["grade_schema_version"] == 2
-    if private:
-        require_external(out, Path(__file__).resolve().parents[2])
     registry = CHECKPOINT_GRADERS if v2 else GRADERS
     for task in tasks:
         if task.grader not in registry:
@@ -136,11 +145,10 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
             provider.configure_run(started, model=model, price=price)
     run_id = started.strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     directory = ((out / pack_id if v2 else out) / run_id).resolve()
-    _output_path(directory, private)
     directory.mkdir(parents=True)
     if v2:
         prepare_workloads(tasks, directory / "capacity")
-    _output_path(directory / "pack.json", private).write_text(
+    (directory / "pack.json").write_text(
         json.dumps(manifest, indent=2) + "\n")
     config = getattr(provider, "config", None)
     ledger = (budget_ledger or BudgetLedger()) if v2 else None
@@ -159,11 +167,12 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                             price_per_million=asdict(price))
         if v2:
             metadata["spend_cap_usd"] = ledger.limit / 1_000_000
-        _output_path(directory / "metadata.json", private).write_text(
+            metadata.update(harness_revision())
+        (directory / "metadata.json").write_text(
             json.dumps(metadata, indent=2) + "\n")
     budget_error = None
     grading_stop = None
-    with _output_path(directory / "attempts.jsonl", private).open("w") as stream:
+    with (directory / "attempts.jsonl").open("w") as stream:
         for index, task in enumerate(tasks):
             for repeat in range(repeats):
                 reservation = None
@@ -180,7 +189,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         extra = config.extra if config else {}
                         output_cap = next((extra[k] for k in
                                            ("max_tokens", "max_completion_tokens", "maxOutputTokens")
-                                           if k in extra), 8192)
+                                           if k in extra), 16384)
                         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
                                    + output_cap * price.output) / 1_000_000
                         reservation = ledger.reserve(maximum * (1 + (config.max_retries
@@ -195,7 +204,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                 except (ProviderUnavailable, SpendLimitExceeded) as error:
                     if isinstance(error, SpendLimitExceeded):
                         budget_error = str(error)
-                    with _output_path(directory / "not-run.jsonl", private).open("a") as skipped:
+                    with (directory / "not-run.jsonl").open("a") as skipped:
                         entry = {"task_id": task.id, "repeat": repeat,
                                  "provider": provider_name, "model": model,
                                  "status": "not_run", "error": str(error)}
@@ -203,7 +212,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                             entry.update(pack_id=pack_id, budget_reservation=reservation)
                         skipped.write(json.dumps(entry) + "\n")
                     continue
-                workdir = _output_path(directory / f"task-{index}-{repeat}", private)
+                workdir = directory / f"task-{index}-{repeat}"
                 result, grading_error = _grade_response(task, response.text, workdir, v2)
                 attempt = {"task_id": task.id, "category": task.category, "repeat": repeat,
                            "provider": provider_name, "model": model,
@@ -223,7 +232,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         backoff_seconds=getattr(provider, "backoff_seconds", 0))
                 if result.get("status") == "not_run" or grading_error and grading_error.get("stop_run"):
                     attempt.update(status="not_run", error=result["detail"])
-                    with _output_path(directory / "not-run.jsonl", private).open("a") as skipped:
+                    with (directory / "not-run.jsonl").open("a") as skipped:
                         skipped.write(json.dumps(attempt) + "\n")
                     grading_stop = "Grading stopped: " + result["detail"]
                     continue

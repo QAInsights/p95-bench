@@ -34,7 +34,7 @@ def test_transport_and_estimated_prices(monkeypatch, model, rates, content):
         assert req.get_header('Authorization') == 'Bearer test-key'
         assert timeout == 180
         assert json.loads(req.data) == {'model': model, 'messages': [],
-                                        'enable_thinking': False, 'max_tokens': 8192,
+                                        'enable_thinking': False, 'max_tokens': 16384,
                                         'temperature': 0}
         return io.BytesIO(json.dumps({
             'choices': [{'message': {'content': content, 'reasoning_content': 'not the answer'}}],

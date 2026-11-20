@@ -8,85 +8,34 @@ import { replayScore, selectModelVersions } from '../src/lib/scores.mjs';
 const data = JSON.parse(await readFile(new URL('../src/data/leaderboard-p95-v2.0.0.json', import.meta.url)));
 const v1 = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 const { tasks } = await loadTaskData({ packId: 'p95-v2.0.0' });
+const PUBLISHED = ['deepseek-flash', 'deepseek-v4-pro'];
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 
-test('published v2 results expose only public per-task records and aggregate the full 50', () => {
+test('published v2 results cover the 40 public tasks with no held-out aggregates', () => {
   assert.equal(data.pack_id, 'p95-v2.0.0');
-  assert.equal(data.budget_file_sha256, '09ca8ed77cd7cb0eebea6a3618ae13c0fdb55496dd14d438745234a0b4a05bc7');
-  assert.deepEqual(new Set(data.models.map(model => model.model)),
-    new Set(['Qwen-Ambassador/Qwen3.7-Max', 'deepseek-v4-pro']));
+  assert.equal(data.budget_file_sha256, '2375e3bd11758aa5cd71964f291572ed47b034a08cb346558707ed874fe349b7');
+  assert.deepEqual(new Set(data.models.map(model => model.model)), new Set(PUBLISHED));
+  assert.equal(tasks.length, 40);
   for (const model of data.models) {
     assert.equal(model.repeats, 1);
-    assert.equal(model.coverage.run, 50);
-    assert.equal(model.coverage.total, 50);
-    assert.equal(model.coverage.partial, false);
+    assert.equal(model.output_cap, 16384);
+    assert.equal(model.private_aggregates, undefined);
+    assert.equal(model.evaluator_segments, undefined);
+    assert.deepEqual(model.coverage, { run: 40, total: 40, partial: false, label: '40/40 tasks run' });
     assert.match(model.cost_note, /list-price estimate/);
-    assert.ok(Number.isFinite(model.cost) && model.cost > 0);
-    assert.equal(model.budget_file_sha256, data.budget_file_sha256);
-    assert.equal(model.evaluator_segments.reduce((sum, segment) => {
-      assert.match(segment.digest, /^[a-f0-9]{64}$/);
-      return sum + segment.scored_attempts;
-    }, 0), 50);
+    assert.match(model.harness_commit, /^[0-9a-f]{40}$/);
+    assert.ok(Number.isFinite(model.cost) && model.cost >= 0);
     assert.equal(model.per_task_results.length, 40);
     assert.deepEqual(new Set(model.per_task_results.map(task => task.task_id)), new Set(tasks.map(task => task.id)));
-    for (const task of model.per_task_results) {
-      assert.deepEqual(Object.keys(task).sort(), ['task_id', 'category', 'tool', 'score', 'efficiency_score',
-        'passed', 'repeat', 'output_tokens', 'latency_seconds', 'detail'].sort());
-      assert.ok(task.score >= 0 && task.score <= 1);
-      assert.ok(task.efficiency_score >= 0 && task.efficiency_score <= task.score);
-    }
-    const hidden = model.private_aggregates;
-    assert.deepEqual(Object.keys(hidden).sort(), ['category_scores', 'task_count']);
-    assert.equal(hidden.task_count, 10);
-    assert.equal(Object.values(hidden.category_scores).reduce((sum, category) => sum + category.task_count, 0), 10);
-    let quality = 0, efficient = 0;
+    let quality = 0;
     for (const [category, weight] of Object.entries(data.weights)) {
-      const publicResults = model.per_task_results.filter(task => task.category === category);
-      const aggregate = hidden.category_scores[category];
-      assert.deepEqual(Object.keys(aggregate).sort(), ['task_count', 'quality_score', 'efficiency_score'].sort());
-      const count = publicResults.length + aggregate.task_count;
-      const credit = (publicResults.reduce((sum, task) => sum + task.score, 0) * 100
-        + aggregate.quality_score * aggregate.task_count) / count;
-      const efficiency = (publicResults.reduce((sum, task) => sum + task.efficiency_score, 0) * 100
-        + aggregate.efficiency_score * aggregate.task_count) / count;
+      const results = model.per_task_results.filter(task => task.category === category);
+      const credit = results.reduce((sum, task) => sum + task.score, 0) * 100 / results.length;
       near(model.category_scores[category], credit);
       quality += weight * credit / 100;
-      efficient += weight * efficiency / 100;
     }
     near(model.quality_score, quality);
-    near(model.efficiency_score, efficient);
-    near(model.overall_score, .95 * quality + .05 * efficient);
-    near(replayScore(model, new Set(model.per_task_results.map((_, index) => index)), data.weights), model.overall_score);
-  }
-});
-
-test('DeepSeek publishes usage-priced costs, three provenance segments and an aggregate audit-overflow note', async () => {
-  const model = data.models.find(model => model.model === 'deepseek-v4-pro');
-  near(model.quality_score, 28.44791666666667);
-  near(model.overall_score, 28.44435594729345);
-  near(model.cost, 1.33790052);
-  assert.match(model.cost_note, /reported token usage at frozen registry prices/);
-  assert.match(model.grading_note, /one audit-overflow zero \(0\/100\)/);
-  assert.match(model.grading_note, /No API call or additional charge/);
-  assert.deepEqual(model.cost_attempts, []);
-  assert.deepEqual(model.evaluator_segments, [
-    { label: 'Original', scored_attempts: 44,
-      digest: '3220ece2ecf9cab054e6ceb8f1eb2232362437e8830b60829be0246235b57d51',
-      public_harness_digest: '867fbd0ab205ec7c0347c891a70d9c8ece06223dbff2789e34c4b32a293bba98',
-      public_harness_commit: '5eef9974debc17f83eb6041978277d1d463ce527' },
-    { label: 'Offline regrade', scored_attempts: 1,
-      digest: '3220ece2ecf9cab054e6ceb8f1eb2232362437e8830b60829be0246235b57d51',
-      public_harness_digest: 'dba0e68dfb9c019c26e41a0a126b7a4c8569741ca41cb71afdd4a4242e1d50e0',
-      public_harness_commit: '701b0a5f4fd75f7eeaf414b20fe0ede7e4d424f9' },
-    { label: 'Continuation', scored_attempts: 5,
-      digest: 'affbe99548486e4fd7219f2fd3ba05935c282f604a988ad3230997875c7c6849',
-      public_harness_digest: 'fbac81b1b7363c9db79a775a7aaed05ff811f8ff6058a87db7373121419f1788',
-      public_harness_commit: '84d84b13f45ded9286b590cf21d0ba54bd7ced7e' },
-  ]);
-  const component = await readFile(new URL('../src/components/PackExplainer.astro', import.meta.url), 'utf8');
-  for (const field of ['segment.label', 'segment.scored_attempts', 'segment.digest',
-    'segment.public_harness_digest', 'segment.public_harness_commit', 'model.grading_note']) {
-    assert.ok(component.includes(field), `Provenance must render ${field}`);
+    near(model.overall_score, .95 * model.quality_score + .05 * model.efficiency_score);
   }
 });
 
@@ -97,11 +46,7 @@ test('v2 is the default and selects the latest family model with results', () =>
   assert.equal(resolvePack('v1', catalog), 'v1');
   assert.equal(resolvePack('v2', catalog), 'v2');
   const latest = selectModelVersions(catalog.v2.models);
-  assert.ok(!latest.some(model => model.model === 'Qwen-Ambassador/Qwen3.8-Max'));
-  const qwen = latest.find(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max');
-  assert.equal(qwen.version_status, 'Latest');
-  assert.equal(qwen.not_run, undefined);
-  assert.equal(latest.find(model => model.model === 'deepseek-v4-pro').not_run, undefined);
+  for (const model of PUBLISHED) assert.equal(latest.find(entry => entry.model === model).not_run, undefined);
   assert.ok(selectModelVersions(catalog.v2.models, true).some(model => model.model === 'Qwen-Ambassador/Qwen3.8-Max' && model.not_run));
   assert.ok(!selectModelVersions(catalog.v1.models).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
 });

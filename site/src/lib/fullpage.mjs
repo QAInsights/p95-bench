@@ -1169,7 +1169,7 @@ function updateVisibleCounts(animate = false) {
   document.querySelectorAll('[data-pack-model]').forEach(row => { row.hidden = !models.some(model => model.model === row.dataset.packModel); });
   $('leading-label').textContent = pack === 'v2' ? 'LEADING COMPOSITE · 95/5' : 'LEADING WEIGHTED SCORE';
   $('method-pack').textContent = pack === 'v2'
-    ? `Showing ${DATA.pack_id} · 50-task design, ${DATA.tasks.length} public tasks. V2 is the default landing view; select v1 for the legacy board. Composite = 95% quality + 5% quality-gated efficiency. Checkpoints total 100 possible points per task; prerequisites gate dependent credit. Repetitions are averaged; first publication defaults to one. Pinned workers, independent server audit evidence and workload capacity preflights verify execution. Private task details are never published.`
+    ? `Showing ${DATA.pack_id} · ${DATA.tasks.length} public tasks, no held-out tasks. V2 is the default landing view; select v1 for the legacy board. Composite = 95% quality + 5% quality-gated efficiency. Checkpoints total 100 possible points per task; prerequisites gate dependent credit. Repetitions are averaged; first publication defaults to one. Pinned workers, independent server audit evidence and workload capacity preflights verify execution. Private task details are never published.`
     : 'Showing p95-v1 · 15 tasks · binary pass/fail. Weighted category pass rates retain their original scoring. V2 is the default landing view.';
   document.querySelectorAll('[data-v1-method]').forEach(node => { node.hidden = pack !== 'v1'; });
   $('method-weights').innerHTML = Object.entries(weights).map(([category, weight]) =>

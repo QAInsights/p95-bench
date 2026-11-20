@@ -31,11 +31,14 @@ Frozen task-specific efficiency budgets must be supplied with `--efficiency-budg
 as JSON mapping IDs to positive `tokens` and `latency_seconds` values. Token budgets
 are three times the reference solution/answer token count using one recorded fixed
 tokenizer across the pack. Latency budgets are 90 seconds for analysis tasks and
-180 seconds for script tasks. V1 scoring and summaries are unchanged.
+180 seconds for script tasks. The published v2 budgets are checked in at
+`packs/p95-v2.0.0/efficiency-budgets.json` (o200k_base tokenizer). V1 scoring and
+summaries are unchanged.
 
 V2 runs are stored under `OUT/p95-v2.0.0/RUN_ID`; v1 preserves `OUT/RUN_ID` for
 compatibility. Both get a hashed `pack.json` snapshot
 containing scoring rules, task inventory, efficiency budgets and repeat count.
+V2 `metadata.json` records `harness_commit` and `harness_dirty` (tracked changes present).
 Offline `p95bench score DIRECTORY` dispatches by that snapshot. Old directories
 without a snapshot are v1. Mixed pack inputs and altered snapshots are rejected.
 Site data generation preserves the unchanged v1 `leaderboard.json`; the public
@@ -55,11 +58,8 @@ above a reservation stops the run for audit. Ledger corruption/cap mismatch fail
 closed. Budget exhaustion skips remaining slots and still writes a provisional
 summary. API keys are not needed for the synthetic tests; no paid runs ship here.
 
-Private task content is **not** included. `--private-tasks EXTERNAL_DIRECTORY` loads
-it only outside the repository (resolved symlinks checked), and requires an external
-`--out` path. Such runs are marked private; the site builder rejects them entirely.
-Raw prompts, responses, checkpoints and fixtures must never be copied into public
-results or commits. A reviewed allowlist exporter/private evaluator comes later.
+v2 is public-only: all 40 tasks are checked in and there are no held-out tasks.
+Runs are always marked public, and the site builder rejects any private run.
 
 An open-source benchmark for AI performance test scripting and engineering.
 General purpose and independent of any AI assistant product. Compare model
@@ -113,7 +113,7 @@ Use `--provider qwen` with `MODELSCOPE_API_KEY`. The OpenAI-compatible endpoint
 is `https://api-inference.modelscope.ai/v1` (override with `QWEN_BASE_URL`).
 Models: `Qwen-Ambassador/Qwen3.8-Max`, `Qwen-Ambassador/Qwen3.8-Flash-Next`,
 and `Qwen-Ambassador/Qwen3.7-Max`. Hybrid thinking is disabled with
-`enable_thinking: false`; temperature is 0 and the output cap is 8192 tokens.
+`enable_thinking: false`; temperature is 0 and the output cap is 16384 tokens.
 The [Qwen API reference](https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-dashscope)
 documents thinking control for the 3.8 and 3.7 series and a temperature range
 that includes 0. ModelScope compatibility is checked by the real runs.
@@ -142,7 +142,7 @@ The runner supports dependency injection for testing and custom adapters.
 
 For Anthropic, set `ANTHROPIC_API_KEY` and use `--provider anthropic` with
 `--model claude-sonnet-5-5` or `--model claude-opus-5-5`. The adapter sends the
-fixed prompt through the top-level `system` field with the same 8192-token output
+fixed prompt through the top-level `system` field with the same 16384-token output
 cap. Temperature is omitted for Sonnet 5.5 and Opus 5.5 because their API rejects
 the parameter as deprecated; published run metadata records this exception.
 It uses `x-api-key` authentication and API version
@@ -158,7 +158,7 @@ Thinking Machines (Tinker) uses the existing OpenAI-compatible adapter. Set
 `TINKER_API_KEY` and use `--provider thinkingmachines`. The beta endpoint is
 `https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1`, with bearer
 authentication and `/chat/completions`. Temperature is 0 and the output cap is
-8192 tokens, including reasoning. If reasoning exhausts that cap, null answer
+16384 tokens, including reasoning. If reasoning exhausts that cap, null answer
 content is graded as empty text; reasoning is not substituted for the answer.
 No explicit reasoning effort is set. Any future `reasoning_effort` override must
 be a top-level request field, not nested under `extra_body`, whose fields the
@@ -183,7 +183,7 @@ Set `OPENAI_API_KEY` and select `--provider openai` with `gpt-6.2-sol` or
 are $2/$10 for Sol and $8/$40 for Astra, from <https://openai.com/api/pricing/>.
 Cached input is conservatively priced at the ordinary input rate pending a
 verified cache discount. Both models reject `max_tokens` and temperature 0:
-requests use `max_completion_tokens: 8192` and omit temperature, leaving the
+requests use `max_completion_tokens: 16384` and omit temperature, leaving the
 API default. Published metadata records these exceptions. Reasoning tokens
 count toward the completion cap and reported output usage.
 
@@ -201,7 +201,7 @@ reported costs are conservative estimates, not invoices. Cache-hit input tokens
 are not charged twice. Each attempt records its price snapshot. Calls use
 temperature 0 where supported, a fixed system prompt and identical task/fixture messages across
 models. DeepSeek thinking is disabled for this initial chat benchmark, with an
-8192-token output cap. Provider failures abort the run rather than count as
+16384-token output cap. Provider failures abort the run rather than count as
 incorrect answers; already-written attempt lines remain available to score.
 
 ## Add a task
@@ -324,8 +324,7 @@ leaderboard, only v1 is offered. Generate `leaderboard-p95-v2.0.0.json` with
 it becomes the default, including with a one-model board. Missing or invalid
 `pack` parameters select v2, while `?pack=v1` selects the legacy board. The header
 wordmark returns home to `/` on v2 without a pack parameter.
-The v2 control names the 50-task design; the public site describes the 40 public
-tasks only. Quality, quality-gated efficiency and the 95/5 composite stay separate.
+The v2 control and copy describe the 40 public tasks. Quality, quality-gated efficiency and the 95/5 composite stay separate.
 Models missing a selected-pack run remain visible without invented scores.
 Synthetic fixtures in `site/tests/` are test-only and must never be published as
 a leaderboard or copied into production data.
@@ -380,7 +379,7 @@ p95bench run --provider gemini --model gemini-4-carbon --out results
 ```
 
 Temperature is omitted, retaining the API's default of 1. Default thinking is
-unchanged. `maxOutputTokens` is 8192, shared by thinking and answer tokens.
+unchanged. `maxOutputTokens` is 16384, shared by thinking and answer tokens.
 Published response output tokens include both `candidatesTokenCount` and
 `thoughtsTokenCount`; `thinking_tokens` and `finish_reason` are also recorded.
 Thinking text is never substituted for an answer. A thinking-only `MAX_TOKENS`
@@ -420,7 +419,7 @@ The `meta` provider uses OpenAI-compatible Chat Completions at
 Contributor variants and Spark 1.1 are not included.
 
 Temperature is omitted per Meta's recommendation (default 1). Reasoning effort
-is omitted: Wonder and Ember default to max, Spark to high. The 8192
+is omitted: Wonder and Ember default to max, Spark to high. The 16384
 `max_completion_tokens` cap includes reasoning and visible output. Returned
 `completion_tokens` already includes reasoning; the harness does not add
 `completion_tokens_details.reasoning_tokens` again. It records the latter
