@@ -70,12 +70,12 @@ test('cost, token and time formatters handle basic and non-finite values', () =>
   assert.equal(formatMinutes(Infinity), '—');
 });
 
-test('page data imports only the v2 leaderboard and has no version switching UI', async () => {
+test('page data imports only the Matrix leaderboard and has no version switching UI', async () => {
   const page = await readFile(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
   const jsonImports = [...page.matchAll(/import\s+[^;]*from\s+["']([^"']+\.json)["'];?/g)]
     .map(([, source]) => source);
 
-  assert.deepEqual(jsonImports, ['../data/leaderboard-p95-v2.0.0.json']);
+  assert.deepEqual(jsonImports, ['../data/leaderboard-p95-matrix.json']);
   assert.doesNotMatch(page, /leaderboard\.json|pack-switch|show-versions/);
   assert.match(page, /href="\/tasks"/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
