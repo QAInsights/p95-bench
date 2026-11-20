@@ -5,7 +5,7 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/geist.css";
 import "../styles/board.css";
 import data from "../data/leaderboard-p95-v2.0.0.json";
-import { boardModels, boardTasks, categoryLabels, scatter, taskCode, taskScore, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
+import { boardModels, boardTasks, categoryLabels, scatter, taskCode, taskScore, toolLabel, toolScores, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
 
 const models = boardModels(data);
 const tasks = boardTasks(data);
@@ -14,6 +14,7 @@ const plot = scatter(models);
 const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
 const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";
+const tools = [...new Set(tasks.map(t => t.tool))].sort();
 const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
 ---
 
@@ -34,7 +35,7 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
   <body>
     <header class="top">
       <a class="wordmark" href="/" aria-label="P95 Bench, home"><img src="/favicon.svg" width="24" height="24" alt="" aria-hidden="true" /><span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a>
-      <nav aria-label="Site"><a href="#rankings">Rankings</a><a href="#tasks">Tasks</a><a href="#method">Method</a><a href={repo}>GitHub ↗</a></nav>
+      <nav aria-label="Site"><a href="#rankings">Rankings</a><a href="/tasks">Tasks</a><a href="#method">Method</a><a href={repo}>GitHub ↗</a></nav>
     </header>
 
     <main>
@@ -107,14 +108,36 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         </div>
       </section>
 
+      <section aria-labelledby="tools-title">
+        <h2 id="tools-title" class="label">By tool <span>average task score / 100 · task count in brackets</span></h2>
+        <div class="table-wrap">
+          <table class="categories">
+            <thead><tr><th>Model</th>{tools.map(t => <th class="n">{toolLabel(t)} <span class="weight">({tasks.filter(x => x.tool === t).length})</span></th>)}</tr></thead>
+            <tbody>
+              {models.map(m => { const scores = toolScores(m, tasks); return (
+                <tr>
+                  <td><span class="swatch" style={`background:${m.color}`}></span>{m.name}</td>
+                  {tools.map(t => <td class="n heat" style={`--t:${tone(scores[t]) ?? 0}%`}>{scores[t] === null ? "—" : scores[t].toFixed(0)}</td>)}
+                </tr>
+              ); })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section id="tasks" aria-labelledby="tasks-title">
-        <h2 id="tasks-title" class="label">Every task <span>brighter is better · hover a cell or open the table below</span></h2>
+        <h2 id="tasks-title" class="label">Every task <span>J = JMeter, k6 = k6 · brighter is better · hover a cell for details</span></h2>
         <div class="table-wrap">
           <div class="grid" style={`--cols:${tasks.length + groups.length - 1}`}>
             <span class="grid-corner"></span>
             {groups.map((g, gi) => <>
               {gi > 0 && <span class="grid-gap"></span>}
               <span class="grid-group" style={`grid-column: span ${g.tasks.length}`}>{categoryLabels[g.category]}</span>
+            </>)}
+            <span class="grid-name tool-key">Tool</span>
+            {groups.map((g, gi) => <>
+              {gi > 0 && <span class="grid-gap"></span>}
+              {g.tasks.map(t => <span class:list={["tool-mark", t.tool]} title={toolLabel(t.tool)}>{t.tool === "k6" ? "k6" : t.tool === "jmeter" ? "J" : toolLabel(t.tool)[0]}</span>)}
             </>)}
             {models.map(m => <>
               <span class="grid-name">{m.name}</span>
@@ -123,29 +146,14 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
                 {g.tasks.map(t => {
                   const value = taskScore(m, t.id);
                   return <span class:list={["cell", value === null && "missing"]} style={value === null ? "" : `--t:${value}%`}
-                    title={`${taskCode(t.id)} · ${t.label} · ${t.tool === "k6" ? "k6" : "JMeter"}\n${m.name}: ${value === null ? "not run" : `${value}/100`}`}
+                    title={`${taskCode(t.id)} · ${t.label} · ${toolLabel(t.tool)}\n${m.name}: ${value === null ? "not run" : `${value}/100`}`}
                     aria-label={`${m.name}, ${t.label}: ${value === null ? "not run" : `${value} of 100`}`}></span>;
                 })}
               </>)}
             </>)}
           </div>
         </div>
-        <details class="task-table">
-          <summary>All task scores as a table</summary>
-          <div class="table-wrap"><table>
-            <thead><tr><th>Task</th><th>Category</th><th>Tool</th>{models.map(m => <th class="n">{m.name}</th>)}</tr></thead>
-            <tbody>
-              {tasks.map(t => (
-                <tr>
-                  <th scope="row"><span class="code">{taskCode(t.id)}</span> {t.label}</th>
-                  <td>{categoryLabels[t.category] ?? t.category}</td>
-                  <td>{t.tool === "k6" ? "k6" : "JMeter"}</td>
-                  {models.map(m => <td class="n">{taskScore(m, t.id) ?? "—"}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table></div>
-        </details>
+        <p class="more"><a href="/tasks">All {tasks.length} tasks with scores and checks →</a></p>
       </section>
 
       <section id="method" aria-labelledby="method-title" class="method">

@@ -77,6 +77,6 @@ test('page data imports only the v2 leaderboard and has no version switching UI'
 
   assert.deepEqual(jsonImports, ['../data/leaderboard-p95-v2.0.0.json']);
   assert.doesNotMatch(page, /leaderboard\.json|pack-switch|show-versions/);
-  assert.match(page, /<details class="task-table">/);
+  assert.match(page, /href="\/tasks"/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
 });
