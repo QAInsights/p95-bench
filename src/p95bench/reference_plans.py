@@ -756,12 +756,14 @@ def gatling_reference(config):
         else:
             chain = ("flow()" if config.get("operation") == "journey"
                      else f'work("{config.get("path", "/v2/work")}")')
-            rates = [rate * 1.05 for rate in config.get("rates", [config.get("rate", 5)])]
+            configured_rates = config.get("rates", [config.get("rate", 5)])
+            rates = ([rate * 1.05 for rate in configured_rates]
+                     if len(configured_rates) == 1 else configured_rates)
             if len(rates) == 1:
                 spans = [duration]
             elif len(rates) == 3:
                 phase_duration = config.get("measured", 30) // 3
-                spans = [config.get("warmup", 5) + phase_duration + 0.25,
+                spans = [config.get("warmup", 5) + phase_duration + 0.425,
                          phase_duration,
                          config.get("measured", 30) - 2 * phase_duration]
             else:
@@ -899,23 +901,15 @@ def login(parent, username=None, reset=False):
     sampler(condition(parent, "redirect"), "${location}", extractors={"grant": "$.grant_id"})
 
 
-def group(parent, users, iterations, duration=None, delay=0, *, bounded=False):
+def group(parent, users, iterations, duration=None, delay=0):
     element, children = node(parent, "ThreadGroup", {"ThreadGroup.num_threads": str(users),
         "ThreadGroup.ramp_time": "0", "ThreadGroup.scheduler": duration is not None,
         "ThreadGroup.duration": str(duration or ""), "ThreadGroup.delay": str(delay),
         "ThreadGroup.on_sample_error": "continue"})
     controller = ET.SubElement(element, "elementProp", name="ThreadGroup.main_controller", elementType="LoopController")
     props(controller, {"LoopController.continue_forever": False,
-                       "LoopController.loops": str(-1 if duration and not bounded else iterations)})
+                       "LoopController.loops": str(-1 if duration else iterations)})
     node(children, "CookieManager", {"CookieManager.clearEachIteration": duration is None})
-    return children
-
-
-def repeat(parent, iterations):
-    _, children = node(parent, "LoopController", {
-        "LoopController.continue_forever": False,
-        "LoopController.loops": str(iterations),
-    })
     return children
 
 
@@ -923,19 +917,6 @@ def pacing(parent, rate):
     element, _ = node(parent, "ConstantThroughputTimer")
     ET.SubElement(element, "stringProp", name="throughput").text = str(rate * 60 * 1.01)
     ET.SubElement(element, "intProp", name="calcMode").text = "4"
-
-
-def precise_pacing(parent, rate, duration, seed):
-    node(parent, "PreciseThroughputTimer", {
-        "throughput": str(rate),
-        "throughputPeriod": "1",
-        "duration": str(duration),
-        "batchSize": "1",
-        "batchThreadDelay": "0",
-        "exactLimit": "10000",
-        "allowedThroughputSurplus": "0",
-        "randomSeed": str(seed),
-    }, testclass="org.apache.jmeter.timers.poissonarrivals.PreciseThroughputTimer")
 
 
 def jmeter_reference(config):
@@ -961,7 +942,7 @@ def jmeter_reference(config):
     root = ET.Element("jmeterTestPlan", version="1.2", properties="5.0", jmeter="5.6.3")
     test_plan, plan = node(ET.SubElement(root, "hashTree"), "TestPlan")
     if workload and len(rates) > 1:
-        ET.SubElement(test_plan, "boolProp", name="TestPlan.serialize_threadgroups").text = "false"
+        ET.SubElement(test_plan, "boolProp", name="TestPlan.serialize_threadgroups").text = "true"
     variables, _ = node(plan, "Arguments")
     arguments = ET.SubElement(variables, "collectionProp", name="Arguments.arguments")
     for key, value in {"username": "bench", "csrf": "MISSING", "cart": "MISSING",
@@ -977,24 +958,16 @@ def jmeter_reference(config):
     if workload and config.get("operation") != "journey" and len(rates) > 1:
         phase_duration = int(config.get("measured", 30) / len(rates))
         warmup = config.get("warmup", 5)
-        startup = 1
+        max_users = 64 if config.get("capacity") else 16
+        latency_seconds = config.get("latency_seconds", 1)
         for index, rate in enumerate(rates):
-            phase_start = warmup + phase_duration * index
-            span = phase_start + phase_duration + startup
-            phase_users = rate
-            children = group(plan, phase_users, 1, span, bounded=True)
+            span = phase_duration + warmup + 1 if index == 0 else phase_duration
+            phase_users = min(max_users, max(4, math.ceil(rate * latency_seconds)))
+            children = group(plan, phase_users, 1, span)
             login(node(children, "OnceOnlyController")[1])
-            if index:
-                health_count = rate * (phase_start + startup)
-                health = sampler(repeat(children, health_count // phase_users), "/v2/health")
-                precise_pacing(health, rate, span, index + 1)
-                work_count = rate * phase_duration
-            else:
-                work_count = rate * span
-            work = sampler(repeat(children, work_count // phase_users),
-                           config.get("path", "/v2/work"), "POST", "{}",
+            work = sampler(children, config.get("path", "/v2/work"), "POST", "{}",
                            assertion=r'"ok"\s*:\s*true')
-            precise_pacing(work, rate, span, index + 1)
+            pacing(work, rate)
         return ET.tostring(root, encoding="unicode")
     children = group(plan, users, config.get("iterations", 2), duration if workload else None)
     if mode in ("data", "ownership", "partition"):

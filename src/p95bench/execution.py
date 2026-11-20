@@ -20,7 +20,7 @@ COMPONENTS = {"jmeterTestPlan", "hashTree", "TestPlan", "ThreadGroup", "LoopCont
               "OnceOnlyController", "IfController", "WhileController", "GenericController",
               "TransactionController", "HTTPSamplerProxy", "CookieManager", "HeaderManager",
               "JSONPostProcessor", "RegexExtractor", "ResponseAssertion", "DurationAssertion",
-              "ConstantTimer", "ConstantThroughputTimer", "PreciseThroughputTimer", "SyncTimer", "CSVDataSet",
+              "ConstantTimer", "ConstantThroughputTimer", "SyncTimer", "CSVDataSet",
               "Arguments", "Argument", "HTTPArgument", "Header", "stringProp", "boolProp",
               "intProp", "longProp", "doubleProp", "collectionProp", "elementProp"}
 FUNCTIONS = {"P", "property", "threadNum", "counter", "time", "Random", "RandomString"}
@@ -52,11 +52,7 @@ def artifact_source(tool, text):
                 "name", "testname", "testclass", "guiclass", "enabled", "version", "properties",
                 "jmeter", "elementType"} for key in element.attrib):
             raise ValueError("JMX component or serialization attribute outside the allowed subset")
-        expected_testclass = (
-            "org.apache.jmeter.timers.poissonarrivals.PreciseThroughputTimer"
-            if element.tag == "PreciseThroughputTimer"
-            else element.get("elementType", element.tag)
-        )
+        expected_testclass = element.get("elementType", element.tag)
         if element.get("testclass", expected_testclass) != expected_testclass:
             raise ValueError("JMX testclass must match its element")
         if element.get("elementType", "Arguments") not in COMPONENTS:

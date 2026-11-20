@@ -133,7 +133,7 @@ def _once(pattern, text, replacement, section):
     return result
 
 
-def protocol_for_tool(source, tool, *, matrix=False):
+def protocol_for_tool(source, tool):
     if tool not in TOOLS:
         raise ValueError(f"Unknown tool: {tool}")
     lines = source.splitlines(keepends=True)
@@ -158,14 +158,10 @@ def protocol_for_tool(source, tool, *, matrix=False):
     jmx_end = rules.group().find("No eval/Groovy/BeanShell/JavaScript/JEXL.") + len(
         "No eval/Groovy/BeanShell/JavaScript/JEXL."
     )
-    jmx_rules = rules.group()[jmx_start:jmx_end]
-    if matrix and tool == "jmeter":
-        old_timer_line = "Response/Duration assertions, Constant/ConstantThroughput/Sync timers, CSVDataSet, Arguments."
-        new_timer_line = "Response/Duration assertions, Constant/ConstantThroughput/PreciseThroughput/Sync timers, CSVDataSet, Arguments."
-        jmx_rules, count = jmx_rules.replace(old_timer_line, new_timer_line), jmx_rules.count(old_timer_line)
-        if count != 1:
-            raise ValueError(f"Expected one Matrix JMeter timer line, found {count}")
-    jmeter_rules = "\n".join((GENERIC_NATIVE, jmx_rules))
+    jmeter_rules = "\n".join((
+        GENERIC_NATIVE,
+        rules.group()[jmx_start:jmx_end],
+    ))
     replacement = jmeter_rules if tool == "jmeter" else TOOL_RULES_BY_TOOL.get(tool)
     text = _once(TOOL_RULES, text, replacement, "native tool rules")
     return text
@@ -290,8 +286,7 @@ def build_matrix_pack(source_pack, target_pack):
         if category != "analysis":
             protocol = (source_dir / "protocol.md").read_text()
             for tool in TOOLS:
-                (output_dir / f"protocol-{tool}.md").write_text(
-                    protocol_for_tool(protocol, tool, matrix=True))
+                (output_dir / f"protocol-{tool}.md").write_text(protocol_for_tool(protocol, tool))
 
         source_tasks = [
             yaml.safe_load(path.read_text())

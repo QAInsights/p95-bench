@@ -30,7 +30,7 @@ Every raw /v2/work response is one native sample. Keep assertions truthful.
 Native results and server audit are authoritative; stdout is not evidence.
 JMX declarative components only: TestPlan, ThreadGroup, Loop/OnceOnly/If/While/Generic/Transaction
 controllers, HTTPSamplerProxy, Cookie/Header managers, JSONPostProcessor, RegexExtractor,
-Response/Duration assertions, Constant/ConstantThroughput/PreciseThroughput/Sync timers, CSVDataSet, Arguments.
+Response/Duration assertions, Constant/ConstantThroughput/Sync timers, CSVDataSet, Arguments.
 No scripting/process components, listeners, custom classpaths/implementations or DTD/entities.
 IfController uses boolean-expression mode. Allowed functions: __P, __property, __threadNum,
 __counter, __time, __Random, __RandomString. No eval/Groovy/BeanShell/JavaScript/JEXL.

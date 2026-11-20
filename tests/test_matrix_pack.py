@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
@@ -119,10 +120,8 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
     assert "Constant/ConstantThroughput/Sync timers" in v2_jmeter_protocol
     assert "PreciseThroughput" not in v2_jmeter_protocol
     assert all(
-        "Constant/ConstantThroughput/PreciseThroughput/Sync timers"
-        in task.fixtures["protocol-jmeter.md"]
-        and "Constant/ConstantThroughput/Sync timers"
-        not in task.fixtures["protocol-jmeter.md"]
+        "Constant/ConstantThroughput/Sync timers" in task.fixtures["protocol-jmeter.md"]
+        and "PreciseThroughput" not in task.fixtures["protocol-jmeter.md"]
         for task in MATRIX_TASKS if task.tool == "jmeter" and task.category != "analysis"
     )
 
@@ -171,15 +170,6 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
             for name, content in source.fixtures.items():
                 if name != "protocol.md":
                     assert task.fixtures[name] == content
-
-
-def test_matrix_w04_jmeter_reference_uses_precise_throughput_timer():
-    task = next(task for task in MATRIX_TASKS
-                if task.id == "mx-w04-three-phases-jmeter")
-    source = reference("jmeter", task.params["contract"])
-
-    assert source.count("<PreciseThroughputTimer") == 5
-    assert artifact_source("jmeter", source) == source
 
     repair_by_scenario = {}
     for task in REPAIR_TASKS:
@@ -304,6 +294,44 @@ def test_matrix_w04_jmeter_reference_uses_precise_throughput_timer():
                     for task in variants}) == 1
 
     assert all((MATRIX_PACK / "overlays" / tool).is_dir() for tool in TOOLS)
+
+
+def test_matrix_w04_jmeter_reference_uses_serialized_constant_throughput_timers():
+    task = next(task for task in MATRIX_TASKS
+                if task.id == "mx-w04-three-phases-jmeter")
+    source = reference("jmeter", task.params["contract"])
+    root = ET.fromstring(source)
+    groups = root.findall(".//ThreadGroup")
+    timers = root.findall(".//ConstantThroughputTimer")
+
+    assert root.findtext(".//boolProp[@name='TestPlan.serialize_threadgroups']") == "true"
+    assert len(groups) == 3
+    assert [group.findtext("stringProp[@name='ThreadGroup.num_threads']")
+            for group in groups] == ["5", "15", "5"]
+    assert [group.findtext("stringProp[@name='ThreadGroup.duration']")
+            for group in groups] == ["16", "10", "10"]
+    assert [group.findtext("stringProp[@name='ThreadGroup.delay']")
+            for group in groups] == ["0", "0", "0"]
+    assert len(timers) == 3
+    assert [timer.findtext("stringProp[@name='throughput']")
+            for timer in timers] == ["303.0", "909.0", "303.0"]
+    assert [timer.findtext("intProp[@name='calcMode']")
+            for timer in timers] == ["4", "4", "4"]
+    assert not root.findall(".//PreciseThroughputTimer")
+    assert artifact_source("jmeter", source) == source
+
+
+def test_matrix_w04_gatling_reference_uses_exact_phase_rates():
+    task = next(task for task in MATRIX_TASKS
+                if task.id == "mx-w04-three-phases-gatling")
+    source = reference("gatling", task.params["contract"])
+
+    assert "constantUsersPerSec(5).during" in source
+    assert "constantUsersPerSec(15).during" in source
+    assert "constantUsersPerSec(5).during(Duration.ofMillis(15425))" in source
+    assert "constantUsersPerSec(15).during(Duration.ofMillis(10000))" in source
+    assert "constantUsersPerSec(5.25)" not in source
+    assert "constantUsersPerSec(15.75)" not in source
 
 
 REFERENCE_TASK_IDS = {

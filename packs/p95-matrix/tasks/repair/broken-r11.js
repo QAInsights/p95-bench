@@ -46,7 +46,9 @@ function work(override){
   check(r,{'operation or expected throttle':r=>(r.status===200 && body(r).ok===true) || (cfg.completion && r.status===429)});
 }
 function flow(){
-  csrf='';cart='';grant='';login();
+  csrf='';cart='';grant='';
+  if(cfg.mode==='ownership' && __VU===2) sleep(.5);
+  login();
   if(cfg.mode==='challenge'){
     let r=request('/v2/challenge-form');const form=r.html().find('form');
     const token=form.find('input[name="challenge"]').first().attr('value');
@@ -64,6 +66,7 @@ function flow(){
   let r=request('/v2/carts','POST',{product_id:product.id,variant_id:variant.id,grant_id:grant});
   cart=body(r).id;let etag=r.headers.Etag;
   check(r,{'cart':r=>r.status===201});
+  if(cfg.mode==='ownership') sleep(__VU===1 ? 1.2 : 1.6);
   if(cfg.mode==='etag'||cfg.mode==='data'){
     const quantity=cfg.mode==='data'?rows[(__VU-1)%rows.length].quantity:(cfg.quantity || 2);
     r=request('/v2/carts/'+cart,'PATCH',{quantity:quantity},{'If-Match':etag});

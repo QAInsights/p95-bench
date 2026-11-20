@@ -43,19 +43,18 @@ def stop_actors():
 
 class Relay(socketserver.BaseRequestHandler):
     def handle(self):
-        with connect_upstream() as upstream:
-            with selectors.DefaultSelector() as selector:
-                selector.register(self.request, selectors.EVENT_READ, upstream)
-                selector.register(upstream, selectors.EVENT_READ, self.request)
-                while True:
-                    ready = selector.select(3)
-                    if not ready:
+        with connect_upstream() as upstream, selectors.DefaultSelector() as selector:
+            selector.register(self.request, selectors.EVENT_READ, upstream)
+            selector.register(upstream, selectors.EVENT_READ, self.request)
+            while True:
+                ready = selector.select(3)
+                if not ready:
+                    return
+                for key, _ in ready:
+                    data = key.fileobj.recv(65536)
+                    if not data:
                         return
-                    for key, _ in ready:
-                        data = key.fileobj.recv(65536)
-                        if not data:
-                            return
-                        key.data.sendall(data)
+                    key.data.sendall(data)
 
 
 def connect_upstream(path="/public.sock"):
