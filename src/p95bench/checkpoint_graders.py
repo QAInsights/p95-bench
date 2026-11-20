@@ -244,8 +244,11 @@ def flow_fractions(trial, controls, contract):
         if mode == "decline":
             behavior = float(control_ok)
         elif mode == "threshold":
-            tagged = [point for point in trial.points if point["metric"] == "http_req_duration"
-                      and point.get("tags", {}).get("name") == "checkout"]
+            tagged = ([point for point in trial.points if point["metric"] == "http_req_duration"
+                       and point.get("tags", {}).get("name") == "checkout"] if trial.points else
+                      [sample for sample in trial.samples if sample.get("name") == "checkout"
+                       and sample.get("method") == "POST" and sample.get("path") == "/v2/orders"
+                       and "response_time" in sample])
             named = {sample["request"] for sample in trial.samples if sample.get("name") == "checkout"
                      and sample.get("method") == "POST" and sample.get("path") == "/v2/orders"}
             setup = min(ratio(len(tagged), expected), ratio(len(named), expected))

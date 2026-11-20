@@ -22,8 +22,11 @@ def test_worker_policy_and_cleanup_on_infrastructure_failure(tmp_path):
     worker.image = PROBE_IMAGE
     worker._docker = Mock(return_value=subprocess.CompletedProcess([], 0, b"", b""))
     worker._attached = Mock(side_effect=WorkerUnavailable("attachment"))
+    runner = tmp_path / "locust_runner.py"
+    runner.write_text("pass")
     with pytest.raises(WorkerUnavailable, match="attachment"):
-        worker.execute(["python3", "-c", "print('synthetic')"], {"input.txt": b"fixture"})
+        worker.execute(["python3", "-c", "print('synthetic')"], {"input.txt": b"fixture"},
+                       runner=runner)
     command = worker._docker.call_args_list[0].args
     for pair in (("--network", "none"), ("--user", "65534:65534"),
                  ("--pids-limit", "64"), ("--memory", "256m"), ("--cpus", "1"),
@@ -32,6 +35,7 @@ def test_worker_policy_and_cleanup_on_infrastructure_failure(tmp_path):
         assert command[index:index + 2] == pair
     assert "--read-only" in command
     assert any("dst=/fixtures/input.txt,readonly" in arg for arg in command)
+    assert any(f"src={runner.resolve()},dst=/locust_runner.py,readonly" in arg for arg in command)
     assert not any("docker.sock" in arg or "dst=/home" in arg for arg in command)
     assert worker._docker.call_args_list[-1].args[:2] == ("rm", "--force")
 

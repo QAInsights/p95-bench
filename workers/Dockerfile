@@ -15,3 +15,12 @@ RUN python3 -c 'import hashlib,tarfile; p="/tmp/jmeter.tgz"; assert hashlib.sha5
 ENV JAVA_HOME=/opt/java/openjdk PATH=/opt/java/openjdk/bin:/opt/apache-jmeter-5.6.3/bin:/usr/local/bin:/usr/bin:/bin
 LABEL org.p95bench.tool="jmeter" org.p95bench.version="5.6.3"
 RUN java -Djava.awt.headless=true -jar /opt/apache-jmeter-5.6.3/bin/ApacheJMeter.jar --version
+
+FROM base AS locust
+COPY locust-requirements.txt /tmp/locust-requirements.txt
+COPY locust-wheels /tmp/locust-wheels
+RUN python3 -m pip install --no-index --no-deps --require-hashes \
+    --find-links=/tmp/locust-wheels -r /tmp/locust-requirements.txt \
+    && rm -rf /tmp/locust-requirements.txt /tmp/locust-wheels
+LABEL org.p95bench.tool="locust" org.p95bench.version="2.47.0"
+RUN locust --version

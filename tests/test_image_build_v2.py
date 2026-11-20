@@ -25,6 +25,10 @@ def test_image_build_and_execution_share_state_override(tmp_path, monkeypatch, i
     monkeypatch.setattr(hashlib, "sha512", lambda data: SimpleNamespace(hexdigest=lambda: images.ARCHIVE_SHA512))
 
     def build(command, **kwargs):
+        if command[1:3] == ["-m", "pip"]:
+            wheelhouse = Path(command[command.index("--dest") + 1])
+            (wheelhouse / "locust-2.47.0-py3-none-any.whl").write_bytes(b"locust wheel fixture")
+            return subprocess.CompletedProcess(command, 0)
         Path(command[command.index("--iidfile") + 1]).write_text("sha256:" + "a" * 64)
         return subprocess.CompletedProcess(command, 0)
 
@@ -39,3 +43,4 @@ def test_image_build_and_execution_share_state_override(tmp_path, monkeypatch, i
     assert expected.exists()
     assert not default.exists()
     assert namespace["tool_image"]("k6", specified if explicit else None) == "sha256:" + "a" * 64
+    assert namespace["tool_image"]("locust", specified if explicit else None) == "sha256:" + "a" * 64

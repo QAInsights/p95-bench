@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from urllib.request import urlopen
@@ -13,7 +14,7 @@ from urllib.request import urlopen
 from p95bench.worker import WorkerUnavailable
 
 STATE = Path.home() / ".local/state/p95-bench/tool-images.json"
-VERSIONS = {"jmeter": "5.6.3", "k6": "1.0.0"}
+VERSIONS = {"jmeter": "5.6.3", "k6": "1.0.0", "locust": "2.47.0"}
 ARCHIVE = "apache-jmeter-5.6.3.tgz"
 ARCHIVE_SHA512 = ("5978a1a35edb5a7d428e270564ff49d2b1b257a65e17a759d259a9283fc17093e"
                   "522fe46f474a043864aea6910683486340706d745fcdf3db1505fd71e689083")
@@ -62,6 +63,7 @@ def build_images(state=None):
         raise ValueError("JMeter archive checksum mismatch")
     dockerfile = Path(__file__).resolve().parents[2] / "workers/Dockerfile"
     recipe = dockerfile.read_bytes()
+    locust_requirements = dockerfile.with_name("locust-requirements.txt")
     records = {}
     with tempfile.TemporaryDirectory(dir=state.parent) as folder:
         context = Path(folder)
@@ -71,12 +73,23 @@ def build_images(state=None):
         config.mkdir()
         environment = {"PATH": os.environ["PATH"], "DOCKER_CONFIG": str(config)}
         for tool, version in VERSIONS.items():
+            requirements_hash = b""
+            if tool == "locust":
+                requirements = context / "locust-requirements.txt"
+                shutil.copyfile(locust_requirements, requirements)
+                wheelhouse = context / "locust-wheels"
+                wheelhouse.mkdir()
+                requirements_hash = requirements.read_bytes()
+                subprocess.run([sys.executable, "-m", "pip", "download", "--disable-pip-version-check",
+                                "--only-binary=:all:", "--no-deps", "--require-hashes",
+                                "--dest", str(wheelhouse), "-r", str(requirements)],
+                               check=True, timeout=300, env=environment)
             image_file = context / (tool + ".iid")
             subprocess.run(["docker", "build", "--network=none", "--platform=linux/amd64",
                             "--target", tool, "--iidfile", str(image_file), str(context)],
                            check=True, timeout=600, env=environment)
             records[tool] = {"id": image_file.read_text().strip(), "version": version,
-                             "recipe_sha256": hashlib.sha256(recipe).hexdigest()}
+                             "recipe_sha256": hashlib.sha256(recipe + requirements_hash).hexdigest()}
     temporary = state.with_suffix(".pending")
     temporary.write_text(json.dumps({"schema_version": 1, "images": records}, indent=2) + "\n")
     temporary.replace(state)

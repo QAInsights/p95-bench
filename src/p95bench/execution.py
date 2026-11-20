@@ -1,6 +1,7 @@
 """Native engine evidence tied to independent demo request identities."""
 
 import json
+import math
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -30,6 +31,9 @@ def artifact_source(tool, text):
         raise ValueError("Expected a nonempty artifact of at most 1 MiB")
     if tool == "k6":
         fenced = re.fullmatch(r"\s*```(?:javascript|js)?\s*\n([\s\S]*?)\n```\s*", text)
+        return fenced[1] if fenced else text
+    if tool == "locust":
+        fenced = re.fullmatch(r"\s*```(?:python|py)?\s*\n([\s\S]*?)\n```\s*", text, re.IGNORECASE)
         return fenced[1] if fenced else text
     if re.search(r"<!\s*(?:DOCTYPE|ENTITY)\b", text, re.IGNORECASE):
         raise ValueError("XML declarations with external entities are forbidden")
@@ -69,6 +73,8 @@ def native_command(tool):
                 "--log-output=file=/output/http.log", "--http-debug=full",
                 "--out=json=/output/points.json",
                 "--system-tags=status,method,url,name,vu,iter,scenario", "/fixtures/model.js"]
+    if tool == "locust":
+        return ["python3", "/locust_runner.py", "/fixtures/locustfile.py"]
     return ["java", "-Xmx128m", "-XX:ActiveProcessorCount=1", "-XX:ParallelGCThreads=1",
             "-Djava.awt.headless=true", "-Duser.home=/tmp", "-jar", "/opt/apache-jmeter-5.6.3/bin/ApacheJMeter.jar",
             "-n", "-t", "/fixtures/model.jmx", "-l", "/output/samples.jtl", "-j", "/output/engine.log",
@@ -138,23 +144,57 @@ def jmeter_evidence(artifacts):
     return samples, []
 
 
+def locust_evidence(artifacts):
+    samples = []
+    for line in artifacts.get("requests.jsonl", b"").decode().splitlines():
+        record = json.loads(line)
+        if not isinstance(record, dict):
+            raise TypeError("Invalid Locust request record")
+        request = record.get("request")
+        worker = record.get("worker")
+        method = record.get("method")
+        path = record.get("path")
+        name = record.get("name")
+        success = record.get("success")
+        assertion_failures = record.get("assertion_failures")
+        response_time = record.get("response_time")
+        active_users = record.get("active_users", 0)
+        if (not isinstance(request, str) or not re.fullmatch(r"request-[a-f0-9]{20}", request)
+                or not isinstance(worker, str) or not re.fullmatch(r"user-\d+", worker)
+                or method not in ("GET", "POST", "PATCH")
+                or not isinstance(path, str) or not path.startswith("/")
+                or (name is not None and not isinstance(name, str))
+                or type(success) is not bool
+                or type(assertion_failures) is not int or assertion_failures not in (0, 1)
+                or isinstance(response_time, bool) or not isinstance(response_time, (int, float))
+                or not math.isfinite(response_time) or response_time < 0
+                or type(active_users) is not int or active_users < 0):
+            raise ValueError("Invalid Locust request record")
+        samples.append({"request": request, "worker": worker, "name": name, "method": method,
+                        "path": path, "success": success, "assertion_failures": assertion_failures,
+                        "response_time": response_time, "active_users": active_users})
+    return samples, []
+
+
 def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="public-reference",
                  timeout=60):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    filename = "model.js" if tool == "k6" else "model.jmx"
+    filename = {"k6": "model.js", "jmeter": "model.jmx", "locust": "locustfile.py"}[tool]
     inputs = dict(fixtures or {})
     if filename in inputs:
         raise ValueError("Reserved model artifact fixture name")
     inputs[filename] = artifact_source(tool, source).encode()
     exports = ({"points.json": 8 * 1048576, "http.log": 8 * 1048576} if tool == "k6" else
+               {"requests.jsonl": 8 * 1048576} if tool == "locust" else
                {"samples.jtl": 8 * 1048576, "engine.log": 1048576})
     image = tool_image(tool)
     with execution_trial(directory, profile=Profile(**(profile or {})), seed=seed,
                          image=image, resources=Resources(768, 256, 512)) as (shop, worker):
         started = time.monotonic()
         result = worker.execute(native_command(tool), inputs, timeout=timeout,
-                                output_limit=1048576, exports=exports)
+                                output_limit=1048576, exports=exports,
+                                runner=Path(__file__).with_name("locust_runner.py") if tool == "locust" else None)
         try:
             events = shop.audit()
         except RuntimeError as error:
@@ -174,8 +214,10 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
         raise AuditOverflow("Audit overflow; script exceeded the request evidence limit")
     try:
         samples, points = (k6_evidence(result.artifacts) if tool == "k6" else
+                           locust_evidence(result.artifacts) if tool == "locust" else
                            jmeter_evidence(result.artifacts))
         loaded = bool(result.artifacts.get("points.json") if tool == "k6" else
+                      result.artifacts.get("requests.jsonl") if tool == "locust" else
                       result.artifacts.get("samples.jtl"))
     except (ValueError, KeyError, TypeError, OverflowError, RecursionError, UnicodeDecodeError, ET.ParseError):
         loaded, samples, points = False, [], []
