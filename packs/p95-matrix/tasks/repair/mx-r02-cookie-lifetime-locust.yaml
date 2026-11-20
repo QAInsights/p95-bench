@@ -1,0 +1,50 @@
+id: mx-r02-cookie-lifetime-locust
+category: repair
+tool: locust
+grader: v2_exec
+prompt: 'Fix session cookies and cart state that carry a completed cart into the next
+  iteration.
+
+
+  '
+params:
+  tool: locust
+  contract:
+    users: 2
+    iterations: 2
+    mode: flow
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: valid login and cookie reuse within a flow
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: fresh session and cart on both iterations
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: two independent virtual users complete without sharing state.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-locust.md
+- broken-r02.py
+scenario: mx-r02-cookie-lifetime

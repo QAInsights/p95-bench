@@ -15,8 +15,8 @@ prompt: 'Handle concurrent account sessions where the later login invalidates th
   Negative-control overrides: [].
 
   Both users deliberately share account bench. Synchronize after initial logins, detect
-  revocation and recover deliberately; per-thread CSV delay staggers subsequent work.
-  Require2 commits without login ping-pong.
+  revocation and recover deliberately; per-virtual-user CSV delay staggers subsequent
+  work. Require2 commits without login ping-pong.
 
   Read-only /fixtures aliases: {"c11-accounts.json": "accounts.json", "c11-account-1.csv":
   "account-1.csv", "c11-account-2.csv": "account-2.csv"}
@@ -24,7 +24,7 @@ prompt: 'Handle concurrent account sessions where the later login invalidates th
   Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
   all cases, never best case):
 
-  loads: 10 points — plan loads Requires: none.
+  loads: 10 points — script loads Requires: none.
 
   setup: 25 points — detects the specified invalidation Requires: loads.
 
@@ -45,7 +45,7 @@ params:
   rubric:
   - id: loads
     points: 10
-    description: plan loads
+    description: script loads
     requires: []
   - id: setup
     points: 25

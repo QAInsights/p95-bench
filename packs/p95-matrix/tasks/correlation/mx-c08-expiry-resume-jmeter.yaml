@@ -17,7 +17,7 @@ prompt: 'Recover from session expiry between cart creation and checkout without 
   Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
   all cases, never best case):
 
-  loads: 10 points — script loads Requires: none.
+  loads: 10 points — plan loads Requires: none.
 
   setup: 25 points — expiry recognized Requires: loads.
 
@@ -38,7 +38,7 @@ params:
   rubric:
   - id: loads
     points: 10
-    description: script loads
+    description: plan loads
     requires: []
   - id: setup
     points: 25

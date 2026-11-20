@@ -1,0 +1,55 @@
+id: mx-r07-controller-reset-k6
+category: repair
+tool: k6
+grader: v2_exec
+prompt: 'Fix a CSRF token captured once outside the iteration and reused after a session
+  renewal.
+
+
+  '
+params:
+  tool: k6
+  contract:
+    users: 2
+    iterations: 3
+    mode: expiry
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: first flow completes
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: renewal happens at the correct scope across three iterations
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: two concurrent users retain independent extractors/cookies after
+      renewal.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      expire_after: 2
+      rotate_csrf: true
+  - name: reordered
+    profile:
+      expire_after: 2
+      rotate_csrf: true
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-k6.md
+- broken-r07.js
+scenario: mx-r07-controller-reset

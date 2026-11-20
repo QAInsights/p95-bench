@@ -1,0 +1,50 @@
+id: mx-r01-extractor-scope-k6
+category: repair
+tool: k6
+grader: v2_exec
+prompt: 'Fix a CSRF/ID value parsed from the wrong response; run two users for two
+  iterations.
+
+
+  '
+params:
+  tool: k6
+  contract:
+    users: 2
+    iterations: 2
+    mode: flow
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: login token extracted from the correct response
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: all four carts/checkouts use their own fresh token
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: no unresolved variables or cross-session requests in the audit.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-k6.md
+- broken-r01.js
+scenario: mx-r01-extractor-scope

@@ -1,5 +1,5 @@
+import json
 import os
-import re
 import shutil
 from pathlib import Path
 
@@ -9,7 +9,8 @@ from p95bench.graders import grade
 from p95bench.packs import pack_config
 from p95bench.reference_plans import reference
 from p95bench.tasks import load_tasks
-from scripts.build_matrix_pack import build_matrix_pack
+from scripts.build_matrix_pack import REPAIR_PROMPTS, _text_for_tool, build_matrix_pack
+from scripts.build_matrix_repair_overlays import build_repair_overlays
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_PACK = ROOT / "packs/p95-v2.0.0"
@@ -18,10 +19,23 @@ TOOLS = ("jmeter", "k6", "locust", "gatling")
 SOURCE_TASKS = {
     task.id: task for task in load_tasks(
         SOURCE_PACK / "tasks", pack_config("p95-v2.0.0")["weights"])
-    if task.category in {"correlation", "workload"}
+    if task.category in {"correlation", "workload", "repair"}
 }
 MATRIX_TASKS = load_tasks(
     MATRIX_PACK / "tasks", pack_config("p95-matrix")["weights"])
+PHASE_A_TASKS = [task for task in MATRIX_TASKS if task.category in {"correlation", "workload"}]
+REPAIR_TASKS = [task for task in MATRIX_TASKS if task.category == "repair"]
+REPAIR_ORIGINAL_TOOLS = {
+    "r01": "jmeter", "r02": "k6", "r04": "k6", "r05": "jmeter",
+    "r06": "k6", "r07": "jmeter", "r08": "k6", "r10": "k6",
+    "r11": "jmeter", "r12": "k6", "r13": "jmeter",
+}
+REPAIR_TARGETS = {
+    "r01": "behavior", "r02": "behavior", "r04": "behavior", "r05": "behavior",
+    "r06": "behavior", "r07": "behavior", "r08": "behavior", "r10": "behavior",
+    "r11": "behavior", "r12": "behavior", "r13": "safety",
+}
+REPAIR_SCORES_PATH = Path.home() / "notes/phase-b-broken-scores.json"
 HEADERS = {
     "k6": (
         "Return one complete k6 1.0.0 JS artifact, no explanation.",
@@ -41,9 +55,6 @@ HEADERS = {
         "Target only http://127.0.0.1:8000 (System.getenv(\"BASE_URL\")).",
     ),
 }
-VU_WORD = re.compile(r"\bVUs?\b")
-
-
 def tree_bytes(root):
     return {
         path.relative_to(root).as_posix(): path.read_bytes()
@@ -53,8 +64,9 @@ def tree_bytes(root):
 
 def test_matrix_pack_generation_is_deterministic_and_matches_committed_pack(tmp_path):
     generated = tmp_path / "p95-matrix"
+    build_repair_overlays(SOURCE_PACK, generated)
     build_matrix_pack(SOURCE_PACK, generated)
-    for category in ("correlation", "workload"):
+    for category in ("correlation", "workload", "repair"):
         assert tree_bytes(generated / "tasks" / category) == tree_bytes(
             MATRIX_PACK / "tasks" / category)
     existing = tmp_path / "existing"
@@ -64,18 +76,25 @@ def test_matrix_pack_generation_is_deterministic_and_matches_committed_pack(tmp_
     assert tree_bytes(existing) == before
 
 
+def test_repair_overlay_generation_is_deterministic(tmp_path):
+    generated = tmp_path / "p95-matrix"
+    build_repair_overlays(SOURCE_PACK, generated)
+    assert tree_bytes(generated / "overlays") == tree_bytes(MATRIX_PACK / "overlays")
+
+
 def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
     matrix_config = pack_config("p95-matrix")
     v2_config = pack_config("p95-v2.0.0")
     assert matrix_config["weights"] == v2_config["weights"]
     assert matrix_config["efficiency_weight"] == v2_config["efficiency_weight"]
-    assert len(MATRIX_TASKS) == 72
-    assert {task.category for task in MATRIX_TASKS} == {"correlation", "workload"}
-    assert sum(task.category == "correlation" for task in MATRIX_TASKS) == 40
-    assert sum(task.category == "workload" for task in MATRIX_TASKS) == 32
+    assert len(MATRIX_TASKS) == 116
+    assert {task.category for task in MATRIX_TASKS} == {"correlation", "workload", "repair"}
+    assert sum(task.category == "correlation" for task in PHASE_A_TASKS) == 40
+    assert sum(task.category == "workload" for task in PHASE_A_TASKS) == 32
+    assert len(REPAIR_TASKS) == 44
 
     by_scenario = {}
-    for task in MATRIX_TASKS:
+    for task in PHASE_A_TASKS:
         by_scenario.setdefault(task.scenario, []).append(task)
         assert task.tool in TOOLS and task.params["tool"] == task.tool
         assert task.id == f"{task.scenario}-{task.tool}"
@@ -107,16 +126,64 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
         for task in variants:
             assert task.category == source.category
             assert task.grader == source.grader
-            for key in ("contract", "rubric", "trials", "controls"):
+            for key in ("contract", "trials", "controls"):
                 assert task.params[key] == source.params[key]
-            expected_prompt = source.prompt if task.tool == "k6" else VU_WORD.sub(
-                lambda match: "virtual users" if match.group() == "VUs" else "virtual user",
-                source.prompt,
-            )
+            assert task.params["rubric"] == [
+                {**rubric, "description": _text_for_tool(
+                    rubric["description"], task.tool, task.scenario)}
+                for rubric in source.params["rubric"]
+            ]
+            expected_prompt = _text_for_tool(source.prompt, task.tool, task.scenario)
             assert task.prompt == expected_prompt
             for name, content in source.fixtures.items():
                 if name != "protocol.md":
                     assert task.fixtures[name] == content
+
+    repair_by_scenario = {}
+    for task in REPAIR_TASKS:
+        repair_by_scenario.setdefault(task.scenario, []).append(task)
+        code = task.scenario.split("-", 2)[1]
+        source = SOURCE_TASKS[f"v2-{code}-" + task.scenario.split("-", 2)[2]]
+        extension = {"jmeter": "jmx", "k6": "js", "locust": "py", "gatling": "java"}[task.tool]
+        artifact_name = f"broken-{code}.{extension}"
+        assert task.id == f"{task.scenario}-{task.tool}"
+        assert task.tool in TOOLS and task.params["tool"] == task.tool
+        assert task.prompt.split("\n\n", 1)[0] == REPAIR_PROMPTS[(code, task.tool)]
+        assert task.prompt.split("\n\n", 1)[1].splitlines()[0] == "Repair the supplied artifact."
+        assert set(task.fixtures) >= {artifact_name, f"protocol-{task.tool}.md"}
+        assert task.fixtures[artifact_name]
+        protocol = task.fixtures[f"protocol-{task.tool}.md"]
+        assert protocol.splitlines()[1:3] == list(HEADERS[task.tool])
+        assert all(line in task.user_prompt() for line in HEADERS[task.tool])
+        for key in ("contract", "trials", "controls"):
+            assert task.params[key] == source.params[key]
+        assert task.params["rubric"] == [
+            {**rubric, "description": _text_for_tool(
+                rubric["description"], task.tool, task.scenario)}
+            for rubric in source.params["rubric"]
+        ]
+        for name, content in source.fixtures.items():
+            if name not in ("protocol.md",) and not name.startswith("broken-r"):
+                assert task.fixtures[name] == content
+        if code == "r10":
+            assert set(task.fixtures) >= {
+                "r10-accounts.json", "r10-account-1.csv", "r10-account-2.csv",
+            }
+        if task.tool == REPAIR_ORIGINAL_TOOLS[code]:
+            original_name = next(name for name in source.fixtures if name.startswith("broken-r"))
+            assert task.fixtures[artifact_name] == source.fixtures[original_name]
+
+    assert len(repair_by_scenario) == 11
+    for scenario, variants in repair_by_scenario.items():
+        assert len(variants) == 4
+        assert {task.tool for task in variants} == set(TOOLS)
+        source_id = scenario.replace("mx-", "v2-", 1)
+        source = SOURCE_TASKS[source_id]
+        for task in variants:
+            assert task.category == source.category
+            assert task.grader == source.grader
+            for key in ("contract", "trials", "controls"):
+                assert task.params[key] == source.params[key]
 
     assert all((MATRIX_PACK / "overlays" / tool).is_dir() for tool in TOOLS)
 
@@ -135,3 +202,55 @@ REFERENCE_TASKS = [task for task in MATRIX_TASKS if task.id in REFERENCE_TASK_ID
 def test_matrix_native_reference_scores_100(task, tmp_path):
     result = grade(task, reference(task.tool, task.params["contract"]), tmp_path, 2)
     assert result.score == 1, result.to_dict()
+
+
+@pytest.fixture(scope="module")
+def repair_acceptance(tmp_path_factory):
+    if os.environ.get("P95_TEST_DOCKER") != "1":
+        pytest.skip("Opt-in native Docker tests")
+    workdir = tmp_path_factory.mktemp("matrix-repair-acceptance")
+    records = []
+    results = {}
+    for task in REPAIR_TASKS:
+        code = task.scenario.split("-", 2)[1]
+        artifact_name = next(name for name in task.fixtures
+                             if name.startswith(f"broken-{code}."))
+        target_id = REPAIR_TARGETS[code]
+        record = {"task_id": task.id, "target_checkpoint": target_id}
+        try:
+            correct = grade(task, reference(task.tool, task.params["contract"]),
+                            workdir / task.id / "reference", 2)
+            broken = grade(task, task.fixtures[artifact_name],
+                           workdir / task.id / "broken", 2)
+            target = next(item for item in broken.checkpoints if item.id == target_id)
+            record.update({
+                "reference_score": correct.score,
+                "broken_score": broken.score,
+                "broken_checkpoints": {
+                    item.id: {"earned": item.earned, "possible": item.possible}
+                    for item in broken.checkpoints
+                },
+                "target_checkpoint": {
+                    "id": target.id, "earned": target.earned, "possible": target.possible,
+                },
+            })
+            results[task.id] = (correct, broken, None)
+        except Exception as error:  # noqa: BLE001
+            record["error"] = f"{type(error).__name__}: {error}"
+            results[task.id] = (None, None, record["error"])
+        records.append(record)
+        REPAIR_SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        REPAIR_SCORES_PATH.write_text(json.dumps(records, indent=2) + "\n")
+    return results
+
+
+@pytest.mark.parametrize("task", REPAIR_TASKS, ids=lambda task: task.id)
+def test_matrix_repair_reference_and_broken_checkpoint(task, repair_acceptance):
+    correct, broken, error = repair_acceptance[task.id]
+    assert error is None, error
+    assert correct.score == 1, correct.to_dict()
+    assert broken.score < 1, broken.to_dict()
+    assert broken.checkpoints[0].earned == broken.checkpoints[0].possible
+    code = task.scenario.split("-", 2)[1]
+    target = next(item for item in broken.checkpoints if item.id == REPAIR_TARGETS[code])
+    assert target.earned < target.possible, broken.to_dict()

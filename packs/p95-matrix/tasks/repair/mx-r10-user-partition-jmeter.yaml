@@ -1,0 +1,58 @@
+id: mx-r10-user-partition-jmeter
+category: repair
+tool: jmeter
+grader: v2_exec
+prompt: 'Fix CSV credential sharing so users do not invalidate each other''s exclusive
+  sessions.
+
+
+  '
+params:
+  tool: jmeter
+  contract:
+    users: 2
+    iterations: 2
+    mode: partition
+  rubric:
+  - id: loads
+    points: 10
+    description: plan loads
+    requires: []
+  - id: setup
+    points: 25
+    description: valid fixture indexing
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: distinct accounts cover all required users and iterations
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: audit proves overlapping activity and no account/session swaps.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      exclusive_accounts: true
+  - name: reordered
+    profile:
+      exclusive_accounts: true
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases:
+    r10-accounts.json: accounts.json
+    r10-account-1.csv: account-1.csv
+    r10-account-2.csv: account-2.csv
+fixtures:
+- protocol-jmeter.md
+- broken-r10.jmx
+- r10-accounts.json
+- r10-account-1.csv
+- r10-account-2.csv
+scenario: mx-r10-user-partition

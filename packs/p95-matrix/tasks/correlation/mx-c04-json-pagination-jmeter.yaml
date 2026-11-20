@@ -16,7 +16,7 @@ prompt: 'Follow JSON cursors to find an eligible item; extract the resulting car
   Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
   all cases, never best case):
 
-  loads: 10 points — script loads Requires: none.
+  loads: 10 points — plan loads Requires: none.
 
   setup: 25 points — follows dynamic cursor links Requires: loads.
 
@@ -37,7 +37,7 @@ params:
   rubric:
   - id: loads
     points: 10
-    description: script loads
+    description: plan loads
     requires: []
   - id: setup
     points: 25

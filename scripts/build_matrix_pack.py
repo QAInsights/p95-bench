@@ -1,4 +1,4 @@
-"""Generate the Matrix correlation and workload task variants."""
+"""Generate the Matrix Phase A and repair task variants."""
 
 import argparse
 import re
@@ -8,7 +8,44 @@ from pathlib import Path
 import yaml
 
 TOOLS = ("jmeter", "k6", "locust", "gatling")
-CATEGORIES = ("correlation", "workload")
+CATEGORIES = ("correlation", "workload", "repair")
+EXPECTED_SCENARIOS = {"correlation": 10, "workload": 8, "repair": 11}
+TOOL_EXTENSIONS = {"jmeter": "jmx", "k6": "js", "locust": "py", "gatling": "java"}
+REPAIR_PROMPTS = {
+    ("r01", "k6"): "Fix a CSRF/ID value parsed from the wrong response; run two users for two iterations.",
+    ("r01", "locust"): "Fix a CSRF/ID value read from the wrong response object; run two users for two iterations.",
+    ("r01", "gatling"): "Fix a jsonPath check saved from the wrong request; run two users for two iterations.",
+    ("r02", "jmeter"): "Fix cookie and cart variables that carry a completed cart into the next iteration.",
+    ("r02", "locust"): "Fix session cookies and cart state that carry a completed cart into the next iteration.",
+    ("r02", "gatling"): "Fix a cookie jar and cart session attribute that carry a completed cart into the next iteration.",
+    ("r04", "jmeter"): "Repair an assertion that treats every 401 as success and never renews the session.",
+    ("r04", "locust"): "Repair response handling that marks every 401 as success and never renews the session.",
+    ("r04", "gatling"): "Repair status checks that accept every 401 as success and never renew the session.",
+    ("r05", "k6"): "Fix an HTTP-200-only check that accepts a declined business transaction.",
+    ("r05", "locust"): "Fix an HTTP-200-only success rule that accepts a declined business transaction.",
+    ("r05", "gatling"): "Fix an HTTP-200-only check that accepts a declined business transaction.",
+    ("r06", "jmeter"): "Fix a checkout latency assertion and label accidentally attached to fast health requests.",
+    ("r06", "locust"): "Fix a checkout latency threshold whose request name is accidentally attached to fast health requests.",
+    ("r06", "gatling"): "Fix a checkout latency assertion accidentally attached to fast health requests.",
+    ("r07", "k6"): "Fix a CSRF token captured once outside the iteration and reused after a session renewal.",
+    ("r07", "locust"): "Fix a CSRF token captured only in on_start and reused after a session renewal.",
+    ("r07", "gatling"): "Fix a CSRF token saved once before the repeat loop and reused after a session renewal.",
+    ("r08", "jmeter"): "Repair a conflicting loop count/duration and an under-provisioned thread pool for the target rate.",
+    ("r08", "locust"): "Repair a conflicting stop time and an under-provisioned user count in the LoadTestShape for the target rate.",
+    ("r08", "gatling"): "Repair conflicting injection steps and an under-provisioned user count for the target rate.",
+    ("r10", "jmeter"): "Fix CSV credential sharing so users do not invalidate each other's exclusive sessions.",
+    ("r10", "locust"): "Fix credential assignment so users do not invalidate each other's exclusive sessions.",
+    ("r10", "gatling"): "Fix feeder credential reuse so users do not invalidate each other's exclusive sessions.",
+    ("r11", "k6"): "Repair pacing applied after every HTTP request instead of once per business iteration.",
+    ("r11", "locust"): "Repair a wait applied after every HTTP request instead of once per business iteration.",
+    ("r11", "gatling"): "Repair pauses applied after every HTTP request instead of pace() once per business iteration.",
+    ("r12", "jmeter"): "Fix failure marking that counts expected expiry and scheduled 429 as errors and accepts unexpected 500s.",
+    ("r12", "locust"): "Fix failure marking that counts expected expiry and scheduled 429 as errors and accepts unexpected 500s.",
+    ("r12", "gatling"): "Fix checks that count expected expiry and scheduled 429 as errors and accept unexpected 500s.",
+    ("r13", "k6"): "Repair a retry loop that restarts checkout after expiry and duplicates business work.",
+    ("r13", "locust"): "Repair a retry loop that restarts checkout after expiry and duplicates business work.",
+    ("r13", "gatling"): "Repair a tryMax block that restarts checkout after expiry and duplicates business work.",
+}
 BUSINESS_FAILURE = re.compile(
     r"500 is unexpected\. /v2/health is not business work\..*?Keep checks truthful\.", re.DOTALL
 )
@@ -98,11 +135,32 @@ def protocol_for_tool(source, tool):
 
 
 def _scenario_id(task_id):
-    match = re.fullmatch(r"v2-([cw]\d+)-(.+)", task_id)
+    match = re.fullmatch(r"v2-([cwr]\d+)-(.+)", task_id)
     if match is None:
         raise ValueError(f"Unexpected Phase A task id: {task_id}")
     code, slug = match.groups()
     return f"mx-{code}-{slug}"
+
+
+def _text_for_tool(text, tool, scenario):
+    if tool != "jmeter":
+        text = text.replace("HTTP samplers", "HTTP requests")
+        text = text.replace("per-thread", "per-virtual-user")
+        text = text.replace("plan loads", "script loads")
+        text = text.replace("crashing the plan", "crashing the script")
+    else:
+        text = text.replace("script loads", "plan loads")
+    if scenario == "mx-w08-capacity-step" and tool != "k6":
+        text = text.replace(
+            "low dropped-iteration count with bounded preallocated/max VUs",
+            "low dropped-start count with a bounded virtual-user pool",
+        )
+    if tool != "k6":
+        text = VU_WORD.sub(
+            lambda match: "virtual users" if match.group() == "VUs" else "virtual user",
+            text,
+        )
+    return text
 
 
 def _copy_fixture(source_dir, target_dir, name):
@@ -116,10 +174,20 @@ def _copy_fixture(source_dir, target_dir, name):
     target.write_bytes(source.read_bytes())
 
 
+def _copy_overlay(target_pack, target_dir, tool, name):
+    source = (target_pack / "overlays" / tool / name).resolve()
+    target = (target_dir / name).resolve()
+    if not source.is_relative_to((target_pack / "overlays" / tool).resolve()):
+        raise ValueError(f"Artifact escapes tool overlay: {name}")
+    if not target.is_relative_to(target_dir.resolve()):
+        raise ValueError(f"Artifact escapes output category: {name}")
+    target.write_bytes(source.read_bytes())
+
+
 def build_matrix_pack(source_pack, target_pack):
     source_pack, target_pack = Path(source_pack), Path(target_pack)
     output_tasks = target_pack / "tasks"
-    scenario_count = 0
+    scenario_counts = {category: 0 for category in CATEGORIES}
     for category in CATEGORIES:
         source_dir = source_pack / "tasks" / category
         output_dir = output_tasks / category
@@ -136,21 +204,33 @@ def build_matrix_pack(source_pack, target_pack):
             if original["category"] != category or original["grader"] != "v2_exec":
                 continue
             scenario = _scenario_id(original["id"])
-            scenario_count += 1
+            scenario_counts[category] += 1
             for tool in TOOLS:
                 task = deepcopy(original)
                 task["id"] = f"{scenario}-{tool}"
                 task["scenario"] = scenario
                 task["tool"] = tool
                 task["params"]["tool"] = tool
-                task["prompt"] = task["prompt"] if tool == "k6" else VU_WORD.sub(
-                    lambda match: "virtual users" if match.group() == "VUs" else "virtual user",
-                    task["prompt"],
-                )
+                if category == "repair":
+                    code = scenario.split("-", 2)[1]
+                    prompt = REPAIR_PROMPTS.get((code, tool), task["prompt"].split("\n\n", 1)[0])
+                    rest = task["prompt"].partition("\n\n")[2]
+                    task["prompt"] = prompt + "\n\n" + rest
+                    artifact = f"broken-{code}.{TOOL_EXTENSIONS[tool]}"
+                    task["fixtures"] = [
+                        artifact if name.startswith("broken-r") else name
+                        for name in task.get("fixtures", [])
+                    ]
+                task["prompt"] = _text_for_tool(task["prompt"], tool, scenario)
+                for rubric_item in task["params"].get("rubric", []):
+                    rubric_item["description"] = _text_for_tool(
+                        rubric_item["description"], tool, scenario)
                 fixtures = []
                 for name in task.get("fixtures", []):
                     if name == "protocol.md":
                         name = f"protocol-{tool}.md"
+                    elif category == "repair" and name.startswith("broken-r"):
+                        _copy_overlay(target_pack, output_dir, tool, name)
                     else:
                         _copy_fixture(source_dir, output_dir, name)
                     fixtures.append(name)
@@ -158,8 +238,8 @@ def build_matrix_pack(source_pack, target_pack):
                 target = output_dir / f"{task['id']}.yaml"
                 target.write_text(yaml.safe_dump(task, sort_keys=False, allow_unicode=True))
 
-    if scenario_count != 18:
-        raise ValueError(f"Expected 18 Phase A scenarios, found {scenario_count}")
+    if scenario_counts != EXPECTED_SCENARIOS:
+        raise ValueError(f"Unexpected Matrix scenario counts: {scenario_counts}")
     for tool in TOOLS:
         placeholder = target_pack / "overlays" / tool / ".gitkeep"
         placeholder.parent.mkdir(parents=True, exist_ok=True)

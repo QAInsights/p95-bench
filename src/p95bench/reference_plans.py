@@ -142,9 +142,9 @@ def k6_reference(config):
 
 LOCUST = r"""
 import json
-import math
 import re
 import time
+
 from gevent import sleep
 from gevent.event import Event
 from gevent.lock import Semaphore
@@ -253,7 +253,7 @@ class MatrixUser(HttpUser):
         form, _ = self.raw('/v2/login-form')
         token = re.search(
             r'<input(?=[^>]*\bname=["\']csrf["\'])(?=[^>]*\bvalue=["\']([^"\']+)["\'])[^>]*>',
-            form.text, re.I)
+            form.text, re.IGNORECASE)
         if not token:
             self.environment.process_exit_code = 99
             return
@@ -287,12 +287,13 @@ class MatrixUser(HttpUser):
         if not self.csrf:
             self.login()
         for _ in range(5):
-            response, body = self.request(path, 'POST', {})
+            response, _ = self.request(path, 'POST', {})
             if response.status_code != 429:
                 return
             sleep(float(response.headers.get('Retry-After', 0.01)) + 0.01)
 
     def flow(self):
+        self.client.cookies.clear()
         self.cart = ''
         self.etag = ''
         self.grant = ''
@@ -309,10 +310,11 @@ class MatrixUser(HttpUser):
                 sleep(0.5)
         if MODE == 'challenge':
             page, _ = self.request('/v2/challenge-form')
-            action = re.search(r'<form\b[^>]*\baction=["\']([^"\']+)["\']', page.text, re.I)
+            action = re.search(
+                r'<form\b[^>]*\baction=["\']([^"\']+)["\']', page.text, re.IGNORECASE)
             challenge = re.search(
                 r'<input(?=[^>]*\bname=["\']challenge["\'])(?=[^>]*\bvalue=["\']([^"\']+)["\'])[^>]*>',
-                page.text, re.I)
+                page.text, re.IGNORECASE)
             if not action or not challenge:
                 self.environment.process_exit_code = 99
                 return
@@ -533,9 +535,22 @@ public class ModelSimulation extends Simulation {
         ChainBuilder chain = exec(http("work").post(path)
             .header("Content-Type", "application/json").header("X-CSRF-Token", "#{csrf}")
             .body(StringBody("{}"))
-            .check(status().in(200, 429), status().saveAs("workStatus"),
+            .check(status().in(200, 401, 429), status().saveAs("workStatus"),
                 header("Retry-After").optional().saveAs("retryAfter"),
                 jsonPath("$.csrf").optional().saveAs("csrf")));
+        if (MODE.equals("errors")) {
+            chain = chain.exec(doIf(session -> session.getInt("workStatus") == 401).then(
+                exec(http("renew").post("/v2/session/renew")
+                    .header("Content-Type", "application/json").header("X-CSRF-Token", "#{csrf}")
+                    .body(StringBody("{}"))
+                    .check(status().is(200), jsonPath("$.csrf").optional().saveAs("csrf")))
+                    .exec(http("work retry").post(path)
+                        .header("Content-Type", "application/json").header("X-CSRF-Token", "#{csrf}")
+                        .body(StringBody("{}"))
+                        .check(status().in(200, 401, 429), status().saveAs("workStatus"),
+                            header("Retry-After").optional().saveAs("retryAfter"),
+                            jsonPath("$.csrf").optional().saveAs("csrf")))));
+        }
         if (CFG.path("completion").asBoolean(false)) {
             for (int retry = 0; retry < 4; retry++) {
                 chain = chain.exec(doIf(session -> session.getInt("workStatus") == 429).then(
@@ -573,7 +588,7 @@ public class ModelSimulation extends Simulation {
     }
 
     private static ChainBuilder flow() {
-        ChainBuilder chain = login();
+        ChainBuilder chain = exec(flushCookieJar()).exec(login());
         if (MODE.equals("challenge")) chain = chain.exec(challenge());
         if (MODE.equals("ownership")) {
             chain = chain.exec(doIf(session -> session.userId() != 1).then(pause(Duration.ofMillis(500))));
@@ -715,7 +730,10 @@ def locust_reference(config):
             for i in range(1, 17)]
     data = ("json.loads(open('/fixtures/accounts.json').read())"
             if config.get("mode") in ("data", "partition") else json.dumps(rows))
-    return LOCUST.replace("__CONFIG__", repr(config)).replace("__ROWS__", data)
+    source = LOCUST.replace("__CONFIG__", repr(config)).replace("__ROWS__", data)
+    if config.get("mode") not in ("data", "partition"):
+        source = source.replace("import json\n", "")
+    return source
 
 
 def gatling_reference(config):
@@ -753,8 +771,11 @@ def gatling_reference(config):
     else:
         users = config.get("users", 2)
         iterations = config.get("iterations", 2)
-        chain = "login().exec(repeat(4).on(workRequest(\"/v2/work\")))" if config.get("mode") == "errors" else \
-            f"repeat({iterations}).on(flow())"
+        if config.get("mode") == "errors":
+            chain = (f'repeat({iterations}).on(login().exec('
+                     'repeat(4).on(workRequest("/v2/work"))))')
+        else:
+            chain = f"repeat({iterations}).on(flow())"
         population_source = (
             f'setUp(scenario("matrix").exec({chain}).injectOpen(atOnceUsers({users})))'
         )
@@ -807,12 +828,15 @@ def condition(parent, variable):
         "IfController.useExpression": True, "IfController.evaluateAll": False})[1]
 
 
-def sampler(parent, path, method="GET", body=None, *, extractors=None, assertion=None, recover=False):
+def sampler(parent, path, method="GET", body=None, *, extractors=None, assertion=None,
+            status_assertion=None, recover=False, name=None, duration_assertion=None):
     element, children = node(parent, "HTTPSamplerProxy", {"HTTPSampler.domain": "127.0.0.1",
         "HTTPSampler.port": "8000", "HTTPSampler.protocol": "http", "HTTPSampler.path": path,
         "HTTPSampler.method": method, "HTTPSampler.follow_redirects": False,
         "HTTPSampler.auto_redirects": False, "HTTPSampler.postBodyRaw": body is not None,
         "HTTPSampler.connect_timeout": "2000", "HTTPSampler.response_timeout": "3000"})
+    if name is not None:
+        element.set("testname", name)
     args = ET.SubElement(element, "elementProp", name="HTTPsampler.Arguments", elementType="Arguments")
     collection = ET.SubElement(args, "collectionProp", name="Arguments.arguments")
     if body is not None:
@@ -833,12 +857,21 @@ def sampler(parent, path, method="GET", body=None, *, extractors=None, assertion
             "Assertion.test_type": "2", "Assertion.assume_success": False})
         tests = ET.SubElement(item, "collectionProp", name="Asserion.test_strings")
         ET.SubElement(tests, "stringProp", name="0").text = assertion
+    if status_assertion:
+        item, _ = node(children, "ResponseAssertion", {"Assertion.test_field": "Assertion.response_code",
+            "Assertion.test_type": "2", "Assertion.assume_success": True})
+        tests = ET.SubElement(item, "collectionProp", name="Asserion.test_strings")
+        ET.SubElement(tests, "stringProp", name="0").text = status_assertion
+    if duration_assertion is not None:
+        node(children, "DurationAssertion", {"DurationAssertion.duration": str(duration_assertion)})
     if recover:
         branch = condition(parent, "recover")
         sampler(branch, "/v2/session/renew", "POST", "{}")
         login(condition(branch, "recover"))
         sampler(condition(branch, "hasCart"), "/v2/carts/${cart}/recover", "POST", "{}")
-        sampler(branch, path, method, body, extractors=extractors, assertion=assertion)
+        sampler(branch, path, method, body, extractors=extractors, assertion=assertion,
+                status_assertion=status_assertion, name=name,
+                duration_assertion=duration_assertion)
     return children
 
 
@@ -874,7 +907,8 @@ def pacing(parent, rate):
 def jmeter_reference(config):
     NAMES.set(count())
     mode = config.get("mode", "flow")
-    LOGIN_USER.set("bench" if config.get("capacity") else "${username}" if mode in ("data", "ownership") else "bench-${__threadNum}")
+    LOGIN_USER.set("bench" if config.get("capacity") else "${username}"
+                   if mode in ("data", "ownership", "partition") else "bench-${__threadNum}")
     if config.get("pools"):
         combined = None
         for name, pool in config["pools"].items():
@@ -904,11 +938,16 @@ def jmeter_reference(config):
         users = min(64 if config.get("capacity") else 16, max(4, math.ceil(rate * .8) + 2))
     duration = config.get("duration", 38)
     children = group(plan, users, config.get("iterations", 2), duration if workload else None)
-    if mode in ("data", "ownership"):
+    if mode in ("data", "ownership", "partition"):
         node(children, "CSVDataSet", {"filename": "/fixtures/account-${__threadNum}.csv",
             "fileEncoding": "UTF-8", "variableNames": "", "delimiter": ",", "recycle": True,
             "stopThread": False, "shareMode": "shareMode.thread"})
-    if workload and config.get("operation") != "journey":
+    if mode == "errors":
+        login(children, reset=True)
+        for _ in range(4):
+            sampler(children, "/v2/work", "POST", "{}",
+                    status_assertion=r"^(?:200|401|429)$", recover=True)
+    elif workload and config.get("operation") != "journey":
         login(node(children, "OnceOnlyController")[1])
         work = sampler(children, config.get("path", "/v2/work"), "POST", "{}", assertion=r'"ok"\s*:\s*true', recover=True)
         pacing(work, config.get("rate", 5))
@@ -939,8 +978,13 @@ def jmeter_reference(config):
             regex(polled, "pending", r'"status"\s*:\s*"pending"', template="true", default="false")
             regex(polled, "ready", r'"status"\s*:\s*"ready"', template="true", default="false")
             children = condition(children, "ready")
+        order_assertion = r'"accepted"\s*:\s*true'
+        if mode in ("expiry", "ownership", "denial"):
+            order_assertion += r'|"error"\s*:\s*"(?:expired|session)"'
         sampler(children, "/v2/orders", "POST", '{"cart_id":"${cart}"' + (',"reservation_id":"${reservation}"' if mode == "reservation" else '') + '}',
-                assertion=r'"accepted"\s*:\s*true', recover=mode in ("expiry", "ownership", "denial"))
+                assertion=order_assertion, recover=mode in ("expiry", "ownership", "denial"),
+                name="checkout" if mode == "threshold" else None,
+                duration_assertion=250 if mode == "threshold" else None)
     return ET.tostring(root, encoding="unicode")
 
 

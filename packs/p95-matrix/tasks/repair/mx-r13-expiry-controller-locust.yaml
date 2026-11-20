@@ -1,0 +1,53 @@
+id: mx-r13-expiry-controller-locust
+category: repair
+tool: locust
+grader: v2_exec
+prompt: 'Repair a retry loop that restarts checkout after expiry and duplicates business
+  work.
+
+
+  '
+params:
+  tool: locust
+  contract:
+    users: 2
+    iterations: 3
+    mode: expiry
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: detects the configured expiry
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: resumes at the correct step with refreshed state
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: one committed order per journey, bounded retries and no cross-user
+      recovery.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      expire_after: 2
+  - name: reordered
+    profile:
+      expire_after: 2
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-locust.md
+- broken-r13.py
+scenario: mx-r13-expiry-controller

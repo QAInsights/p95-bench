@@ -1,0 +1,55 @@
+id: mx-r06-threshold-tags-jmeter
+category: repair
+tool: jmeter
+grader: v2_exec
+prompt: 'Fix a checkout latency assertion and label accidentally attached to fast
+  health requests.
+
+
+  '
+params:
+  tool: jmeter
+  contract:
+    users: 2
+    iterations: 2
+    mode: threshold
+  rubric:
+  - id: loads
+    points: 10
+    description: plan loads
+    requires: []
+  - id: setup
+    points: 25
+    description: tags real checkout requests correctly
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: checkout-only metric/threshold responds to the injected slowdown
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: healthy control passes and slow control fails with the expected threshold
+      evidence.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      checkout_delay_seconds: 0.01
+  - name: reordered
+    profile:
+      checkout_delay_seconds: 0.01
+      html_layout: 1
+      reverse_catalog: true
+      catalog_delay_seconds: 0.5
+  controls:
+  - checkout_delay_seconds: 0.5
+  fixture_aliases: {}
+fixtures:
+- protocol-jmeter.md
+- broken-r06.jmx
+scenario: mx-r06-threshold-tags

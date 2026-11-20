@@ -1,0 +1,56 @@
+id: mx-r08-arrival-options-gatling
+category: repair
+tool: gatling
+grader: v2_exec
+prompt: 'Repair conflicting injection steps and an under-provisioned user count for
+  the target rate.
+
+
+  '
+params:
+  tool: gatling
+  contract:
+    users: 2
+    iterations: 2
+    mode: flow
+    workload: true
+    rate: 5
+  rubric:
+  - id: loads
+    points: 10
+    description: executable options
+    requires: []
+  - id: setup
+    points: 25
+    description: preserves the required operation Full window credit allows max(10%
+      of expected arrivals, 1 arrival) count error; average windows with the same
+      quantized full-window mean-rate cap.
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: actual rate stays within the published target bands
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: dropped work and errors stay below stated limits without adding extra
+      business requests.
+    requires:
+    - loads
+  trials:
+  - name: baseline
+    profile:
+      delay_seconds: 0.2
+  - name: reordered
+    profile:
+      delay_seconds: 0.2
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-gatling.md
+- broken-r08.java
+scenario: mx-r08-arrival-options

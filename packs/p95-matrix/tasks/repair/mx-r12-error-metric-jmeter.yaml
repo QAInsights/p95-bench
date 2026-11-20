@@ -1,0 +1,54 @@
+id: mx-r12-error-metric-jmeter
+category: repair
+tool: jmeter
+grader: v2_exec
+prompt: 'Fix failure marking that counts expected expiry and scheduled 429 as errors
+  and accepts unexpected 500s.
+
+
+  '
+params:
+  tool: jmeter
+  contract:
+    users: 2
+    iterations: 2
+    mode: errors
+  rubric:
+  - id: loads
+    points: 10
+    description: plan loads
+    requires: []
+  - id: setup
+    points: 25
+    description: correct success/failure event population
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: expected versus unexpected errors are classified correctly
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: both healthy and injected-failure controls give the expected threshold
+      outcome/counts.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      expire_after: 2
+  - name: reordered
+    profile:
+      expire_after: 2
+      html_layout: 1
+      reverse_catalog: true
+  controls:
+  - unexpected_every: 3
+  fixture_aliases: {}
+fixtures:
+- protocol-jmeter.md
+- broken-r12.jmx
+scenario: mx-r12-error-metric

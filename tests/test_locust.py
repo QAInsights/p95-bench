@@ -15,11 +15,6 @@ from p95bench.tasks import load_tasks
 ROOT = Path(__file__).resolve().parents[1]
 TASKS = load_tasks(ROOT / "packs/p95-v2.0.0/tasks", pack_config("p95-v2.0.0")["weights"])
 EXECUTABLE = [task for task in TASKS if task.grader == "v2_exec"]
-K6_EVIDENCE_XFAIL = {
-    "v2-r12-error-metric": "Locust exports no business_failure metric points",
-}
-
-
 @pytest.mark.parametrize("task", EXECUTABLE, ids=lambda task: task.id)
 def test_locust_reference_sources_are_python(task):
     source = reference("locust", task.params["contract"])
@@ -76,11 +71,7 @@ def test_threshold_uses_native_duration_samples_when_points_are_absent(points, e
 
 
 @pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1", reason="Opt-in native Docker tests")
-@pytest.mark.parametrize("task", [
-    pytest.param(task, marks=pytest.mark.xfail(strict=True, reason=K6_EVIDENCE_XFAIL[task.id]))
-    if task.id in K6_EVIDENCE_XFAIL else pytest.param(task)
-    for task in EXECUTABLE
-], ids=lambda task: task.id)
+@pytest.mark.parametrize("task", EXECUTABLE, ids=lambda task: task.id)
 def test_native_locust_reference_scores_100(task, tmp_path):
     source = locust_reference(task.params["contract"])
     locust_task = replace(task, tool="locust",

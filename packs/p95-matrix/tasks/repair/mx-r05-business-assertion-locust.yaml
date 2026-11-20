@@ -1,0 +1,51 @@
+id: mx-r05-business-assertion-locust
+category: repair
+tool: locust
+grader: v2_exec
+prompt: 'Fix an HTTP-200-only success rule that accepts a declined business transaction.
+
+
+  '
+params:
+  tool: locust
+  contract:
+    users: 2
+    iterations: 2
+    mode: decline
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: successful control flow completes
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: detects the declared JSON decline and avoids an invalid checkout
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: negative control fails the intended assertion rather than merely
+      crashing the script.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls:
+  - decline_orders: true
+  fixture_aliases: {}
+fixtures:
+- protocol-locust.md
+- broken-r05.py
+scenario: mx-r05-business-assertion

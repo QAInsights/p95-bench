@@ -140,8 +140,10 @@ def jmeter_evidence(artifacts):
         identity = re.search(r"(?im)^X-P95-Request-ID:\s*(request-[a-f0-9]{20})\s*$",
                              sample.findtext("responseHeader", ""))
         if identity:
+            response_time = float(sample.get("t", 0))
             samples.append({"request": identity[1], "worker": sample.get("tn"),
                             "active_users": int(sample.get("na", 0)),
+                            "name": sample.get("lb"), "response_time": response_time,
                             "success": sample.get("s") == "true", "status": sample.get("rc"),
                             "assertion_failures": sum(
                                 item.findtext("failure") == "true" or item.findtext("error") == "true"

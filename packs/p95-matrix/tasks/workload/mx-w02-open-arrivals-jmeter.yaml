@@ -75,7 +75,7 @@ params:
     - setup
   - id: safety
     points: 20
-    description: correct success checks and no unbounded VU growth.
+    description: correct success checks and no unbounded virtual user growth.
     requires:
     - loads
   trials:

@@ -1,0 +1,56 @@
+id: mx-r11-timer-scope-k6
+category: repair
+tool: k6
+grader: v2_exec
+prompt: 'Repair pacing applied after every HTTP request instead of once per business
+  iteration.
+
+
+  '
+params:
+  tool: k6
+  contract:
+    users: 2
+    iterations: 2
+    mode: flow
+    workload: true
+    operation: journey
+    path: /v2/orders
+    rate: 1
+    max_vus: 4
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: complete valid journeys Full window credit allows max(10% of expected
+      arrivals, 1 arrival) count error; average windows with the same quantized full-window
+      mean-rate cap.
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: measured iteration starts meet the target in all windows
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: think time is applied once and no compensating request flood occurs.
+    requires:
+    - loads
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-k6.md
+- broken-r11.js
+scenario: mx-r11-timer-scope

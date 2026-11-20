@@ -231,7 +231,18 @@ def flow_fractions(trial, controls, contract):
             points = [point["value"] for point in item.points if point["metric"] == "business_failure"]
             expected_errors = sum(event["outcome"] >= 400 and event.get("error") not in ("expired",)
                                   and event["outcome"] != 429 for event in eligible)
-            behavior *= float(len(points) == len(eligible) and sum(points) == expected_errors)
+            if item.points:
+                behavior *= float(len(points) == len(eligible) and sum(points) == expected_errors)
+            else:
+                work_paths = {event["request"]: (event["method"], event["path"])
+                              for event in events(item, "start")}
+                work_samples = [sample for sample in item.samples
+                                if work_paths.get(sample["request"]) == ("POST", "/v2/work")]
+                observed_rate = ratio(sum(bool(sample.get("assertion_failures"))
+                                          for sample in work_samples), len(work_samples))
+                expected_rate = ratio(expected_errors, len(eligible))
+                behavior *= float(len(work_samples) == len(eligible)
+                                  and observed_rate == expected_rate)
         safety = float(safe and iteration_counts and controls and all(asserted(item) for item in controls))
     if mode in ("decline", "denial", "threshold", "reservation"):
         control_ok = bool(controls) and trial.returncode == 0 and not asserted(trial)
@@ -240,17 +251,36 @@ def flow_fractions(trial, controls, contract):
                 control_ok &= not events(item, "commit")
             else:
                 control_ok &= len(events(item, "commit")) == expected
-            control_ok &= (item.returncode == 99 if mode == "threshold" else asserted(item)) and item.loaded and item.status == "completed"
+            if mode == "threshold" and contract.get("tool") == "jmeter":
+                sample_paths = {event["request"]: (event["method"], event["path"])
+                                for event in events(item, "start")}
+                checkout_samples = [sample for sample in item.samples
+                                    if sample.get("name") == "checkout"
+                                    and sample_paths.get(sample["request"]) == ("POST", "/v2/orders")]
+                threshold_reached = len(checkout_samples) == expected and all(
+                    sample.get("assertion_failures", 0) > 0 for sample in checkout_samples)
+            else:
+                threshold_reached = item.returncode == 99 if mode == "threshold" else asserted(item)
+            control_ok &= threshold_reached and item.loaded and item.status == "completed"
         if mode == "decline":
             behavior = float(control_ok)
         elif mode == "threshold":
-            tagged = ([point for point in trial.points if point["metric"] == "http_req_duration"
-                       and point.get("tags", {}).get("name") == "checkout"] if trial.points else
-                      [sample for sample in trial.samples if sample.get("name") == "checkout"
-                       and sample.get("method") == "POST" and sample.get("path") == "/v2/orders"
-                       and "response_time" in sample])
-            named = {sample["request"] for sample in trial.samples if sample.get("name") == "checkout"
-                     and sample.get("method") == "POST" and sample.get("path") == "/v2/orders"}
+            if contract.get("tool") == "jmeter":
+                sample_paths = {event["request"]: (event["method"], event["path"])
+                                for event in events(trial, "start")}
+                named = {sample["request"] for sample in trial.samples
+                         if sample.get("name") == "checkout"
+                         and sample_paths.get(sample["request"]) == ("POST", "/v2/orders")}
+                tagged = [sample for sample in trial.samples
+                          if sample["request"] in named and "response_time" in sample]
+            else:
+                tagged = ([point for point in trial.points if point["metric"] == "http_req_duration"
+                           and point.get("tags", {}).get("name") == "checkout"] if trial.points else
+                          [sample for sample in trial.samples if sample.get("name") == "checkout"
+                           and sample.get("method") == "POST" and sample.get("path") == "/v2/orders"
+                           and "response_time" in sample])
+                named = {sample["request"] for sample in trial.samples if sample.get("name") == "checkout"
+                         and sample.get("method") == "POST" and sample.get("path") == "/v2/orders"}
             setup = min(ratio(len(tagged), expected), ratio(len(named), expected))
             behavior = float(control_ok)
         safety *= float(control_ok)
@@ -287,7 +317,8 @@ def executable(text, params, workdir, fixtures):
                 for position, control in enumerate(params.get("controls", []))]
             fractions = (workload_fractions(trial, contract) if contract.get("workload")
                          else flow_fractions(trial, controls, {
-                             **contract, "poll_interval": case.get("profile", {}).get("poll_interval", 0)}))
+                             **contract, "poll_interval": case.get("profile", {}).get("poll_interval", 0),
+                             "tool": tool}))
             values.append(award(rubric, fractions))
     except (ValueError, KeyError, TypeError, OverflowError, RecursionError, ET.ParseError) as error:
         return CheckpointGrade(award(rubric, {}),

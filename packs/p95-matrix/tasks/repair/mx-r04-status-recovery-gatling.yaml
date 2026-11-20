@@ -1,0 +1,54 @@
+id: mx-r04-status-recovery-gatling
+category: repair
+tool: gatling
+grader: v2_exec
+prompt: 'Repair status checks that accept every 401 as success and never renew the
+  session.
+
+
+  '
+params:
+  tool: gatling
+  contract:
+    users: 2
+    iterations: 2
+    mode: denial
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: expected expiry is recognized
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: fresh login/token and retry complete the interrupted flow
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: an unrelated denied request still fails its assertion in a negative-control
+      run.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      expire_after: 2
+  - name: reordered
+    profile:
+      expire_after: 2
+      html_layout: 1
+      reverse_catalog: true
+  controls:
+  - deny_orders: true
+  fixture_aliases: {}
+fixtures:
+- protocol-gatling.md
+- broken-r04.java
+scenario: mx-r04-status-recovery

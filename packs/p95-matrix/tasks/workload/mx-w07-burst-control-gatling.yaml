@@ -21,7 +21,7 @@ prompt: 'Reach 8 starts/s while limiting one-second bursts and coordinating paci
   First authenticated eligible POST anchors T0, within10s of launch. Warmup5s, score
   [T0+5,T0+35) in six5s windows, drain<=5s. Phased targets5/15/5 apply to three10s
   scored plateaus. Count only declared paths/pools; login/setup excluded, health/extra
-  routes forbidden. Journey rate counts committed checkout starts, not HTTP samplers.
+  routes forbidden. Journey rate counts committed checkout starts, not HTTP requests.
   Rate fraction=1 within max(10% of expected arrivals, 1 arrival) count error, linear
   to0 at40% relative error; average windows equally, with each window capped by the
   full scored-window mean-rate fraction using the same quantization allowance. Each1s
