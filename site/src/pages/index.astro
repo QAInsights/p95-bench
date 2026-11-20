@@ -74,7 +74,7 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
 
       {plot.points.length > 1 && (
         <section aria-labelledby="value-title">
-          <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length} tasks, log scale</span></h2>
+          <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length * tools.length} tasks, log scale</span></h2>
           <div class="table-wrap"><svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost">
             {plot.yTicks.map(t => <g><line x1={plot.left} x2={plot.width - plot.right} y1={t.y} y2={t.y} /><text x={plot.left - 10} y={t.y + 4} text-anchor="end">{t.value}</text></g>)}
             {plot.xTicks.map(t => <text x={t.x} y={plot.height - 10} text-anchor="middle">{t.label}</text>)}

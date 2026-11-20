@@ -41,7 +41,7 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
     <main>
       <section class="page-intro">
         <h1><span class="lime">{tasks.length}</span> scenarios × {tools.length} tools</h1>
-        <p>Each task gives a model one performance-testing job in JMeter or k6. The generated script runs against a demo shop, and graders award points for each check it passes. Every task file is <a href={`${repo}/tree/main/packs/p95-matrix/tasks`}>in the repo</a>.</p>
+        <p>Each task gives a model one performance-testing job in JMeter, k6, Locust or Gatling; every scenario exists in all four tools. The generated script runs against a demo shop, and graders award points for each check it passes. Every task file is <a href={`${repo}/tree/main/packs/p95-matrix/tasks`}>in the repo</a>.</p>
       </section>
 
       <section aria-labelledby="count-title">

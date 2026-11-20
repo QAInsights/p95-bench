@@ -90,7 +90,10 @@ export function taskDetails(definitions, tasks) {
   }
   return tasks.map(t => {
     const d = byId.get(t.id) ?? {};
-    return { ...t, summary: taskSummary(d.prompt),
+    const summary = taskSummary(d.prompt);
+    return { ...t, summary: t.category === 'migration'
+      ? summary.replace(/\bto k6\b/, 'to the target tool').replace(/\b(?:a )?JMX\b/, 'a source').replace(/\bJMeter\b/, 'source').replace(/\bk6 /, '')
+      : summary,
       checks: (d.params?.rubric ?? []).map(item => item.id) };
   });
 }
