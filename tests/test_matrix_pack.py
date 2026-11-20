@@ -9,7 +9,12 @@ from p95bench.graders import grade
 from p95bench.packs import pack_config
 from p95bench.reference_plans import reference
 from p95bench.tasks import load_tasks
-from scripts.build_matrix_pack import REPAIR_PROMPTS, _text_for_tool, build_matrix_pack
+from scripts.build_matrix_pack import (
+    MIGRATION_PROMPTS,
+    REPAIR_PROMPTS,
+    _text_for_tool,
+    build_matrix_pack,
+)
 from scripts.build_matrix_repair_overlays import build_repair_overlays
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,12 +24,13 @@ TOOLS = ("jmeter", "k6", "locust", "gatling")
 SOURCE_TASKS = {
     task.id: task for task in load_tasks(
         SOURCE_PACK / "tasks", pack_config("p95-v2.0.0")["weights"])
-    if task.category in {"correlation", "workload", "repair"}
+    if task.category in {"correlation", "workload", "repair", "migration"}
 }
 MATRIX_TASKS = load_tasks(
     MATRIX_PACK / "tasks", pack_config("p95-matrix")["weights"])
 PHASE_A_TASKS = [task for task in MATRIX_TASKS if task.category in {"correlation", "workload"}]
 REPAIR_TASKS = [task for task in MATRIX_TASKS if task.category == "repair"]
+MIGRATION_TASKS = [task for task in MATRIX_TASKS if task.category == "migration"]
 REPAIR_ORIGINAL_TOOLS = {
     "r01": "jmeter", "r02": "k6", "r04": "k6", "r05": "jmeter",
     "r06": "k6", "r07": "jmeter", "r08": "k6", "r10": "k6",
@@ -66,7 +72,7 @@ def test_matrix_pack_generation_is_deterministic_and_matches_committed_pack(tmp_
     generated = tmp_path / "p95-matrix"
     build_repair_overlays(SOURCE_PACK, generated)
     build_matrix_pack(SOURCE_PACK, generated)
-    for category in ("correlation", "workload", "repair"):
+    for category in ("correlation", "workload", "repair", "migration"):
         assert tree_bytes(generated / "tasks" / category) == tree_bytes(
             MATRIX_PACK / "tasks" / category)
     existing = tmp_path / "existing"
@@ -79,6 +85,7 @@ def test_matrix_pack_generation_is_deterministic_and_matches_committed_pack(tmp_
 def test_repair_overlay_generation_is_deterministic(tmp_path):
     generated = tmp_path / "p95-matrix"
     build_repair_overlays(SOURCE_PACK, generated)
+    build_matrix_pack(SOURCE_PACK, generated)
     assert tree_bytes(generated / "overlays") == tree_bytes(MATRIX_PACK / "overlays")
 
 
@@ -87,8 +94,10 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
     v2_config = pack_config("p95-v2.0.0")
     assert matrix_config["weights"] == v2_config["weights"]
     assert matrix_config["efficiency_weight"] == v2_config["efficiency_weight"]
-    assert len(MATRIX_TASKS) == 116
-    assert {task.category for task in MATRIX_TASKS} == {"correlation", "workload", "repair"}
+    assert len(MATRIX_TASKS) == 140
+    assert {task.category for task in MATRIX_TASKS} == {
+        "correlation", "workload", "repair", "migration",
+    }
     assert sum(task.category == "correlation" for task in PHASE_A_TASKS) == 40
     assert sum(task.category == "workload" for task in PHASE_A_TASKS) == 32
     assert len(REPAIR_TASKS) == 44
@@ -188,6 +197,52 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
             for key in ("contract", "trials", "controls"):
                 assert task.params[key] == source.params[key]
 
+    assert len(MIGRATION_TASKS) == 24
+    migration_by_scenario = {}
+    for task in MIGRATION_TASKS:
+        migration_by_scenario.setdefault(task.scenario, []).append(task)
+        code = task.scenario.split("-", 2)[1]
+        source = next(
+            candidate for candidate in SOURCE_TASKS.values()
+            if candidate.category == "migration"
+            and candidate.id.startswith(f"v2-{code}-")
+        )
+        source_jmx = next(name for name in source.fixtures if name.startswith("source-m"))
+        assert task.id == f"{task.scenario}-{task.tool}"
+        assert task.tool in TOOLS and task.params["tool"] == task.tool
+        assert set(task.fixtures) >= {f"protocol-{task.tool}.md"}
+        for key in ("contract", "trials", "controls", "rubric"):
+            assert task.params[key] == source.params[key]
+        if task.tool == "k6":
+            assert task.prompt == source.prompt
+            assert task.fixtures[source_jmx] == source.fixtures[source_jmx]
+        else:
+            line_two = (
+                f"Translate the supplied JMX to {task.tool.title()}."
+                if task.tool in ("locust", "gatling")
+                else "Translate the supplied k6 script to JMeter."
+            )
+            assert task.prompt.splitlines()[0] == MIGRATION_PROMPTS[(code, task.tool)]
+            assert task.prompt.splitlines()[2] == line_two
+        if task.tool == "jmeter":
+            source_js = Path(source_jmx).with_suffix(".js").name
+            assert task.fixtures[source_js] == reference(
+                "k6", source.params["contract"])
+            assert task.fixtures[source_js] == (
+                MATRIX_PACK / "overlays" / "jmeter" / source_js
+            ).read_text()
+        else:
+            assert task.fixtures[source_jmx] == source.fixtures[source_jmx]
+        if code == "m04":
+            assert set(task.fixtures) >= {
+                "m04-accounts.json", "m04-account-1.csv", "m04-account-2.csv",
+            }
+
+    assert len(migration_by_scenario) == 6
+    for scenario, variants in migration_by_scenario.items():
+        assert len(variants) == 4
+        assert {task.tool for task in variants} == set(TOOLS)
+
     assert all((MATRIX_PACK / "overlays" / tool).is_dir() for tool in TOOLS)
 
 
@@ -204,6 +259,31 @@ REFERENCE_TASKS = [task for task in MATRIX_TASKS if task.id in REFERENCE_TASK_ID
 @pytest.mark.parametrize("task", REFERENCE_TASKS, ids=lambda task: task.id)
 def test_matrix_native_reference_scores_100(task, tmp_path):
     result = grade(task, reference(task.tool, task.params["contract"]), tmp_path, 2)
+    assert result.score == 1, result.to_dict()
+
+
+@pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1",
+                    reason="Opt-in native Docker tests")
+@pytest.mark.parametrize("task", MIGRATION_TASKS, ids=lambda task: task.id)
+def test_matrix_migration_reference_scores_100(task, tmp_path):
+    result = grade(task, reference(task.tool, task.params["contract"]), tmp_path, 2)
+    assert result.score == 1, result.to_dict()
+
+
+JMeter_MIGRATION_TASKS = [task for task in MIGRATION_TASKS if task.tool == "jmeter"]
+
+
+@pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1",
+                    reason="Opt-in native Docker tests")
+@pytest.mark.parametrize("task", JMeter_MIGRATION_TASKS, ids=lambda task: task.id)
+def test_jmeter_migration_source_scores_as_k6(task, tmp_path):
+    code = task.scenario.split("-", 2)[1]
+    source_task = next(
+        candidate for candidate in SOURCE_TASKS.values()
+        if candidate.category == "migration" and candidate.id.startswith(f"v2-{code}-")
+    )
+    source_name = next(name for name in task.fixtures if name.endswith(".js"))
+    result = grade(source_task, task.fixtures[source_name], tmp_path, 2)
     assert result.score == 1, result.to_dict()
 
 

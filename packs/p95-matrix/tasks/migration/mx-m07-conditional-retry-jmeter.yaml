@@ -1,0 +1,76 @@
+id: mx-m07-conditional-retry-jmeter
+category: migration
+tool: jmeter
+grader: v2_exec
+prompt: 'Migrate nested k6 conditionals/loops with a bounded refresh branch to JMeter
+  controllers.
+
+
+  Translate the supplied k6 script to JMeter.
+
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "expiry"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{"expire_after": 2},
+  {"expire_after": 2, "html_layout": 1, "reverse_catalog": true}]. Negative-control
+  overrides: [].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — target loads Requires: none.
+
+  setup: 25 points — normal branch matches source Requires: loads.
+
+  behavior: 40 points — only the intended failed operation is retried after refresh
+  Requires: loads, setup.
+
+  safety: 25 points — source retry cap, payload and completion invariants preserved.
+  Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: jmeter
+  contract:
+    users: 2
+    iterations: 2
+    mode: expiry
+  rubric:
+  - id: loads
+    points: 10
+    description: target loads
+    requires: []
+  - id: setup
+    points: 25
+    description: normal branch matches source
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: only the intended failed operation is retried after refresh
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: source retry cap, payload and completion invariants preserved.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      expire_after: 2
+  - name: reordered
+    profile:
+      expire_after: 2
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-jmeter.md
+- source-m07.js
+scenario: mx-m07-conditional-retry

@@ -7,9 +7,11 @@ from pathlib import Path
 
 import yaml
 
+from p95bench.reference_plans import reference
+
+CATEGORIES = ("correlation", "workload", "repair", "migration")
 TOOLS = ("jmeter", "k6", "locust", "gatling")
-CATEGORIES = ("correlation", "workload", "repair")
-EXPECTED_SCENARIOS = {"correlation": 10, "workload": 8, "repair": 11}
+EXPECTED_SCENARIOS = {"correlation": 10, "workload": 8, "repair": 11, "migration": 6}
 TOOL_EXTENSIONS = {"jmeter": "jmx", "k6": "js", "locust": "py", "gatling": "java"}
 REPAIR_PROMPTS = {
     ("r01", "k6"): "Fix a CSRF/ID value parsed from the wrong response; run two users for two iterations.",
@@ -45,6 +47,26 @@ REPAIR_PROMPTS = {
     ("r13", "k6"): "Repair a retry loop that restarts checkout after expiry and duplicates business work.",
     ("r13", "locust"): "Repair a retry loop that restarts checkout after expiry and duplicates business work.",
     ("r13", "gatling"): "Repair a tryMax block that restarts checkout after expiry and duplicates business work.",
+}
+MIGRATION_PROMPTS = {
+    ("m01", "locust"): "Convert a JMX cookie/CSRF shop plan to Locust without changing its semantics.",
+    ("m01", "gatling"): "Convert a JMX cookie/CSRF shop plan to Gatling without changing its semantics.",
+    ("m01", "jmeter"): "Convert a k6 cookie/CSRF shop script to JMeter without changing its semantics.",
+    ("m03", "locust"): "Preserve a JMX flow that extracts a redirect location and follows a one-use token, in Locust.",
+    ("m03", "gatling"): "Preserve a JMX flow that extracts a redirect location and follows a one-use token, in Gatling.",
+    ("m03", "jmeter"): "Preserve a k6 flow that extracts a redirect location and follows a one-use token, in JMeter.",
+    ("m04", "locust"): "Convert CSV-driven JMeter users and parameter substitution into deterministic Locust fixture use.",
+    ("m04", "gatling"): "Convert CSV-driven JMeter users and parameter substitution into deterministic Gatling feeder use.",
+    ("m04", "jmeter"): "Convert fixture-driven k6 users into deterministic JMeter CSV Data Set use.",
+    ("m05", "locust"): "Convert a JMX plan's specified iteration pacing into an equivalent Locust workload.",
+    ("m05", "gatling"): "Convert a JMX plan's specified iteration pacing into an equivalent Gatling workload.",
+    ("m05", "jmeter"): "Convert a k6 script's specified iteration pacing into an equivalent JMeter workload.",
+    ("m06", "locust"): "Translate sampler assertions and transaction-level error limits into Locust response checks and an exit-code rule.",
+    ("m06", "gatling"): "Translate sampler assertions and transaction-level error limits into Gatling checks and assertions.",
+    ("m06", "jmeter"): "Translate k6 checks and thresholds into JMeter assertions and transaction-level error limits.",
+    ("m07", "locust"): "Migrate nested conditional/loop controllers with a bounded refresh branch to Locust.",
+    ("m07", "gatling"): "Migrate nested conditional/loop controllers with a bounded refresh branch to Gatling.",
+    ("m07", "jmeter"): "Migrate nested k6 conditionals/loops with a bounded refresh branch to JMeter controllers.",
 }
 BUSINESS_FAILURE = re.compile(
     r"500 is unexpected\. /v2/health is not business work\..*?Keep checks truthful\.", re.DOTALL
@@ -135,7 +157,7 @@ def protocol_for_tool(source, tool):
 
 
 def _scenario_id(task_id):
-    match = re.fullmatch(r"v2-([cwr]\d+)-(.+)", task_id)
+    match = re.fullmatch(r"v2-([cwrm]\d+)-(.+)", task_id)
     if match is None:
         raise ValueError(f"Unexpected Phase A task id: {task_id}")
     code, slug = match.groups()
@@ -211,6 +233,25 @@ def build_matrix_pack(source_pack, target_pack):
                 task["scenario"] = scenario
                 task["tool"] = tool
                 task["params"]["tool"] = tool
+                if category == "migration" and tool != "k6":
+                    code = scenario.split("-", 2)[1]
+                    source_tool = "JMX" if tool in ("locust", "gatling") else "k6 script"
+                    target_tool = {"jmeter": "JMeter", "locust": "Locust", "gatling": "Gatling"}[tool]
+                    line_two = (
+                        f"Translate the supplied JMX to {target_tool}."
+                        if source_tool == "JMX"
+                        else "Translate the supplied k6 script to JMeter."
+                    )
+                    body = "\n".join(task["prompt"].splitlines()[2:]).lstrip("\n")
+                    task["prompt"] = (
+                        MIGRATION_PROMPTS[(code, tool)] + "\n\n" + line_two + "\n\n" + body
+                    )
+                if category == "migration" and tool == "jmeter":
+                    source_name = next(name for name in task["fixtures"] if name.startswith("source-m"))
+                    source_js = Path(source_name).with_suffix(".js").name
+                    overlay = target_pack / "overlays" / "jmeter" / source_js
+                    overlay.parent.mkdir(parents=True, exist_ok=True)
+                    overlay.write_text(reference("k6", task["params"]["contract"]))
                 if category == "repair":
                     code = scenario.split("-", 2)[1]
                     prompt = REPAIR_PROMPTS.get((code, tool), task["prompt"].split("\n\n", 1)[0])
@@ -224,15 +265,19 @@ def build_matrix_pack(source_pack, target_pack):
                         artifact if name.startswith("broken-r") else name
                         for name in task.get("fixtures", [])
                     ]
-                task["prompt"] = _text_for_tool(task["prompt"], tool, scenario)
-                for rubric_item in task["params"].get("rubric", []):
-                    rubric_item["description"] = _text_for_tool(
-                        rubric_item["description"], tool, scenario)
+                if category != "migration":
+                    task["prompt"] = _text_for_tool(task["prompt"], tool, scenario)
+                    for rubric_item in task["params"].get("rubric", []):
+                        rubric_item["description"] = _text_for_tool(
+                            rubric_item["description"], tool, scenario)
                 fixtures = []
                 for name in task.get("fixtures", []):
                     if name == "protocol.md":
                         name = f"protocol-{tool}.md"
                     elif category == "repair" and name.startswith("broken-r"):
+                        _copy_overlay(target_pack, output_dir, tool, name)
+                    elif category == "migration" and name.startswith("source-m") and tool == "jmeter":
+                        name = Path(name).with_suffix(".js").name
                         _copy_overlay(target_pack, output_dir, tool, name)
                     else:
                         _copy_fixture(source_dir, output_dir, name)

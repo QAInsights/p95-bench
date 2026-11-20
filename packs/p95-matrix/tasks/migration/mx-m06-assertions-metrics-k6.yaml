@@ -1,0 +1,72 @@
+id: mx-m06-assertions-metrics-k6
+category: migration
+tool: k6
+grader: v2_exec
+prompt: 'Translate sampler assertions and transaction-level error limits into checks
+  and thresholds.
+
+  Translate the supplied JMX to k6.
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "decline"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout": 1,
+  "reverse_catalog": true}]. Negative-control overrides: [{"decline_orders": true}].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — target loads Requires: none.
+
+  setup: 25 points — correct metric/transaction tagging Requires: loads.
+
+  behavior: 40 points — success and business-failure controls retain source outcomes
+  Requires: loads, setup.
+
+  safety: 25 points — threshold scope and denominator exactly match the supplied contract.
+  Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: k6
+  contract:
+    users: 2
+    iterations: 2
+    mode: decline
+  rubric:
+  - id: loads
+    points: 10
+    description: target loads
+    requires: []
+  - id: setup
+    points: 25
+    description: correct metric/transaction tagging
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: success and business-failure controls retain source outcomes
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: threshold scope and denominator exactly match the supplied contract.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls:
+  - decline_orders: true
+  fixture_aliases: {}
+fixtures:
+- protocol-k6.md
+- source-m06.jmx
+scenario: mx-m06-assertions-metrics
