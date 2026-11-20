@@ -140,7 +140,7 @@ const result = (model, id) => model.tasks.find(t => t.task_id === id);
           <li>{tasks.length} public tasks across {categories.length} categories: {categories.map(c => (categoryLabels[c] ?? c).toLowerCase()).join(", ")}. Every task is in the repo.</li>
           <li>Each model answers every task once at temperature 0 with a 16,384-token output cap, through the provider's own API.</li>
           <li>Generated JMeter and k6 scripts run in isolated containers against a demo shop; graders award weighted checkpoints.</li>
-          <li>Score = 95% quality + 5% efficiency. Efficiency counts only on passing work and uses token and latency budgets.</li>
+          <li>Score = 95% quality + 5% efficiency. Efficiency is scaled by quality and uses per-task output-token and latency budgets.</li>
           <li>Cost is reported token usage at list price, not a provider invoice.</li>
         </ul>
       </section>
