@@ -1,0 +1,20 @@
+{
+  "distractor": {
+    "cpu_percent": 85,
+    "route": "browse"
+  },
+  "windows": [
+    {
+      "id": "browse-window-3",
+      "interval": "20-30",
+      "p95_ms": 120,
+      "route": "browse"
+    },
+    {
+      "id": "checkout-window-3",
+      "interval": "20-30",
+      "p95_ms": 850,
+      "route": "checkout"
+    }
+  ]
+}

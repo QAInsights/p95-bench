@@ -43,9 +43,7 @@ def stop_actors():
 
 class Relay(socketserver.BaseRequestHandler):
     def handle(self):
-        with socket.socket(socket.AF_UNIX) as upstream:
-            upstream.settimeout(3)
-            upstream.connect("/public.sock")
+        with connect_upstream() as upstream:
             with selectors.DefaultSelector() as selector:
                 selector.register(self.request, selectors.EVENT_READ, upstream)
                 selector.register(upstream, selectors.EVENT_READ, self.request)
@@ -60,13 +58,36 @@ class Relay(socketserver.BaseRequestHandler):
                         key.data.sendall(data)
 
 
+def connect_upstream(path="/public.sock"):
+    upstream = socket.socket(socket.AF_UNIX)
+    upstream.settimeout(3)
+    deadline = time.monotonic() + .2
+    try:
+        while True:
+            try:
+                upstream.connect(path)
+                return upstream
+            except BlockingIOError:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise
+                time.sleep(min(.01, remaining))
+    except BaseException:
+        upstream.close()
+        raise
+
+
+class RelayServer(socketserver.ThreadingTCPServer):
+    request_queue_size = 128
+
+
 if __name__ == "__main__":
     if sys.argv[1] == "--stop":
         stop_actors()
         sys.exit(0)
     supervised = sys.argv[1] == "--supervised"
     command = sys.argv[2:] if supervised else sys.argv[1:]
-    with socketserver.ThreadingTCPServer(("127.0.0.1", 8000), Relay) as server:
+    with RelayServer(("127.0.0.1", 8000), Relay) as server:
         server.daemon_threads = True
         threading.Thread(target=server.serve_forever, daemon=True).start()
         identity = {"user": 65534, "group": 65534, "extra_groups": [], "umask": 0o022} if supervised else {}

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from p95bench.execution import artifact_source
 from p95bench.graders import grade
 from p95bench.packs import pack_config
 from p95bench.reference_plans import reference
@@ -24,13 +25,14 @@ TOOLS = ("jmeter", "k6", "locust", "gatling")
 SOURCE_TASKS = {
     task.id: task for task in load_tasks(
         SOURCE_PACK / "tasks", pack_config("p95-v2.0.0")["weights"])
-    if task.category in {"correlation", "workload", "repair", "migration"}
+    if task.category in {"correlation", "workload", "repair", "migration", "analysis"}
 }
 MATRIX_TASKS = load_tasks(
     MATRIX_PACK / "tasks", pack_config("p95-matrix")["weights"])
 PHASE_A_TASKS = [task for task in MATRIX_TASKS if task.category in {"correlation", "workload"}]
 REPAIR_TASKS = [task for task in MATRIX_TASKS if task.category == "repair"]
 MIGRATION_TASKS = [task for task in MATRIX_TASKS if task.category == "migration"]
+ANALYSIS_TASKS = [task for task in MATRIX_TASKS if task.category == "analysis"]
 REPAIR_ORIGINAL_TOOLS = {
     "r01": "jmeter", "r02": "k6", "r04": "k6", "r05": "jmeter",
     "r06": "k6", "r07": "jmeter", "r08": "k6", "r10": "k6",
@@ -72,7 +74,7 @@ def test_matrix_pack_generation_is_deterministic_and_matches_committed_pack(tmp_
     generated = tmp_path / "p95-matrix"
     build_repair_overlays(SOURCE_PACK, generated)
     build_matrix_pack(SOURCE_PACK, generated)
-    for category in ("correlation", "workload", "repair", "migration"):
+    for category in ("correlation", "workload", "repair", "migration", "analysis"):
         assert tree_bytes(generated / "tasks" / category) == tree_bytes(
             MATRIX_PACK / "tasks" / category)
     existing = tmp_path / "existing"
@@ -89,18 +91,40 @@ def test_repair_overlay_generation_is_deterministic(tmp_path):
     assert tree_bytes(generated / "overlays") == tree_bytes(MATRIX_PACK / "overlays")
 
 
+def test_matrix_efficiency_budgets_cover_all_tasks():
+    budgets = json.loads((MATRIX_PACK / "efficiency-budgets.json").read_text())
+    assert set(budgets) == {task.id for task in MATRIX_TASKS}
+    for task in MATRIX_TASKS:
+        assert budgets[task.id]["tokens"] > 0
+        assert budgets[task.id]["latency_seconds"] == (
+            90 if task.grader == "v2_analysis" else 180
+        )
+
+
 def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
     matrix_config = pack_config("p95-matrix")
     v2_config = pack_config("p95-v2.0.0")
     assert matrix_config["weights"] == v2_config["weights"]
     assert matrix_config["efficiency_weight"] == v2_config["efficiency_weight"]
-    assert len(MATRIX_TASKS) == 140
+    assert len(MATRIX_TASKS) == 160
     assert {task.category for task in MATRIX_TASKS} == {
-        "correlation", "workload", "repair", "migration",
+        "correlation", "workload", "repair", "migration", "analysis",
     }
     assert sum(task.category == "correlation" for task in PHASE_A_TASKS) == 40
     assert sum(task.category == "workload" for task in PHASE_A_TASKS) == 32
     assert len(REPAIR_TASKS) == 44
+    assert len(MIGRATION_TASKS) == 24
+    assert len(ANALYSIS_TASKS) == 20
+    v2_jmeter_protocol = (SOURCE_PACK / "tasks/workload/protocol.md").read_text()
+    assert "Constant/ConstantThroughput/Sync timers" in v2_jmeter_protocol
+    assert "PreciseThroughput" not in v2_jmeter_protocol
+    assert all(
+        "Constant/ConstantThroughput/PreciseThroughput/Sync timers"
+        in task.fixtures["protocol-jmeter.md"]
+        and "Constant/ConstantThroughput/Sync timers"
+        not in task.fixtures["protocol-jmeter.md"]
+        for task in MATRIX_TASKS if task.tool == "jmeter" and task.category != "analysis"
+    )
 
     by_scenario = {}
     for task in PHASE_A_TASKS:
@@ -147,6 +171,15 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
             for name, content in source.fixtures.items():
                 if name != "protocol.md":
                     assert task.fixtures[name] == content
+
+
+def test_matrix_w04_jmeter_reference_uses_precise_throughput_timer():
+    task = next(task for task in MATRIX_TASKS
+                if task.id == "mx-w04-three-phases-jmeter")
+    source = reference("jmeter", task.params["contract"])
+
+    assert source.count("<PreciseThroughputTimer") == 5
+    assert artifact_source("jmeter", source) == source
 
     repair_by_scenario = {}
     for task in REPAIR_TASKS:
@@ -242,6 +275,33 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
     for scenario, variants in migration_by_scenario.items():
         assert len(variants) == 4
         assert {task.tool for task in variants} == set(TOOLS)
+
+    analysis_by_scenario = {}
+    for task in ANALYSIS_TASKS:
+        analysis_by_scenario.setdefault(task.scenario, []).append(task)
+        assert task.id == f"{task.scenario}-{task.tool}"
+        assert task.tool in TOOLS and task.params["tool"] == task.tool
+        assert task.params["native_files"]["data"] in task.fixtures
+        if task.params["analysis"] == "decomposition":
+            assert task.params["native_files"]["spans"] in task.fixtures
+            assert "spans.json" in task.user_prompt()
+        if task.params["analysis"] == "omission":
+            assert task.params["native_files"]["schedule"] in task.fixtures
+        if task.params["analysis"] in ("endpoints", "omission") and task.tool == "locust":
+            assert {
+                "row_id", "timestamp", "name", "request_type", "response_time",
+                "success", "warmup",
+            } <= set(task.fixtures[task.params["native_files"]["data"]].splitlines()[0].split(","))
+            assert "events.request" in task.user_prompt()
+            if task.params["analysis"] == "endpoints":
+                assert "request_type=transaction" in task.user_prompt()
+    assert len(analysis_by_scenario) == 5
+    for variants in analysis_by_scenario.values():
+        assert len(variants) == 4
+        assert {task.tool for task in variants} == set(TOOLS)
+        assert len({task.params["analysis"] for task in variants}) == 1
+        assert len({json.dumps(task.params["rubric"], sort_keys=True)
+                    for task in variants}) == 1
 
     assert all((MATRIX_PACK / "overlays" / tool).is_dir() for tool in TOOLS)
 

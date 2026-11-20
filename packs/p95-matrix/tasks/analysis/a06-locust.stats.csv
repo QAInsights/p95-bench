@@ -1,0 +1,3 @@
+Name,Route,Interval,Request Count,95%,Distractor CPU %,Distractor route
+browse-window-3,browse,20-30,4,120,85,browse
+checkout-window-3,checkout,20-30,4,850,85,browse

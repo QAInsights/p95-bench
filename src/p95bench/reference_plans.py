@@ -56,7 +56,9 @@ function work(override){
   check(r,{'operation or expected throttle':r=>(r.status===200 && body(r).ok===true) || (cfg.completion && r.status===429)});
 }
 function flow(){
-  csrf='';cart='';grant='';login();
+  csrf='';cart='';grant='';
+  if(cfg.mode==='ownership' && __VU===2) sleep(.5);
+  login();
   if(cfg.mode==='challenge'){
     let r=request('/v2/challenge-form');const form=r.html().find('form');
     const token=form.find('input[name="challenge"]').first().attr('value');
@@ -74,6 +76,7 @@ function flow(){
   let r=request('/v2/carts','POST',{product_id:product.id,variant_id:variant.id,grant_id:grant});
   cart=body(r).id;let etag=r.headers.Etag;
   check(r,{'cart':r=>r.status===201});
+  if(cfg.mode==='ownership') sleep(__VU===1 ? 1.2 : 1.6);
   if(cfg.mode==='etag'||cfg.mode==='data'){
     const quantity=cfg.mode==='data'?rows[(__VU-1)%rows.length].quantity:(cfg.quantity || 2);
     r=request('/v2/carts/'+cart,'PATCH',{quantity:quantity},{'If-Match':etag});
@@ -108,8 +111,10 @@ export function checkout(){flow();}
 
 def k6_reference(config):
     config = dict(config)
-    rows = [{"username": f"bench-{i}", "password": "bench", "quantity": i + 1}
-            for i in range(1, 17)]
+    rows = ([{"username": "bench", "password": "bench", "quantity": 2}]
+            if config.get("mode") == "ownership" else
+            [{"username": f"bench-{i}", "password": "bench", "quantity": i + 1}
+             for i in range(1, 17)])
     data = "JSON.parse(open('/fixtures/accounts.json'))" if config.get("mode") in ("data", "partition") else json.dumps(rows)
     if config.get("workload"):
         rates = config.get("rates", [config.get("rate", 5)])
@@ -806,8 +811,10 @@ def node(parent, tag, values=None, **attributes):
            "CookieManager": "CookiePanel", "HeaderManager": "HeaderPanel", "Arguments": "ArgumentsPanel",
            "JSONPostProcessor": "JSONPostProcessorGui", "RegexExtractor": "RegexExtractorGui",
            "ResponseAssertion": "AssertionGui", "ConstantTimer": "ConstantTimerGui"}.get(tag, "TestBeanGUI")
-    element = ET.SubElement(parent, tag, testname=attributes.pop("testname", f"{tag}-{next(NAMES.get())}"),
-                            testclass=tag, guiclass=gui, enabled="true", **attributes)
+    element = ET.SubElement(
+        parent, tag, testname=attributes.pop("testname", f"{tag}-{next(NAMES.get())}"),
+        testclass=attributes.pop("testclass", tag), guiclass=attributes.pop("guiclass", gui),
+        enabled="true", **attributes)
     props(element, values or {})
     return element, ET.SubElement(parent, "hashTree")
 
@@ -892,24 +899,50 @@ def login(parent, username=None, reset=False):
     sampler(condition(parent, "redirect"), "${location}", extractors={"grant": "$.grant_id"})
 
 
-def group(parent, users, iterations, duration=None):
+def group(parent, users, iterations, duration=None, delay=0, *, bounded=False):
     element, children = node(parent, "ThreadGroup", {"ThreadGroup.num_threads": str(users),
         "ThreadGroup.ramp_time": "0", "ThreadGroup.scheduler": duration is not None,
-        "ThreadGroup.duration": str(duration or ""), "ThreadGroup.on_sample_error": "continue"})
+        "ThreadGroup.duration": str(duration or ""), "ThreadGroup.delay": str(delay),
+        "ThreadGroup.on_sample_error": "continue"})
     controller = ET.SubElement(element, "elementProp", name="ThreadGroup.main_controller", elementType="LoopController")
-    props(controller, {"LoopController.continue_forever": False, "LoopController.loops": str(-1 if duration else iterations)})
+    props(controller, {"LoopController.continue_forever": False,
+                       "LoopController.loops": str(-1 if duration and not bounded else iterations)})
     node(children, "CookieManager", {"CookieManager.clearEachIteration": duration is None})
     return children
 
 
+def repeat(parent, iterations):
+    _, children = node(parent, "LoopController", {
+        "LoopController.continue_forever": False,
+        "LoopController.loops": str(iterations),
+    })
+    return children
+
+
 def pacing(parent, rate):
-    element, _ = node(parent, "ConstantThroughputTimer", {"calcMode": "4"})
+    element, _ = node(parent, "ConstantThroughputTimer")
     ET.SubElement(element, "stringProp", name="throughput").text = str(rate * 60 * 1.01)
+    ET.SubElement(element, "intProp", name="calcMode").text = "4"
+
+
+def precise_pacing(parent, rate, duration, seed):
+    node(parent, "PreciseThroughputTimer", {
+        "throughput": str(rate),
+        "throughputPeriod": "1",
+        "duration": str(duration),
+        "batchSize": "1",
+        "batchThreadDelay": "0",
+        "exactLimit": "10000",
+        "allowedThroughputSurplus": "0",
+        "randomSeed": str(seed),
+    }, testclass="org.apache.jmeter.timers.poissonarrivals.PreciseThroughputTimer")
 
 
 def jmeter_reference(config):
     NAMES.set(count())
     mode = config.get("mode", "flow")
+    workload = config.get("workload")
+    rates = config.get("rates", [config.get("rate", 5)])
     LOGIN_USER.set("bench" if config.get("capacity") else "${username}"
                    if mode in ("data", "ownership", "partition") else "bench-${__threadNum}")
     if config.get("pools"):
@@ -926,7 +959,9 @@ def jmeter_reference(config):
                 combined.find("hashTree/hashTree").extend(list(content)[-2:])
         return ET.tostring(combined, encoding="unicode")
     root = ET.Element("jmeterTestPlan", version="1.2", properties="5.0", jmeter="5.6.3")
-    _, plan = node(ET.SubElement(root, "hashTree"), "TestPlan")
+    test_plan, plan = node(ET.SubElement(root, "hashTree"), "TestPlan")
+    if workload and len(rates) > 1:
+        ET.SubElement(test_plan, "boolProp", name="TestPlan.serialize_threadgroups").text = "false"
     variables, _ = node(plan, "Arguments")
     arguments = ET.SubElement(variables, "collectionProp", name="Arguments.arguments")
     for key, value in {"username": "bench", "csrf": "MISSING", "cart": "MISSING",
@@ -934,12 +969,33 @@ def jmeter_reference(config):
             "product": "MISSING", "variant": "MISSING", "quantity": "2"}.items():
         item = ET.SubElement(arguments, "elementProp", name=key, elementType="Argument")
         props(item, {"Argument.name": key, "Argument.value": value, "Argument.metadata": "="})
-    workload = config.get("workload")
     users = config.get("users", 2)
     if workload:
-        rate = config.get("rate", 5)
+        rate = max(rates)
         users = min(64 if config.get("capacity") else 16, max(4, math.ceil(rate * .8) + 2))
     duration = config.get("duration", 38)
+    if workload and config.get("operation") != "journey" and len(rates) > 1:
+        phase_duration = int(config.get("measured", 30) / len(rates))
+        warmup = config.get("warmup", 5)
+        startup = 1
+        for index, rate in enumerate(rates):
+            phase_start = warmup + phase_duration * index
+            span = phase_start + phase_duration + startup
+            phase_users = rate
+            children = group(plan, phase_users, 1, span, bounded=True)
+            login(node(children, "OnceOnlyController")[1])
+            if index:
+                health_count = rate * (phase_start + startup)
+                health = sampler(repeat(children, health_count // phase_users), "/v2/health")
+                precise_pacing(health, rate, span, index + 1)
+                work_count = rate * phase_duration
+            else:
+                work_count = rate * span
+            work = sampler(repeat(children, work_count // phase_users),
+                           config.get("path", "/v2/work"), "POST", "{}",
+                           assertion=r'"ok"\s*:\s*true')
+            precise_pacing(work, rate, span, index + 1)
+        return ET.tostring(root, encoding="unicode")
     children = group(plan, users, config.get("iterations", 2), duration if workload else None)
     if mode in ("data", "ownership", "partition"):
         node(children, "CSVDataSet", {"filename": "/fixtures/account-${__threadNum}.csv",
@@ -952,7 +1008,25 @@ def jmeter_reference(config):
                     status_assertion=r"^(?:200|401|429)$", recover=True)
     elif workload and config.get("operation") != "journey":
         login(node(children, "OnceOnlyController")[1])
-        work = sampler(children, config.get("path", "/v2/work"), "POST", "{}", assertion=r'"ok"\s*:\s*true', recover=True)
+        completion = config.get("completion")
+        status_assertion = r"^(?:200|429)$" if completion else None
+        work = sampler(children, config.get("path", "/v2/work"), "POST", "{}",
+                       assertion=None if completion else r'"ok"\s*:\s*true',
+                       status_assertion=status_assertion, recover=True)
+        if completion:
+            regex(work, "throttled", r"(?im)^HTTP/\d(?:\.\d)?\s+429\b",
+                  headers=True, template="true", default="false")
+            regex(work, "retryAfter", r"(?im)^Retry-After:\s*([0-9.]+)",
+                  headers=True, default="1")
+            for _ in range(4):
+                retry = condition(children, "throttled")
+                node(retry, "ConstantTimer", {"ConstantTimer.delay": "1210"})
+                retried = sampler(retry, config.get("path", "/v2/work"), "POST", "{}",
+                                  status_assertion=status_assertion, recover=True)
+                regex(retried, "throttled", r"(?im)^HTTP/\d(?:\.\d)?\s+429\b",
+                      headers=True, template="true", default="false")
+                regex(retried, "retryAfter", r"(?im)^Retry-After:\s*([0-9.]+)",
+                      headers=True, default="1")
         pacing(work, config.get("rate", 5))
     else:
         login_start = len(children)
@@ -963,14 +1037,57 @@ def jmeter_reference(config):
             barrier = sampler(children, "/v2/health")
             node(barrier, "SyncTimer", {"groupSize": "2", "timeoutInMs": "5000"})
         selection = "$.data.products[?(@.variants[0].in_stock == true)]"
-        catalog = sampler(children, "/v2/catalog", extractors={"product": selection + ".id", "variant": selection + ".variants[0].id"}, recover=mode == "ownership")
+        catalog_path = "/v2/catalog/page" if mode == "pagination" else "/v2/catalog"
+        catalog_extractors = {"product": selection + ".id",
+                              "variant": selection + ".variants[0].id"}
+        if mode == "pagination":
+            catalog_extractors["next"] = "$.next"
+        catalog = sampler(children, catalog_path, extractors=catalog_extractors,
+                          recover=mode == "ownership")
+        if mode == "pagination":
+            continuation = r'(?s)^(?!.*"in_stock"\s*:\s*true).*"next"\s*:\s*"[^"]+"'
+            regex(catalog, "continuePagination", continuation,
+                  template="true", default="false")
+            for _ in range(2):
+                page = sampler(condition(children, "continuePagination"), "${next}",
+                               extractors=catalog_extractors)
+                regex(page, "continuePagination", continuation,
+                      template="true", default="false")
         if mode == "ownership":
             node(catalog, "ConstantTimer", {"ConstantTimer.delay": "${delay}"})
+        if mode == "challenge":
+            challenge = sampler(children, "/v2/challenge-form")
+            regex(challenge, "challengeAction",
+                  r'''(?i)<form\b[^>]*\baction=["']([^"']+)["']''')
+            regex(challenge, "challengeToken",
+                  r'''(?i)<input(?=[^>]*\bname=["']challenge["'])(?=[^>]*\bvalue=["']([^"']+)["'])[^>]*>''')
+            submit = sampler(children, "${challengeAction}", "POST",
+                             '{"challenge":"${challengeToken}"}',
+                             extractors={"grant": "$.grant_id"},
+                             status_assertion=r"^(?:200|302)$")
+            regex(submit, "location", r"(?im)^Location:\s*([^\r\n]+)",
+                  headers=True)
+            regex(submit, "redirect", r"(?im)^Location:",
+                  headers=True, template="true", default="false")
+            sampler(condition(children, "redirect"), "${location}",
+                    extractors={"grant": "$.grant_id"})
         created = sampler(children, "/v2/carts", "POST", '{"product_id":"${product}","variant_id":"${variant}","grant_id":"${grant}"}',
                           extractors={"cart": "$.id"}, assertion=r'"id"\s*:\s*"cart-')
         regex(created, "hasCart", r'"id"\s*:\s*"cart-', template="true", default="false")
         if mode == "data":
             sampler(children, "/v2/carts/${cart}", "PATCH", '{"quantity":${quantity}}', recover=True)
+        elif mode == "etag":
+            quantity = config.get("quantity", 2)
+            update = sampler(children, "/v2/carts/${cart}", "PATCH",
+                             '{"quantity":' + str(quantity) + '}',
+                             status_assertion=r"^(?:200|412)$")
+            regex(update, "conflict",
+                  r'"error"\s*:\s*"(?:etag|etag_conflict)"',
+                  template="true", default="false")
+            refresh = condition(children, "conflict")
+            sampler(refresh, "/v2/carts/${cart}")
+            sampler(refresh, "/v2/carts/${cart}", "PATCH",
+                    '{"quantity":' + str(quantity) + '}')
         if mode == "reservation":
             reserved = sampler(children, "/v2/reservations", "POST", '{"cart_id":"${cart}"}', extractors={"poll": "$.status_url"})
             regex(reserved, "pending", r'"status_url"', template="true", default="false")

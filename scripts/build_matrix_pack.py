@@ -1,17 +1,28 @@
 """Generate the Matrix Phase A and repair task variants."""
 
 import argparse
+import json
 import re
 from copy import deepcopy
 from pathlib import Path
 
 import yaml
 
+from p95bench.analysis_v2 import TOOL_ANSWER_STRINGS
 from p95bench.reference_plans import reference
 
-CATEGORIES = ("correlation", "workload", "repair", "migration")
+try:
+    from scripts.build_matrix_analysis_overlays import build_matrix_analysis_overlays
+except ModuleNotFoundError as error:
+    if error.name != "scripts":
+        raise
+    from build_matrix_analysis_overlays import build_matrix_analysis_overlays
+
+CATEGORIES = ("correlation", "workload", "repair", "migration", "analysis")
 TOOLS = ("jmeter", "k6", "locust", "gatling")
-EXPECTED_SCENARIOS = {"correlation": 10, "workload": 8, "repair": 11, "migration": 6}
+EXPECTED_SCENARIOS = {
+    "correlation": 10, "workload": 8, "repair": 11, "migration": 6, "analysis": 5,
+}
 TOOL_EXTENSIONS = {"jmeter": "jmx", "k6": "js", "locust": "py", "gatling": "java"}
 REPAIR_PROMPTS = {
     ("r01", "k6"): "Fix a CSRF/ID value parsed from the wrong response; run two users for two iterations.",
@@ -122,7 +133,7 @@ def _once(pattern, text, replacement, section):
     return result
 
 
-def protocol_for_tool(source, tool):
+def protocol_for_tool(source, tool, *, matrix=False):
     if tool not in TOOLS:
         raise ValueError(f"Unknown tool: {tool}")
     lines = source.splitlines(keepends=True)
@@ -147,21 +158,82 @@ def protocol_for_tool(source, tool):
     jmx_end = rules.group().find("No eval/Groovy/BeanShell/JavaScript/JEXL.") + len(
         "No eval/Groovy/BeanShell/JavaScript/JEXL."
     )
-    jmeter_rules = "\n".join((
-        GENERIC_NATIVE,
-        rules.group()[jmx_start:jmx_end],
-    ))
+    jmx_rules = rules.group()[jmx_start:jmx_end]
+    if matrix and tool == "jmeter":
+        old_timer_line = "Response/Duration assertions, Constant/ConstantThroughput/Sync timers, CSVDataSet, Arguments."
+        new_timer_line = "Response/Duration assertions, Constant/ConstantThroughput/PreciseThroughput/Sync timers, CSVDataSet, Arguments."
+        jmx_rules, count = jmx_rules.replace(old_timer_line, new_timer_line), jmx_rules.count(old_timer_line)
+        if count != 1:
+            raise ValueError(f"Expected one Matrix JMeter timer line, found {count}")
+    jmeter_rules = "\n".join((GENERIC_NATIVE, jmx_rules))
     replacement = jmeter_rules if tool == "jmeter" else TOOL_RULES_BY_TOOL.get(tool)
     text = _once(TOOL_RULES, text, replacement, "native tool rules")
     return text
 
 
 def _scenario_id(task_id):
-    match = re.fullmatch(r"v2-([cwrm]\d+)-(.+)", task_id)
+    match = re.fullmatch(r"v2-([cwrma]\d+)-(.+)", task_id)
     if match is None:
         raise ValueError(f"Unexpected Phase A task id: {task_id}")
     code, slug = match.groups()
     return f"mx-{code}-{slug}"
+
+
+def _analysis_prompt(task, tool, native_files):
+    kind = task["params"]["analysis"]
+    tool_name = {"jmeter": "JMeter", "k6": "k6", "locust": "Locust", "gatling": "Gatling"}[tool]
+    headline = {
+        "endpoints": {
+            "jmeter": "Analyze a labeled JTL slice; identify the slow endpoint after removing warmup and transaction parent samples.",
+            "k6": "Analyze a k6 JSON point stream; identify the slow endpoint after removing warmup and transaction parent samples.",
+            "locust": "Analyze a Locust per-request CSV exported by events.request; identify the slow endpoint after removing warmup and transaction parent samples.",
+            "gatling": "Analyze Gatling REQUEST/GROUP records; identify the slow endpoint after removing warmup and transaction parent samples.",
+        },
+        "thresholds": {
+            name: f"Explain a failing checkout threshold from a tagged {name} summary with a misleading fast aggregate."
+            for name in ("JMeter", "k6", "Locust", "Gatling")
+        },
+        "errors": {
+            name: f"Diagnose a misleading error rate in {name} results where expected expiry responses and unexpected failures were merged."
+            for name in ("JMeter", "k6", "Locust", "Gatling")
+        },
+        "omission": {
+            name: f"Compare requested arrivals with achieved {name} throughput; recognize coordinated-omission risk without inventing missing latencies."
+            for name in ("JMeter", "k6", "Locust", "Gatling")
+        },
+        "decomposition": {
+            name: f"Locate the bottleneck from a {name} summary plus the attached spans.json sidecar containing timing spans and a plausible distractor."
+            for name in ("JMeter", "k6", "Locust", "Gatling")
+        },
+    }[kind][tool if kind == "endpoints" else tool_name]
+    body = "\n".join(task["prompt"].splitlines()[1:]).lstrip()
+    answer_strings = TOOL_ANSWER_STRINGS.get(kind, {}).get(tool)
+    if answer_strings:
+        metric, keys, fix = answer_strings
+        source_fix = ("scope_checkout_threshold" if kind == "thresholds"
+                      else "exclude_expected_from_numerator_only")
+        body = body.replace(f'"{source_fix}"', f'"{fix}"')
+        answer_note = (
+            f'Native answer strings: failed_metric="{metric}"; '
+            f"evidence.keys={json.dumps(keys)}; fix=\"{fix}\"."
+        )
+    else:
+        answer_note = ""
+    fixture_note = f"Native fixture: {native_files['data']}."
+    if kind == "omission":
+        fixture_note += f" Arrival schedule: {native_files['schedule']}."
+    if "threshold" in native_files:
+        fixture_note += f" Threshold metadata: {native_files['threshold']}."
+    if "stats" in native_files:
+        fixture_note += f" Request totals: {native_files['stats']}."
+    if kind == "decomposition":
+        fixture_note += f" Read the attached {native_files['spans']} sidecar."
+    if kind == "endpoints" and tool == "locust":
+        fixture_note += " request_type=transaction identifies parent rows."
+    if kind == "omission" and tool == "locust":
+        fixture_note += " This per-request CSV is exported by the events.request listener."
+    notes = "\n\n".join(note for note in (fixture_note, answer_note) if note)
+    return f"{headline}\n\n{body}\n\n{notes}"
 
 
 def _text_for_tool(text, tool, scenario):
@@ -209,21 +281,25 @@ def _copy_overlay(target_pack, target_dir, tool, name):
 def build_matrix_pack(source_pack, target_pack):
     source_pack, target_pack = Path(source_pack), Path(target_pack)
     output_tasks = target_pack / "tasks"
+    analysis_overlays = build_matrix_analysis_overlays(source_pack, target_pack)
     scenario_counts = {category: 0 for category in CATEGORIES}
     for category in CATEGORIES:
         source_dir = source_pack / "tasks" / category
         output_dir = output_tasks / category
         output_dir.mkdir(parents=True, exist_ok=True)
-        protocol = (source_dir / "protocol.md").read_text()
-        for tool in TOOLS:
-            (output_dir / f"protocol-{tool}.md").write_text(protocol_for_tool(protocol, tool))
+        if category != "analysis":
+            protocol = (source_dir / "protocol.md").read_text()
+            for tool in TOOLS:
+                (output_dir / f"protocol-{tool}.md").write_text(
+                    protocol_for_tool(protocol, tool, matrix=True))
 
         source_tasks = [
             yaml.safe_load(path.read_text())
             for path in sorted(source_dir.glob("*.yaml"))
         ]
         for original in source_tasks:
-            if original["category"] != category or original["grader"] != "v2_exec":
+            grader = "v2_analysis" if category == "analysis" else "v2_exec"
+            if original["category"] != category or original["grader"] != grader:
                 continue
             scenario = _scenario_id(original["id"])
             scenario_counts[category] += 1
@@ -233,6 +309,12 @@ def build_matrix_pack(source_pack, target_pack):
                 task["scenario"] = scenario
                 task["tool"] = tool
                 task["params"]["tool"] = tool
+                if category == "analysis":
+                    native_files = analysis_overlays[(scenario, tool)]
+                    task["params"]["native_files"] = native_files
+                    task["params"]["fixture_aliases"] = {}
+                    task["prompt"] = _analysis_prompt(task, tool, native_files)
+                    task["fixtures"] = list(native_files.values())
                 if category == "migration" and tool != "k6":
                     code = scenario.split("-", 2)[1]
                     source_tool = "JMX" if tool in ("locust", "gatling") else "k6 script"
@@ -265,14 +347,16 @@ def build_matrix_pack(source_pack, target_pack):
                         artifact if name.startswith("broken-r") else name
                         for name in task.get("fixtures", [])
                     ]
-                if category != "migration":
+                if category in ("correlation", "workload", "repair"):
                     task["prompt"] = _text_for_tool(task["prompt"], tool, scenario)
                     for rubric_item in task["params"].get("rubric", []):
                         rubric_item["description"] = _text_for_tool(
                             rubric_item["description"], tool, scenario)
                 fixtures = []
                 for name in task.get("fixtures", []):
-                    if name == "protocol.md":
+                    if category == "analysis":
+                        _copy_overlay(target_pack, output_dir, tool, name)
+                    elif name == "protocol.md":
                         name = f"protocol-{tool}.md"
                     elif category == "repair" and name.startswith("broken-r"):
                         _copy_overlay(target_pack, output_dir, tool, name)

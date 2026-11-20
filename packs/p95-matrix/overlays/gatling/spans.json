@@ -1,0 +1,20 @@
+[
+  {
+    "component": "queue",
+    "duration_ms": 30,
+    "id": "queue-7",
+    "window": "checkout-window-3"
+  },
+  {
+    "component": "database",
+    "duration_ms": 700,
+    "id": "db-query-7",
+    "window": "checkout-window-3"
+  },
+  {
+    "component": "service",
+    "duration_ms": 120,
+    "id": "service-7",
+    "window": "checkout-window-3"
+  }
+]

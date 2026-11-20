@@ -1,0 +1,6 @@
+{"data": {"tags": {"parent": "false", "route": "checkout", "row_id": "warmup", "success": "true", "warmup": "true"}, "time": "0", "value": 50000.0}, "metric": "http_req_duration", "type": "Point"}
+{"data": {"tags": {"parent": "false", "route": "checkout", "row_id": "checkout-1", "success": "true", "warmup": "false"}, "time": "1000", "value": 100.0}, "metric": "http_req_duration", "type": "Point"}
+{"data": {"tags": {"parent": "false", "route": "checkout", "row_id": "checkout-2", "success": "false", "warmup": "false"}, "time": "2000", "value": 900.0}, "metric": "http_req_duration", "type": "Point"}
+{"data": {"tags": {"parent": "false", "route": "browse", "row_id": "browse-1", "success": "true", "warmup": "false"}, "time": "1100", "value": 20.0}, "metric": "http_req_duration", "type": "Point"}
+{"data": {"tags": {"parent": "false", "route": "browse", "row_id": "browse-2", "success": "true", "warmup": "false"}, "time": "2100", "value": 30.0}, "metric": "http_req_duration", "type": "Point"}
+{"data": {"tags": {"parent": "true", "route": "transaction", "row_id": "parent", "success": "true", "warmup": "false"}, "time": "2000", "value": 5000.0}, "metric": "http_req_duration", "type": "Point"}

@@ -1,0 +1,75 @@
+id: mx-a02-k6-thresholds-locust
+category: analysis
+tool: locust
+grader: v2_analysis
+prompt: 'Explain a failing checkout threshold from a tagged Locust summary with a
+  misleading fast aggregate.
+
+
+  Return only JSON with exactly this structure (leaves are types, not answers):
+
+  {"observations": {"aggregate_p95_ms": "number", "checkout_p95_ms": "number", "limit_ms":
+  "number"}, "diagnosis": {"route": "string", "failed_metric": "string"}, "evidence":
+  {"keys": ["string", "string"], "fix": "string"}}
+
+  Nearest-rank p95=ceil(.95*n), includes failed responses; exclude warmup=true or
+  parent=true. Timestamp ms. Numeric absolute tolerance1e-6. Sort row IDs; rank descending
+  p95. Never invent unobserved latencies.
+
+  Sort all evidence ID/key arrays lexicographically. Enum choices: {"fix": ["threshold_checkout_request_only",
+  "scope_all_routes", "remove_threshold"]}. Other string values must exactly match
+  fixture identifiers.
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — JSON schema Requires: none.
+
+  setup: 30 points — correct failed threshold and scoped metric values Requires: loads.
+
+  behavior: 40 points — identifies the offending route/scenario rather than the aggregate
+  Requires: loads.
+
+  safety: 20 points — concrete evidence keys and the appropriate scoped threshold
+  fix. Requires: loads.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.
+
+
+  Native fixture: a02-locust.stats.csv. Threshold metadata: a02-threshold.json.
+
+
+  Native answer strings: failed_metric="checkout"; evidence.keys=["stats.csv.checkout.95%",
+  "threshold.checkout.limit_ms"]; fix="threshold_checkout_request_only".'
+params:
+  analysis: thresholds
+  rubric:
+  - id: loads
+    points: 10
+    description: JSON schema
+    requires: []
+  - id: setup
+    points: 30
+    description: correct failed threshold and scoped metric values
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: identifies the offending route/scenario rather than the aggregate
+    requires:
+    - loads
+  - id: safety
+    points: 20
+    description: concrete evidence keys and the appropriate scoped threshold fix.
+    requires:
+    - loads
+  fixture_aliases: {}
+  tool: locust
+  native_files:
+    data: a02-locust.stats.csv
+    threshold: a02-threshold.json
+fixtures:
+- a02-locust.stats.csv
+- a02-threshold.json
+scenario: mx-a02-k6-thresholds

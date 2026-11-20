@@ -1,0 +1,72 @@
+id: mx-a06-k6-decomposition-jmeter
+category: analysis
+tool: jmeter
+grader: v2_analysis
+prompt: 'Locate the bottleneck from a JMeter summary plus the attached spans.json
+  sidecar containing timing spans and a plausible distractor.
+
+
+  Return only JSON with exactly this structure (leaves are types, not answers):
+
+  {"observations": {"p95_ms": "number", "dominant_ms": "number"}, "diagnosis": {"component":
+  "string", "route": "string", "interval": "string"}, "evidence": {"keys": ["string",
+  "string"], "next_test": "string"}}
+
+  Nearest-rank p95=ceil(.95*n), includes failed responses; exclude warmup=true or
+  parent=true. Timestamp ms. Numeric absolute tolerance1e-6. Sort row IDs; rank descending
+  p95. Never invent unobserved latencies.
+
+  Sort all evidence ID/key arrays lexicographically. Enum choices: {"next_test": ["measure_db_wait_and_query_plan",
+  "increase_vus_without_measurement", "ignore_checkout"]}. Other string values must
+  exactly match fixture identifiers.
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — JSON schema Requires: none.
+
+  setup: 30 points — correct failing interval/route metrics Requires: loads.
+
+  behavior: 40 points — identifies the supported component from timing decomposition
+  Requires: loads.
+
+  safety: 20 points — exact evidence IDs and a discriminating next test, not an unsupported
+  causal claim. Requires: loads.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.
+
+
+  Native fixture: a06-jmeter.statistics.json. Read the attached spans.json sidecar.'
+params:
+  analysis: decomposition
+  rubric:
+  - id: loads
+    points: 10
+    description: JSON schema
+    requires: []
+  - id: setup
+    points: 30
+    description: correct failing interval/route metrics
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: identifies the supported component from timing decomposition
+    requires:
+    - loads
+  - id: safety
+    points: 20
+    description: exact evidence IDs and a discriminating next test, not an unsupported
+      causal claim.
+    requires:
+    - loads
+  fixture_aliases: {}
+  tool: jmeter
+  native_files:
+    data: a06-jmeter.statistics.json
+    spans: spans.json
+fixtures:
+- a06-jmeter.statistics.json
+- spans.json
+scenario: mx-a06-k6-decomposition

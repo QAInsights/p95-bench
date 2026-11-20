@@ -1,0 +1,4 @@
+REQUEST /v2/work work-ok 1000 1010 OK status=200 class=success count=90 route=/v2/orders
+REQUEST /v2/work expiry-1 1010 1020 KO status=401 class=expected_expiry count=8 route=/v2/orders
+REQUEST /v2/work work-500 1020 1030 KO status=500 class=unexpected count=2 route=/v2/orders
+GROUP work 1000 1100 OK requests=100 route=/v2/orders

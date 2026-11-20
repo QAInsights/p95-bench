@@ -1,0 +1,7 @@
+timeStamp,elapsed,label,responseCode,success,threadName,parent,sample_id,warmup,request_type
+-1000,1000,checkout,200,true,worker,false,warmup,true,request
+0,1000,checkout,200,true,worker,false,r1,false,request
+1000,1000,checkout,200,true,worker,false,r2,false,request
+2000,1000,checkout,200,true,worker,false,r3,false,request
+3000,1000,checkout,200,true,worker,false,r4,false,request
+4000,1000,checkout,200,true,worker,false,r5,false,request
