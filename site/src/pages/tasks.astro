@@ -87,6 +87,7 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
     <script>
       const buttons = [...document.querySelectorAll(".filter button")];
       const apply = tool => {
+        if (!buttons.some(b => b.dataset.tool === tool)) tool = "all";
         buttons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tool === tool)));
         document.querySelectorAll(".task-group").forEach(group => {
           const rows = [...group.querySelectorAll("tbody tr")];
@@ -96,7 +97,13 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
           group.hidden = shown === 0;
         });
       };
-      buttons.forEach(b => b.addEventListener("click", () => apply(b.dataset.tool)));
+      buttons.forEach(b => b.addEventListener("click", () => {
+        apply(b.dataset.tool);
+        const url = new URL(location.href);
+        b.dataset.tool === "all" ? url.searchParams.delete("tool") : url.searchParams.set("tool", b.dataset.tool);
+        history.replaceState(null, "", url);
+      }));
+      apply(new URLSearchParams(location.search).get("tool") ?? "all");
     </script>
 
     <footer class="bottom">
