@@ -1,4 +1,4 @@
-import { name } from './scores.mjs';
+import { attemptFraction, name } from './scores.mjs';
 import { providerName } from './provider-names.mjs';
 
 export const palette = ['#d4ff3a', '#7b8cff', '#ff7a3d', '#e86fb0', '#4fd1e8', '#3fbf8f', '#b48cf2', '#f2c14e'];
@@ -32,6 +32,11 @@ export function boardTasks(data) {
 
 export const taskLabel = id => id.replace(/^v2-[a-z]\d+-/i, '').replaceAll('-', ' ');
 export const taskCode = id => id.match(/^v2-([a-z]\d+)/i)?.[1].toUpperCase() ?? id;
+
+export function taskScore(model, taskId) {
+  const values = model.tasks.filter(t => t.task_id === taskId).map(attemptFraction).filter(v => v !== null);
+  return values.length ? Math.round(100 * values.reduce((s, v) => s + v, 0) / values.length) : null;
+}
 
 const costTicks = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
 

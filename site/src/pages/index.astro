@@ -5,7 +5,7 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/geist.css";
 import "../styles/board.css";
 import data from "../data/leaderboard-p95-v2.0.0.json";
-import { boardModels, boardTasks, categoryLabels, scatter, taskCode, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
+import { boardModels, boardTasks, categoryLabels, scatter, taskCode, taskScore, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
 
 const models = boardModels(data);
 const tasks = boardTasks(data);
@@ -15,7 +15,6 @@ const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
 const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";
 const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
-const result = (model, id) => model.tasks.find(t => t.task_id === id);
 ---
 
 <!doctype html>
@@ -109,7 +108,7 @@ const result = (model, id) => model.tasks.find(t => t.task_id === id);
       </section>
 
       <section id="tasks" aria-labelledby="tasks-title">
-        <h2 id="tasks-title" class="label">Every task <span>brighter is better · hover for details</span></h2>
+        <h2 id="tasks-title" class="label">Every task <span>brighter is better · hover a cell or open the table below</span></h2>
         <div class="table-wrap">
           <div class="grid" style={`--cols:${tasks.length + groups.length - 1}`}>
             <span class="grid-corner"></span>
@@ -122,8 +121,7 @@ const result = (model, id) => model.tasks.find(t => t.task_id === id);
               {groups.map((g, gi) => <>
                 {gi > 0 && <span class="grid-gap"></span>}
                 {g.tasks.map(t => {
-                  const r = result(m, t.id);
-                  const value = r ? Math.round(r.score * 100) : null;
+                  const value = taskScore(m, t.id);
                   return <span class:list={["cell", value === null && "missing"]} style={value === null ? "" : `--t:${value}%`}
                     title={`${taskCode(t.id)} · ${t.label} · ${t.tool === "k6" ? "k6" : "JMeter"}\n${m.name}: ${value === null ? "not run" : `${value}/100`}`}
                     aria-label={`${m.name}, ${t.label}: ${value === null ? "not run" : `${value} of 100`}`}></span>;
@@ -132,6 +130,22 @@ const result = (model, id) => model.tasks.find(t => t.task_id === id);
             </>)}
           </div>
         </div>
+        <details class="task-table">
+          <summary>All task scores as a table</summary>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Task</th><th>Category</th><th>Tool</th>{models.map(m => <th class="n">{m.name}</th>)}</tr></thead>
+            <tbody>
+              {tasks.map(t => (
+                <tr>
+                  <th scope="row"><span class="code">{taskCode(t.id)}</span> {t.label}</th>
+                  <td>{categoryLabels[t.category] ?? t.category}</td>
+                  <td>{t.tool === "k6" ? "k6" : "JMeter"}</td>
+                  {models.map(m => <td class="n">{taskScore(m, t.id) ?? "—"}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table></div>
+        </details>
       </section>
 
       <section id="method" aria-labelledby="method-title" class="method">

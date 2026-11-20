@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import {
   boardModels, boardTasks, formatCost, formatMinutes, formatTokens, palette,
-  scatter, taskCode, taskLabel,
+  scatter, taskCode, taskLabel, taskScore,
 } from '../src/lib/board.mjs';
 import { fakeV2 } from './fake-v2.mjs';
 
@@ -33,6 +33,17 @@ test('tasks follow category weights, sort by id and deduplicate', () => {
 test('task labels and codes omit the v2 category prefix', () => {
   assert.equal(taskLabel('v2-a01-jtl-endpoints'), 'jtl endpoints');
   assert.equal(taskCode('v2-a01-jtl-endpoints'), 'A01');
+});
+
+test('task scores average repetitions and use pass booleans when scores are absent', () => {
+  const model = { tasks: [
+    { task_id: 'repeated', score: 0 }, { task_id: 'repeated', score: 1 },
+    { task_id: 'passed', passed: false }, { task_id: 'passed', passed: true },
+  ] };
+
+  assert.equal(taskScore(model, 'repeated'), 50);
+  assert.equal(taskScore(model, 'passed'), 50);
+  assert.equal(taskScore(model, 'unknown'), null);
 });
 
 test('scatter plots priced models with x increasing by cost and y tracking score', () => {
@@ -66,4 +77,6 @@ test('page data imports only the v2 leaderboard and has no version switching UI'
 
   assert.deepEqual(jsonImports, ['../data/leaderboard-p95-v2.0.0.json']);
   assert.doesNotMatch(page, /leaderboard\.json|pack-switch|show-versions/);
+  assert.match(page, /<details class="task-table">/);
+  assert.doesNotMatch(page, /model\.tasks\.find\(/);
 });
