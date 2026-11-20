@@ -54,16 +54,22 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
         </div>
       </section>
 
+      <div class="filter" role="group" aria-label="Filter tasks by tool">
+        <span>Tool</span>
+        <button type="button" data-tool="all" aria-pressed="true">All <small>{tasks.length}</small></button>
+        {tools.map(t => <button type="button" data-tool={t.tool} aria-pressed="false">{toolLabel(t.tool)} <small>{t.count}</small></button>)}
+      </div>
+
       {groups.map(g => (
-        <section id={g.category} aria-labelledby={`${g.category}-title`}>
-          <h2 id={`${g.category}-title`} class="label">{categoryLabels[g.category]} <span>{g.tasks.length} tasks · {data.weights[g.category]}% of the score</span></h2>
+        <section id={g.category} class="task-group" aria-labelledby={`${g.category}-title`}>
+          <h2 id={`${g.category}-title`} class="label">{categoryLabels[g.category]} <span><span class="visible-count">{g.tasks.length}</span> tasks · {data.weights[g.category]}% of the score</span></h2>
           <p class="blurb">{categoryBlurbs[g.category]}</p>
           <div class="table-wrap">
             <table class="tasks">
               <thead><tr><th>Code</th><th>Task</th><th>Tool</th><th>Checks</th>{models.map(m => <th class="n">{m.name}</th>)}</tr></thead>
               <tbody>
                 {g.tasks.map(t => (
-                  <tr>
+                  <tr data-tool={t.tool}>
                     <td class="code">{taskCode(t.id)}</td>
                     <td class="summary"><b>{t.label}</b><span>{t.summary}</span></td>
                     <td><span class:list={["tool-badge", t.tool]}>{toolLabel(t.tool)}</span></td>
@@ -77,6 +83,21 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
         </section>
       ))}
     </main>
+
+    <script>
+      const buttons = [...document.querySelectorAll(".filter button")];
+      const apply = tool => {
+        buttons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tool === tool)));
+        document.querySelectorAll(".task-group").forEach(group => {
+          const rows = [...group.querySelectorAll("tbody tr")];
+          rows.forEach(row => { row.hidden = tool !== "all" && row.dataset.tool !== tool; });
+          const shown = rows.filter(row => !row.hidden).length;
+          group.querySelector(".visible-count").textContent = String(shown);
+          group.hidden = shown === 0;
+        });
+      };
+      buttons.forEach(b => b.addEventListener("click", () => apply(b.dataset.tool)));
+    </script>
 
     <footer class="bottom">
       <span>Pack {data.pack_id} · scores out of 100</span>
