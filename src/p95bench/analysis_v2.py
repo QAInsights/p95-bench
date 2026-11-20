@@ -130,7 +130,7 @@ def _analysis_samples(kind, tool, text):
             })
     elif tool == "locust":
         for row in _csv_rows(text):
-            parent = row["request_type"] == "transaction"
+            parent = row["request_type"] == "Transaction"
             rows.append({
                 "row_id": row["row_id"], "timestamp_ms": row["timestamp"],
                 "route": row["name"], "elapsed_ms": row["response_time"],

@@ -2,8 +2,10 @@ id: mx-a01-jtl-endpoints-locust
 category: analysis
 tool: locust
 grader: v2_analysis
-prompt: 'Analyze a Locust per-request CSV exported by events.request; identify the
-  slow endpoint after removing warmup and transaction parent samples.
+prompt: 'Analyze a Locust per-request CSV exported by an events.request listener;
+  the test also fires transaction timings through events.request (locust-plugins TransactionManager
+  style). Identify the slow endpoint after removing warmup and transaction parent
+  samples.
 
 
   Return only JSON with exactly this structure (leaves are types, not answers):
@@ -35,8 +37,8 @@ prompt: 'Analyze a Locust per-request CSV exported by events.request; identify t
   fault can lose multiple checkpoints.
 
 
-  Native fixture: a01-locust.requests.csv. request_type=transaction identifies parent
-  rows.'
+  Native fixture: a01-locust.requests.csv. request_type=Transaction identifies the
+  transaction rows fired through events.request.'
 params:
   analysis: endpoints
   rubric:

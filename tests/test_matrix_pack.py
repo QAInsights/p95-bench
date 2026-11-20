@@ -284,7 +284,7 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
             } <= set(task.fixtures[task.params["native_files"]["data"]].splitlines()[0].split(","))
             assert "events.request" in task.user_prompt()
             if task.params["analysis"] == "endpoints":
-                assert "request_type=transaction" in task.user_prompt()
+                assert "request_type=Transaction" in task.user_prompt()
     assert len(analysis_by_scenario) == 5
     for variants in analysis_by_scenario.values():
         assert len(variants) == 4

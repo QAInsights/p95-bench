@@ -79,7 +79,7 @@ def _locust_requests(rows):
             "row_id": row["row_id"],
             "timestamp": row["timestamp_ms"],
             "name": row["route"],
-            "request_type": "transaction" if row["parent"] == "true"
+            "request_type": "Transaction" if row["parent"] == "true"
             else "POST" if row["route"] == "checkout" else "GET",
             "response_time": row["elapsed_ms"],
             "success": row["success"],

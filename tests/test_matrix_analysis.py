@@ -58,6 +58,30 @@ def test_matrix_analysis_adapter_matches_canonical_v2_data(task):
     }
 
 
+def test_matrix_a01_locust_transaction_rows_match_events_request_prompt():
+    task = next(
+        task for task in MATRIX_ANALYSIS
+        if task.id == "mx-a01-jtl-endpoints-locust"
+    )
+    native = _parsed(task.params["native_files"]["data"], task.fixtures[
+        task.params["native_files"]["data"]
+    ])
+    parent_rows = [row for row in native if row["row_id"] == "parent"]
+
+    assert len(parent_rows) == 1
+    assert parent_rows[0]["request_type"] == "Transaction"
+    assert task.prompt.splitlines()[0] == (
+        "Analyze a Locust per-request CSV exported by an events.request listener; "
+        "the test also fires transaction timings through events.request "
+        "(locust-plugins TransactionManager style). Identify the slow endpoint "
+        "after removing warmup and transaction parent samples."
+    )
+    assert (
+        "request_type=Transaction identifies the transaction rows fired through "
+        "events.request."
+    ) in task.user_prompt()
+
+
 @pytest.mark.parametrize("task", MATRIX_ANALYSIS, ids=lambda task: task.id)
 def test_matrix_analysis_goldens_and_independent_mutations(task, tmp_path):
     expected = analysis_reference(task.params, task.fixtures)

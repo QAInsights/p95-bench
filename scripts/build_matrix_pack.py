@@ -182,7 +182,7 @@ def _analysis_prompt(task, tool, native_files):
         "endpoints": {
             "jmeter": "Analyze a labeled JTL slice; identify the slow endpoint after removing warmup and transaction parent samples.",
             "k6": "Analyze a k6 JSON point stream; identify the slow endpoint after removing warmup and transaction parent samples.",
-            "locust": "Analyze a Locust per-request CSV exported by events.request; identify the slow endpoint after removing warmup and transaction parent samples.",
+            "locust": "Analyze a Locust per-request CSV exported by an events.request listener; the test also fires transaction timings through events.request (locust-plugins TransactionManager style). Identify the slow endpoint after removing warmup and transaction parent samples.",
             "gatling": "Analyze Gatling REQUEST/GROUP records; identify the slow endpoint after removing warmup and transaction parent samples.",
         },
         "thresholds": {
@@ -225,7 +225,7 @@ def _analysis_prompt(task, tool, native_files):
     if kind == "decomposition":
         fixture_note += f" Read the attached {native_files['spans']} sidecar."
     if kind == "endpoints" and tool == "locust":
-        fixture_note += " request_type=transaction identifies parent rows."
+        fixture_note += " request_type=Transaction identifies the transaction rows fired through events.request."
     if kind == "omission" and tool == "locust":
         fixture_note += " This per-request CSV is exported by the events.request listener."
     notes = "\n\n".join(note for note in (fixture_note, answer_note) if note)
