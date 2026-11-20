@@ -1,29 +1,3 @@
-import registry from '../data/model-registry.json' with { type: 'json' };
-
-export function selectModelVersions(models, showEarlier = false, versions = registry) {
-  const familyKey = (model) => Object.hasOwn(versions, model.model)
-    ? `registered:${versions[model.model].family}` : `unknown:${model.model}`;
-  const latest = new Map();
-  const measuredFamilies = new Set(models.filter(model => model.pack_id === 'p95-v2.0.0' && !model.not_run).map(familyKey));
-  for (const model of models) {
-    const key = familyKey(model), order = versions[model.model]?.release_order ?? 0;
-    if (model.not_run && measuredFamilies.has(key)) continue;
-    if (!latest.has(key) || order > latest.get(key).order) latest.set(key, { model: model.model, order });
-  }
-  return models.map((model) => {
-    const entry = versions[model.model];
-    const newer = latest.get(familyKey(model)).model;
-    return { ...model, family: entry?.family ?? model.model,
-      release_order: entry?.release_order ?? 0, discontinued: entry?.discontinued === true,
-      version_status: newer === model.model ? 'Latest' : 'Earlier version',
-      newer_model: newer === model.model ? null : newer };
-  }).filter((model) => showEarlier || model.newer_model === null)
-    .sort((a, b) => Number(Boolean(a.not_run)) - Number(Boolean(b.not_run))
-      || b.overall_score - a.overall_score || a.cost - b.cost || a.model.localeCompare(b.model));
-}
-
-export const score = (value) => value.toFixed(1);
-export const money = (value) => `$${value.toFixed(4)}`;
 export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'deepseek-flash' ? 'DeepSeek Flash'
   : model === 'claude-sonnet-5-5' ? 'Claude Sonnet 5.5'
@@ -44,10 +18,10 @@ export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'muse-ember-1.0' ? 'Muse Ember 1.0'
   : model === 'gpt-6.2-sol' ? 'GPT-6.2 Sol'
   : model === 'gpt-6.2-astra' ? 'GPT-6.2 Astra' : model;
+
 export const modelSlug = (model) => model.replace(/^thinkingmachines\//, '').toLowerCase()
   .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-export const shortTaskLabel = id => id.match(/^v2-([a-z]\d+)(?:-|$)/i)?.[1].toUpperCase()
-  ?? id.replaceAll('-', '').slice(0, 4).toUpperCase();
+
 export function taskCoverage(model, tasks) {
   const expected = new Set(tasks.map(task => task.id));
   const run = new Set(model.per_task_results.map(task => task.task_id)
@@ -55,12 +29,14 @@ export function taskCoverage(model, tasks) {
   const total = expected.size;
   return { run, total, partial: run < total, label: `${run}/${total} tasks run` };
 }
+
 export function costFrontier(models) {
   const sorted = models.filter(model => Number.isFinite(model.cost) && Number.isFinite(model.overall_score))
     .sort((a, b) => a.cost - b.cost || b.overall_score - a.overall_score);
   return sorted.filter((model, index) => index === 0
     || model.overall_score > Math.max(...sorted.slice(0, index).map((m) => m.overall_score)));
 }
+
 export function contributions(model, weights) {
   const present = Object.keys(model.category_scores);
   const total = present.reduce((sum, category) => sum + weights[category], 0);
@@ -68,35 +44,26 @@ export function contributions(model, weights) {
     .map(([category, weight]) => ({ category, score: model.category_scores[category],
       points: model.category_scores[category] * weight / total }));
 }
-export function scoreAttempts(attempts, weights) {
-  const groups = new Map();
-  for (const attempt of attempts) {
-    if (attempt.passed == null) continue;
-    if (!Object.hasOwn(weights, attempt.category)) throw new Error(`Unknown category: ${attempt.category}`);
-    if (!groups.has(attempt.category)) groups.set(attempt.category, []);
-    groups.get(attempt.category).push(attempt);
-  }
-  const category_scores = Object.fromEntries([...groups].map(([category, values]) =>
-    [category, 100 * values.filter(value => value.passed).length / values.length]));
-  const measured_weight = [...groups.keys()].reduce((sum, category) => sum + weights[category], 0);
-  const overall_score = contributions({ category_scores }, weights).reduce((sum, row) => sum + row.points, 0);
-  return { overall_score, category_scores, measured_weight };
-}
+
 export const bestWithin = (models, budget) => [...models].filter((m) => Number.isFinite(m.cost)
   && Number.isFinite(m.overall_score) && m.cost <= budget)
   .sort((a, b) => b.overall_score - a.overall_score || a.cost - b.cost)[0] ?? null;
-export function toolScore(model, tool) {
-  const values = model.per_task_results.filter(t => t.tool === tool).map(attemptFraction).filter(value => value !== null);
-  return values.length ? 100 * values.reduce((sum, value) => sum + value, 0) / values.length : null;
-}
+
 export function attemptFraction(attempt) {
   if (Number.isFinite(attempt?.score) && attempt.score >= 0 && attempt.score <= 1) return attempt.score;
   return typeof attempt?.passed === 'boolean' ? Number(attempt.passed) : null;
 }
+
+export function toolScore(model, tool) {
+  const values = model.per_task_results.filter(t => t.tool === tool).map(attemptFraction).filter(value => value !== null);
+  return values.length ? 100 * values.reduce((sum, value) => sum + value, 0) / values.length : null;
+}
+
 export function toolScoreLabel(model, tool) {
   const value = toolScore(model, tool);
-  return value === null ? 'Not run' : score(value);
+  return value === null ? 'Not run' : value.toFixed(1);
 }
+
 export function taskResult(model, taskId) {
   const attempts = model.per_task_results.filter((task) => task.task_id === taskId);
   if (!attempts.length) return null;
@@ -113,86 +80,5 @@ export function taskResult(model, taskId) {
     label: attempts.length === 1 ? (passed ? 'Pass' : 'Fail') : `${passed}/${attempts.length} pass`,
     detail: attempts.length === 1 ? attempts[0].detail : attempts.map((attempt, index) =>
       `Attempt ${index + 1}: ${attempt.passed ? 'Pass' : 'Fail'} · ${attempt.detail}`).join('\n'),
-  };
-}
-
-const replayTool = (tool) => tool?.trim().toLowerCase() || 'none';
-const toolLabels = { none: 'General', jmeter: 'JMeter', k6: 'k6', gatling: 'Gatling', locust: 'Locust' };
-const toolOrder = ['none', 'jmeter', 'k6', 'gatling', 'locust'];
-export const replayToolLabel = (tool) => toolLabels[tool] ?? tool;
-
-export function replayTools(models, tasks = []) {
-  const tools = new Set([
-    ...tasks.map(task => replayTool(task.tool)),
-    ...models.flatMap(model => model.per_task_results.map(task => replayTool(task.tool))),
-  ]);
-  return [...tools].sort((a, b) => {
-    const order = tool => toolOrder.includes(tool) ? toolOrder.indexOf(tool) : toolOrder.length;
-    return order(a) - order(b) || a.localeCompare(b, 'en');
-  });
-}
-
-export function replayToolStats(model, tasks, tool, landed = null) {
-  const stats = { tool, label: replayToolLabel(tool), pass: 0, partial: 0, fail: 0, notrun: 0, total: 0, cats: {} };
-  const byTask = new Map();
-  model.per_task_results.forEach((task, index) => {
-    if (replayTool(task.tool) !== tool) return;
-    if (!byTask.has(task.task_id)) byTask.set(task.task_id, []);
-    byTask.get(task.task_id).push({ task, index });
-  });
-  const inventory = tasks.filter(task => replayTool(task.tool) === tool);
-  const slots = inventory.length
-    ? inventory.map(task => ({ id: task.id, category: task.category }))
-    : [...byTask.entries()].map(([id, entries]) => ({ id, category: entries[0].task.category }));
-  for (const slot of slots) {
-    stats.total++;
-    const cat = stats.cats[slot.category] ?? (stats.cats[slot.category] = { pass: 0, total: 0 });
-    cat.total++;
-    const entries = byTask.get(slot.id) ?? [];
-    const values = entries.map(entry => attemptFraction(entry.task)).filter(value => value !== null);
-    if (!values.length || entries.some(entry => landed !== null && !landed.has(entry.index))) {
-      stats.notrun++;
-      continue;
-    }
-    const fraction = values.reduce((sum, value) => sum + value, 0) / values.length;
-    if (fraction === 1) { stats.pass++; cat.pass++; }
-    else if (fraction > 0) stats.partial++;
-    else stats.fail++;
-  }
-  return stats;
-}
-
-export const replayCellLabel = (stats) => !stats.total ? 'No tasks yet'
-  : stats.notrun === stats.total ? 'Not run' : `${stats.pass}/${stats.total} pass`;
-
-export function replayToolDescription(model, tasks, tool) {
-  const stats = replayToolStats(model, tasks, tool);
-  const cats = Object.keys(stats.cats).sort()
-    .map(category => `${category[0].toUpperCase() + category.slice(1)} ${stats.cats[category].pass}/${stats.cats[category].total}`)
-    .join(' · ');
-  return `${stats.label} ${replayCellLabel(stats)}: ${stats.pass} pass, ${stats.partial} partial, ${stats.fail} fail, ${stats.notrun} not run` +
-    (cats ? `. ${cats}` : '');
-}
-
-export function replayScore(model, landed, weights) {
-  const quality = contributions(model, weights).reduce((total, { category, points }) => {
-    const tasks = model.per_task_results.map((task, index) => ({ task, index }))
-      .filter(({ task }) => task.category === category);
-    const sum = tasks.reduce((sum, { task }) => sum + (attemptFraction(task) ?? 0), 0);
-    const received = tasks.reduce((sum, { task, index }) => sum + (landed.has(index) ? attemptFraction(task) ?? 0 : 0), 0);
-    return total + (sum ? points * received / sum : 0);
-  }, 0);
-  return model.pack_id === 'p95-v2.0.0' ? (model.quality_score ? quality * model.overall_score / model.quality_score : 0) : quality;
-}
-
-export function budgetScale(models) {
-  const costs = models.map((model) => model.cost).filter((cost) => Number.isFinite(cost) && cost > 0);
-  const min = costs.length ? Math.min(...costs) * .65 : .001;
-  const max = costs.length ? Math.max(...costs) * 1.22 : 1;
-  const start = Math.log10(min), range = Math.log10(max) - start;
-  return {
-    min, max,
-    toCost: (position) => 10 ** (start + Math.max(0, Math.min(1000, position)) / 1000 * range),
-    toPosition: (cost) => cost > 0 ? Math.max(0, Math.min(1000, (Math.log10(cost) - start) / range * 1000)) : 0,
   };
 }

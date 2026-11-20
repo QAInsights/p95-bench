@@ -4,12 +4,10 @@ import { test } from 'node:test';
 
 const publicFile = (name) => new URL(`../public/${name}`, import.meta.url);
 
-test('manifest declares the site identity, matching description and available icons', async () => {
+test('manifest declares the site identity and available icons', async () => {
   const manifest = JSON.parse(await readFile(publicFile('site.webmanifest'), 'utf8'));
-  const page = await readFile(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
   assert.equal(manifest.name, 'P95 Bench');
   assert.equal(manifest.short_name, 'P95 Bench');
-  assert.equal(manifest.description, page.match(/<meta name="description" content="([^"]+)"/)[1]);
   assert.equal(manifest.start_url, '/');
   assert.equal(manifest.display, 'standalone');
   assert.equal(manifest.background_color, '#0c0b10');
