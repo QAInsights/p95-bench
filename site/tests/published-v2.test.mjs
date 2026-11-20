@@ -2,11 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { loadTaskData } from '../scripts/build-data.mjs';
-import { makePackCatalog, resolvePack } from '../src/lib/packs.mjs';
-import { replayScore, selectModelVersions } from '../src/lib/scores.mjs';
 
 const data = JSON.parse(await readFile(new URL('../src/data/leaderboard-p95-v2.0.0.json', import.meta.url)));
-const v1 = JSON.parse(await readFile(new URL('../src/data/leaderboard.json', import.meta.url)));
 const { tasks } = await loadTaskData({ packId: 'p95-v2.0.0' });
 const PUBLISHED = ['deepseek-flash', 'deepseek-v4-pro'];
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
@@ -37,16 +34,4 @@ test('published v2 results cover the 40 public tasks with no held-out aggregates
     near(model.quality_score, quality);
     near(model.overall_score, .95 * model.quality_score + .05 * model.efficiency_score);
   }
-});
-
-test('v2 is the default and selects the latest family model with results', () => {
-  const catalog = makePackCatalog(v1, data, { v1: [], v2: tasks }, []);
-  assert.equal(resolvePack(null, catalog), 'v2');
-  assert.equal(resolvePack('invalid', catalog), 'v2');
-  assert.equal(resolvePack('v1', catalog), 'v1');
-  assert.equal(resolvePack('v2', catalog), 'v2');
-  const latest = selectModelVersions(catalog.v2.models);
-  for (const model of PUBLISHED) assert.equal(latest.find(entry => entry.model === model).not_run, undefined);
-  assert.ok(selectModelVersions(catalog.v2.models, true).some(model => model.model === 'Qwen-Ambassador/Qwen3.8-Max' && model.not_run));
-  assert.ok(!selectModelVersions(catalog.v1.models).some(model => model.model === 'Qwen-Ambassador/Qwen3.7-Max'));
 });

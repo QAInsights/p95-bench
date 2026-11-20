@@ -1,71 +1,20 @@
 ---
 import "@fontsource/bricolage-grotesque/latin-400.css";
 import "@fontsource/bricolage-grotesque/latin-600.css";
-import "@fontsource/bricolage-grotesque/latin-800.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
-import "../styles/global.css";
-import "../styles/jelly-wordmark.css";
 import "../styles/geist.css";
-import data from "../data/leaderboard.json";
-import { name, toolScore, toolScoreLabel, selectModelVersions } from "../lib/scores.mjs";
-import UnitMatrix from "../components/UnitMatrix.astro";
-import Heatmap from "../components/Heatmap.astro";
-import "../styles/scatter.css";
-import "../styles/rolling-numbers.css";
-import "../styles/packs.css";
-import { packCatalog } from "../lib/pack-catalog.mjs";
-import { packLabels, resolvePack } from "../lib/packs.mjs";
-import Scenarios from "../components/Scenarios.astro";
-import PackExplainer from "../components/PackExplainer.astro";
+import "../styles/board.css";
+import data from "../data/leaderboard-p95-v2.0.0.json";
+import { boardModels, boardTasks, categoryLabels, scatter, taskCode, taskScore, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
 
-const { weights } = data;
-const models = selectModelVersions(data.models);
-const allModels = selectModelVersions(data.models, true);
-const tasks = packCatalog.v1.tasks;
-const colors = {
-  authoring: "#6b2a7a",
-  correlation: "#c4416a",
-  workload: "#ff7a3d",
-  analysis: "#ffc94a",
-  concepts: "#a587e8",
-  repair: "#2a1a4a",
-  migration: "#75688b",
-};
-const categories = Object.keys(weights);
-const active = categories.filter((c) =>
-  models.some((m) => c in m.category_scores),
-);
-const inactive = categories.filter((c) => !active.includes(c));
-const activeWeight = active.reduce((sum, c) => sum + weights[c], 0);
-const totalSamples = models.reduce(
-  (sum, m) => sum + m.per_task_results.length,
-  0,
-);
-const uniqueTasks = new Set(
-  models.flatMap((m) => m.per_task_results.map((t) => t.task_id)),
-).size;
-const latestDate = models
-  .map((m) => m.run_date)
-  .filter(Boolean)
-  .sort()
-  .at(-1);
-const latestRun = latestDate
-  ? new Date(latestDate)
-      .toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        timeZone: "UTC",
-      })
-      .toUpperCase()
-  : "PUBLISHED RUNS";
-const toolRanking = [...allModels].sort(
-  (a, b) => (toolScore(b, "jmeter") ?? -1) - (toolScore(a, "jmeter") ?? -1),
-);
-const k6Ranking = [...allModels].sort(
-  (a, b) => (toolScore(b, "k6") ?? -1) - (toolScore(a, "k6") ?? -1),
-);
+const models = boardModels(data);
+const tasks = boardTasks(data);
+const categories = Object.keys(data.weights);
+const plot = scatter(models);
+const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
+const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";
+const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
 ---
 
 <!doctype html>
@@ -73,481 +22,147 @@ const repo = "https://github.com/QAInsights/p95-bench";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="text-scale" content="scale" />
-    <meta name="description" content="An open benchmark for AI on performance test scripting and engineering. Real model runs, executable JMeter tests and transparent scoring." />
+    <meta name="description" content="P95 Bench measures how well language models write, fix and analyse performance tests in JMeter and k6." />
     <meta name="theme-color" content="#0c0b10" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preload" href="/fonts/GeistPixel-Square.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/GeistPixel-Grid.woff2" as="font" type="font/woff2" crossorigin />
-    <title>P95 Bench · Under load</title>
+    <title>P95 Bench</title>
   </head>
   <body>
-    <a class="skip" href="#opening-title">Skip to experience</a>
-    <header>
-      <div class="brand-group">
-        <a class="wordmark" href="/" aria-label="P95 Bench, home"
-          ><img
-            src="/favicon.svg"
-            width="27"
-            height="27"
-            alt=""
-            aria-hidden="true"
-          />
-          <span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a
-        ><label class="version-switch" for="show-versions"><input id="show-versions" type="checkbox" switch role="switch" aria-describedby="versions-help" />Show earlier versions</label>
-        <div class="pack-switch" role="group" aria-label="Benchmark pack">
-          {Object.keys(packCatalog).map(pack => <button type="button" data-pack={pack} aria-pressed={String(pack === resolvePack(null, packCatalog))}>{packLabels[pack]}</button>)}
-        </div>
-        <p class="sr" id="versions-help">Latest means the newest benchmarked release in each family. Earlier versions remain fully ranked when shown. Discontinued means the provider no longer offers the model.</p>
-      </div><div class="header-tools">
-        <a class="header-link" href="#method">Method</a><a
-          class="header-link"
-          href={repo}>GitHub ↗</a
-        ><span class="muted" id="published-date">{latestRun}</span><span class="pill"
-          ><span class="dot"></span><span data-run-count>{models.length}</span> PUBLISHED RUNS</span
-        ><button class="control" id="fullscreen" aria-label="Enter fullscreen"
-          ><span aria-hidden="true">⛶</span><span class="fullscreen-label">
-            Fullscreen</span
-          ><span class="key">F</span></button>
-      </div>
+    <header class="top">
+      <a class="wordmark" href="/" aria-label="P95 Bench, home"><img src="/favicon.svg" width="24" height="24" alt="" aria-hidden="true" /><span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a>
+      <nav aria-label="Site"><a href="#rankings">Rankings</a><a href="#tasks">Tasks</a><a href="#method">Method</a><a href={repo}>GitHub ↗</a></nav>
     </header>
-    <nav class="rail" aria-label="Page sections"></nav>
-    <main id="experience">
-      <section class="scene" id="scene-1" data-section-label="Live run">
-        <div class="scene-head replay-head">
-          <div class="scene-intro">
-            <p class="eyebrow">
-              <b>01 / Live run</b> &nbsp; A replay of real results
-            </p><h1 id="opening-title" tabindex="-1">
-              Put every model<br /> under load.
-            </h1><p class="subcopy">
-              Open benchmarking for AI performance test scripting and
-              engineering.
-            </p>
-          </div><div class="replay-stats">
-            <div>
-              <div class="big-counter">
-                <span id="leading-score">0.00</span><span id="leading-empty" hidden>—</span><small> / 100</small>
-              </div><p class="stat-label" id="leading-label">LEADING WEIGHTED SCORE</p><p class="pack-quality" id="leading-quality" hidden></p>
-            </div><div>
-              <div class="sample-count">
-                <span id="sample-count">0</span><small> / <span data-sample-total>{totalSamples}</span></small>
-              </div><p class="stat-label">SAMPLES LANDED</p>
-            </div>
-          </div>
-        </div>
-        <div class="run-toolbar">
-          <span class="run-state" id="run-state"
-            >REPLAYING PUBLISHED SAMPLES</span
-          ><div class="run-buttons">
-            <button class="control" id="pause">Pause</button><button
-              class="control"
-              id="finish">Settle results ↗</button>
-          </div>
-        </div>
-        <div class="run-board">
-        <div class="sample-head run-head">
-          <span>#</span><span>MODEL / PROVIDER</span><div
-            class="tool-heads"
-            id="tool-heads"
-          ></div><span style="text-align:right">SCORE</span>
-        </div><div class="lanes" id="lanes"></div>
-        </div>
-        <div id="run-tip" role="tooltip" hidden></div>
-        <div class="sr" id="lane-descriptions"></div>
-        <div class="scene-foot">
-          <div class="legend-inline">
-            <span><i style="background:var(--lime)"></i>Pass</span><span
-              ><i style="background:var(--fail)"></i>Fail ×</span
-            ><span class="partial-key"><i style="background:color-mix(in srgb, var(--lime) 50%, var(--fail))"></i>Partial</span><span><i class="unrun-key"></i>Not run</span><span>Hover a tool cell for details · press a cell or lane to inspect ↗</span>
-          </div><span
-            ><span data-task-count>{uniqueTasks}</span> tasks · <span data-model-count>{models.length}</span> models · Published attempts<br
-            /><b>Animated replay, not a running benchmark.</b></span>
+
+    <main>
+      <section class="intro">
+        <h1><span class="lime">P95 Bench</span> measures how well language models write, fix and analyse performance tests in JMeter and k6.</h1>
+        <p class="meta">{tasks.length} public tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
+      </section>
+
+      <section aria-labelledby="score-title">
+        <h2 id="score-title" class="label">Score <span>/ 100</span></h2>
+        <ol class="bars">
+          {models.map(m => (
+            <li>
+              <span class="bar-name">{m.name}</span>
+              <span class="bar-track"><span class="bar-fill" style={`width:${m.score}%;background:${m.color}`}></span></span>
+              <span class="bar-value num">{m.score.toFixed(1)}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {plot.points.length > 1 && (
+        <section aria-labelledby="value-title">
+          <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length} tasks, log scale</span></h2>
+          <div class="table-wrap"><svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost">
+            {plot.yTicks.map(t => <g><line x1={plot.left} x2={plot.width - plot.right} y1={t.y} y2={t.y} /><text x={plot.left - 10} y={t.y + 4} text-anchor="end">{t.value}</text></g>)}
+            {plot.xTicks.map(t => <text x={t.x} y={plot.height - 10} text-anchor="middle">{t.label}</text>)}
+            {plot.points.map(p => <g class="point"><circle cx={p.x} cy={p.y} r="6" fill={p.color} /><text class="point-label" x={p.x + 12} y={p.y + 4}>{p.name}</text></g>)}
+          </svg></div>
+        </section>
+      )}
+
+      <section id="rankings" aria-labelledby="rankings-title">
+        <h2 id="rankings-title" class="label">Rankings</h2>
+        <div class="table-wrap">
+          <table class="rankings">
+            <thead><tr><th>#</th><th>Model</th><th class="n">Score</th><th class="n">Quality</th><th class="n">Efficiency</th><th class="n">Cost</th><th class="n">Output tokens</th><th class="n">Time</th></tr></thead>
+            <tbody>
+              {models.map((m, i) => (
+                <tr>
+                  <td class="rank">{i + 1}</td>
+                  <td><span class="swatch" style={`background:${m.color}`}></span>{m.name} <span class="provider">{m.providerLabel}</span></td>
+                  <td class="n strong">{m.score.toFixed(1)}</td>
+                  <td class="n">{m.quality.toFixed(1)}</td>
+                  <td class="n">{m.efficiency.toFixed(1)}</td>
+                  <td class="n">{formatCost(m.cost)}</td>
+                  <td class="n">{formatTokens(m.outputTokens)}</td>
+                  <td class="n">{formatMinutes(m.latency)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
-      <UnitMatrix models={data.models} tasks={tasks} />
-      <Heatmap models={data.models} tasks={tasks} />
-      <section class="scene" id="scene-2" data-section-label="Flame stack">
-        <div class="scene-head stack-top">
-          <div class="scene-intro">
-            <p class="eyebrow">
-              <b>02 / Flame stack</b> &nbsp; Follow the contribution
-            </p><h2 tabindex="-1">Where the score<br />catches fire.</h2><p
-              class="subcopy"
-            >
-              Every segment earns its space. Zoom into a category to find what
-              holds up.
-            </p>
-          </div><aside class="stack-info" aria-label="Selected category">
-            <strong id="stack-info-title">{activeWeight} active points</strong
-            ><p id="stack-info-detail">
-              Scores are normalized across the <span data-active-count>{active.length}</span> categories with tasks.
-              Empty categories never count as zero.
-            </p>
-          </aside>
-        </div>
-        <div class="stack-tools">
-          <nav class="breadcrumb" aria-label="Flame zoom">
-            <button id="zoom-out">All categories</button><span id="zoom-path"
-              >/ Weighted contribution</span>
-          </nav><span class="muted" style="font-size:0.75rem"
-            >HOVER TO LIFT · CLICK TO ZOOM</span>
-        </div>
-        <div id="flames"></div><div
-          id="category-legend"
-          class="legend"
-          aria-label="Zoom into category"
-        >
-        </div><div class="not-run" id="not-run">
-          {
-            inactive.map((c) => (
-              <div class="empty-frame">
-                <>
-                  <b>
-                    {c[0].toUpperCase() + c.slice(1)} / weight {weights[c]}
-                  </b>
-                  <span>Not yet benchmarked</span>
-                </>
-              </div>
-            ))
-          }
-        </div><div class="scene-foot">
-          <span
-            >Segment width = category score × weight / <span data-active-weight>{activeWeight}</span>.<br />In
-            category view, width = category score.</span
-          ><span
-            >THE UNMEASURED CATEGORIES<br /><b
-              >Visible absence. No invented scores.</b
-            ></span>
+
+      <section aria-labelledby="categories-title">
+        <h2 id="categories-title" class="label">By category <span>quality / 100, weight in brackets</span></h2>
+        <div class="table-wrap">
+          <table class="categories">
+            <thead><tr><th>Model</th>{categories.map(c => <th class="n">{categoryLabels[c] ?? c} <span class="weight">({data.weights[c]}%)</span></th>)}</tr></thead>
+            <tbody>
+              {models.map(m => (
+                <tr>
+                  <td><span class="swatch" style={`background:${m.color}`}></span>{m.name}</td>
+                  {categories.map(c => <td class="n heat" style={`--t:${tone(m.categories[c]) ?? 0}%`}>{Number.isFinite(m.categories[c]) ? m.categories[c].toFixed(0) : "—"}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
-      <section class="scene" id="scene-3" data-section-label="Value frontier">
-        <div class="scene-head frontier-head">
-          <div class="scene-intro">
-            <p class="eyebrow">
-              <b>03 / Value frontier</b> &nbsp; Spend with intent
-            </p><h2 tabindex="-1">Performance.<br /> Priced in.</h2><p
-              class="subcopy"
-            >
-              Explore cost, output tokens and response latency. Drag the budget handle in Cost view.
-            </p>
-          </div><div class="value-winner">
-            <p class="eyebrow">BEST WITHIN YOUR BUDGET</p><h3 id="winner-name">
-            </h3><p class="winner-meta" id="winner-meta"></p>
+
+      <section id="tasks" aria-labelledby="tasks-title">
+        <h2 id="tasks-title" class="label">Every task <span>brighter is better · hover a cell or open the table below</span></h2>
+        <div class="table-wrap">
+          <div class="grid" style={`--cols:${tasks.length + groups.length - 1}`}>
+            <span class="grid-corner"></span>
+            {groups.map((g, gi) => <>
+              {gi > 0 && <span class="grid-gap"></span>}
+              <span class="grid-group" style={`grid-column: span ${g.tasks.length}`}>{categoryLabels[g.category]}</span>
+            </>)}
+            {models.map(m => <>
+              <span class="grid-name">{m.name}</span>
+              {groups.map((g, gi) => <>
+                {gi > 0 && <span class="grid-gap"></span>}
+                {g.tasks.map(t => {
+                  const value = taskScore(m, t.id);
+                  return <span class:list={["cell", value === null && "missing"]} style={value === null ? "" : `--t:${value}%`}
+                    title={`${taskCode(t.id)} · ${t.label} · ${t.tool === "k6" ? "k6" : "JMeter"}\n${m.name}: ${value === null ? "not run" : `${value}/100`}`}
+                    aria-label={`${m.name}, ${t.label}: ${value === null ? "not run" : `${value} of 100`}`}></span>;
+                })}
+              </>)}
+            </>)}
           </div>
         </div>
-        <div class="scatter-controls" role="group" aria-label="Scatter horizontal axis">{['Cost', 'Output tokens', 'Latency'].map((label, index) => <button type="button" class="control" data-scatter-axis={['cost', 'tokens', 'latency'][index]} aria-pressed={index === 0}>{label}</button>)}</div>
-        <figure class="chart-shell">
-          <svg
-            id="scatter"
-            class="scatter"
-            aria-labelledby="chart-title chart-desc"
-            ><title id="chart-title">
-              Published model score versus run cost
-            </title><desc id="chart-desc"
-              >Higher is better. Costs use a logarithmic horizontal scale. The
-              lime line joins nondominated runs. Use the labeled budget slider
-              or select a numbered model to inspect it.</desc
-            ></svg
-          ><div class="budget-slider-wrap">
-            <label class="sr" for="budget"
-              >Maximum estimated run cost in USD, logarithmic scale</label
-            ><input
-              id="budget"
-              type="range"
-              min="0"
-              max="1000"
-              step="1"
-              aria-describedby="budget-hint"
-            />
-          </div><div class="budget-label">
-            <label for="budget"
-              >YOUR RUN BUDGET <span class="accent">↔</span></label
-            ><output id="budget-value" for="budget"></output>
-          </div><div class="chart-models" id="chart-models"></div><figcaption
-            id="budget-hint"
-            class="chart-caption"
-          >
-            <b id="scatter-figure">FIG.</b> · <span id="scatter-fit"></span> · ◇ beats trend.<br />Source: published runs, n = <span id="scatter-source"></span>. Descriptive fit, not a causal claim.
-          </figcaption>
-        </figure>
-        <details class="data-disclosure">
-          <summary>Show data table</summary><div role="region" tabindex="0" aria-label="Scatter model data" style="overflow:auto;max-inline-size:100%"><table>
-            <caption
-              ><span data-model-count>{models.length}</span> visible published runs. Run totals; output includes reasoning. Score is out of 100. Cost is a list-price estimate, not an invoice. No confidence intervals from single runs.</caption
-            ><thead
-              ><tr
-                ><th scope="col">Rank</th><th scope="col">Model</th><th scope="col">Score</th><th
-                  scope="col">Cost (USD)</th
-                ><th scope="col">Provider</th><th scope="col">Output tokens</th><th scope="col">Latency (s)</th></tr
-              ></thead
-            ><tbody id="chart-table"></tbody>
+        <details class="task-table">
+          <summary>All task scores as a table</summary>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Task</th><th>Category</th><th>Tool</th>{models.map(m => <th class="n">{m.name}</th>)}</tr></thead>
+            <tbody>
+              {tasks.map(t => (
+                <tr>
+                  <th scope="row"><span class="code">{taskCode(t.id)}</span> {t.label}</th>
+                  <td>{categoryLabels[t.category] ?? t.category}</td>
+                  <td>{t.tool === "k6" ? "k6" : "JMeter"}</td>
+                  {models.map(m => <td class="n">{taskScore(m, t.id) ?? "—"}</td>)}
+                </tr>
+              ))}
+            </tbody>
           </table></div>
         </details>
-        <div class="scene-foot">
-          <span
-            >Direct provider APIs. Published tasks and attempts.<br />No
-            confidence intervals from single runs.</span
-          ><span
-            >FRONTIER ≠ EVERY CAPABILITY<br /><b
-              >Inspect the tasks, not just the point.</b
-            ></span>
-        </div>
-      </section>
-      <section class="scene" id="scene-4" data-section-label="Model focus">
-        <div class="scene-head focus-head">
-          <div>
-            <p class="eyebrow">
-              <b>04 / Model focus</b> &nbsp; The evidence beneath the score
-            </p><h2 id="focus-name" tabindex="-1"></h2><p
-              class="muted"
-              id="focus-provider"
-              style="margin-top:10px"
-            >
-            </p>
-            <p id="focus-version" class="model-version"></p>
-          </div><div class="model-controls">
-            <button
-              class="control"
-              id="previous-model"
-              aria-label="Previous model">←</button
-            ><label class="sr" for="model-picker">Choose a model</label><select
-              id="model-picker"></select><button
-              class="control"
-              id="next-model"
-              aria-label="Next model">→</button>
-          </div>
-        </div><div class="profile">
-          <div class="profile-left">
-            <figure>
-              <div class="ring-wrap">
-                <svg
-                  id="ring"
-                  viewBox="0 0 260 260"
-                  role="img"
-                  aria-label="Weighted category score ring"></svg><div
-                  class="ring-center"
-                >
-                  <div class="ring-score" id="focus-score"></div><p
-                    class="muted"
-                  >
-                    WEIGHTED / 100
-                  </p>
-                </div>
-              </div><figcaption class="ring-caption" id="ring-caption">
-                {active.length} measured categories. Every point traceable.
-              </figcaption>
-            </figure><div id="cat-keys" class="cat-keys"></div>
-          </div><div class="profile-right">
-            <div class="task-header">
-              <h3>Samples, not promises.</h3><span
-                class="muted"
-                id="focus-passed"></span>
-            </div><div class="profile-tools" id="profile-tools" role="group" aria-label="Filter task results by tool"></div><div class="task-grid" id="task-grid" role="region" aria-label="Task results" tabindex="0"></div><div
-              class="metrics"
-            >
-              <div>
-                <div class="metric-value" id="focus-cost"></div><p
-                  class="metric-label"
-                >
-                  ESTIMATED RUN COST
-                </p><p class="metric-note" id="focus-cost-note">USD · list-price estimate</p>
-              </div><div>
-                <div class="metric-value" id="focus-tokens"></div><p
-                  class="metric-label"
-                >
-                  TOTAL TOKENS
-                </p><p class="metric-note" id="focus-token-detail"></p>
-              </div><div>
-                <div class="metric-value" id="focus-latency"></div><p
-                  class="metric-label"
-                >
-                  API LATENCY
-                </p><p class="metric-note" id="focus-latency-detail">
-                  Total across published requests
-                </p>
-              </div>
-            </div><p class="profile-provenance" id="focus-provenance"></p>
-          </div>
-        </div><div class="scene-foot">
-          <span
-            >← → to change model · Select any lane or chart point to open this
-            view.<br />Pass/fail reflects each task's exact grading contract.
-            <a href="#scenarios">Explore scenarios ↗</a></span
-          ><span
-            >REAL ARTIFACTS. OPEN HARNESS.<br /><b
-              >No hidden prompts. No synthetic models.</b
-            ></span>
-        </div>
-      </section>
-      <Scenarios pack="v1" tasks={tasks} models={packCatalog.v1.models} />
-      <PackExplainer pack="v1" data={packCatalog.v1} />
-      <section class="reading-section" id="tools" data-section-label="Tools">
-        <p class="eyebrow">07 / PICK YOUR INSTRUMENT</p><h2 tabindex="-1">
-          Built for the tools you use.
-        </h2>
-        <p class="subcopy">Executable plans first. More engines next.</p>
-        <div class="tools-grid">
-          <article class="tool-card active-tool">
-            <h3>JMeter</h3><div class="tool-heading">
-              Real scripts.<br />Real checkouts.
-            </div><p class="tool-note mono">Executable task pass rate</p>
-            <ol role="list" data-tool-ranking="jmeter">
-              {
-                toolRanking.map((m) => (
-                  <li data-tool-model={m.model} data-tool-provider={m.provider} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
-                    <>
-                      <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
-                      <b class={toolScore(m, "jmeter") === null ? 'tool-unrun' : undefined}>{toolScoreLabel(m, "jmeter")}</b>
-                    </>
-                  </li>
-                ))
-              }
-            </ol>
-          </article>
-          <article class="tool-card active-tool">
-            <h3>k6</h3><div class="tool-heading">
-              Real scripts.<br />Real checkouts.
-            </div><p class="tool-note mono">Executable task pass rate</p>
-            <ol role="list" data-tool-ranking="k6">
-              {
-                k6Ranking.map((m) => (
-                  <li data-tool-model={m.model} data-tool-provider={m.provider} hidden={m.newer_model !== null} class={m.discontinued ? 'is-discontinued' : undefined}>
-                    <span>{name(m.model)}<span class="model-version">{m.version_status}{m.newer_model && <small class="newer-tag">newer: {name(m.newer_model)}</small>}{m.discontinued && <span> · Discontinued</span>}</span></span>
-                    <b class={toolScore(m, "k6") === null ? 'tool-unrun' : undefined}>{toolScoreLabel(m, "k6")}</b>
-                  </li>
-                ))
-              }
-            </ol>
-          </article>
-          {
-            ["Gatling", "Locust"].map((tool, i) => (
-              <article class="tool-card">
-                <>
-                  <h3>{tool}</h3>
-                  <div class="tool-heading">
-                    Next in
-                    <br />
-                    the pipeline.
-                  </div>
-                  <div class="mini-flame" aria-hidden="true">
-                    {[1, 2, 3].map((n) => (
-                      <i
-                        style={`--heat:${Object.values(colors)[i + n - 1]};width:${90 - n * 20}%`}
-                      />
-                    ))}
-                  </div>
-                  <p class="coming mono">Graders coming</p>
-                </>
-              </article>
-            ))
-          }
-        </div>
-        <p class="footnote">
-          JMeter and k6 scores = percentage of executable tasks passed per tool. No scores are
-          assigned to tools without graders. Provider timeouts with no returned
-          attempts are shown as Not run, not counted as failures.
-        </p>
       </section>
 
-      <section class="reading-section methodology" id="method" data-section-label="Methodology">
-        <div>
-          <p class="eyebrow">08 / SHOW YOUR WORK</p><h2 tabindex="-1">
-            A benchmark.<br />Not a black box.
-          </h2><a class="repo-link mono" href={repo}
-            >Explore the harness on GitHub ↗</a>
-        </div>
-        <div class="method-copy">
-          <p id="method-pack">Showing p95-v1 · 15 tasks · binary pass/fail.</p>
-          <p data-v1-method>
-            Direct provider APIs. Temperature 0 where supported; omitted for
-            Claude Sonnet 5.5, Opus 5.5, GPT-6.2 Sol and Astra because their
-            APIs reject it. OpenAI uses max_completion_tokens instead of
-            max_tokens. One fixed system prompt and identical task prompts for
-            every model. No routing layer.
-          </p>
-          <p data-v1-method>
-            Generated JMeter plans and k6 v1.0.0 scripts run against a loopback
-            demo shop. Passing requires successful HTTP samples, verified
-            session-aware checkouts and distinct checkout workers for isolation.
-            Completed k6 attempts were run separately and appended to original
-            attempts, preserving the original system prompt and provider settings.
-            Numeric and choice tasks use deterministic answer keys.
-          </p>
-          <p data-v1-method>
-            Category means are weighted, then renormalized over categories with
-            tasks. Unmeasured categories stay unmeasured, never zero.
-          </p>
-          <div class="weight-list mono" id="method-weights">
-            {
-              categories.map((c) => (
-                <span>
-                  <i style={`background:${colors[c]}`} />
-                  {c}
-                  <b>{weights[c]}</b>
-                </span>
-              ))
-            }
-          </div>
-          <p>
-            Cost is estimated from published peak list prices, including
-            cache-hit pricing. It is not an invoice. Latency measures provider
-            calls, excluding grading.
-          </p>
-          <p class="small-copy" data-v1-method>
-            This public seed pack is small: one run per model, not a confidence
-            interval. DeepSeek thinking is disabled. Output cap: 8,192 tokens.
-            Tool scores and overall scores measure different slices.
-          </p>
-        </div>
-        <div class="legal">
-          <span>Open source · MIT · P95 Bench</span><span
-            >© 2026 NaveenKumar Namachivayam</span>
-        </div>
-        <div class="jelly-wordmark" id="jelly-wordmark">
-          <span class="sr">P95 Bench</span>
-          <canvas aria-hidden="true"></canvas>
-        </div>
+      <section id="method" aria-labelledby="method-title" class="method">
+        <h2 id="method-title" class="label">Method</h2>
+        <ul>
+          <li>{tasks.length} public tasks across {categories.length} categories: {categories.map(c => (categoryLabels[c] ?? c).toLowerCase()).join(", ")}. Every task is in the repo.</li>
+          <li>Each model answers every task once at temperature 0 with a 16,384-token output cap, through the provider's own API.</li>
+          <li>Generated JMeter and k6 scripts run in isolated containers against a demo shop; graders award weighted checkpoints.</li>
+          <li>Score = 95% quality + 5% efficiency. Efficiency is scaled by quality and uses per-task output-token and latency budgets.</li>
+          <li>Cost is reported token usage at list price, not a provider invoice.</li>
+        </ul>
       </section>
     </main>
-    <footer>
-      <div class="footer-left">
-        <span class="line"></span><span id="scene-label">01 / LIVE RUN</span
-        ><span class="desktop-help"
-          ><span data-task-count>{uniqueTasks}</span> TASKS · <span data-model-count>{models.length}</span> MODELS · DIRECT APIs</span>
-      </div><div class="footer-right">
-        <span class="desktop-help"
-          >SCROLL TO EXPLORE &nbsp; <span data-section-shortcuts></span></span
-        ><button id="next-scene"
-          >NEXT SECTION <span aria-hidden="true">↓</span></button>
-      </div>
-    </footer><div id="status" class="sr" role="status" aria-live="polite" aria-atomic="true"></div>
-    <div id="rolling-status" class="sr" role="status" aria-live="polite" aria-atomic="true"></div>
-    <div id="fullscreen-message" class="status" hidden>
-      <span id="fullscreen-message-text"></span>
-      <button type="button" class="control" id="dismiss-fullscreen-message" aria-label="Dismiss fullscreen notice">Dismiss</button>
-    </div>
-    <noscript
-      ><p>
-        The interactive scenes need JavaScript. <a href="#tools"
-          >Read tool coverage</a
-        > or <a href="#method">explore the methodology</a> below.
-      </p></noscript
-    >
 
-    <script type="application/json" id="pack-data" set:html={JSON.stringify(packCatalog).replaceAll('<', '\\u003c')} />
-    {Object.entries(packCatalog).map(([pack, dataset]) => <template id={`pack-template-${pack}`}>
-      <UnitMatrix models={dataset.models} tasks={dataset.tasks} />
-      <Heatmap models={dataset.models} tasks={dataset.tasks} attempts={dataset.attempts} />
-      <Scenarios pack={pack} tasks={dataset.tasks} models={dataset.models} />
-      <PackExplainer pack={pack} data={dataset} />
-    </template>)}
-    <script>
-      import "../lib/fullpage.mjs";
-      import { mountJellyWordmark } from "../lib/jelly-wordmark.mjs";
-      mountJellyWordmark(document.getElementById('jelly-wordmark'));
-    </script>
+    <footer class="bottom">
+      <span>Pack {data.pack_id}</span>
+      <a href={repo}>Source and raw runs on GitHub ↗</a>
+    </footer>
   </body>
 </html>
