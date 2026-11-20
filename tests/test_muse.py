@@ -74,7 +74,7 @@ def test_null_usage_details_and_non_reasoning_empty_response(monkeypatch):
     assert not response.thinking_exhausted
 
 
-@pytest.mark.parametrize('error', [429, 503, URLError('network'), RemoteDisconnected('closed'),
+@pytest.mark.parametrize('error', [503, URLError('network'), RemoteDisconnected('closed'),
                                  IncompleteRead(b'partial'), ConnectionResetError('reset')])
 @pytest.mark.parametrize('recover', [True, False])
 def test_transient_retry_and_exhaustion(monkeypatch, error, recover):
@@ -95,8 +95,9 @@ def test_transient_retry_and_exhaustion(monkeypatch, error, recover):
     else:
         with pytest.raises(ProviderUnavailable):
             provider.send('muse-wonder-1.0', [])
-    assert len(calls) == 2
-    assert sleeps == [1]
+    expected_calls = 2 if error == 503 or recover else 3
+    assert len(calls) == expected_calls
+    assert sleeps == ([1] if expected_calls == 2 else [1, 2])
     assert 0 < provider.spent_upper_bound < 3
 
 

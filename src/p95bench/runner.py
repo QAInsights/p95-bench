@@ -195,8 +195,9 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                                            if k in extra), 16384)
                         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
                                    + output_cap * price.output) / 1_000_000
-                        reservation = ledger.reserve(maximum * (1 + (config.max_retries
-                                                                     if config else 0)))
+                        retries = (getattr(config, "max_retries", 0)
+                                   + getattr(config, "transport_retries", 0)) if config else 0
+                        reservation = ledger.reserve(maximum * (1 + retries))
                         provider.transport_attempts = 0
                         provider.response_latency_seconds = None
                     response = provider.send(model, messages)
