@@ -189,7 +189,6 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         if (!buttons.some(b => b.dataset.tool === tool)) tool = "all";
         buttons.forEach(x => x.setAttribute("aria-pressed", String(x.dataset.tool === tool)));
         document.querySelectorAll("[data-view]").forEach(el => { el.hidden = el.dataset.view !== tool; });
-        document.querySelectorAll(".grid [data-tool]").forEach(el => { el.classList.toggle("dimmed", tool !== "all" && el.dataset.tool !== tool); });
       };
       buttons.forEach(b => b.addEventListener("click", () => {
         apply(b.dataset.tool);
