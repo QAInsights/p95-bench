@@ -8,16 +8,59 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.request import urlopen
 
 from p95bench.worker import WorkerUnavailable
 
 STATE = Path.home() / ".local/state/p95-bench/tool-images.json"
-VERSIONS = {"jmeter": "5.6.3", "k6": "1.0.0", "locust": "2.47.0"}
+VERSIONS = {"jmeter": "5.6.3", "k6": "1.0.0", "locust": "2.47.0", "gatling": "3.15.1"}
 ARCHIVE = "apache-jmeter-5.6.3.tgz"
 ARCHIVE_SHA512 = ("5978a1a35edb5a7d428e270564ff49d2b1b257a65e17a759d259a9283fc17093e"
                   "522fe46f474a043864aea6910683486340706d745fcdf3db1505fd71e689083")
+MAVEN_CENTRAL = "https://maven-central.storage-download.googleapis.com/maven2/"
+
+
+def download_gatling_jars(lock_path, cache):
+    lock = json.loads(lock_path.read_text())
+    if lock.get("version") != VERSIONS["gatling"] or len(lock.get("artifacts", [])) > 128:
+        raise ValueError("Invalid Gatling artifact lock")
+    cache.mkdir(parents=True, exist_ok=True, mode=0o700)
+
+    def fetch(artifact):
+        group, name = artifact["group"], artifact["artifact"]
+        version, classifier, filename = (artifact["version"], artifact["classifier"],
+                                         artifact["filename"])
+        digest = artifact["sha256"]
+        if (not isinstance(digest, str) or len(digest) != 64
+                or any(char not in "0123456789abcdef" for char in digest)
+                or filename != f"{name}-{version}{'-' + classifier if classifier else ''}.jar"):
+            raise ValueError("Invalid Gatling artifact entry")
+        destination = cache / filename
+        if destination.is_file() and hashlib.sha256(destination.read_bytes()).hexdigest() == digest:
+            return destination
+        path = "/".join((group.replace(".", "/"), name, version, filename))
+        temporary = destination.with_suffix(".download")
+        try:
+            actual = hashlib.sha256()
+            size = 0
+            with urlopen(MAVEN_CENTRAL + path, timeout=60) as response, temporary.open("wb") as output:
+                while chunk := response.read(1048576):
+                    size += len(chunk)
+                    if size > 64 * 1048576:
+                        raise ValueError("Gatling artifact exceeds download limit")
+                    actual.update(chunk)
+                    output.write(chunk)
+            if actual.hexdigest() != digest:
+                raise ValueError(f"Gatling artifact checksum mismatch: {filename}")
+            temporary.replace(destination)
+            return destination
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        return list(pool.map(fetch, lock["artifacts"]))
 
 
 def image_state(state=None):
@@ -64,6 +107,8 @@ def build_images(state=None):
     dockerfile = Path(__file__).resolve().parents[2] / "workers/Dockerfile"
     recipe = dockerfile.read_bytes()
     locust_requirements = dockerfile.with_name("locust-requirements.txt")
+    gatling_lock = dockerfile.with_name("gatling-artifacts.json")
+    gatling_logback = dockerfile.with_name("gatling-logback.xml")
     records = {}
     with tempfile.TemporaryDirectory(dir=state.parent) as folder:
         context = Path(folder)
@@ -84,6 +129,16 @@ def build_images(state=None):
                                 "--only-binary=:all:", "--no-deps", "--require-hashes",
                                 "--dest", str(wheelhouse), "-r", str(requirements)],
                                check=True, timeout=300, env=environment)
+            elif tool == "gatling":
+                lock = context / "gatling-artifacts.json"
+                shutil.copyfile(gatling_lock, lock)
+                jars = context / "gatling-libs"
+                jars.mkdir()
+                for jar in download_gatling_jars(lock, state.parent / "gatling-jars"):
+                    shutil.copyfile(jar, jars / jar.name)
+                logback = context / "gatling-logback.xml"
+                shutil.copyfile(gatling_logback, logback)
+                requirements_hash = lock.read_bytes() + logback.read_bytes()
             image_file = context / (tool + ".iid")
             subprocess.run(["docker", "build", "--network=none", "--platform=linux/amd64",
                             "--target", tool, "--iidfile", str(image_file), str(context)],
@@ -96,9 +151,13 @@ def build_images(state=None):
     return records
 
 
-if __name__ == "__main__":
+def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["build"])
     parser.add_argument("--state", type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     print(json.dumps(build_images(args.state), indent=2))
+
+
+if __name__ == "__main__":
+    main()

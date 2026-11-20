@@ -77,7 +77,7 @@ class Worker:
             raise WorkerUnavailable("Container runtime unavailable") from error
 
     def execute(self, command, fixtures=None, *, timeout=30, output_limit=1048576, exports=None,
-                runner=None):
+                runner=None, runner_destination="/locust_runner.py"):
         if (not isinstance(command, (list, tuple)) or not command or len(command) > 64
                 or any(not isinstance(arg, str) or not arg or len(arg) > 4096 for arg in command)):
             raise ValueError("Invalid execution command")
@@ -104,9 +104,10 @@ class Worker:
         runner_mount = []
         if runner is not None:
             runner = Path(runner).resolve()
-            if (not runner.is_file() or any(ch in str(runner) for ch in (",", "\n"))):
+            if (not runner.is_file() or any(ch in str(runner) for ch in (",", "\n"))
+                    or runner_destination not in ("/locust_runner.py", "/gatling_runner.py")):
                 raise ValueError("Invalid trusted runner")
-            runner_mount = ["--mount", f"type=bind,src={runner},dst=/locust_runner.py,readonly"]
+            runner_mount = ["--mount", f"type=bind,src={runner},dst={runner_destination},readonly"]
         name = "p95-" + uuid4().hex
         with tempfile.TemporaryDirectory(dir=self.directory) as folder:
             mounts = []

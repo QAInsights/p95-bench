@@ -1,0 +1,738 @@
+{
+  "version": "3.15.1",
+  "roots": [
+    "io.gatling:gatling-app:3.15.1",
+    "io.gatling:gatling-http-java:3.15.1",
+    "io.gatling:gatling-core-java:3.15.1"
+  ],
+  "artifacts": [
+    {
+      "group": "ch.qos.logback",
+      "artifact": "logback-classic",
+      "classifier": null,
+      "version": "1.5.32",
+      "filename": "logback-classic-1.5.32.jar",
+      "sha256": "2d4cf592db78be2de4d6140434c2fec170dcb16a09e8c8b7b207dbf5e31b848a"
+    },
+    {
+      "group": "ch.qos.logback",
+      "artifact": "logback-core",
+      "classifier": null,
+      "version": "1.5.32",
+      "filename": "logback-core-1.5.32.jar",
+      "sha256": "6a904d5778d0e361a9692f9cbe68b1b0620ae0f3eda2ec2ed09102755bf036c4"
+    },
+    {
+      "group": "com.aayushatharva.brotli4j",
+      "artifact": "brotli4j",
+      "classifier": null,
+      "version": "1.23.0",
+      "filename": "brotli4j-1.23.0.jar",
+      "sha256": "5fcf13ad78d07319cc507465dcf61cbc3efee9f45c9ae1c42a9902414696bc0b"
+    },
+    {
+      "group": "com.aayushatharva.brotli4j",
+      "artifact": "native-linux-aarch64",
+      "classifier": null,
+      "version": "1.23.0",
+      "filename": "native-linux-aarch64-1.23.0.jar",
+      "sha256": "900c73dac7330ebe966071c770d2d4357c4de3f9417262ed4408dc08f2b573b6"
+    },
+    {
+      "group": "com.aayushatharva.brotli4j",
+      "artifact": "native-linux-x86_64",
+      "classifier": null,
+      "version": "1.23.0",
+      "filename": "native-linux-x86_64-1.23.0.jar",
+      "sha256": "c504e243961c4229d8e486ca8f87b757ad9a033dda471061c0134c050ddcaa7c"
+    },
+    {
+      "group": "com.aayushatharva.brotli4j",
+      "artifact": "native-osx-aarch64",
+      "classifier": null,
+      "version": "1.23.0",
+      "filename": "native-osx-aarch64-1.23.0.jar",
+      "sha256": "be3bc53688dbaff26d9d554301837de2bfa9ec09090b64d1ebf1fb6b23c28e61"
+    },
+    {
+      "group": "com.aayushatharva.brotli4j",
+      "artifact": "native-osx-x86_64",
+      "classifier": null,
+      "version": "1.23.0",
+      "filename": "native-osx-x86_64-1.23.0.jar",
+      "sha256": "392774ced607a625ac316b5efeb7065d300e722fe03d8963ab0ffb2fdd40e982"
+    },
+    {
+      "group": "com.aayushatharva.brotli4j",
+      "artifact": "native-windows-x86_64",
+      "classifier": null,
+      "version": "1.23.0",
+      "filename": "native-windows-x86_64-1.23.0.jar",
+      "sha256": "8f770f6d6c29caade53fc9fc7d848338a09471b080096ed7d5ce851e31cb9504"
+    },
+    {
+      "group": "com.aayushatharva.brotli4j",
+      "artifact": "service",
+      "classifier": null,
+      "version": "1.23.0",
+      "filename": "service-1.23.0.jar",
+      "sha256": "7f298d44dbb7688419f0179ee1dfa0e4436633272b05d38a5faf3a2b8d08697b"
+    },
+    {
+      "group": "com.eatthepath",
+      "artifact": "fast-uuid",
+      "classifier": null,
+      "version": "0.2.0",
+      "filename": "fast-uuid-0.2.0.jar",
+      "sha256": "8668a0aa07025f4ee10155e45092de52132f2176e6099c17671e431ca741febf"
+    },
+    {
+      "group": "com.fasterxml.jackson.core",
+      "artifact": "jackson-annotations",
+      "classifier": null,
+      "version": "2.21",
+      "filename": "jackson-annotations-2.21.jar",
+      "sha256": "53ca085f4a150f703f49e1aabd935bd03b43e1ea3d55d135438292af22cef56b"
+    },
+    {
+      "group": "com.fasterxml.jackson.core",
+      "artifact": "jackson-core",
+      "classifier": null,
+      "version": "2.21.3",
+      "filename": "jackson-core-2.21.3.jar",
+      "sha256": "baf8b739e9d9b93bcdb33f25046bfdb8dbd74c97de2a8698539fbe0c7eeac0bb"
+    },
+    {
+      "group": "com.fasterxml.jackson.core",
+      "artifact": "jackson-databind",
+      "classifier": null,
+      "version": "2.21.3",
+      "filename": "jackson-databind-2.21.3.jar",
+      "sha256": "f397563d8e67630c10cab8c2334ca0e55af832fa3ebde160a379c2c96d43bf25"
+    },
+    {
+      "group": "com.github.ben-manes.caffeine",
+      "artifact": "caffeine",
+      "classifier": null,
+      "version": "3.2.4",
+      "filename": "caffeine-3.2.4.jar",
+      "sha256": "9d9d2cfd681fd9272ded3d27c9930db12f89f732345975aa113ebc223bbf1224"
+    },
+    {
+      "group": "com.github.scopt",
+      "artifact": "scopt_2.13",
+      "classifier": null,
+      "version": "4.1.0",
+      "filename": "scopt_2.13-4.1.0.jar",
+      "sha256": "2e5037bda974630b046794274e344273919abf4727acfcd86352617dce68f82b"
+    },
+    {
+      "group": "com.google.errorprone",
+      "artifact": "error_prone_annotations",
+      "classifier": null,
+      "version": "2.49.0",
+      "filename": "error_prone_annotations-2.49.0.jar",
+      "sha256": "3b1003e51b8ae56fdbd7c71073e81d1683b97e6c4dff5a9151164d59b769d13c"
+    },
+    {
+      "group": "com.tdunning",
+      "artifact": "t-digest",
+      "classifier": null,
+      "version": "3.3",
+      "filename": "t-digest-3.3.jar",
+      "sha256": "dc8be5228e0733e12fbe35eeffb6f720dff576bb2eb5dee69c1c211adcd7aeb9"
+    },
+    {
+      "group": "com.typesafe",
+      "artifact": "config",
+      "classifier": null,
+      "version": "1.4.8",
+      "filename": "config-1.4.8.jar",
+      "sha256": "bf91fd793fcd9ed52cc7a0f90863794321af8797b90f3f71d7306e6b98ec8e7e"
+    },
+    {
+      "group": "com.typesafe.scala-logging",
+      "artifact": "scala-logging_2.13",
+      "classifier": null,
+      "version": "3.9.6",
+      "filename": "scala-logging_2.13-3.9.6.jar",
+      "sha256": "0ad0c3f4d89d538b3b6c300158555e266aa69cf1b5f6522aba8b5bad238eb994"
+    },
+    {
+      "group": "io.burt",
+      "artifact": "jmespath-core",
+      "classifier": null,
+      "version": "0.6.0",
+      "filename": "jmespath-core-0.6.0.jar",
+      "sha256": "14d000d71381d23041466c2b560506cbee1fb0a9d2bcb6d1c609ebe7adc66381"
+    },
+    {
+      "group": "io.burt",
+      "artifact": "jmespath-jackson",
+      "classifier": null,
+      "version": "0.6.0",
+      "filename": "jmespath-jackson-0.6.0.jar",
+      "sha256": "e0fec658325693c5db7405268fcc1a73033b92c7ed516237fea420197a24c1f9"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-app",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-app-3.15.1.jar",
+      "sha256": "46e27e79843df60c0f33d476f03161a63f9ca8a0b559fc2bf0692ea76c04e035"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-charts",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-charts-3.15.1.jar",
+      "sha256": "7caf894618f01d3e8881c2cb10cf58fcaf1bcff33e776294f9509b8149fe4131"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-commons",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-commons-3.15.1.jar",
+      "sha256": "3147a02d4dc36d3c671a6cea7297784184cc112d0cc241572a5e9ce051a53fb8"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-core",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-core-3.15.1.jar",
+      "sha256": "27dabf6ff3be7091d7a2854cc3f1108e5518707ec28e61c7ff0b647e3ed338c8"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-core-java",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-core-java-3.15.1.jar",
+      "sha256": "a8bba1b5f9c1ff1d5d560e1534bd367e78d276393a3aa3af9dd795950075aa81"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-http",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-http-3.15.1.jar",
+      "sha256": "4d8284bac766822b4465f27a4e18173bc53fdf29c350febb7d43bce40f8dd72b"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-http-client",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-http-client-3.15.1.jar",
+      "sha256": "a92043a75dedc2aaf099c11ea3809b3015df9a005a3af3e6405ca904b5ce594f"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-http-java",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-http-java-3.15.1.jar",
+      "sha256": "841e3fcd5746b9eaace3e31166706e52619af6972ba3e9f80417ff6cb985e1f7"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-jdbc",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-jdbc-3.15.1.jar",
+      "sha256": "70958ea829353b9e0fbd7d17e6aa7e5e70b09dcbf1373348c91d042b2a09b2ea"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-jdbc-java",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-jdbc-java-3.15.1.jar",
+      "sha256": "ee082568212f232cee03a5ba0dabba9483497ef837dffd745c8f0e93ae73926e"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-jms",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-jms-3.15.1.jar",
+      "sha256": "d414f3d78687e4f8c47847b38e2375d90addebd7f81c35dfc168eff48880624e"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-jms-java",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-jms-java-3.15.1.jar",
+      "sha256": "99493e82c6c2b930c5a2c0666388b9caa08cd90b8ac0956cbf43e2fd139c500d"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-jsonpath",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-jsonpath-3.15.1.jar",
+      "sha256": "6114d57e64bbca0436c5fa6a4baa181989cd51e273c8012efde655fedec16410"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-netty-util",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-netty-util-3.15.1.jar",
+      "sha256": "3491609b1b7f0f6371a51023083a2fff0e2d92075891d443e266827fb29ebae2"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-quicklens",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-quicklens-3.15.1.jar",
+      "sha256": "5faa11a67f85c7f3c3d66bc7b4be6d99d76e0e20995bac273f521c10e94aeb03"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-redis",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-redis-3.15.1.jar",
+      "sha256": "28294cf10d0e94161ad2a44bcf63c1347f7dc220d9dd431ebea360509d244e47"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-redis-java",
+      "classifier": null,
+      "version": "3.15.1",
+      "filename": "gatling-redis-java-3.15.1.jar",
+      "sha256": "f36a53bcd7445204eccfd87f55b8d6a5b8618ca8095a5e7ad8f2f77d80fc687c"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-shared-cli",
+      "classifier": null,
+      "version": "0.0.7",
+      "filename": "gatling-shared-cli-0.0.7.jar",
+      "sha256": "885fb3eef0cd0dd8cdd9893ce4de5fb0e9e853048496610a3add3c4d4163b7a1"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-shared-model_2.13",
+      "classifier": null,
+      "version": "0.1.3",
+      "filename": "gatling-shared-model_2.13-0.1.3.jar",
+      "sha256": "884bb8777f997f49bad533a75b9cdccbde40ff56d1c1657f46da324ca6b1095f"
+    },
+    {
+      "group": "io.gatling",
+      "artifact": "gatling-shared-util_2.13",
+      "classifier": null,
+      "version": "0.0.14",
+      "filename": "gatling-shared-util_2.13-0.0.14.jar",
+      "sha256": "56e19e73cf4f1eb5b0dd4e35819024b97b6e90a62ec9d677cc24f3f71d4ec359"
+    },
+    {
+      "group": "io.github.metarank",
+      "artifact": "cfor_2.13",
+      "classifier": null,
+      "version": "0.3",
+      "filename": "cfor_2.13-0.3.jar",
+      "sha256": "cb2bb449e48f3fc37d0aaabcc3b1d6533247002a76a51010dc6a3c6c54c69bbe"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-buffer",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-buffer-4.2.14.Final.jar",
+      "sha256": "1a781d45cbbf1524159840e40d16e5cbc4e6e04eaac26381b00e433eface3e35"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-codec-base",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-codec-base-4.2.14.Final.jar",
+      "sha256": "e6c72017b7118bfe90ebdcaa8bb7d02769499b07be0f1667b7719bab93e37056"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-codec-compression",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-codec-compression-4.2.14.Final.jar",
+      "sha256": "b21e149db12d13087200c8fd5c3e6cd214a1b8ffe7a886e27298a98f836dcca9"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-codec-dns",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-codec-dns-4.2.14.Final.jar",
+      "sha256": "14cd1eeec625a9022f142368d91c46c98120cc6c45ff7700a05effaa124fb87c"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-codec-http",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-codec-http-4.2.14.Final.jar",
+      "sha256": "278963b4ca3b76df1818309ff162935458e032bf159691e7c79d97c4e6e52a7f"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-codec-http2",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-codec-http2-4.2.14.Final.jar",
+      "sha256": "fde2bb176a16dd37c229995e3e0998881aa1e42abc091948fe48af372a557c1d"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-codec-socks",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-codec-socks-4.2.14.Final.jar",
+      "sha256": "cf164038b4c91c04d0bea994967a68d304cef08eea16257ca24031244f817ca0"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-common",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-common-4.2.14.Final.jar",
+      "sha256": "f157563175b07dbf252924e12390b87e3772ea0a9bf6f7505e7367f26fd722d1"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-handler",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-handler-4.2.14.Final.jar",
+      "sha256": "a23de2261ff904be5eb988eb117b185e15d9997b09304ef0a98fd587abd2e09f"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-handler-proxy",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-handler-proxy-4.2.14.Final.jar",
+      "sha256": "35d2de1d0a23611118fbebafa6cf6259c2cfffc247d446a921d0b241ef074ea1"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-resolver",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-resolver-4.2.14.Final.jar",
+      "sha256": "9c261739a11dbe90a6d2f9bf72dbfb780d776fa086e48e6a9263684e481ea257"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-resolver-dns",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-resolver-dns-4.2.14.Final.jar",
+      "sha256": "bbf9eea6aac2d83ab8b95c1077594792e3f3e1acdbcc9fdb7459dbf7954ab9c0"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-resolver-dns-classes-macos",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-resolver-dns-classes-macos-4.2.14.Final.jar",
+      "sha256": "7567f301c7ef954bfce0d5ba5208b463b25f9c0a23137d991ede3c70b220d541"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-resolver-dns-native-macos",
+      "classifier": "osx-aarch_64",
+      "version": "4.2.14.Final",
+      "filename": "netty-resolver-dns-native-macos-4.2.14.Final-osx-aarch_64.jar",
+      "sha256": "8adb72a7d354a12bf884a57c49a7916050ba71290520b6137802b2ac6a4d8ae8"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-resolver-dns-native-macos",
+      "classifier": "osx-x86_64",
+      "version": "4.2.14.Final",
+      "filename": "netty-resolver-dns-native-macos-4.2.14.Final-osx-x86_64.jar",
+      "sha256": "f7bfd7f8d133273c7cc25df5cccf1df244f751fc53dbeb899c33f48f550610b1"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-tcnative-boringssl-static",
+      "classifier": null,
+      "version": "2.0.77.Final",
+      "filename": "netty-tcnative-boringssl-static-2.0.77.Final.jar",
+      "sha256": "73a2272656e17483f65fcec78c0e93ed14d5f584bda5a7d51ea5a636d5cf60ef"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-tcnative-boringssl-static",
+      "classifier": "linux-aarch_64",
+      "version": "2.0.77.Final",
+      "filename": "netty-tcnative-boringssl-static-2.0.77.Final-linux-aarch_64.jar",
+      "sha256": "32f73dd78d8af143a0b2274cdea9ecdb406cfcd536ce200287577bd09ef9a4dc"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-tcnative-boringssl-static",
+      "classifier": "linux-x86_64",
+      "version": "2.0.77.Final",
+      "filename": "netty-tcnative-boringssl-static-2.0.77.Final-linux-x86_64.jar",
+      "sha256": "7c97f40ca4441aa2c878dd4a5ab3c73c4eb140d31a77d07a00b2396b6288f826"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-tcnative-boringssl-static",
+      "classifier": "osx-aarch_64",
+      "version": "2.0.77.Final",
+      "filename": "netty-tcnative-boringssl-static-2.0.77.Final-osx-aarch_64.jar",
+      "sha256": "7d2ff3a2527ade2949ccc5f00f48dbe84823a7997d938d47c0c2587acdf23f96"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-tcnative-boringssl-static",
+      "classifier": "osx-x86_64",
+      "version": "2.0.77.Final",
+      "filename": "netty-tcnative-boringssl-static-2.0.77.Final-osx-x86_64.jar",
+      "sha256": "05edbc65d17a5d21bd5cf8bd07b5ad20a8a7a645f1e56e1fe4194788ad301e46"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-tcnative-boringssl-static",
+      "classifier": "windows-x86_64",
+      "version": "2.0.77.Final",
+      "filename": "netty-tcnative-boringssl-static-2.0.77.Final-windows-x86_64.jar",
+      "sha256": "fb680744cb305a59373f12afdd5d49faaaa054481fc12e0c5877e71ee07328c3"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-tcnative-classes",
+      "classifier": null,
+      "version": "2.0.77.Final",
+      "filename": "netty-tcnative-classes-2.0.77.Final.jar",
+      "sha256": "d492269308336001b7a7eca02703282c3d74c8c3b4fe08c5078cfefeeda7e34f"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-transport",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-transport-4.2.14.Final.jar",
+      "sha256": "6f184bc1946a022cb4556c50f35edfd6335ccf02587ea2c520131b5774f5f063"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-transport-classes-epoll",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-transport-classes-epoll-4.2.14.Final.jar",
+      "sha256": "00a2ec5fd5f9258a09b198aee43234ec879dc0af520b8d1977b8bd7010443362"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-transport-classes-io_uring",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-transport-classes-io_uring-4.2.14.Final.jar",
+      "sha256": "d37799a57bdc17e386757e2aabcfd3ac2d877c642bf25f7734790f945feab3e3"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-transport-native-epoll",
+      "classifier": "linux-aarch_64",
+      "version": "4.2.14.Final",
+      "filename": "netty-transport-native-epoll-4.2.14.Final-linux-aarch_64.jar",
+      "sha256": "97a2a8a53af04aefd094dca58dc8a552e58acef76594f7966ef566bbdb46db4c"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-transport-native-epoll",
+      "classifier": "linux-x86_64",
+      "version": "4.2.14.Final",
+      "filename": "netty-transport-native-epoll-4.2.14.Final-linux-x86_64.jar",
+      "sha256": "e567c1097de567644de02bd6da4247b0ab1d2721bbb87e528e25eb4b99ab6019"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-transport-native-io_uring",
+      "classifier": "linux-aarch_64",
+      "version": "4.2.14.Final",
+      "filename": "netty-transport-native-io_uring-4.2.14.Final-linux-aarch_64.jar",
+      "sha256": "4ad282f1bca8d77855e3edd0d297867c2475007a0caf9354b9955c36951372b6"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-transport-native-io_uring",
+      "classifier": "linux-x86_64",
+      "version": "4.2.14.Final",
+      "filename": "netty-transport-native-io_uring-4.2.14.Final-linux-x86_64.jar",
+      "sha256": "110b2d63040a54060ea9117863a3266be4a40e25c370610ca2aedd43a5d43a41"
+    },
+    {
+      "group": "io.netty",
+      "artifact": "netty-transport-native-unix-common",
+      "classifier": null,
+      "version": "4.2.14.Final",
+      "filename": "netty-transport-native-unix-common-4.2.14.Final.jar",
+      "sha256": "6c57976b2bcc87097cb9e9c52b4d55191d2550ac3bddd29e890cb2150b9a5ff0"
+    },
+    {
+      "group": "io.pebbletemplates",
+      "artifact": "pebble",
+      "classifier": null,
+      "version": "4.1.1",
+      "filename": "pebble-4.1.1.jar",
+      "sha256": "3b1ceff69a50cefa135c71e88f69f305a370c2460e15e97cd7572ddb37824b47"
+    },
+    {
+      "group": "io.suzaku",
+      "artifact": "boopickle_2.13",
+      "classifier": null,
+      "version": "1.5.0",
+      "filename": "boopickle_2.13-1.5.0.jar",
+      "sha256": "635fc6797332bc2b6b3dfccb4bf4f090f0725276f4d5be66d362783c34a671ab"
+    },
+    {
+      "group": "jakarta.jms",
+      "artifact": "jakarta.jms-api",
+      "classifier": null,
+      "version": "3.1.0",
+      "filename": "jakarta.jms-api-3.1.0.jar",
+      "sha256": "6605e08075ab389c359451c7854808cf4b1575e1ea6317e534e9d4df088096df"
+    },
+    {
+      "group": "net.debasishg",
+      "artifact": "redisclient_2.13",
+      "classifier": null,
+      "version": "3.42",
+      "filename": "redisclient_2.13-3.42.jar",
+      "sha256": "18e5ce6fa3f7709365fe79f56320e6845970c8e3376fb081725f50ff01e32358"
+    },
+    {
+      "group": "net.jodah",
+      "artifact": "typetools",
+      "classifier": null,
+      "version": "0.6.3",
+      "filename": "typetools-0.6.3.jar",
+      "sha256": "408300867804be05d1083cc0287dd3a21295a9e76090e288013ba5a4182dc96d"
+    },
+    {
+      "group": "net.sf.saxon",
+      "artifact": "Saxon-HE",
+      "classifier": null,
+      "version": "12.9",
+      "filename": "Saxon-HE-12.9.jar",
+      "sha256": "8f3a9216a537367132293eacbba9df062eace8f8b16a184af59e2e4839d4cd41"
+    },
+    {
+      "group": "org.apache.commons",
+      "artifact": "commons-pool2",
+      "classifier": null,
+      "version": "2.13.1",
+      "filename": "commons-pool2-2.13.1.jar",
+      "sha256": "f77a5060d6936a9144023584232f9de3f2248f1abfe156e9d31795f18770674f"
+    },
+    {
+      "group": "org.jodd",
+      "artifact": "jodd-lagarto",
+      "classifier": null,
+      "version": "6.0.6",
+      "filename": "jodd-lagarto-6.0.6.jar",
+      "sha256": "d6f4088eb3be9f9056f2aabeb6d17991f42cbcd1fcf5145b538b8a77a9ed11c0"
+    },
+    {
+      "group": "org.jodd",
+      "artifact": "jodd-util",
+      "classifier": null,
+      "version": "6.3.0",
+      "filename": "jodd-util-6.3.0.jar",
+      "sha256": "e5c676715897124101f74900dd1f98ebbcad9da3ab2dffbac6e7712612094427"
+    },
+    {
+      "group": "org.jspecify",
+      "artifact": "jspecify",
+      "classifier": null,
+      "version": "1.0.0",
+      "filename": "jspecify-1.0.0.jar",
+      "sha256": "1fad6e6be7557781e4d33729d49ae1cdc8fdda6fe477bb0cc68ce351eafdfbab"
+    },
+    {
+      "group": "org.scala-lang",
+      "artifact": "scala-library",
+      "classifier": null,
+      "version": "2.13.18",
+      "filename": "scala-library-2.13.18.jar",
+      "sha256": "4e85d96ff7bc7dc627985523c3541b9917aaa08e956391380c42db21a2c4e5a0"
+    },
+    {
+      "group": "org.scala-lang",
+      "artifact": "scala-reflect",
+      "classifier": null,
+      "version": "2.13.10",
+      "filename": "scala-reflect-2.13.10.jar",
+      "sha256": "62bd7a7198193c5373a992c122990279e413af3307162472a5d3cbb8ecadb35e"
+    },
+    {
+      "group": "org.scala-lang.modules",
+      "artifact": "scala-parser-combinators_2.13",
+      "classifier": null,
+      "version": "2.4.0",
+      "filename": "scala-parser-combinators_2.13-2.4.0.jar",
+      "sha256": "e36dccdc21fd4bc770907a9e126d7e3901e71a191eb9ea8e93a0227774e0945d"
+    },
+    {
+      "group": "org.simpleflatmapper",
+      "artifact": "lightning-csv",
+      "classifier": null,
+      "version": "9.0.2",
+      "filename": "lightning-csv-9.0.2.jar",
+      "sha256": "92009cc183e854bdaa12f0566e48cdff118dd32f29a1498f9890f900a71097f8"
+    },
+    {
+      "group": "org.simpleflatmapper",
+      "artifact": "sfm-util",
+      "classifier": null,
+      "version": "9.0.2",
+      "filename": "sfm-util-9.0.2.jar",
+      "sha256": "79d087adde1d4eb38eb13929249753831e8a5b37c72dd94b2bb044fd3c071a2b"
+    },
+    {
+      "group": "org.slf4j",
+      "artifact": "slf4j-api",
+      "classifier": null,
+      "version": "2.0.18",
+      "filename": "slf4j-api-2.0.18.jar",
+      "sha256": "44508fd1576500688c790b190acdd16fec4f8c79a3e0b900afd70503cf055f55"
+    },
+    {
+      "group": "org.unbescape",
+      "artifact": "unbescape",
+      "classifier": null,
+      "version": "1.1.6.RELEASE",
+      "filename": "unbescape-1.1.6.RELEASE.jar",
+      "sha256": "597cf87d5b1a4f385b9d1cec974b7b483abb3ee85fc5b3f8b62af8e4bec95c2c"
+    },
+    {
+      "group": "org.xmlresolver",
+      "artifact": "xmlresolver",
+      "classifier": null,
+      "version": "6.0.23",
+      "filename": "xmlresolver-6.0.23.jar",
+      "sha256": "8bd99540e826dada93126fa05c3a0b54f5db00701d7be98193673099307e77e2"
+    },
+    {
+      "group": "org.xmlresolver",
+      "artifact": "xmlresolver",
+      "classifier": "data",
+      "version": "6.0.23",
+      "filename": "xmlresolver-6.0.23-data.jar",
+      "sha256": "0614b78ce484ce33670dc842b75efc8961af9bd6145edb65a34865dc521629de"
+    }
+  ]
+}

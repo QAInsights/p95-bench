@@ -15,7 +15,8 @@ def test_worker_pins_runtime_and_never_falls_back_to_host(tmp_path, monkeypatch)
         Worker(tmp_path, tmp_path / "public.sock", PROBE_IMAGE)
 
 
-def test_worker_policy_and_cleanup_on_infrastructure_failure(tmp_path):
+@pytest.mark.parametrize("runner_destination", ["/locust_runner.py", "/gatling_runner.py"])
+def test_worker_policy_and_cleanup_on_infrastructure_failure(tmp_path, runner_destination):
     worker = object.__new__(Worker)
     worker.directory = tmp_path
     worker.public_socket = tmp_path / "public.sock"
@@ -26,7 +27,7 @@ def test_worker_policy_and_cleanup_on_infrastructure_failure(tmp_path):
     runner.write_text("pass")
     with pytest.raises(WorkerUnavailable, match="attachment"):
         worker.execute(["python3", "-c", "print('synthetic')"], {"input.txt": b"fixture"},
-                       runner=runner)
+                       runner=runner, runner_destination=runner_destination)
     command = worker._docker.call_args_list[0].args
     for pair in (("--network", "none"), ("--user", "65534:65534"),
                  ("--pids-limit", "64"), ("--memory", "256m"), ("--cpus", "1"),
@@ -35,7 +36,7 @@ def test_worker_policy_and_cleanup_on_infrastructure_failure(tmp_path):
         assert command[index:index + 2] == pair
     assert "--read-only" in command
     assert any("dst=/fixtures/input.txt,readonly" in arg for arg in command)
-    assert any(f"src={runner.resolve()},dst=/locust_runner.py,readonly" in arg for arg in command)
+    assert any(f"src={runner.resolve()},dst={runner_destination},readonly" in arg for arg in command)
     assert not any("docker.sock" in arg or "dst=/home" in arg for arg in command)
     assert worker._docker.call_args_list[-1].args[:2] == ("rm", "--force")
 

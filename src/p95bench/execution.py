@@ -35,6 +35,9 @@ def artifact_source(tool, text):
     if tool == "locust":
         fenced = re.fullmatch(r"\s*```(?:python|py)?\s*\n([\s\S]*?)\n```\s*", text, re.IGNORECASE)
         return fenced[1] if fenced else text
+    if tool == "gatling":
+        fenced = re.fullmatch(r"\s*```(?:java)?\s*\n([\s\S]*?)\n```\s*", text)
+        return fenced[1] if fenced else text
     if re.search(r"<!\s*(?:DOCTYPE|ENTITY)\b", text, re.IGNORECASE):
         raise ValueError("XML declarations with external entities are forbidden")
     match = re.search(r"<jmeterTestPlan\b[\s\S]*?</jmeterTestPlan>", text)
@@ -75,6 +78,8 @@ def native_command(tool):
                 "--system-tags=status,method,url,name,vu,iter,scenario", "/fixtures/model.js"]
     if tool == "locust":
         return ["python3", "/locust_runner.py", "/fixtures/locustfile.py"]
+    if tool == "gatling":
+        return ["python3", "/gatling_runner.py", "/fixtures/ModelSimulation.java"]
     return ["java", "-Xmx128m", "-XX:ActiveProcessorCount=1", "-XX:ParallelGCThreads=1",
             "-Djava.awt.headless=true", "-Duser.home=/tmp", "-jar", "/opt/apache-jmeter-5.6.3/bin/ApacheJMeter.jar",
             "-n", "-t", "/fixtures/model.jmx", "-l", "/output/samples.jtl", "-j", "/output/engine.log",
@@ -176,17 +181,27 @@ def locust_evidence(artifacts):
     return samples, []
 
 
+def gatling_evidence(artifacts):
+    try:
+        return locust_evidence(artifacts)
+    except ValueError as error:
+        if str(error) == "Invalid Locust request record":
+            raise ValueError("Invalid Gatling request record") from error
+        raise
+
+
 def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="public-reference",
                  timeout=60):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    filename = {"k6": "model.js", "jmeter": "model.jmx", "locust": "locustfile.py"}[tool]
+    filename = {"k6": "model.js", "jmeter": "model.jmx", "locust": "locustfile.py",
+                "gatling": "ModelSimulation.java"}[tool]
     inputs = dict(fixtures or {})
     if filename in inputs:
         raise ValueError("Reserved model artifact fixture name")
     inputs[filename] = artifact_source(tool, source).encode()
     exports = ({"points.json": 8 * 1048576, "http.log": 8 * 1048576} if tool == "k6" else
-               {"requests.jsonl": 8 * 1048576} if tool == "locust" else
+               {"requests.jsonl": 8 * 1048576} if tool in ("locust", "gatling") else
                {"samples.jtl": 8 * 1048576, "engine.log": 1048576})
     image = tool_image(tool)
     with execution_trial(directory, profile=Profile(**(profile or {})), seed=seed,
@@ -194,7 +209,11 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
         started = time.monotonic()
         result = worker.execute(native_command(tool), inputs, timeout=timeout,
                                 output_limit=1048576, exports=exports,
-                                runner=Path(__file__).with_name("locust_runner.py") if tool == "locust" else None)
+                                runner=(Path(__file__).with_name(
+                                    "locust_runner.py" if tool == "locust" else "gatling_runner.py")
+                                    if tool in ("locust", "gatling") else None),
+                                runner_destination=("/gatling_runner.py" if tool == "gatling"
+                                                    else "/locust_runner.py"))
         try:
             events = shop.audit()
         except RuntimeError as error:
@@ -215,9 +234,10 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
     try:
         samples, points = (k6_evidence(result.artifacts) if tool == "k6" else
                            locust_evidence(result.artifacts) if tool == "locust" else
+                           gatling_evidence(result.artifacts) if tool == "gatling" else
                            jmeter_evidence(result.artifacts))
         loaded = bool(result.artifacts.get("points.json") if tool == "k6" else
-                      result.artifacts.get("requests.jsonl") if tool == "locust" else
+                      result.artifacts.get("requests.jsonl") if tool in ("locust", "gatling") else
                       result.artifacts.get("samples.jtl"))
     except (ValueError, KeyError, TypeError, OverflowError, RecursionError, UnicodeDecodeError, ET.ParseError):
         loaded, samples, points = False, [], []
