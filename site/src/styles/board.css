@@ -125,3 +125,5 @@ a.stat:hover b { color: var(--lime); }
 .filter button[aria-pressed="true"] { color: var(--bg); background: var(--lime); border-color: var(--lime); }
 .filter button[aria-pressed="true"] small { color: var(--bg); }
 [hidden] { display: none !important; }
+.grid .dimmed { opacity: .12; }
+main > .filter { margin: -40px 0 -40px; }
