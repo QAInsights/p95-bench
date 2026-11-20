@@ -33,7 +33,7 @@
       "id": "mx-a01-jtl-endpoints-locust",
       "category": "analysis",
       "scenario": "mx-a01-jtl-endpoints",
-      "task_digest": "14f7fcb1eedc9550aea34f4a3355ff4f4e6f8ac804e13077247a45997c3cb0e8"
+      "task_digest": "3533ace4d2e869909d44ea7afdf1d089b8845ab74f1d362a7f87de5cad4174be"
     },
     {
       "id": "mx-a02-k6-thresholds-gatling",
@@ -1616,5 +1616,5 @@
     }
   },
   "visibility": "public",
-  "digest": "685339883b6170d715645925ec0a0d16d6fe3d1d810692129c3221ac741d409d"
+  "digest": "e1172becde2abd9fdcbef9ea343ed25e95728a55d0a023cd8d554016a2f50ed7"
 }

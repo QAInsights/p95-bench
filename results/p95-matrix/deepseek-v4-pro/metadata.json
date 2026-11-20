@@ -1,7 +1,7 @@
 {
-  "run_date": "2026-11-20T15:23:13.428784+00:00",
+  "run_date": "2026-11-20T20:38:03.896884+00:00",
   "pack_id": "p95-matrix",
-  "pack_digest": "685339883b6170d715645925ec0a0d16d6fe3d1d810692129c3221ac741d409d",
+  "pack_digest": "e1172becde2abd9fdcbef9ea343ed25e95728a55d0a023cd8d554016a2f50ed7",
   "visibility": "public",
   "provider": "deepseek",
   "model": "deepseek-v4-pro",
@@ -176,6 +176,6 @@
     "mx-w09-isolated-pools-locust": "mx-w09-isolated-pools"
   },
   "spend_cap_usd": 30.0,
-  "harness_commit": "b3a2b9f381df725d682fee72b84313a5be859e88",
+  "harness_commit": "f3b2baa0baf459b4c5faee579717b4e95754cefc",
   "harness_dirty": false
 }
