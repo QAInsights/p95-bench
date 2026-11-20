@@ -1,0 +1,18 @@
+# Copy this file to sandbox/models.txt and uncomment the models you want to benchmark.
+# Format: <provider> <model>
+# Model IDs must match src/p95bench/providers.py.
+
+# openai gpt-6.2-sol
+# openai gpt-6.2-astra
+# anthropic claude-sonnet-5-5
+# anthropic claude-opus-5-5
+# gemini gemini-4-carbon
+# gemini gemini-4-argon
+# gemini gemini-4-hydrogen
+# gemini gemini-3.8-flash
+# deepseek deepseek-flash
+# deepseek deepseek-v4-pro
+# meta muse-wonder-1.0
+# meta muse-spark-1.3
+# qwen Qwen-Ambassador/Qwen3.8-Max
+# thinkingmachines thinkingmachines/Inkling
