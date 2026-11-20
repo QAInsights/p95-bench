@@ -1,0 +1,86 @@
+---
+import "@fontsource/bricolage-grotesque/latin-400.css";
+import "@fontsource/bricolage-grotesque/latin-600.css";
+import "@fontsource/jetbrains-mono/latin-400.css";
+import "../styles/geist.css";
+import "../styles/board.css";
+import { parse } from "yaml";
+import data from "../data/leaderboard-p95-v2.0.0.json";
+import { boardModels, boardTasks, categoryBlurbs, categoryLabels, taskCode, taskDetails, taskScore, toolLabel } from "../lib/board.mjs";
+
+const sources = import.meta.glob("../../../packs/p95-v2.0.0/tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
+const models = boardModels(data);
+const tasks = taskDetails(Object.values(sources).map(source => parse(source)), boardTasks(data));
+const categories = Object.keys(data.weights);
+const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
+const tools = [...new Set(tasks.map(t => t.tool))].sort().map(tool => ({ tool, count: tasks.filter(t => t.tool === tool).length }));
+const repo = "https://github.com/QAInsights/p95-bench";
+const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : value === 100 ? "score-full" : "";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={`The ${tasks.length} public P95 Bench tasks, with each model's score.`} />
+    <meta name="theme-color" content="#0c0b10" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preload" href="/fonts/GeistPixel-Square.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/GeistPixel-Grid.woff2" as="font" type="font/woff2" crossorigin />
+    <title>Tasks · P95 Bench</title>
+  </head>
+  <body>
+    <header class="top">
+      <a class="wordmark" href="/" aria-label="P95 Bench, home"><img src="/favicon.svg" width="24" height="24" alt="" aria-hidden="true" /><span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a>
+      <nav aria-label="Site"><a href="/#rankings">Rankings</a><a href="/tasks" aria-current="page">Tasks</a><a href="/#method">Method</a><a href={repo}>GitHub ↗</a></nav>
+    </header>
+
+    <main>
+      <section class="page-intro">
+        <h1><span class="lime">{tasks.length}</span> public tasks</h1>
+        <p>Each task gives a model one performance-testing job in JMeter or k6. The generated script runs against a demo shop, and graders award points for each check it passes. Every task file is <a href={`${repo}/tree/main/packs/p95-v2.0.0/tasks`}>in the repo</a>.</p>
+      </section>
+
+      <section aria-labelledby="count-title">
+        <h2 id="count-title" class="label">By category <span>count · weight in the score</span></h2>
+        <div class="stats">
+          {groups.map(g => <a class="stat" href={`#${g.category}`}><b>{g.tasks.length}</b><span>{categoryLabels[g.category]} · {data.weights[g.category]}%</span></a>)}
+        </div>
+        <div class="stats tools" style="margin-top:12px">
+          {tools.map(t => <div class="stat"><b>{t.count}</b><span>{toolLabel(t.tool)} tasks</span></div>)}
+        </div>
+      </section>
+
+      {groups.map(g => (
+        <section id={g.category} aria-labelledby={`${g.category}-title`}>
+          <h2 id={`${g.category}-title`} class="label">{categoryLabels[g.category]} <span>{g.tasks.length} tasks · {data.weights[g.category]}% of the score</span></h2>
+          <p class="blurb">{categoryBlurbs[g.category]}</p>
+          <div class="table-wrap">
+            <table class="tasks">
+              <thead><tr><th>Code</th><th>Task</th><th>Tool</th><th>Checks</th>{models.map(m => <th class="n">{m.name}</th>)}</tr></thead>
+              <tbody>
+                {g.tasks.map(t => (
+                  <tr>
+                    <td class="code">{taskCode(t.id)}</td>
+                    <td class="summary"><b>{t.label}</b><span>{t.summary}</span></td>
+                    <td><span class:list={["tool-badge", t.tool]}>{toolLabel(t.tool)}</span></td>
+                    <td class="checks">{t.checks.length ? t.checks.join(" → ") : "JSON fields"}</td>
+                    {models.map(m => { const v = taskScore(m, t.id); return <td class:list={["n", scoreClass(v)]}>{v ?? "—"}</td>; })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ))}
+    </main>
+
+    <footer class="bottom">
+      <span>Pack {data.pack_id} · scores out of 100</span>
+      <a href="/">Back to the board</a>
+    </footer>
+  </body>
+</html>

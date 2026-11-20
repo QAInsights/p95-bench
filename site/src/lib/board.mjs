@@ -66,3 +66,33 @@ export const formatCost = value => !Number.isFinite(value) ? '—' : `$${value.t
 export const formatTokens = value => !Number.isFinite(value) ? '—'
   : value >= 1000 ? `${Math.round(value / 1000)}k` : String(value);
 export const formatMinutes = seconds => !Number.isFinite(seconds) ? '—' : `${(seconds / 60).toFixed(1)} min`;
+
+export const categoryBlurbs = {
+  repair: 'Fix a broken script so it runs the journey correctly.',
+  migration: 'Convert an existing test plan to the target tool without changing its behaviour.',
+  correlation: 'Capture dynamic values such as tokens, IDs and ETags, and reuse them correctly.',
+  workload: 'Generate an exact load shape: arrival rates, phases, pacing and isolated pools.',
+  analysis: 'Read result files and report the requested numbers as JSON.',
+};
+
+export const toolLabel = tool => tool === 'k6' ? 'k6' : tool === 'jmeter' ? 'JMeter'
+  : tool === 'locust' ? 'Locust' : tool === 'gatling' ? 'Gatling' : tool;
+
+export const taskSummary = prompt => String(prompt ?? '').split('\n')[0].trim();
+
+export function taskDetails(definitions, tasks) {
+  const byId = new Map(definitions.map(d => [d.id, d]));
+  return tasks.map(t => {
+    const d = byId.get(t.id) ?? {};
+    return { ...t, summary: taskSummary(d.prompt),
+      checks: (d.params?.rubric ?? []).map(item => item.id) };
+  });
+}
+
+export function toolScores(model, tasks) {
+  const tools = [...new Set(tasks.map(t => t.tool))].sort();
+  return Object.fromEntries(tools.map(tool => {
+    const values = tasks.filter(t => t.tool === tool).map(t => taskScore(model, t.id)).filter(v => v !== null);
+    return [tool, values.length ? values.reduce((s, v) => s + v, 0) / values.length : null];
+  }));
+}
