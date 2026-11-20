@@ -162,6 +162,9 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                     "pricing_source": getattr(config, "pricing_source", None),
                     "temperature": getattr(config, "temperature", None),
                     **(config.extra if config else {})}
+        task_scenarios = {task.id: task.scenario for task in tasks if task.scenario is not None}
+        if task_scenarios:
+            metadata["task_scenarios"] = dict(sorted(task_scenarios.items()))
         if provider_name == "gemini":
             metadata.update(pricing_date_utc=started.date().isoformat(),
                             price_per_million=asdict(price))
@@ -208,6 +211,8 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         entry = {"task_id": task.id, "repeat": repeat,
                                  "provider": provider_name, "model": model,
                                  "status": "not_run", "error": str(error)}
+                        if task.scenario is not None:
+                            entry["scenario"] = task.scenario
                         if v2:
                             entry.update(pack_id=pack_id, budget_reservation=reservation)
                         skipped.write(json.dumps(entry) + "\n")
@@ -219,6 +224,8 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                            "messages": messages, "grader": task.grader, "params": task.params,
                            "price_per_million": asdict(price), "response": asdict(response),
                            "grade": result, "cost_usd": price.cost(response)}
+                if task.scenario is not None:
+                    attempt["scenario"] = task.scenario
                 if grading_error is not None:
                     attempt["grading_error"] = grading_error
                 if v2:

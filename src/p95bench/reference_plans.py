@@ -463,7 +463,8 @@ public class ModelSimulation extends Simulation {
     }
 
     private static String password(Session session) {
-        return row(session).path("password").asText("bench");
+        return MODE.equals("data") || MODE.equals("partition")
+            ? row(session).path("password").asText("bench") : "bench";
     }
 
     private static int quantity(Session session) {

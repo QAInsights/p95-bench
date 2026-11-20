@@ -347,6 +347,26 @@ def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
     assert isinstance(metadata["harness_dirty"], bool) or not head
 
 
+def test_matrix_scenario_is_recorded_in_manifest_attempts_and_metadata(tmp_path, monkeypatch):
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint", lambda *args: result(80))
+    scenario = "mx-c02-html-csrf"
+    task_id = scenario + "-k6"
+    matrix_task = Task(task_id, "correlation", "k6", "Synthetic", "test_checkpoint", {}, {},
+                       scenario=scenario)
+    directory, _ = run(
+        FakeProvider(), "fake", "model", Price(1, .5, 2), [matrix_task], tmp_path,
+        pack_id="p95-matrix",
+        efficiency_budgets={task_id: {"tokens": 100, "latency_seconds": 2}},
+        budget_ledger=BudgetLedger(tmp_path / "matrix-ledger.json"),
+    )
+    manifest = json.loads((directory / "pack.json").read_text())
+    metadata = json.loads((directory / "metadata.json").read_text())
+    attempt = json.loads((directory / "attempts.jsonl").read_text())
+    assert manifest["tasks"][0]["scenario"] == scenario
+    assert attempt["scenario"] == scenario
+    assert metadata["task_scenarios"] == {task_id: scenario}
+
+
 def test_harness_revision_ignores_enclosing_repository(tmp_path):
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=t", "-c", "user.email=t@t",

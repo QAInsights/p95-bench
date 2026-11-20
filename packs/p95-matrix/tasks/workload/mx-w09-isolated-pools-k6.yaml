@@ -1,0 +1,111 @@
+id: mx-w09-isolated-pools-k6
+category: workload
+tool: k6
+grader: v2_exec
+prompt: 'Maintain separate 8/s browse and 2/s checkout pools while checkout alone
+  becomes slow.
+
+  Write a complete executable solution.
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "flow", "workload": true,
+  "pools": {"browse": {"path": "/v2/browse", "rate": 8}, "checkout": {"path": "/v2/orders",
+  "rate": 2, "operation": "journey"}}}. Two fixture variants count equally; the same
+  artifact is reused without feedback. Fresh owner seeds are recorded after execution.
+  Profiles: [{"checkout_delay_seconds": 0.15, "checkout_slow_after_seconds": 20, "checkout_slow_seconds":
+  0.6}, {"checkout_delay_seconds": 0.15, "checkout_slow_after_seconds": 20, "checkout_slow_seconds":
+  0.6, "html_layout": 1, "reverse_catalog": true}]. Negative-control overrides: [].
+
+  Pool browse: POST /v2/browse is the operation. No checkout belongs to this pool;
+  orders and cart/catalog calls are extra routes unless explicitly needed by another
+  declared pool. Count the server request start timestamp, only for authenticated
+  requests with a successful owner work event and response status below 400. Login
+  and renewal never count as operations. Pool checkout: POST /v2/orders is a complete
+  owned checkout. Count its checkout request start at the server request start timestamp,
+  only when the owner records a committed order. Login, catalog selection and cart
+  setup are part of the journey but do not count as starts.
+
+  First authenticated eligible POST anchors T0, within10s of launch. Warmup5s, score
+  [T0+5,T0+35) in six5s windows, drain<=5s. Phased targets5/15/5 apply to three10s
+  scored plateaus. Count only declared paths/pools; login/setup excluded, health/extra
+  routes forbidden. Journey rate counts committed checkout starts, not HTTP samplers.
+  Rate fraction=1 within max(10% of expected arrivals, 1 arrival) count error, linear
+  to0 at40% relative error; average windows equally, with each window capped by the
+  full scored-window mean-rate fraction using the same quantization allowance. Each1s
+  burst<=ceil(1.5*target)+1. Unexpected error/dropped work<=1%; max concurrent VUs=64.
+  W06 uses successful completions (scheduled429 is expected, never a completion),
+  raw /work ceiling12/s and Retry-After per native worker, including across renewal.
+  Same-native-runtime capacity must sustain3x target before grading or this is infrastructure-unavailable.
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — both flows valid Requires: none.
+
+  setup: 40 points — per-pool actual-rate credit Full window credit allows max(10%
+  of expected arrivals, 1 arrival) count error; average windows with the same quantized
+  full-window mean-rate cap. Requires: loads.
+
+  behavior: 30 points — browse does not collapse when checkout slows Requires: loads,
+  setup.
+
+  safety: 20 points — cart correctness, bounded resources and clean drain. Requires:
+  loads.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: k6
+  contract:
+    users: 2
+    iterations: 2
+    mode: flow
+    workload: true
+    pools:
+      browse:
+        path: /v2/browse
+        rate: 8
+      checkout:
+        path: /v2/orders
+        rate: 2
+        operation: journey
+  rubric:
+  - id: loads
+    points: 10
+    description: both flows valid
+    requires: []
+  - id: setup
+    points: 40
+    description: per-pool actual-rate credit Full window credit allows max(10% of
+      expected arrivals, 1 arrival) count error; average windows with the same quantized
+      full-window mean-rate cap.
+    requires:
+    - loads
+  - id: behavior
+    points: 30
+    description: browse does not collapse when checkout slows
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 20
+    description: cart correctness, bounded resources and clean drain.
+    requires:
+    - loads
+  trials:
+  - name: baseline
+    profile:
+      checkout_delay_seconds: 0.15
+      checkout_slow_after_seconds: 20
+      checkout_slow_seconds: 0.6
+  - name: reordered
+    profile:
+      checkout_delay_seconds: 0.15
+      checkout_slow_after_seconds: 20
+      checkout_slow_seconds: 0.6
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-k6.md
+scenario: mx-w09-isolated-pools

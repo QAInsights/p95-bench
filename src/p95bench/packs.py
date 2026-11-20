@@ -24,11 +24,17 @@ def snapshot(pack_id, tasks, repeats=1, budgets=None):
     config = pack_config(pack_id)
     if not isinstance(repeats, int) or isinstance(repeats, bool) or repeats < 1:
         raise ValueError("repeats must be a positive integer")
-    inventory = sorted([{"id": t.id, "category": t.category,
-                         "task_digest": digest({"tool": t.tool, "grader": t.grader,
-                                                "prompt": t.prompt, "params": t.params,
-                                                "fixtures": t.fixtures})}
-                        for t in tasks], key=lambda item: item["id"])
+    inventory = []
+    for task in tasks:
+        task_content = {"tool": task.tool, "grader": task.grader, "prompt": task.prompt,
+                        "params": task.params, "fixtures": task.fixtures}
+        inventory_item = {"id": task.id, "category": task.category}
+        if task.scenario is not None:
+            task_content["scenario"] = task.scenario
+            inventory_item["scenario"] = task.scenario
+        inventory_item["task_digest"] = digest(task_content)
+        inventory.append(inventory_item)
+    inventory.sort(key=lambda item: item["id"])
     if ((not inventory and config["grade_schema_version"] == 2)
             or len({t["id"] for t in inventory}) != len(inventory)):
         raise ValueError("Pack requires nonempty, unique tasks")

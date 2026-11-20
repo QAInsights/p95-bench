@@ -98,3 +98,43 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     await rm(directory, { recursive: true });
   }
 });
+
+test('Matrix scenario identity survives into grouped task results', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'p95-matrix-scenario-'));
+  try {
+    const taskId = 'mx-c02-html-csrf-k6';
+    const scenario = 'mx-c02-html-csrf';
+    const taskFolder = path.join(directory, 'tasks', 'correlation');
+    await mkdir(taskFolder, { recursive: true });
+    await writeFile(path.join(taskFolder, 'sample.yaml'),
+      `id: ${taskId}\nscenario: ${scenario}\ncategory: correlation\ntool: k6\nprompt: Synthetic\ngrader: v2_exec\n`);
+    const options = { packId: 'p95-matrix', tasksRoot: path.join(directory, 'tasks') };
+    const { weights } = await loadTaskData(options);
+    const attempt = { pack_id: options.packId, repeat: 0, model: 'synthetic', provider: 'test',
+      task_id: taskId, scenario, category: 'correlation',
+      response: { input_tokens: 100, output_tokens: 20, latency_seconds: 2 }, cost_usd: .01,
+      price_per_million: { input: 1, cached: 1, output: 2 },
+      grade: { schema_version: 2, score: 1, passed: true, detail: 'Complete' } };
+    const manifest = { pack_id: options.packId, grade_schema_version: 2, default_repeats: 1,
+      efficiency_weight: .05, weights, visibility: 'public',
+      tasks: [{ id: taskId, category: 'correlation', scenario, task_digest: 'fixture' }],
+      repeats: 1, efficiency_budgets: { [taskId]: { tokens: 1000, latency_seconds: 10 } } };
+    manifest.digest = snapshotDigest(manifest);
+    attempt.pack_digest = manifest.digest;
+    const summary = { pack_id: options.packId, pack_digest: manifest.digest, complete: true,
+      attempts: 1, overall_score: 100, quality_score: 100, efficiency_score: 100,
+      category_scores: { correlation: 100 }, repeats: 1, estimated_cost_usd: .01,
+      input_tokens: 100, output_tokens: 20, latency_seconds: 2 };
+    const metadata = { pack_id: options.packId, pack_digest: manifest.digest, visibility: 'public',
+      task_scenarios: { [taskId]: scenario } };
+    await writeFile(path.join(directory, 'pack.json'), JSON.stringify(manifest));
+    await writeFile(path.join(directory, 'summary.json'), JSON.stringify(summary));
+    await writeFile(path.join(directory, 'metadata.json'), JSON.stringify(metadata));
+    await writeFile(path.join(directory, 'attempts.jsonl'), JSON.stringify(attempt));
+
+    const data = await buildData([directory], options);
+    assert.equal(data.models[0].per_task_results[0].scenario, scenario);
+  } finally {
+    await rm(directory, { recursive: true });
+  }
+});
