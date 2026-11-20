@@ -779,7 +779,7 @@ def gatling_reference(config):
         population_source = (
             f'setUp(scenario("matrix").exec({chain}).injectOpen(atOnceUsers({users})))'
         )
-    assertions = "" if config.get("workload") else (
+    assertions = "" if config.get("workload") or config.get("mode") == "errors" else (
         '.assertions(MODE.equals("threshold")\n'
         '                ? details("checkout").responseTime().percentile3().lt(250)\n'
         '                : global().failedRequests().count().is(0L))'
@@ -787,6 +787,9 @@ def gatling_reference(config):
     source = GATLING.replace("__CONFIG_JSON__", json.dumps(json.dumps(config)))
     source = source.replace("__POPULATIONS__", population_source)
     source = source.replace("__ASSERTIONS__", assertions)
+    if not assertions:
+        source = source.replace("\n            \n            .protocols(HTTP);",
+                                "\n            .protocols(HTTP);")
     return source
 
 

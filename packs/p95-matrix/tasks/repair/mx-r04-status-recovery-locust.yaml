@@ -6,7 +6,31 @@ prompt: 'Repair response handling that marks every 401 as success and never rene
   the session.
 
 
-  '
+  Repair the supplied artifact.
+
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "denial"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{"expire_after": 2},
+  {"expire_after": 2, "html_layout": 1, "reverse_catalog": true}]. Negative-control
+  overrides: [{"deny_orders": true}].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — script loads Requires: none.
+
+  setup: 25 points — expected expiry is recognized Requires: loads.
+
+  behavior: 40 points — fresh login/token and retry complete the interrupted flow
+  Requires: loads, setup.
+
+  safety: 25 points — an unrelated denied request still fails its assertion in a negative-control
+  run. Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
 params:
   tool: locust
   contract:

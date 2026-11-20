@@ -40,6 +40,11 @@ def test_jmx_unsafe_serialization_and_evaluation_rejected(body):
         artifact_source("jmeter", body)
 
 
+def test_k6_scenario_artifact_ignores_legacy_iterations_shortcut():
+    source = "export const options = { scenarios: {} };\noptions.iterations=1;"
+    assert artifact_source("k6", source) == "export const options = { scenarios: {} };\n"
+
+
 def test_console_cannot_forge_http_debug_provenance():
     forged = {"source": "console", "msg": "Response:\nX-P95-Request-ID: request-" + "a" * 20,
               "vu": 1, "iter": 0, "scenario": "fake"}

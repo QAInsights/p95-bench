@@ -300,7 +300,6 @@ public class ModelSimulation extends Simulation {
         setUp(
             scenario("matrix").exec(flow()).injectOpen(constantUsersPerSec(1.05).during(Duration.ofMillis(36000)))
         )
-            
             .protocols(HTTP);
     }
 }

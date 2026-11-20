@@ -214,8 +214,11 @@ def build_matrix_pack(source_pack, target_pack):
                 if category == "repair":
                     code = scenario.split("-", 2)[1]
                     prompt = REPAIR_PROMPTS.get((code, tool), task["prompt"].split("\n\n", 1)[0])
-                    rest = task["prompt"].partition("\n\n")[2]
-                    task["prompt"] = prompt + "\n\n" + rest
+                    prompt_lines = task["prompt"].splitlines()
+                    if len(prompt_lines) < 2 or prompt_lines[1] != "Repair the supplied artifact.":
+                        raise ValueError(f"Missing repair instruction line in {original['id']}")
+                    rest = "\n".join(prompt_lines[2:]).lstrip("\n")
+                    task["prompt"] = prompt + "\n\nRepair the supplied artifact.\n\n" + rest
                     artifact = f"broken-{code}.{TOOL_EXTENSIONS[tool]}"
                     task["fixtures"] = [
                         artifact if name.startswith("broken-r") else name

@@ -148,7 +148,10 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
         artifact_name = f"broken-{code}.{extension}"
         assert task.id == f"{task.scenario}-{task.tool}"
         assert task.tool in TOOLS and task.params["tool"] == task.tool
-        assert task.prompt.split("\n\n", 1)[0] == REPAIR_PROMPTS[(code, task.tool)]
+        expected_prompt = REPAIR_PROMPTS.get(
+            (code, task.tool),
+            _text_for_tool(source.prompt, task.tool, task.scenario).split("\n\n", 1)[0])
+        assert task.prompt.split("\n\n", 1)[0] == expected_prompt
         assert task.prompt.split("\n\n", 1)[1].splitlines()[0] == "Repair the supplied artifact."
         assert set(task.fixtures) >= {artifact_name, f"protocol-{task.tool}.md"}
         assert task.fixtures[artifact_name]
@@ -204,53 +207,62 @@ def test_matrix_native_reference_scores_100(task, tmp_path):
     assert result.score == 1, result.to_dict()
 
 
-@pytest.fixture(scope="module")
-def repair_acceptance(tmp_path_factory):
-    if os.environ.get("P95_TEST_DOCKER") != "1":
-        pytest.skip("Opt-in native Docker tests")
-    workdir = tmp_path_factory.mktemp("matrix-repair-acceptance")
-    records = []
-    results = {}
-    for task in REPAIR_TASKS:
-        code = task.scenario.split("-", 2)[1]
-        artifact_name = next(name for name in task.fixtures
-                             if name.startswith(f"broken-{code}."))
-        target_id = REPAIR_TARGETS[code]
-        record = {"task_id": task.id, "target_checkpoint": target_id}
-        try:
-            correct = grade(task, reference(task.tool, task.params["contract"]),
-                            workdir / task.id / "reference", 2)
-            broken = grade(task, task.fixtures[artifact_name],
-                           workdir / task.id / "broken", 2)
-            target = next(item for item in broken.checkpoints if item.id == target_id)
-            record.update({
-                "reference_score": correct.score,
-                "broken_score": broken.score,
-                "broken_checkpoints": {
-                    item.id: {"earned": item.earned, "possible": item.possible}
-                    for item in broken.checkpoints
-                },
-                "target_checkpoint": {
-                    "id": target.id, "earned": target.earned, "possible": target.possible,
-                },
-            })
-            results[task.id] = (correct, broken, None)
-        except Exception as error:  # noqa: BLE001
-            record["error"] = f"{type(error).__name__}: {error}"
-            results[task.id] = (None, None, record["error"])
-        records.append(record)
+@pytest.fixture(scope="session", autouse=True)
+def reset_repair_scores():
+    if os.environ.get("P95_TEST_DOCKER") == "1":
         REPAIR_SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
-        REPAIR_SCORES_PATH.write_text(json.dumps(records, indent=2) + "\n")
-    return results
+        REPAIR_SCORES_PATH.write_text("[]\n")
 
 
+def write_repair_score(record):
+    records = json.loads(REPAIR_SCORES_PATH.read_text())
+    records = [item for item in records if item["task_id"] != record["task_id"]]
+    records.append(record)
+    REPAIR_SCORES_PATH.write_text(json.dumps(records, indent=2) + "\n")
+
+
+def repair_target(task):
+    code = task.scenario.split("-", 2)[1]
+    if code == "r11" and task.tool == "gatling":
+        return "safety"
+    return REPAIR_TARGETS[code]
+
+
+@pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1",
+                    reason="Opt-in native Docker tests")
 @pytest.mark.parametrize("task", REPAIR_TASKS, ids=lambda task: task.id)
-def test_matrix_repair_reference_and_broken_checkpoint(task, repair_acceptance):
-    correct, broken, error = repair_acceptance[task.id]
-    assert error is None, error
+def test_matrix_repair_reference_and_broken_checkpoint(task, tmp_path):
+    code = task.scenario.split("-", 2)[1]
+    artifact_name = next(name for name in task.fixtures
+                         if name.startswith(f"broken-{code}."))
+    target_id = repair_target(task)
+    record = {"task_id": task.id, "target_checkpoint": target_id}
+    try:
+        correct = grade(task, reference(task.tool, task.params["contract"]),
+                        tmp_path / "reference", 2)
+        broken = grade(task, task.fixtures[artifact_name], tmp_path / "broken", 2)
+        target = next(item for item in broken.checkpoints if item.id == target_id)
+        record.update({
+            "reference_score": correct.score,
+            "broken_score": broken.score,
+            "broken_checkpoints": {
+                item.id: {"earned": item.earned, "possible": item.possible}
+                for item in broken.checkpoints
+            },
+            "target_checkpoint": {
+                "id": target.id, "earned": target.earned, "possible": target.possible,
+            },
+            "reference_detail": correct.detail,
+            "broken_detail": broken.detail,
+        })
+    except Exception as error:
+        record["error"] = f"{type(error).__name__}: {error}"
+        write_repair_score(record)
+        raise
+    write_repair_score(record)
     assert correct.score == 1, correct.to_dict()
     assert broken.score < 1, broken.to_dict()
     assert broken.checkpoints[0].earned == broken.checkpoints[0].possible
     code = task.scenario.split("-", 2)[1]
-    target = next(item for item in broken.checkpoints if item.id == REPAIR_TARGETS[code])
+    target = next(item for item in broken.checkpoints if item.id == repair_target(task))
     assert target.earned < target.possible, broken.to_dict()

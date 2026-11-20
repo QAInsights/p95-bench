@@ -24,6 +24,7 @@ function login(){
   csrf=token;
   const row=rows[(__VU-1)%rows.length];
   r=raw('/v2/login','POST',{username:row.username,password:row.password,csrf:token});
+  csrf=token;
   if(r.status===302) {r=raw(r.headers.Location);grant=body(r).grant_id;}
   check(r,{'login':r=>r.status===200});
 }

@@ -4,12 +4,11 @@ import argparse
 import re
 import shutil
 import xml.etree.ElementTree as ET
-from copy import deepcopy
 from pathlib import Path
 
 import yaml
 
-from p95bench.reference_plans import reference
+from p95bench.reference_plans import reference, sampler
 
 TOOLS = ("jmeter", "k6", "locust", "gatling")
 EXTENSIONS = {"jmeter": "jmx", "k6": "js", "locust": "py", "gatling": "java"}
@@ -65,12 +64,19 @@ def _r01(tool, source):
         )
         source = _replace_once(source, "const token=r.html()", "const token=earlier.html()",
                                "R01 k6 token response")
-        return _replace_once(
+        source = _replace_once(
             source,
             "  const token=earlier.html().find('input[name=\"csrf\"]').first().attr('value');",
             "  const token=earlier.html().find('input[name=\"csrf\"]').first().attr('value');\n"
             "  csrf=token;",
             "R01 k6 token assignment",
+        )
+        return _replace_once(
+            source,
+            "  r=raw('/v2/login','POST',{username:row.username,password:row.password,csrf:token});",
+            "  r=raw('/v2/login','POST',{username:row.username,password:row.password,csrf:token});\n"
+            "  csrf=token;",
+            "R01 k6 stale token use",
         )
     if tool == "locust":
         source = _replace_once(source, "form, _ = self.raw('/v2/login-form')",
@@ -128,9 +134,7 @@ def _r02(tool, source):
             "IfController", testname="IfController", testclass="IfController",
             guiclass="IfControllerPanel", enabled="true",
         )
-        ET.SubElement(controller, "stringProp", name="IfController.condition").text = (
-            "${__groovy(vars.get('cart') == 'MISSING')}"
-        )
+        ET.SubElement(controller, "stringProp", name="IfController.condition").text = "!${hasCart}"
         ET.SubElement(controller, "boolProp", name="IfController.evaluateAll").text = "false"
         ET.SubElement(controller, "boolProp", name="IfController.useExpression").text = "true"
         controller_tree = ET.Element("hashTree")
@@ -282,17 +286,9 @@ def _r06(tool, source):
         checkout_tree = _paired_tree(checkout, parents)
         duration = next(item for item in checkout_tree.iter("DurationAssertion"))
         _remove_component(duration, _parent_map(root))
-        health = deepcopy(checkout)
-        health.set("testname", "checkout")
-        _property(health, "HTTPSampler.path").text = "/v2/health"
-        _property(health, "HTTPSampler.method").text = "GET"
-        _property(health, "HTTPSampler.postBodyRaw").text = "false"
-        arguments = health.find("elementProp[@name='HTTPsampler.Arguments']")
-        collection = arguments.find("collectionProp[@name='Arguments.arguments']")
-        collection.clear()
-        health_tree = ET.Element("hashTree")
-        health_tree.extend((duration, ET.Element("hashTree")))
-        parent.extend((health, health_tree))
+        health_parent = ET.Element("hashTree")
+        sampler(health_parent, "/v2/health", name="checkout", duration_assertion=250)
+        parent.extend(list(health_parent))
         return _jmeter_text(root)
     if tool == "locust":
         source = _replace_once(
@@ -483,12 +479,14 @@ def _r11(tool, source):
 def _r12(tool, source):
     if tool == "jmeter":
         root = _jmeter_tree(source)
+        parents = _parent_map(root)
         for sample in root.iter("HTTPSamplerProxy"):
             if _property(sample, "HTTPSampler.path").text != "/v2/work":
                 continue
-            for assertion in sample.iter("ResponseAssertion"):
+            for assertion in _paired_tree(sample, parents).iter("ResponseAssertion"):
                 strings = assertion.find("collectionProp[@name='Asserion.test_strings']")
-                strings.clear()
+                for item in list(strings):
+                    strings.remove(item)
                 ET.SubElement(strings, "stringProp", name="0").text = "^(?:200|500)$"
         return _jmeter_text(root)
     if tool == "locust":

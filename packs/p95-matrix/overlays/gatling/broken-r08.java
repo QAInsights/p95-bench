@@ -300,7 +300,6 @@ public class ModelSimulation extends Simulation {
         setUp(
             scenario("matrix").exec(work("/v2/work")).injectOpen(constantUsersPerSec(1.0).during(Duration.ofMillis(30000)), constantUsersPerSec(5.25).during(Duration.ofMillis(6000)))
         )
-            
             .protocols(HTTP);
     }
 }

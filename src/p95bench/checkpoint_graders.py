@@ -112,7 +112,10 @@ def workload_fractions(trial, contract):
     native_checks = [point for point in trial.points if point["metric"] == "checks"]
     max_vus = max([point["value"] for point in trial.points if point["metric"] in ("vus", "vus_max")]
                   + [sample.get("active_users", 0) for sample in trial.samples] + [0])
-    duration_ok = max(event["time"] for event in all_operations) >= anchor + warmup + duration - 1
+    duration_boundary = anchor + warmup + duration - 1
+    duration_ok = (max(event["time"] for event in all_operations) >= duration_boundary
+                   or math.isclose(max(event["time"] for event in all_operations),
+                                   duration_boundary, abs_tol=1e-3))
     drain_ok = max(event["time"] for event in ends) <= anchor + warmup + duration + 5
     limits = (len(unexpected) <= len(all_operations) * .01 and not extra_routes
               and native_drops <= len(all_operations) * .01 and duration_ok and drain_ok

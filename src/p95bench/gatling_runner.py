@@ -108,7 +108,11 @@ PREFIX = re.compile(
     r"(?P<level>\w+)\s+(?P<logger>\S+) - (?P<message>.*)$"
 )
 TRACE_LOGGER = "io.gatling.http.engine.response.DefaultStatsProcessor"
+HTTP_APP_LOGGER = "io.gatling.http.client.impl.HttpAppHandler"
 REQUEST_NAME = re.compile(r"(?m)^Request:\s*\n(.+):\s*(OK|KO)\s*$")
+REQUEST_FAILURE = re.compile(r"(?m)^Request '(.+)' failed for user (\d+):")
+FAILED_STATUS = re.compile(r"found (\d{3})\b")
+RESPONSE_STATUS = re.compile(r"(?m)^HTTP/\d(?:\.\d)?\s+(\d{3})\b")
 SESSION_USER = re.compile(
     r"(?m)^Session:\s*\nSession\([^,\n]+,\s*(\d+),\s*(?:Map|HashMap)\("
 )
@@ -130,6 +134,7 @@ REQUEST_PATHS = {
     "reservation assertion": ("GET", "/v2/jobs"),
     "reservation poll": ("GET", "/v2/jobs"),
     "work": ("POST", "/v2/work"),
+    "work retry": ("POST", "/v2/work"),
 }
 
 
@@ -148,26 +153,81 @@ def trace_records(path):
     return records
 
 
+def request_trace(record):
+    if record["logger"] != TRACE_LOGGER:
+        return None
+    message = record["message"]
+    name = REQUEST_NAME.search(message)
+    failed = REQUEST_FAILURE.search(message)
+    if name:
+        request_name, success = name[1], name[2] == "OK"
+        status = None
+    elif failed:
+        request_name, success = failed[1], False
+        status_match = FAILED_STATUS.search(message)
+        status = int(status_match[1]) if status_match else None
+    else:
+        return None
+    user = SESSION_USER.search(message)
+    user_id = user[1] if user else failed[2] if failed else None
+    request_line = REQUEST_LINE.search(
+        message.split("HTTP request:", 1)[-1].split("HTTP response:", 1)[0])
+    response = message.split("HTTP response:", 1)[-1]
+    identity = REQUEST_ID.search(response)
+    response_status = RESPONSE_STATUS.search(response)
+    if status is None and response_status:
+        status = int(response_status[1])
+    method, path = (request_line[1], urlsplit(request_line[2]).path) if request_line else (
+        REQUEST_PATHS.get(request_name, (None, None))
+    )
+    if not user_id or not method or not path:
+        return None
+    timestamp = datetime.strptime(record["time"], "%Y-%m-%d %H:%M:%S.%f")
+    timestamp_ms = int(timestamp.replace(tzinfo=UTC).timestamp() * 1000)
+    return {"time": timestamp_ms, "name": request_name, "success": success,
+            "worker": f"user-{user_id}", "method": method, "path": path,
+            "request": identity[1] if identity else None, "status": status}
+
+
+def response_trace(record):
+    if record["logger"] != HTTP_APP_LOGGER:
+        return None
+    identity = REQUEST_ID.search(record["message"])
+    status = RESPONSE_STATUS.search(record["message"])
+    if not identity or not status:
+        return None
+    timestamp = datetime.strptime(record["time"], "%Y-%m-%d %H:%M:%S.%f")
+    timestamp_ms = int(timestamp.replace(tzinfo=UTC).timestamp() * 1000)
+    return {"time": timestamp_ms, "request": identity[1], "status": int(status[1])}
+
+
+def attach_response_ids(traces, responses):
+    available = set(range(len(responses)))
+    for trace in traces:
+        if trace["request"] is not None:
+            continue
+        candidates = [index for index in sorted(available)
+                      if trace["status"] is None or responses[index]["status"] == trace["status"]]
+        if not candidates:
+            continue
+        index = min(candidates, key=lambda item: abs(responses[item]["time"] - trace["time"]))
+        if abs(responses[index]["time"] - trace["time"]) > 60000:
+            continue
+        trace["request"] = responses[index]["request"]
+        available.remove(index)
+    return traces
+
+
 def request_samples(log_path, data_path):
     run_start, _, requests = BinaryLog(data_path).parse()
     traces = []
-    for record in trace_records(log_path):
-        if record["logger"] != TRACE_LOGGER:
-            continue
-        name = REQUEST_NAME.search(record["message"])
-        user = SESSION_USER.search(record["message"])
-        request_line = REQUEST_LINE.search(
-            record["message"].split("HTTP request:", 1)[-1].split("HTTP response:", 1)[0])
-        response = record["message"].split("HTTP response:", 1)[-1]
-        identity = REQUEST_ID.search(response)
-        if not (name and user and request_line):
-            continue
-        timestamp = datetime.strptime(record["time"], "%Y-%m-%d %H:%M:%S.%f")
-        timestamp_ms = int(timestamp.replace(tzinfo=UTC).timestamp() * 1000)
-        traces.append({"time": timestamp_ms, "name": name[1], "success": name[2] == "OK",
-                       "worker": f"user-{user[1]}", "method": request_line[1],
-                       "path": urlsplit(request_line[2]).path,
-                       "request": identity[1] if identity else None})
+    records = trace_records(log_path)
+    responses = [response for record in records if (response := response_trace(record))]
+    for record in records:
+        trace = request_trace(record)
+        if trace:
+            traces.append(trace)
+    attach_response_ids(traces, responses)
 
     available = set(range(len(requests)))
     samples = []

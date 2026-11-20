@@ -13,7 +13,14 @@ from p95bench.execution import (
     native_command,
     run_artifact,
 )
-from p95bench.gatling_runner import SESSION_USER
+from p95bench.gatling_runner import (
+    HTTP_APP_LOGGER,
+    SESSION_USER,
+    TRACE_LOGGER,
+    attach_response_ids,
+    request_trace,
+    response_trace,
+)
 from p95bench.graders import grade
 from p95bench.images import VERSIONS
 from p95bench.packs import pack_config
@@ -60,6 +67,33 @@ def test_gatling_evidence_parses_request_records():
 def test_gatling_trace_session_user_id():
     match = SESSION_USER.search("Session:\nSession(matrix,1,HashMap())")
     assert match and match[1] == "1"
+
+
+def test_gatling_failed_trace_includes_request_id_and_user():
+    message = (
+        "Request 'work' failed for user 1: status.find.in(200,401,429), found 500\n"
+        "work: KO status.find.in(200,401,429), found 500\n"
+    )
+    trace = request_trace({
+        "logger": TRACE_LOGGER, "time": "2026-11-20 08:27:52.217", "message": message,
+    })
+    response = response_trace({
+        "logger": HTTP_APP_LOGGER,
+        "time": "2026-11-20 08:27:52.217",
+        "message": (
+            "Read msg='DefaultHttpResponse(decodeResult: success, version: HTTP/1.0)\n"
+            "HTTP/1.0 500 Internal Server Error\n"
+            "X-P95-Request-ID: request-aaaaaaaaaaaaaaaaaaaa\n'"
+        ),
+    })
+    assert trace and response
+    attach_response_ids([trace], [response])
+    assert trace.pop("time") > 0
+    assert trace == {
+        "name": "work", "success": False, "worker": "user-1",
+        "method": "POST", "path": "/v2/work", "request": "request-aaaaaaaaaaaaaaaaaaaa",
+        "status": 500,
+    }
 
 
 @pytest.mark.parametrize("record", [

@@ -6,7 +6,30 @@ prompt: 'Fix a CSRF/ID value read from the wrong response object; run two users 
   two iterations.
 
 
-  '
+  Repair the supplied artifact.
+
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "flow"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout": 1,
+  "reverse_catalog": true}]. Negative-control overrides: [].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — script loads Requires: none.
+
+  setup: 25 points — login token extracted from the correct response Requires: loads.
+
+  behavior: 40 points — all four carts/checkouts use their own fresh token Requires:
+  loads, setup.
+
+  safety: 25 points — no unresolved variables or cross-session requests in the audit.
+  Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
 params:
   tool: locust
   contract:

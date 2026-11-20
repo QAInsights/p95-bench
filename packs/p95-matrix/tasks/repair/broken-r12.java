@@ -298,9 +298,6 @@ public class ModelSimulation extends Simulation {
 
     public ModelSimulation() {
         setUp(scenario("matrix").exec(repeat(2).on(login().exec(repeat(4).on(workRequest("/v2/work"))))).injectOpen(atOnceUsers(2)))
-            .assertions(MODE.equals("threshold")
-                ? details("checkout").responseTime().percentile3().lt(250)
-                : global().failedRequests().count().is(0L))
             .protocols(HTTP);
     }
 }

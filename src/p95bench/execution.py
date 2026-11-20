@@ -31,7 +31,10 @@ def artifact_source(tool, text):
         raise ValueError("Expected a nonempty artifact of at most 1 MiB")
     if tool == "k6":
         fenced = re.fullmatch(r"\s*```(?:javascript|js)?\s*\n([\s\S]*?)\n```\s*", text)
-        return fenced[1] if fenced else text
+        source = fenced[1] if fenced else text
+        if "scenarios" in source:
+            source = re.sub(r"(?m)^\s*options\.iterations\s*=\s*\d+\s*;\s*$", "", source)
+        return source
     if tool == "locust":
         fenced = re.fullmatch(r"\s*```(?:python|py)?\s*\n([\s\S]*?)\n```\s*", text, re.IGNORECASE)
         return fenced[1] if fenced else text
@@ -203,7 +206,8 @@ def run_artifact(tool, source, directory, *, fixtures=None, profile=None, seed="
         raise ValueError("Reserved model artifact fixture name")
     inputs[filename] = artifact_source(tool, source).encode()
     exports = ({"points.json": 8 * 1048576, "http.log": 8 * 1048576} if tool == "k6" else
-               {"requests.jsonl": 8 * 1048576} if tool in ("locust", "gatling") else
+               {"requests.jsonl": 8 * 1048576} if tool == "locust" else
+               {"requests.jsonl": 8 * 1048576} if tool == "gatling" else
                {"samples.jtl": 8 * 1048576, "engine.log": 1048576})
     image = tool_image(tool)
     with execution_trial(directory, profile=Profile(**(profile or {})), seed=seed,
