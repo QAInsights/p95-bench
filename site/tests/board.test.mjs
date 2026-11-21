@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import {
-  boardModels, boardTasks, formatCost, formatMinutes, formatTokens, hasRepairScores, palette,
+  boardModels, boardTasks, formatCost, palette,
   scatter, taskCode, taskLabel, taskScore,
 } from '../src/lib/board.mjs';
 import { fakeV2 } from './fake-v2.mjs';
@@ -46,7 +46,7 @@ test('task scores average repetitions and use pass booleans when scores are abse
   assert.equal(taskScore(model, 'unknown'), null);
 });
 
-test('after-repair scores and provider reasoning metadata reach board models', () => {
+test('board score is the final scored answer, including the one allowed fix', () => {
   const data = fakeV2();
   const source = data.models[0];
   source.after_repair = { overall_score: 91, quality_score: 92, efficiency_score: 72,
@@ -58,21 +58,20 @@ test('after-repair scores and provider reasoning metadata reach board models', (
   const model = boardModels(data).find(item => item.key === `${source.provider}/${source.model}`);
   const taskId = source.per_task_results[0].task_id;
 
-  assert.equal(model.afterRepair.score, 91);
-  assert.equal(model.repairRounds, 1);
+  assert.equal(model.score, 91);
+  assert.deepEqual(model.categories, { repair: 92 });
   assert.equal(model.reasoningMode, 'thinking');
   assert.deepEqual(model.derivedFrom, source.derived_from);
-  assert.equal(taskScore(model, taskId, null, 'first'), 60);
-  assert.equal(taskScore(model, taskId, null, 'repair'), 90);
+  assert.equal(taskScore(model, taskId, null), 90);
+  assert.equal('afterRepair' in model, false);
 });
 
-test('legacy board data has no after-repair scores', () => {
-  assert.ok(boardModels(fakeV2()).every(model => model.afterRepair === null));
-});
-
-test('repair toggle requires an available configured repair round', () => {
-  assert.equal(hasRepairScores([{ repairRounds: null, afterRepair: { score: 90 } }]), false);
-  assert.equal(hasRepairScores([{ repairRounds: 1, afterRepair: { score: 90 } }]), true);
+test('models without a fix round keep their recorded score', () => {
+  const data = fakeV2();
+  for (const model of boardModels(data)) {
+    const source = data.models.find(item => `${item.provider}/${item.model}` === model.key);
+    assert.equal(model.score, source.overall_score);
+  }
 });
 
 test('scatter plots priced models with x increasing by cost and y tracking score', () => {
@@ -89,14 +88,9 @@ test('scatter plots priced models with x increasing by cost and y tracking score
   assert.deepEqual(scatter(models.map(model => ({ ...model, cost: 0 }))).points, []);
 });
 
-test('cost, token and time formatters handle basic and non-finite values', () => {
+test('cost formatter handles basic and non-finite values', () => {
   assert.equal(formatCost(1.234), '$1.23');
   assert.equal(formatCost(Infinity), '—');
-  assert.equal(formatTokens(950), '950');
-  assert.equal(formatTokens(1500), '2k');
-  assert.equal(formatTokens(NaN), '—');
-  assert.equal(formatMinutes(90), '1.5 min');
-  assert.equal(formatMinutes(Infinity), '—');
 });
 
 test('pages use the Core leaderboard and task pack without Matrix-only copy', async () => {
@@ -107,19 +101,15 @@ test('pages use the Core leaderboard and task pack without Matrix-only copy', as
   assert.deepEqual(jsonImports, ['../data/leaderboard-p95-core.json']);
   assert.doesNotMatch(page, /leaderboard\.json|pack-switch|show-versions/);
   assert.match(page, /Core · \{tasks\.length\} scenarios × \{tools\.length\} tools = \{tasks\.length \* tools\.length\} tasks/);
-  assert.match(page, /tasks\.length\} scenarios, average over \$\{tools\.length\} tools/);
   assert.doesNotMatch(page, /40 scenarios/);
-  assert.match(page, /Derived from the Matrix run/);
   assert.doesNotMatch(page, /JMeter three-phase workload reference/);
   assert.match(page, /href="\/tasks"/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
-  assert.match(page, /data-score="repair"/);
-  assert.match(page, /hasRepairScores && <div class="score-toggle"/);
-  assert.match(page, /params\.get\("score"\)/);
+  assert.doesNotMatch(page, /First try|After 1 repair|score-toggle|data-score/);
+  assert.doesNotMatch(page, />Every task <span|class="grid"|Output tokens/);
   const tasksPage = await readFile(new URL('../src/pages/tasks.astro', import.meta.url), 'utf8');
   assert.match(tasksPage, /leaderboard-p95-core\.json/);
   assert.match(tasksPage, /packs\/p95-core\/tasks/);
   assert.match(tasksPage, /<span class="lime">\{tasks\.length\}<\/span> scenarios × \{tools\.length\} tools = \{tasks\.length \* tools\.length\} tasks/);
-  assert.match(tasksPage, /data-score-view/);
-  assert.match(tasksPage, /params\.get\("score"\)/);
+  assert.doesNotMatch(tasksPage, /First try|After 1 repair|data-score|Solved|boardModels/);
 });
