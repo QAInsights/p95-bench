@@ -8,7 +8,7 @@ from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import digest, pack_config, snapshot
 from p95bench.tasks import load_tasks
 from scripts.build_core_pack import CORE_SCENARIOS, build_core_pack
-from scripts.derive_core_run import derive_core_run
+from scripts.derive_core_run import _output_cap, derive_core_run
 
 ROOT = Path(__file__).resolve().parents[1]
 MATRIX_PACK = ROOT / "packs/p95-matrix"
@@ -181,3 +181,84 @@ def test_core_run_derivation_rejects_digest_mismatch_and_missing_task(tmp_path):
         tmp_path / "missing", core_tasks, budgets, omit=core_tasks[0].id)
     with pytest.raises(ValueError, match="Missing Core task attempts"):
         derive_core_run([missing], tmp_path / "missing-output")
+
+
+def _write_committed_core_tool_shards(
+    tmp_path, *, duplicate_task=False, mismatch_metadata=False,
+):
+    model = "deepseek-flash"
+    committed_run = ROOT / "results/p95-core" / model
+    metadata = json.loads((committed_run / "metadata.json").read_text())
+    attempts = {
+        attempt["task_id"]: attempt
+        for attempt in (json.loads(line) for line in
+                        (committed_run / "attempts.jsonl").read_text().splitlines())
+    }
+    core_tasks = load_tasks(CORE_PACK / "tasks", pack_config("p95-core")["weights"])
+    budgets = json.loads((CORE_PACK / "efficiency-budgets.json").read_text())
+    by_tool = {
+        tool: [task for task in core_tasks if task.tool == tool]
+        for tool in ("jmeter", "k6", "locust", "gatling")
+    }
+    duplicate = by_tool["jmeter"][0]
+    sources = []
+    for tool, tasks in by_tool.items():
+        shard_tasks = list(tasks)
+        if duplicate_task and tool == "k6":
+            shard_tasks.append(duplicate)
+        directory = tmp_path / tool
+        directory.mkdir()
+        manifest = snapshot(
+            "p95-core", shard_tasks,
+            budgets={task.id: budgets[task.id] for task in shard_tasks},
+        )
+        shard_metadata = dict(metadata)
+        shard_metadata.update(pack_id="p95-core", pack_digest=manifest["digest"])
+        shard_metadata["task_scenarios"] = {
+            task.id: task.scenario for task in shard_tasks if task.scenario is not None
+        }
+        if mismatch_metadata and tool == "gatling":
+            shard_metadata["reasoning_mode"] = "thinking-low"
+        (directory / "pack.json").write_text(json.dumps(manifest))
+        (directory / "metadata.json").write_text(json.dumps(shard_metadata))
+        shard_attempts = []
+        for task in shard_tasks:
+            attempt = dict(attempts[task.id])
+            attempt.update(pack_id="p95-core", pack_digest=manifest["digest"])
+            shard_attempts.append(attempt)
+        (directory / "attempts.jsonl").write_text(
+            "".join(json.dumps(attempt) + "\n" for attempt in shard_attempts)
+        )
+        sources.append(directory)
+    return sources
+
+
+def test_core_run_derivation_merges_committed_core_tool_shards(tmp_path):
+    sources = _write_committed_core_tool_shards(tmp_path)
+
+    summary = derive_core_run(sources, tmp_path / "merged")
+
+    expected = json.loads((ROOT / "results/p95-core/deepseek-flash/summary.json").read_text())
+    assert summary == expected
+    assert summary["attempts"] == 104
+    assert summary["complete"] is True
+    metadata = json.loads((tmp_path / "merged/metadata.json").read_text())
+    assert [source["pack_id"] for source in metadata["derived_from"]] == ["p95-core"] * 4
+
+
+def test_core_run_derivation_rejects_duplicate_core_tasks_across_shards(tmp_path):
+    sources = _write_committed_core_tool_shards(tmp_path, duplicate_task=True)
+
+    with pytest.raises(ValueError, match="Duplicate Core task attempt"):
+        derive_core_run(sources, tmp_path / "duplicate")
+
+
+def test_core_run_derivation_rejects_mismatched_shard_metadata(tmp_path):
+    sources = _write_committed_core_tool_shards(tmp_path, mismatch_metadata=True)
+
+    with pytest.raises(ValueError, match="Source run metadata differs: reasoning_mode"):
+        derive_core_run(sources, tmp_path / "mismatched")
+
+
+def test_core_run_derivation_prefers_output_cap_metadata():
+    assert _output_cap({"output_cap": 65536, "max_tokens": 16384}) == 65536

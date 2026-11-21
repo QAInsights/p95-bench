@@ -280,6 +280,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
         metadata.update(pricing_date_utc=started.date().isoformat(),
                         price_per_million=asdict(price))
     if v2:
+        metadata["output_cap"] = _output_cap(config)
         metadata["spend_cap_usd"] = ledger.limit / 1_000_000
         metadata.update(harness_revision())
     (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")

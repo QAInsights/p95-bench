@@ -527,6 +527,26 @@ def test_budget_shared_models_processes_and_fail_closed(tmp_path):
         first.reserve(1)
 
 
+def test_budget_ledger_environment_overrides(tmp_path, monkeypatch):
+    path = tmp_path / "environment-ledger.json"
+    monkeypatch.setenv("P95_BUDGET_LEDGER", str(path))
+    monkeypatch.setenv("P95_BUDGET_LIMIT_USD", "17.250001")
+
+    ledger = BudgetLedger()
+
+    assert ledger.path == path
+    assert ledger.limit == 17_250_001
+
+
+@pytest.mark.parametrize("limit", ["invalid", "NaN", "0"])
+def test_budget_ledger_rejects_invalid_environment_limit(tmp_path, monkeypatch, limit):
+    monkeypatch.setenv("P95_BUDGET_LEDGER", str(tmp_path / "ledger.json"))
+    monkeypatch.setenv("P95_BUDGET_LIMIT_USD", limit)
+
+    with pytest.raises(ValueError):
+        BudgetLedger()
+
+
 def test_concurrent_budget_reservations(tmp_path):
     ledger = BudgetLedger(tmp_path / "ledger.json")
 
@@ -549,6 +569,7 @@ def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
     metadata = json.loads((directory / "metadata.json").read_text())
     assert metadata["repair_rounds"] == 1
     assert metadata["reasoning_mode"] is None
+    assert metadata["output_cap"] == 16384
     head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True,
                           text=True, check=False).stdout.strip()
     assert metadata["harness_commit"] == (head or None)
@@ -573,6 +594,88 @@ def test_matrix_scenario_is_recorded_in_manifest_attempts_and_metadata(tmp_path,
     assert manifest["tasks"][0]["scenario"] == scenario
     assert attempt["scenario"] == scenario
     assert metadata["task_scenarios"] == {task_id: scenario}
+
+
+@pytest.mark.parametrize(
+    "filters,expected",
+    [
+        (["--tool", "k6"], {"mx-a01-analysis-k6", "mx-w07-analysis-k6"}),
+        (["--scenario", "a01"], {
+            "mx-a01-analysis-jmeter", "mx-a01-analysis-k6",
+            "mx-a01-analysis-locust", "mx-a01-analysis-gatling",
+        }),
+        (["--tool", "k6", "--scenario", "a01"], {"mx-a01-analysis-k6"}),
+    ],
+)
+def test_cli_filters_scenarios_and_subsets_budgets(tmp_path, monkeypatch, filters, expected):
+    tasks = [
+        Task(f"mx-{scenario}-analysis-{tool}", "analysis", tool, "Synthetic",
+             "test_checkpoint", {}, {}, scenario=f"mx-{scenario}-analysis")
+        for scenario in ("a01", "w07")
+        for tool in ("jmeter", "k6", "locust", "gatling")
+    ]
+    all_budgets = {
+        item.id: {"tokens": 100, "latency_seconds": 10}
+        for item in tasks
+    }
+    budget_file = tmp_path / "budgets.json"
+    budget_file.write_text(json.dumps(all_budgets))
+    captured = {}
+
+    def fake_run(_provider, _provider_name, _model, _price, selected, _out, _repeats, **options):
+        captured["task_ids"] = {item.id for item in selected}
+        captured["budgets"] = options["efficiency_budgets"]
+        return tmp_path / "run", {"complete": True}
+
+    monkeypatch.setattr("p95bench.cli.load_tasks", lambda *_: tasks)
+    monkeypatch.setattr("p95bench.cli.get_provider", lambda _: FakeProvider())
+    monkeypatch.setattr("p95bench.cli.run", fake_run)
+
+    assert main([
+        "run", "--provider", "deepseek", "--model", "deepseek-flash",
+        "--pack", "p95-core", "--efficiency-budgets", str(budget_file),
+        *filters,
+    ]) == 0
+    assert captured["task_ids"] == expected
+    assert set(captured["budgets"]) == expected
+
+
+@pytest.mark.parametrize(
+    "tasks,scenario,error",
+    [
+        ([task()], "a01", "Task has no scenario"),
+        ([replace(task(), scenario="mx-w07-burst")], "a01", "No tasks match scenario"),
+    ],
+)
+def test_cli_rejects_unfilterable_or_unknown_scenarios(
+    tmp_path, monkeypatch, capsys, tasks, scenario, error,
+):
+    monkeypatch.setattr("p95bench.cli.load_tasks", lambda *_: tasks)
+    monkeypatch.setattr("p95bench.cli.get_provider", lambda _: FakeProvider())
+
+    assert main([
+        "run", "--provider", "deepseek", "--model", "deepseek-flash",
+        "--pack", "p95-core", "--scenario", scenario, "--out", str(tmp_path),
+    ]) == 1
+    assert error in capsys.readouterr().err
+
+
+def test_cli_rejects_selected_task_missing_efficiency_budget(tmp_path, monkeypatch, capsys):
+    selected = replace(task(), id="mx-a01-analysis-k6", tool="k6", scenario="mx-a01-analysis")
+    other = replace(task(), id="mx-w07-analysis-k6", tool="k6", scenario="mx-w07-analysis")
+    budget_file = tmp_path / "budgets.json"
+    budget_file.write_text(json.dumps({
+        other.id: {"tokens": 100, "latency_seconds": 10},
+    }))
+    monkeypatch.setattr("p95bench.cli.load_tasks", lambda *_: [selected, other])
+    monkeypatch.setattr("p95bench.cli.get_provider", lambda _: FakeProvider())
+
+    assert main([
+        "run", "--provider", "deepseek", "--model", "deepseek-flash",
+        "--pack", "p95-core", "--tool", "k6", "--scenario", "a01",
+        "--efficiency-budgets", str(budget_file), "--out", str(tmp_path),
+    ]) == 1
+    assert selected.id in capsys.readouterr().err
 
 
 def test_harness_revision_ignores_enclosing_repository(tmp_path):

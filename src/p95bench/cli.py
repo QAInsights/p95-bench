@@ -11,6 +11,15 @@ from p95bench.tasks import TOOLS, load_tasks
 from p95bench.worker import WorkerUnavailable
 
 
+def _scenario_code(task):
+    if not task.scenario:
+        raise ValueError(f"Task has no scenario: {task.id}")
+    parts = task.scenario.split("-", 2)
+    if len(parts) < 2 or not parts[1]:
+        raise ValueError(f"Task has no scenario code: {task.id}")
+    return parts[1]
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="p95bench")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -24,6 +33,7 @@ def main(argv=None):
     execute.add_argument("--efficiency-budgets", type=Path)
     execute.add_argument("--repair-rounds", type=int, choices=(0, 1))
     execute.add_argument("--tool", choices=sorted(TOOLS), action="append")
+    execute.add_argument("--scenario", action="append")
     score = commands.add_parser("score")
     score.add_argument("directory", type=Path)
     args = parser.parse_args(argv)
@@ -41,10 +51,33 @@ def main(argv=None):
                                              Path("packs") / args.pack / "tasks"), categories)
             budgets = (json.loads(args.efficiency_budgets.read_text())
                        if args.efficiency_budgets else None)
-            if args.tool:
-                tasks = [task for task in tasks if task.tool in args.tool]
+            if args.tool or args.scenario:
+                selected = tasks
+                if args.tool:
+                    selected = [task for task in selected if task.tool in args.tool]
+                if args.scenario:
+                    scenario_codes = {task.id: _scenario_code(task) for task in tasks}
+                    requested_scenarios = set(args.scenario)
+                    available = {scenario_codes[task.id] for task in selected}
+                    missing_scenarios = requested_scenarios - available
+                    if missing_scenarios:
+                        raise ValueError(
+                            "No tasks match scenario code(s): "
+                            + ", ".join(sorted(missing_scenarios)))
+                    selected = [task for task in selected
+                                if scenario_codes[task.id] in requested_scenarios]
+                tasks = selected
                 if not tasks:
-                    raise ValueError("No tasks match the selected tools")
+                    raise ValueError("No tasks match the selected filters")
+                if budgets is not None:
+                    if not isinstance(budgets, dict):
+                        raise ValueError("Efficiency budgets must be a JSON object")
+                    missing_budgets = [task.id for task in tasks if task.id not in budgets]
+                    if missing_budgets:
+                        raise ValueError(
+                            "Efficiency budgets missing selected task(s): "
+                            + ", ".join(sorted(missing_budgets)))
+                    budgets = {task.id: budgets[task.id] for task in tasks}
             options = {}
             if args.repair_rounds is not None:
                 options["repair_rounds"] = args.repair_rounds
