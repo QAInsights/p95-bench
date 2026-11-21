@@ -46,7 +46,7 @@ v2 builder uses `npm run data -- --pack p95-v2.0.0 --tasks PUBLIC_TASK_ROOT RUN_
 and writes `leaderboard-p95-v2.0.0.json`, never overwriting v1. The site lands on v2
 by default; `?pack=v1` selects the legacy board.
 
-V2 has a shared **$30 maximum budget across all models**, backed by
+V2 has a shared **$60 maximum budget across all models**, backed by
 `~/.local/state/p95-bench/p95-v2.0.0-budget.json`. Do not delete/reset that ledger
 between models. File-locked, persistent maximum-cost reservations happen before
 generation and include every possible transport retry. Returned usage releases

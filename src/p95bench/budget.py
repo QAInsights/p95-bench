@@ -20,11 +20,11 @@ def micros(value):
 
 
 class BudgetLedger:
-    def __init__(self, path=DEFAULT_LEDGER, limit=30):
+    def __init__(self, path=DEFAULT_LEDGER, limit=60):
         self.path = Path(path)
         self.limit = micros(limit)
-        if not 0 < self.limit <= 30_000_000:
-            raise ValueError("V2 shared spend cap must be positive and at most $30")
+        if not 0 < self.limit <= 60_000_000:
+            raise ValueError("V2 shared spend cap must be positive and at most $60")
 
     @contextmanager
     def transaction(self):

@@ -425,15 +425,15 @@ def test_shared_cap_stops_requests_but_writes_summary(tmp_path, monkeypatch):
 def test_budget_shared_models_processes_and_fail_closed(tmp_path):
     path = tmp_path / "ledger.json"
     first, second = BudgetLedger(path), BudgetLedger(path)
-    reservation = first.reserve(20)
+    reservation = first.reserve(40)
     with pytest.raises(SpendLimitExceeded):
-        second.reserve(11)
+        second.reserve(21)
     first.settle(reservation, 1)
-    second.reserve(29)
+    second.reserve(59)
     with pytest.raises(SpendLimitExceeded):
         first.reserve(.000001)
     with pytest.raises(ValueError):
-        BudgetLedger(path, limit=31)
+        BudgetLedger(path, limit=61)
     with pytest.raises(ValueError):
         BudgetLedger(path, limit=1).reserve(.1)
     path.write_text("corrupted")
@@ -446,7 +446,7 @@ def test_concurrent_budget_reservations(tmp_path):
 
     def reserve(_):
         try:
-            ledger.reserve(5)
+            ledger.reserve(10)
             return True
         except SpendLimitExceeded:
             return False
@@ -502,8 +502,8 @@ def test_budget_overrun_is_persisted_and_blocks_future_spend(tmp_path):
     ledger = BudgetLedger(tmp_path / "ledger.json")
     key = ledger.reserve(1)
     with pytest.raises(ValueError, match="reservation"):
-        ledger.settle(key, 31)
-    assert json.loads(ledger.path.read_text())["charges"][key] == 31_000_000
+        ledger.settle(key, 61)
+    assert json.loads(ledger.path.read_text())["charges"][key] == 61_000_000
     with pytest.raises(SpendLimitExceeded):
         BudgetLedger(ledger.path).reserve(.000001)
 
