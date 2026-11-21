@@ -136,6 +136,25 @@ def test_qwen_stream_without_usage_is_unavailable(monkeypatch):
         get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
 
 
+def test_qwen_malformed_stream_event_is_unavailable(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    calls = []
+    response = io.BytesIO(
+        b'data: {"choices":[{"delta":{"content":"partial"}}]}\n\n'
+        b'data: {"usage": {"prompt_tok')
+
+    def request(*args, **kwargs):
+        calls.append(None)
+        return response
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+
+    with pytest.raises(ProviderUnavailable, match='Malformed stream event:'):
+        get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert len(calls) == 1
+
+
 def test_qwen_stream_error_is_unavailable(monkeypatch):
     monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
     monkeypatch.setattr('urllib.request.urlopen', lambda *args, **kwargs: sse_response(

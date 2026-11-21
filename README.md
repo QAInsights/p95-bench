@@ -172,8 +172,9 @@ ModelScope inference uses a free tier with daily limits. Reported costs are
 per million input/output tokens are $1.50/$4.50 for 4-Max (cache hits $0.075),
 $2/$6 for 3.8-Max, $0.15/$0.47 for 3.8-Flash (used as the estimate for
 Flash-Next), and $2.50/$7.50 for 3.7-Max.
-Cache hits use 10% of the input rate. Run metadata preserves the pricing source
-and free-tier note, which also appear in Model focus and the cost explainer.
+Cache hits use 10% of the input rate (5% for 4-Max). Run metadata preserves the
+pricing source and free-tier note, which also appear in Model focus and the cost
+explainer.
 
 Rate limits and transient transport/server errors retry five times, using
 exponential backoff or a numeric `Retry-After`, capped at 60 seconds per wait.

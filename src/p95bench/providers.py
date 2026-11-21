@@ -209,7 +209,11 @@ class OpenAICompatible:
                 payload = line[5:].strip()
                 if payload == "[DONE]":
                     break
-                chunk = json.loads(payload)
+                try:
+                    chunk = json.loads(payload)
+                except json.JSONDecodeError as error:
+                    raise ProviderUnavailable(
+                        f"Malformed stream event: {error}") from error
                 if "error" in chunk:
                     error = chunk["error"]
                     message = error.get("message", error) if isinstance(error, dict) else error
