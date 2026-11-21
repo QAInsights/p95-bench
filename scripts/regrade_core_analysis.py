@@ -97,18 +97,37 @@ def regrade(run_dir, commit):
                                        "previous_score": old_grade["score"]}
 
     if not changed:
-        return changed, superseded_cost, _summary_for_attempts(run_dir, attempts)
+        summary = _summary_for_attempts(run_dir, attempts)
+        summary_path = run_dir / "summary.json"
+        try:
+            current_summary = json.loads(summary_path.read_text())
+        except FileNotFoundError:
+            current_summary = None
+        except json.JSONDecodeError:
+            current_summary = None
+        if current_summary != summary:
+            summary_path.write_text(json.dumps(summary, indent=2) + "\n")
+        return changed, superseded_cost, summary
 
     cost_note = metadata.get("cost_note")
-    if not isinstance(cost_note, str) or COST_NOTE_PATTERN.fullmatch(cost_note) is None:
-        raise RuntimeError("Existing cost_note does not match the expected Core estimate pattern")
+    rewrite_cost_note = False
+    if isinstance(cost_note, str):
+        if COST_NOTE_PATTERN.fullmatch(cost_note):
+            rewrite_cost_note = True
+        elif "$" in cost_note:
+            raise RuntimeError("Existing cost_note contains an embedded total")
     summary = _summary_for_attempts(run_dir, attempts)
-    repairs = sum(bool((attempt.get("repair") or {}).get("triggered")) for attempt in attempts)
-    metadata["cost_note"] = (
-        f"USD list-price estimate from reported token usage at frozen registry prices for all "
-        f"{len(attempts)} Core first tries and {repairs} repair responses; Core usage cost "
-        f"${summary['estimated_cost_usd']:.6f}. Not an invoice."
+    repairs = sum(
+        bool((repair := attempt.get("repair") or {}).get("triggered"))
+        and repair.get("response") is not None
+        for attempt in attempts
     )
+    if rewrite_cost_note:
+        metadata["cost_note"] = (
+            f"USD list-price estimate from reported token usage at frozen registry prices for all "
+            f"{len(attempts)} Core first tries and {repairs} repair responses; Core usage cost "
+            f"${summary['estimated_cost_usd']:.6f}. Not an invoice."
+        )
     regraded = metadata.get("regraded", [])
     if isinstance(regraded, dict):
         regraded = [regraded]
@@ -121,10 +140,10 @@ def regrade(run_dir, commit):
         "tasks": changed,
         "superseded_repair_cost_usd": superseded_cost,
     }]
+    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    metadata_path.write_text(json.dumps(metadata, indent=2) + "\n")
     (run_dir / "attempts.jsonl").write_text(
         "".join(json.dumps(attempt) + "\n" for attempt in attempts))
-    metadata_path.write_text(json.dumps(metadata, indent=2) + "\n")
-    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     return changed, superseded_cost, summary
 
 
