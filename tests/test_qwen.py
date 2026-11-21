@@ -14,8 +14,14 @@ from p95bench.providers import (
     Response,
     get_provider,
 )
-from p95bench.runner import run
+from p95bench.runner import _output_cap, run
 from p95bench.tasks import Task
+
+
+def sse_response(*chunks):
+    lines = [f"data: {json.dumps(chunk)}\n\n" for chunk in chunks]
+    lines.append("data: [DONE]\n\n")
+    return io.BytesIO("".join(lines).encode())
 
 
 @pytest.mark.parametrize('model,rates', [
@@ -29,23 +35,32 @@ def test_transport_and_estimated_prices(monkeypatch, model, rates, content):
     monkeypatch.delenv('QWEN_BASE_URL', raising=False)
     provider = get_provider('qwen')
     assert type(provider) is OpenAICompatible
+    assert _output_cap(PROVIDERS['qwen']) == 65536
 
     def request(req, timeout):
         assert req.full_url == 'https://api-inference.modelscope.ai/v1/chat/completions'
         assert req.get_header('Authorization') == 'Bearer test-key'
-        assert timeout == 180
-        assert json.loads(req.data) == {'model': model, 'messages': [],
-                                        'enable_thinking': False, 'max_tokens': 16384,
-                                        'temperature': 0}
-        return io.BytesIO(json.dumps({
-            'choices': [{'message': {'content': content, 'reasoning_content': 'not the answer'}}],
-            'usage': {'prompt_tokens': 100, 'completion_tokens': 20,
-                      'prompt_tokens_details': {'cached_tokens': 40}},
-        }).encode())
+        assert timeout == 600
+        assert json.loads(req.data) == {
+            'model': model, 'messages': [], 'enable_thinking': True,
+            'reasoning_effort': 'xhigh',
+            'max_completion_tokens': 65536, 'stream': True,
+            'stream_options': {'include_usage': True},
+        }
+        return sse_response(
+            {'choices': [{'delta': {'content': content,
+                                    'reasoning_content': 'not the answer'}}]},
+            {'choices': [], 'usage': {
+                'prompt_tokens': 100, 'completion_tokens': 20,
+                'completion_tokens_details': {'reasoning_tokens': 8},
+                'prompt_tokens_details': {'cached_tokens': 40},
+            }},
+        )
 
     monkeypatch.setattr('urllib.request.urlopen', request)
     response = provider.send(model, [])
     assert response.text == (content or '')
+    assert response.reasoning_tokens == 8
     price = PROVIDERS['qwen'].prices[model]
     assert (price.input, price.cached, price.output) == rates
     assert price.cost(response) == pytest.approx((60 * rates[0] + 40 * rates[1]

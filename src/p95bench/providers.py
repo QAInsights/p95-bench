@@ -125,11 +125,15 @@ PROVIDERS = {
         {"Qwen-Ambassador/Qwen3.8-Max": Price(2, .2, 6),
          "Qwen-Ambassador/Qwen3.8-Flash-Next": Price(.15, .015, .47),
          "Qwen-Ambassador/Qwen3.7-Max": Price(2.5, .25, 7.5)},
-        extra={"enable_thinking": False, "max_tokens": 16384},
+        temperature=None,
+        extra={"enable_thinking": True, "reasoning_effort": "xhigh",
+               "max_completion_tokens": 65536, "stream": True,
+               "stream_options": {"include_usage": True}},
+        timeout_seconds=600,
         max_retries=5,
         cost_note="List-price estimate, run via ModelScope free tier.",
         pricing_source="https://www.alibabacloud.com/help/en/model-studio/model-pricing",
-        reasoning_mode="disabled",
+        reasoning_mode="thinking-xhigh",
     ),
     "deepseek": ProviderConfig(
         "https://api.deepseek.com", "DEEPSEEK_API_KEY",
@@ -190,8 +194,40 @@ class OpenAICompatible:
                 "User-Agent": "p95bench/0.1.0"}
 
     def _request_once(self, request):
+        body = json.loads(request.data) if request.data is not None else {}
         with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
-            return json.load(response)
+            if body.get("stream") is not True:
+                return json.load(response)
+            text, reasoning = [], []
+            finish_reason = usage = None
+            for raw_line in response:
+                line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
+                line = line.strip()
+                if not line or not line.startswith("data:"):
+                    continue
+                payload = line[5:].strip()
+                if payload == "[DONE]":
+                    break
+                chunk = json.loads(payload)
+                if "error" in chunk:
+                    error = chunk["error"]
+                    message = error.get("message", error) if isinstance(error, dict) else error
+                    raise ProviderUnavailable(f"Stream error: {message}")
+                if "usage" in chunk:
+                    usage = chunk["usage"]
+                for choice in chunk.get("choices") or []:
+                    delta = choice.get("delta") or {}
+                    if delta.get("content") is not None:
+                        text.append(delta["content"])
+                    if delta.get("reasoning_content") is not None:
+                        reasoning.append(delta["reasoning_content"])
+                    if choice.get("finish_reason") is not None:
+                        finish_reason = choice["finish_reason"]
+            if usage is None:
+                raise ProviderUnavailable("Streamed response ended without usage")
+            return {"choices": [{"message": {
+                "content": "".join(text), "reasoning_content": "".join(reasoning)},
+                "finish_reason": finish_reason}], "usage": usage}
 
     def _request(self, path: str, body: dict | None = None) -> dict:
         key = os.environ.get(self.config.key_env)

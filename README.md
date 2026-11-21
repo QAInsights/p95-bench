@@ -156,8 +156,11 @@ result files. Execution subprocesses do not need provider credentials.
 Use `--provider qwen` with `MODELSCOPE_API_KEY`. The OpenAI-compatible endpoint
 is `https://api-inference.modelscope.ai/v1` (override with `QWEN_BASE_URL`).
 Models: `Qwen-Ambassador/Qwen3.8-Max`, `Qwen-Ambassador/Qwen3.8-Flash-Next`,
-and `Qwen-Ambassador/Qwen3.7-Max`. Hybrid thinking is disabled with
-`enable_thinking: false`; temperature is 0 and the output cap is 16384 tokens.
+and `Qwen-Ambassador/Qwen3.7-Max`. Thinking is enabled (`enable_thinking: true`)
+at `reasoning_effort: xhigh` (Qwen's default and top level; no `thinking_budget`).
+Responses are streamed because ModelScope requires streaming for thinking.
+Temperature is left at the provider default, and the output cap is 65,536 tokens
+via `max_completion_tokens`, which covers reasoning and reply, matching DeepSeek.
 The [Qwen API reference](https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-dashscope)
 documents thinking control for the 3.8 and 3.7 series and a temperature range
 that includes 0. ModelScope compatibility is checked by the real runs.
