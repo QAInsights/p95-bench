@@ -16,6 +16,25 @@ CORE_PACK = ROOT / "packs/p95-core"
 TOOLS = {"jmeter", "k6", "locust", "gatling"}
 
 
+def _assert_json_matches(expected, actual, path="$"):
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict), path
+        assert set(actual) == set(expected), path
+        for key in expected:
+            _assert_json_matches(expected[key], actual[key], f"{path}.{key}")
+    elif isinstance(expected, list):
+        assert isinstance(actual, list), path
+        assert len(actual) == len(expected), path
+        for index, (expected_item, actual_item) in enumerate(zip(expected, actual)):
+            _assert_json_matches(expected_item, actual_item, f"{path}[{index}]")
+    elif isinstance(expected, float) or isinstance(actual, float):
+        assert isinstance(expected, float) and isinstance(actual, float), path
+        assert actual == pytest.approx(expected, rel=1e-9, abs=1e-12), path
+    else:
+        assert type(actual) is type(expected), path
+        assert actual == expected, path
+
+
 def _task_files(pack):
     result = {}
     for path in (pack / "tasks").rglob("*.yaml"):
@@ -241,14 +260,7 @@ def test_core_run_derivation_merges_committed_core_tool_shards(tmp_path):
     summary = derive_core_run(sources, tmp_path / "merged")
 
     expected = json.loads((ROOT / "results/p95-core/deepseek-flash/summary.json").read_text())
-    for key in ("overall_score", "quality_score", "efficiency_score", "estimated_cost_usd"):
-        assert summary[key] == pytest.approx(expected[key])
-    assert summary["category_scores"] == pytest.approx(expected["category_scores"])
-    for key in ("overall_score", "quality_score", "efficiency_score"):
-        assert summary["after_repair"][key] == pytest.approx(expected["after_repair"][key])
-    assert summary["after_repair"]["category_scores"] == pytest.approx(
-        expected["after_repair"]["category_scores"]
-    )
+    _assert_json_matches(expected, summary)
     assert summary["attempts"] == 104
     assert summary["complete"] is True
     metadata = json.loads((tmp_path / "merged/metadata.json").read_text())
