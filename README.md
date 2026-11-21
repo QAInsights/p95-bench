@@ -179,7 +179,8 @@ explainer.
 Rate limits and transient transport/server errors retry five times, using
 exponential backoff or a numeric `Retry-After`, capped at 60 seconds per wait.
 A streamed response that ends mid-event or without usage counts as a transport
-error and is retried; its tokens are unknown and not charged.
+error and is retried; its tokens are unknown, so it is left out of the
+published cost, while the spend ledger keeps its full reserved estimate.
 Exhausted requests are recorded in `not-run.jsonl`, not graded as failures.
 Authentication and other non-retryable errors abort the run. Published coverage
 counts only actual responses; an empty response is still a real, graded attempt.
