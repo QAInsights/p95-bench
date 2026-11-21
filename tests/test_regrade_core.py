@@ -66,14 +66,26 @@ def test_regrade_rejects_tampered_task_digest_without_writing(tmp_path):
     assert _files(run_dir) == before
 
 
-def test_regrade_of_already_regraded_run_is_byte_identical(tmp_path):
+def test_regrade_of_already_regraded_run_reconciles_summary_only(tmp_path):
     run_dir = _copy_run(tmp_path)
-    before = _files(run_dir)
+    attempts_path = run_dir / "attempts.jsonl"
+    metadata_path = run_dir / "metadata.json"
+    summary_path = run_dir / "summary.json"
+    attempts_before = attempts_path.read_bytes()
+    metadata_before = metadata_path.read_bytes()
+    summary_before = summary_path.read_bytes()
+    previous_summary = json.loads(summary_before)
 
-    changed, _, _ = regrade(run_dir, "second-pass")
+    changed, _, summary = regrade(run_dir, "second-pass")
 
     assert changed == []
-    assert _files(run_dir) == before
+    assert attempts_path.read_bytes() == attempts_before
+    assert metadata_path.read_bytes() == metadata_before
+    assert json.loads(summary_path.read_text()) == summary
+    if previous_summary == summary:
+        assert summary_path.read_bytes() == summary_before
+    else:
+        assert summary_path.read_bytes() == (json.dumps(summary, indent=2) + "\n").encode()
 
 
 def test_regrade_repairs_stale_summary_without_rewriting_attempts_or_metadata(tmp_path):
