@@ -29,6 +29,10 @@ class ProviderUnavailable(RuntimeError):
     pass
 
 
+class StreamInterrupted(ConnectionError):
+    pass
+
+
 class SpendLimitExceeded(RuntimeError):
     pass
 
@@ -212,8 +216,7 @@ class OpenAICompatible:
                 try:
                     chunk = json.loads(payload)
                 except json.JSONDecodeError as error:
-                    raise ProviderUnavailable(
-                        f"Malformed stream event: {error}") from error
+                    raise StreamInterrupted(f"Malformed stream event: {error}") from error
                 if "error" in chunk:
                     error = chunk["error"]
                     message = error.get("message", error) if isinstance(error, dict) else error
@@ -229,7 +232,7 @@ class OpenAICompatible:
                     if choice.get("finish_reason") is not None:
                         finish_reason = choice["finish_reason"]
             if usage is None:
-                raise ProviderUnavailable("Streamed response ended without usage")
+                raise StreamInterrupted("Streamed response ended without usage")
             return {"choices": [{"message": {
                 "content": "".join(text), "reasoning_content": "".join(reasoning)},
                 "finish_reason": finish_reason}], "usage": usage}

@@ -127,41 +127,91 @@ def test_qwen_stream_length_with_reasoning_only_is_thinking_exhausted(monkeypatc
     assert response.thinking_exhausted
 
 
-def test_qwen_stream_without_usage_is_unavailable(monkeypatch):
+def test_qwen_stream_without_usage_retries_as_transport_error(monkeypatch):
     monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
-    monkeypatch.setattr('urllib.request.urlopen', lambda *args, **kwargs: sse_response(
-        {'choices': [{'delta': {'content': 'answer'}}]}))
-
-    with pytest.raises(ProviderUnavailable, match='Streamed response ended without usage'):
-        get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
-
-
-def test_qwen_malformed_stream_event_is_unavailable(monkeypatch):
-    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    provider = get_provider('qwen')
     calls = []
-    response = io.BytesIO(
+
+    def request(*args, **kwargs):
+        calls.append(None)
+        return sse_response({'choices': [{'delta': {'content': 'answer'}}]})
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+    expected_calls = 1 + provider.config.transport_retries
+
+    with pytest.raises(ProviderUnavailable,
+                       match=rf'No response after {expected_calls} requests \(StreamInterrupted\)'):
+        provider.send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert len(calls) == expected_calls
+
+
+def test_qwen_malformed_stream_event_retries_as_transport_error(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    provider = get_provider('qwen')
+    calls = []
+    truncated_stream = (
         b'data: {"choices":[{"delta":{"content":"partial"}}]}\n\n'
         b'data: {"usage": {"prompt_tok')
 
     def request(*args, **kwargs):
         calls.append(None)
-        return response
+        return io.BytesIO(truncated_stream)
 
     monkeypatch.setattr('urllib.request.urlopen', request)
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+    expected_calls = 1 + provider.config.transport_retries
 
-    with pytest.raises(ProviderUnavailable, match='Malformed stream event:'):
-        get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
+    with pytest.raises(ProviderUnavailable,
+                       match=rf'No response after {expected_calls} requests \(StreamInterrupted\)'):
+        provider.send('Qwen-Ambassador/Qwen3.8-Max', [])
 
-    assert len(calls) == 1
+    assert len(calls) == expected_calls
+
+
+def test_qwen_interrupted_stream_recovers_on_retry(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    calls = []
+    truncated_stream = (
+        b'data: {"choices":[{"delta":{"content":"partial"}}]}\n\n'
+        b'data: {"usage": {"prompt_tok')
+
+    def request(*args, **kwargs):
+        calls.append(None)
+        if len(calls) == 1:
+            return io.BytesIO(truncated_stream)
+        return sse_response(
+            {'choices': [{'delta': {'content': 'recovered'}, 'finish_reason': 'stop'}]},
+            {'choices': [], 'usage': {'prompt_tokens': 4, 'completion_tokens': 3}},
+        )
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+
+    response = get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert response.text == 'recovered'
+    assert response.input_tokens == 4
+    assert response.output_tokens == 3
+    assert response.finish_reason == 'stop'
+    assert len(calls) == 2
 
 
 def test_qwen_stream_error_is_unavailable(monkeypatch):
     monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
-    monkeypatch.setattr('urllib.request.urlopen', lambda *args, **kwargs: sse_response(
-        {'error': {'message': 'stream rejected'}}))
+    calls = []
+
+    def request(*args, **kwargs):
+        calls.append(None)
+        return sse_response({'error': {'message': 'stream rejected'}})
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
 
     with pytest.raises(ProviderUnavailable, match='Stream error: stream rejected'):
         get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert len(calls) == 1
 
 
 def test_deepseek_non_stream_response_remains_plain_json(monkeypatch):
