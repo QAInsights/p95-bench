@@ -170,6 +170,7 @@ export async function buildData(directories, options = {}) {
       harness_commit: metadata.harness_commit ?? first.harness_commit ?? null,
       ...(metadata.cost_note ? { cost_note: metadata.cost_note,
         pricing_source: metadata.pricing_source ?? null } : {}),
+      ...(metadata.derived_from ? { derived_from: metadata.derived_from } : {}),
       output_cap: metadata.max_completion_tokens ?? metadata.max_tokens ?? metadata.maxOutputTokens ?? null,
       cost_attempts: costAttempts,
       coverage: taskCoverage({ per_task_results: attempts }, tasks),

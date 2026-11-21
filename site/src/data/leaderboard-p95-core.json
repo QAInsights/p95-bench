@@ -1,0 +1,5325 @@
+{
+  "pack_id": "p95-core",
+  "pack_digest": "5a5d08825662410062545ffd7e7d35b6bfe3dddcf956f2d0e08693fea9da5a8a",
+  "weights": {
+    "repair": 25,
+    "migration": 15,
+    "correlation": 25,
+    "workload": 20,
+    "analysis": 15
+  },
+  "models": [
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-pro",
+      "overall_score": 25.0882294534116,
+      "pack_id": "p95-core",
+      "pack_digest": "5a5d08825662410062545ffd7e7d35b6bfe3dddcf956f2d0e08693fea9da5a8a",
+      "quality_score": 25.093750000000004,
+      "efficiency_score": 24.98333906823199,
+      "repeats": 1,
+      "after_repair": {
+        "overall_score": 25.0882294534116,
+        "quality_score": 25.093750000000004,
+        "efficiency_score": 24.98333906823199,
+        "category_scores": {
+          "repair": 53.75000000000001,
+          "migration": 10.625,
+          "correlation": 7.916666666666667,
+          "workload": 6.666666666666667,
+          "analysis": 45
+        }
+      },
+      "category_scores": {
+        "repair": 53.75000000000001,
+        "migration": 10.625,
+        "correlation": 7.916666666666667,
+        "workload": 6.666666666666667,
+        "analysis": 45
+      },
+      "cost": 2.432423312,
+      "tokens": {
+        "input": 420913,
+        "output": 607411
+      },
+      "latency": 2710.785274368027,
+      "run_date": "2026-11-20T20:38:03.896884+00:00",
+      "harness_commit": "f3b2baa0baf459b4c5faee579717b4e95754cefc",
+      "derived_from": [
+        {
+          "pack_id": "p95-matrix",
+          "pack_digest": "e1172becde2abd9fdcbef9ea343ed25e95728a55d0a023cd8d554016a2f50ed7",
+          "run": "deepseek-v4-pro",
+          "harness_commit": "f3b2baa0baf459b4c5faee579717b4e95754cefc"
+        }
+      ],
+      "output_cap": 16384,
+      "cost_attempts": [
+        {
+          "task_id": "mx-a01-jtl-endpoints-gatling",
+          "input_tokens": 443,
+          "cached_tokens": 384,
+          "output_tokens": 134,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000625416
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-jmeter",
+          "input_tokens": 514,
+          "cached_tokens": 512,
+          "output_tokens": 132,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0005478880000000001
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-k6",
+          "input_tokens": 789,
+          "cached_tokens": 768,
+          "output_tokens": 107,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000485232
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-locust",
+          "input_tokens": 514,
+          "cached_tokens": 512,
+          "output_tokens": 149,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000615208
+        },
+        {
+          "task_id": "mx-a04-k6-errors-gatling",
+          "input_tokens": 571,
+          "cached_tokens": 512,
+          "output_tokens": 124,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0005914480000000001
+        },
+        {
+          "task_id": "mx-a04-k6-errors-jmeter",
+          "input_tokens": 532,
+          "cached_tokens": 512,
+          "output_tokens": 122,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000532048
+        },
+        {
+          "task_id": "mx-a04-k6-errors-k6",
+          "input_tokens": 637,
+          "cached_tokens": 512,
+          "output_tokens": 111,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0006270879999999999
+        },
+        {
+          "task_id": "mx-a04-k6-errors-locust",
+          "input_tokens": 550,
+          "cached_tokens": 512,
+          "output_tokens": 126,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000571648
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-gatling",
+          "input_tokens": 532,
+          "cached_tokens": 512,
+          "output_tokens": 144,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000619168
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-jmeter",
+          "input_tokens": 608,
+          "cached_tokens": 512,
+          "output_tokens": 128,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000656128
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-k6",
+          "input_tokens": 883,
+          "cached_tokens": 768,
+          "output_tokens": 128,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000692472
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-locust",
+          "input_tokens": 582,
+          "cached_tokens": 512,
+          "output_tokens": 126,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0006138879999999999
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-gatling",
+          "input_tokens": 629,
+          "cached_tokens": 512,
+          "output_tokens": 98,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000565048
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-jmeter",
+          "input_tokens": 619,
+          "cached_tokens": 512,
+          "output_tokens": 98,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000551848
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-k6",
+          "input_tokens": 619,
+          "cached_tokens": 512,
+          "output_tokens": 103,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.000571648
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-locust",
+          "input_tokens": 565,
+          "cached_tokens": 512,
+          "output_tokens": 106,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0005122480000000001
+        },
+        {
+          "task_id": "mx-c01-html-csrf-gatling",
+          "input_tokens": 1074,
+          "cached_tokens": 1024,
+          "output_tokens": 3938,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.015705536
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "input_tokens": 1127,
+          "cached_tokens": 1024,
+          "output_tokens": 9988,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.03973349600000001
+        },
+        {
+          "task_id": "mx-c01-html-csrf-k6",
+          "input_tokens": 1007,
+          "cached_tokens": 896,
+          "output_tokens": 5675,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.022658944
+        },
+        {
+          "task_id": "mx-c01-html-csrf-locust",
+          "input_tokens": 1077,
+          "cached_tokens": 1024,
+          "output_tokens": 4302,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.017150936
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "input_tokens": 1057,
+          "cached_tokens": 1024,
+          "output_tokens": 2729,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.010895456
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-jmeter",
+          "input_tokens": 1110,
+          "cached_tokens": 1024,
+          "output_tokens": 8547,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.034004696
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-k6",
+          "input_tokens": 990,
+          "cached_tokens": 896,
+          "output_tokens": 3893,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.015579784000000001
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "input_tokens": 1060,
+          "cached_tokens": 1024,
+          "output_tokens": 3533,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.014083255999999999
+        },
+        {
+          "task_id": "mx-c04-json-pagination-gatling",
+          "input_tokens": 1058,
+          "cached_tokens": 1024,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.064970576
+        },
+        {
+          "task_id": "mx-c04-json-pagination-jmeter",
+          "input_tokens": 1111,
+          "cached_tokens": 1024,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.065040536
+        },
+        {
+          "task_id": "mx-c04-json-pagination-k6",
+          "input_tokens": 991,
+          "cached_tokens": 896,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.065045464
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "input_tokens": 1061,
+          "cached_tokens": 1024,
+          "output_tokens": 4586,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.018254456000000002
+        },
+        {
+          "task_id": "mx-c06-etag-update-gatling",
+          "input_tokens": 1114,
+          "cached_tokens": 1024,
+          "output_tokens": 7733,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.030786536
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "input_tokens": 1167,
+          "cached_tokens": 1152,
+          "output_tokens": 10017,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.039737808
+        },
+        {
+          "task_id": "mx-c06-etag-update-k6",
+          "input_tokens": 1047,
+          "cached_tokens": 1024,
+          "output_tokens": 4931,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.019602176
+        },
+        {
+          "task_id": "mx-c06-etag-update-locust",
+          "input_tokens": 1117,
+          "cached_tokens": 1024,
+          "output_tokens": 2853,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.011465696
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "input_tokens": 1074,
+          "cached_tokens": 1024,
+          "output_tokens": 13766,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.054624415999999995
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-jmeter",
+          "input_tokens": 1127,
+          "cached_tokens": 1024,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.06506165600000001
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-k6",
+          "input_tokens": 1007,
+          "cached_tokens": 896,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.065066584
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "input_tokens": 1077,
+          "cached_tokens": 1024,
+          "output_tokens": 5162,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.020556536
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "input_tokens": 1116,
+          "cached_tokens": 1024,
+          "output_tokens": 2435,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.009809096
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "input_tokens": 1169,
+          "cached_tokens": 1152,
+          "output_tokens": 12736,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.050507687999999995
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "input_tokens": 1049,
+          "cached_tokens": 1024,
+          "output_tokens": 5291,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.021030416
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "input_tokens": 1119,
+          "cached_tokens": 1024,
+          "output_tokens": 4307,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.017226176
+        },
+        {
+          "task_id": "mx-m01-basic-flow-gatling",
+          "input_tokens": 8729,
+          "cached_tokens": 8704,
+          "output_tokens": 2615,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.010771376000000001
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "input_tokens": 2909,
+          "cached_tokens": 2816,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.065127304
+        },
+        {
+          "task_id": "mx-m01-basic-flow-k6",
+          "input_tokens": 8662,
+          "cached_tokens": 8576,
+          "output_tokens": 2877,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.011883784
+        },
+        {
+          "task_id": "mx-m01-basic-flow-locust",
+          "input_tokens": 8732,
+          "cached_tokens": 8704,
+          "output_tokens": 2163,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.008985416
+        },
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "input_tokens": 16295,
+          "cached_tokens": 16256,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.065647384
+        },
+        {
+          "task_id": "mx-m04-data-driven-jmeter",
+          "input_tokens": 2773,
+          "cached_tokens": 2688,
+          "output_tokens": 6043,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.024160752
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "input_tokens": 16228,
+          "cached_tokens": 16128,
+          "output_tokens": 3137,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.013264152
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "input_tokens": 16298,
+          "cached_tokens": 16256,
+          "output_tokens": 3846,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.016000864
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "input_tokens": 9117,
+          "cached_tokens": 9088,
+          "output_tokens": 2686,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.011074711999999999
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "input_tokens": 3302,
+          "cached_tokens": 3200,
+          "output_tokens": 5533,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.02218612
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "input_tokens": 9050,
+          "cached_tokens": 8960,
+          "output_tokens": 3606,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0147928
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-locust",
+          "input_tokens": 9120,
+          "cached_tokens": 9088,
+          "output_tokens": 1766,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.007435471999999999
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "input_tokens": 8716,
+          "cached_tokens": 8704,
+          "output_tokens": 4722,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.019097936
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "input_tokens": 2898,
+          "cached_tokens": 2816,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.06511278399999999
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-k6",
+          "input_tokens": 8647,
+          "cached_tokens": 8576,
+          "output_tokens": 3624,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.014822104
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-locust",
+          "input_tokens": 8723,
+          "cached_tokens": 8704,
+          "output_tokens": 3889,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.015808496000000002
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-gatling",
+          "input_tokens": 5411,
+          "cached_tokens": 5376,
+          "output_tokens": 4360,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.017548343999999997
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "input_tokens": 8989,
+          "cached_tokens": 8960,
+          "output_tokens": 6145,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.024766720000000002
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "input_tokens": 2799,
+          "cached_tokens": 2688,
+          "output_tokens": 1404,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.005824632000000001
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-locust",
+          "input_tokens": 4225,
+          "cached_tokens": 4224,
+          "output_tokens": 3155,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.012680975999999998
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "input_tokens": 5423,
+          "cached_tokens": 5376,
+          "output_tokens": 4739,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.019065023999999996
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "input_tokens": 8587,
+          "cached_tokens": 8576,
+          "output_tokens": 8720,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.034923064
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-k6",
+          "input_tokens": 2933,
+          "cached_tokens": 2816,
+          "output_tokens": 2258,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.009220024
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-locust",
+          "input_tokens": 4195,
+          "cached_tokens": 4096,
+          "output_tokens": 3151,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.012788863999999999
+        },
+        {
+          "task_id": "mx-r04-status-recovery-gatling",
+          "input_tokens": 5442,
+          "cached_tokens": 5376,
+          "output_tokens": 5583,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.022432344
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "input_tokens": 8943,
+          "cached_tokens": 8832,
+          "output_tokens": 8938,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.035929608
+        },
+        {
+          "task_id": "mx-r04-status-recovery-k6",
+          "input_tokens": 2990,
+          "cached_tokens": 2944,
+          "output_tokens": 2097,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.008494376
+        },
+        {
+          "task_id": "mx-r04-status-recovery-locust",
+          "input_tokens": 4140,
+          "cached_tokens": 4096,
+          "output_tokens": 3561,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.014339863999999999
+        },
+        {
+          "task_id": "mx-r05-business-assertion-gatling",
+          "input_tokens": 5417,
+          "cached_tokens": 5376,
+          "output_tokens": 4361,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.017560224000000003
+        },
+        {
+          "task_id": "mx-r05-business-assertion-jmeter",
+          "input_tokens": 8988,
+          "cached_tokens": 8960,
+          "output_tokens": 8839,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.03543364
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "input_tokens": 2767,
+          "cached_tokens": 2688,
+          "output_tokens": 1987,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.008091072
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "input_tokens": 4168,
+          "cached_tokens": 4096,
+          "output_tokens": 3156,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.012773024
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-gatling",
+          "input_tokens": 5494,
+          "cached_tokens": 5376,
+          "output_tokens": 4598,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.018600383999999998
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-jmeter",
+          "input_tokens": 9721,
+          "cached_tokens": 9600,
+          "output_tokens": 9916,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.03984948000000001
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-k6",
+          "input_tokens": 3076,
+          "cached_tokens": 3072,
+          "output_tokens": 1929,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0077792880000000005
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-locust",
+          "input_tokens": 4265,
+          "cached_tokens": 4224,
+          "output_tokens": 3100,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.012515976
+        },
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "input_tokens": 5755,
+          "cached_tokens": 5632,
+          "output_tokens": 14736,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.058764727999999995
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "input_tokens": 13266,
+          "cached_tokens": 13184,
+          "output_tokens": 11812,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.047463856
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "input_tokens": 3670,
+          "cached_tokens": 3584,
+          "output_tokens": 1938,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.007945696
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "input_tokens": 4522,
+          "cached_tokens": 4480,
+          "output_tokens": 3296,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.013304719999999999
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "input_tokens": 5581,
+          "cached_tokens": 5504,
+          "output_tokens": 4594,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.018536056000000002
+        },
+        {
+          "task_id": "mx-r10-user-partition-jmeter",
+          "input_tokens": 9074,
+          "cached_tokens": 8960,
+          "output_tokens": 9123,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.036671800000000004
+        },
+        {
+          "task_id": "mx-r10-user-partition-k6",
+          "input_tokens": 2845,
+          "cached_tokens": 2816,
+          "output_tokens": 1110,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0045577840000000005
+        },
+        {
+          "task_id": "mx-r10-user-partition-locust",
+          "input_tokens": 4075,
+          "cached_tokens": 3968,
+          "output_tokens": 2995,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.012176032000000002
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "input_tokens": 6422,
+          "cached_tokens": 6400,
+          "output_tokens": 4673,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.018815719999999998
+        },
+        {
+          "task_id": "mx-r11-timer-scope-jmeter",
+          "input_tokens": 9705,
+          "cached_tokens": 9600,
+          "output_tokens": 9050,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.036399
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "input_tokens": 3172,
+          "cached_tokens": 3072,
+          "output_tokens": 2038,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.008337648
+        },
+        {
+          "task_id": "mx-r11-timer-scope-locust",
+          "input_tokens": 4568,
+          "cached_tokens": 4480,
+          "output_tokens": 3176,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.012890239999999999
+        },
+        {
+          "task_id": "mx-r12-error-metric-gatling",
+          "input_tokens": 5419,
+          "cached_tokens": 5376,
+          "output_tokens": 4813,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.019352784
+        },
+        {
+          "task_id": "mx-r12-error-metric-jmeter",
+          "input_tokens": 35540,
+          "cached_tokens": 35456,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.066551584
+        },
+        {
+          "task_id": "mx-r12-error-metric-k6",
+          "input_tokens": 2971,
+          "cached_tokens": 2944,
+          "output_tokens": 1679,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.006814016000000001
+        },
+        {
+          "task_id": "mx-r12-error-metric-locust",
+          "input_tokens": 4170,
+          "cached_tokens": 4096,
+          "output_tokens": 3202,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.012957824
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "input_tokens": 1372,
+          "cached_tokens": 1280,
+          "output_tokens": 10341,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.041128120000000004
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "input_tokens": 1427,
+          "cached_tokens": 1408,
+          "output_tokens": 6679,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.026535872
+        },
+        {
+          "task_id": "mx-w01-steady-starts-k6",
+          "input_tokens": 1305,
+          "cached_tokens": 1280,
+          "output_tokens": 6478,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.0257422
+        },
+        {
+          "task_id": "mx-w01-steady-starts-locust",
+          "input_tokens": 1375,
+          "cached_tokens": 1280,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.06506236
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-gatling",
+          "input_tokens": 1388,
+          "cached_tokens": 1280,
+          "output_tokens": 3138,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.012625359999999999
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "input_tokens": 1443,
+          "cached_tokens": 1408,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.064988792
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-k6",
+          "input_tokens": 1321,
+          "cached_tokens": 1280,
+          "output_tokens": 6156,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.024488199999999998
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "input_tokens": 1391,
+          "cached_tokens": 1280,
+          "output_tokens": 5400,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.02158684
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "input_tokens": 1370,
+          "cached_tokens": 1280,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.06505576
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "input_tokens": 1425,
+          "cached_tokens": 1408,
+          "output_tokens": 4746,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.018878552
+        },
+        {
+          "task_id": "mx-w07-burst-control-k6",
+          "input_tokens": 1303,
+          "cached_tokens": 1280,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.06496732
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "input_tokens": 1373,
+          "cached_tokens": 1280,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 1.32,
+            "cached": 0.044,
+            "output": 3.96
+          },
+          "cost_usd": 0.06505972
+        }
+      ],
+      "coverage": {
+        "run": 104,
+        "total": 104,
+        "partial": false,
+        "label": "104/104 tasks run"
+      },
+      "per_task_results": [
+        {
+          "task_id": "mx-a01-jtl-endpoints-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 134,
+          "latency_seconds": 1.487741510005435,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (JSONDecodeError): Expecting value: line 1 column 1 (char 0)"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 132,
+          "latency_seconds": 1.700068670004839,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (JSONDecodeError): Expecting value: line 1 column 1 (char 0)"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 107,
+          "latency_seconds": 1.687358415001654,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 149,
+          "latency_seconds": 2.1396633779950207,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (JSONDecodeError): Expecting value: line 1 column 1 (char 0)"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a04-k6-errors",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 124,
+          "latency_seconds": 1.5681087669945555,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a04-k6-errors",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 122,
+          "latency_seconds": 1.7404734439915046,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a04-k6-errors",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 111,
+          "latency_seconds": 1.5480740549974144,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a04-k6-errors",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 126,
+          "latency_seconds": 1.6094875189883169,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 144,
+          "latency_seconds": 1.6621657959913136,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 128,
+          "latency_seconds": 1.621825321999495,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 128,
+          "latency_seconds": 1.5193556870071916,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 126,
+          "latency_seconds": 1.30792188399937,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 98,
+          "latency_seconds": 1.6827344159974018,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 98,
+          "latency_seconds": 1.1307426860003034,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 103,
+          "latency_seconds": 1.4542667549976613,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 106,
+          "latency_seconds": 1.832219076997717,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3938,
+          "latency_seconds": 19.156370090000564,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 9988,
+          "latency_seconds": 48.47665171700646,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5675,
+          "latency_seconds": 27.425425969006028,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 4302,
+          "latency_seconds": 19.354580145998625,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 2729,
+          "latency_seconds": 14.101873977997457,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 8547,
+          "latency_seconds": 35.24866195500363,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX executable expression outside the allowed subset"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3893,
+          "latency_seconds": 17.947628157999134,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3533,
+          "latency_seconds": 17.161727943996084,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 72.11518525201245,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 67.39326426098705,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 65.06046593599604,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 4586,
+          "latency_seconds": 23.632486364993383,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c06-etag-update-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 7733,
+          "latency_seconds": 39.77199294300226,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 10017,
+          "latency_seconds": 42.53801435000787,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c06-etag-update-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c06-etag-update",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 4931,
+          "latency_seconds": 26.105002725002123,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c06-etag-update-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c06-etag-update",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 2853,
+          "latency_seconds": 13.979445040997234,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 13766,
+          "latency_seconds": 69.79250650100585,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 73.45423832400411,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 72.30436098999053,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5162,
+          "latency_seconds": 24.823484811000526,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 2435,
+          "latency_seconds": 13.058442724999622,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 12736,
+          "latency_seconds": 53.72740233200602,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ParseError): not well-formed (invalid token): line 703, column 92"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 5291,
+          "latency_seconds": 24.901689817997976,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4307,
+          "latency_seconds": 22.11909526999807,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 2615,
+          "latency_seconds": 15.344462065011612,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 73.67570339300437,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0.75,
+          "repeat": 0,
+          "output_tokens": 2877,
+          "latency_seconds": 14.292583240996464,
+          "after_repair_score": 0.75,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 2163,
+          "latency_seconds": 11.548561465999228,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 65.38434598800086,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m04-data-driven",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 6043,
+          "latency_seconds": 30.71076701200218,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m04-data-driven",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 3137,
+          "latency_seconds": 15.297293889001594,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m04-data-driven",
+          "score": 0.75,
+          "repeat": 0,
+          "output_tokens": 3846,
+          "latency_seconds": 20.446694256999763,
+          "after_repair_score": 0.75,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 2686,
+          "latency_seconds": 15.519427712002653,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5533,
+          "latency_seconds": 24.714049656991847,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3606,
+          "latency_seconds": 16.974303104987484,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 1766,
+          "latency_seconds": 9.634981148003135,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4722,
+          "latency_seconds": 23.394909687005566,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 65.94216199700895,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3624,
+          "latency_seconds": 18.396322183005395,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3889,
+          "latency_seconds": 18.018512395996368,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 4360,
+          "latency_seconds": 18.521691991001717,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 6145,
+          "latency_seconds": 24.651248661000864,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1404,
+          "latency_seconds": 6.773754680994898,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3155,
+          "latency_seconds": 13.574427147992537,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4739,
+          "latency_seconds": 20.399907066996093,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 8720,
+          "latency_seconds": 33.98506105699926,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2258,
+          "latency_seconds": 10.714659290009877,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3151,
+          "latency_seconds": 14.258310028002597,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5583,
+          "latency_seconds": 25.209515163005562,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 8938,
+          "latency_seconds": 36.14494329999434,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r04-status-recovery",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2097,
+          "latency_seconds": 9.744430616003228,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3561,
+          "latency_seconds": 17.508309247001307,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 4361,
+          "latency_seconds": 20.029504720994737,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r05-business-assertion",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 8839,
+          "latency_seconds": 34.38085581999621,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 1987,
+          "latency_seconds": 9.101054625003599,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r05-business-assertion",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3156,
+          "latency_seconds": 13.721474448000663,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4598,
+          "latency_seconds": 19.745662462999462,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 9916,
+          "latency_seconds": 42.78102325700456,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1929,
+          "latency_seconds": 8.459324198003742,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 3100,
+          "latency_seconds": 12.671844374999637,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 14736,
+          "latency_seconds": 75.37887153899646,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 11812,
+          "latency_seconds": 54.450851734000025,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r08-arrival-options",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1938,
+          "latency_seconds": 9.596938318005414,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3296,
+          "latency_seconds": 14.402992400006042,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r10-user-partition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4594,
+          "latency_seconds": 19.337484671996208,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r10-user-partition",
+          "score": 0.55,
+          "repeat": 0,
+          "output_tokens": 9123,
+          "latency_seconds": 36.605760716993245,
+          "after_repair_score": 0.55,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r10-user-partition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1110,
+          "latency_seconds": 6.054221586004132,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r10-user-partition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2995,
+          "latency_seconds": 13.551830138996593,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4673,
+          "latency_seconds": 20.54462171799969,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 9050,
+          "latency_seconds": 40.34436054500111,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r11-timer-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2038,
+          "latency_seconds": 9.812266157998238,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r11-timer-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3176,
+          "latency_seconds": 13.799292978001176,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4813,
+          "latency_seconds": 20.55221413700201,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 69.14104940199468,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-r12-error-metric-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r12-error-metric",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 1679,
+          "latency_seconds": 8.131926703004865,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r12-error-metric",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3202,
+          "latency_seconds": 13.319005044002552,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 10341,
+          "latency_seconds": 44.91546978900442,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 6679,
+          "latency_seconds": 30.147889999003382,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX executable expression outside the allowed subset"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 6478,
+          "latency_seconds": 32.66112385800807,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 68.76317575199937,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3138,
+          "latency_seconds": 15.196468920010375,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 62.31946299200354,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 6156,
+          "latency_seconds": 28.907300632999977,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5400,
+          "latency_seconds": 24.051873374992283,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 70.26383175799856,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4746,
+          "latency_seconds": 21.72268679899571,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ParseError): mismatched tag: line 145, column 12"
+        },
+        {
+          "task_id": "mx-w07-burst-control-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 62.92812287900597,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 62.86989349000214,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        }
+      ]
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "overall_score": 24.564236111111114,
+      "pack_id": "p95-core",
+      "pack_digest": "5a5d08825662410062545ffd7e7d35b6bfe3dddcf956f2d0e08693fea9da5a8a",
+      "quality_score": 24.564236111111114,
+      "efficiency_score": 24.564236111111114,
+      "repeats": 1,
+      "after_repair": {
+        "overall_score": 24.564236111111114,
+        "quality_score": 24.564236111111114,
+        "efficiency_score": 24.564236111111114,
+        "category_scores": {
+          "repair": 38.611111111111114,
+          "migration": 8.75,
+          "correlation": 19.479166666666668,
+          "workload": 25.833333333333332,
+          "analysis": 23.75
+        }
+      },
+      "category_scores": {
+        "repair": 38.611111111111114,
+        "migration": 8.75,
+        "correlation": 19.479166666666668,
+        "workload": 25.833333333333332,
+        "analysis": 23.75
+      },
+      "cost": 0.51219171,
+      "tokens": {
+        "input": 421017,
+        "output": 419789
+      },
+      "latency": 1418.8056371320563,
+      "run_date": "2026-11-20T20:38:03.877001+00:00",
+      "harness_commit": "f3b2baa0baf459b4c5faee579717b4e95754cefc",
+      "derived_from": [
+        {
+          "pack_id": "p95-matrix",
+          "pack_digest": "e1172becde2abd9fdcbef9ea343ed25e95728a55d0a023cd8d554016a2f50ed7",
+          "run": "deepseek-flash",
+          "harness_commit": "f3b2baa0baf459b4c5faee579717b4e95754cefc"
+        }
+      ],
+      "output_cap": 16384,
+      "cost_attempts": [
+        {
+          "task_id": "mx-a01-jtl-endpoints-gatling",
+          "input_tokens": 444,
+          "cached_tokens": 256,
+          "output_tokens": 107,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000186336
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-jmeter",
+          "input_tokens": 515,
+          "cached_tokens": 381,
+          "output_tokens": 86,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00014568600000000001
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-k6",
+          "input_tokens": 790,
+          "cached_tokens": 640,
+          "output_tokens": 107,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00017724
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-locust",
+          "input_tokens": 515,
+          "cached_tokens": 381,
+          "output_tokens": 86,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00014568600000000001
+        },
+        {
+          "task_id": "mx-a04-k6-errors-gatling",
+          "input_tokens": 572,
+          "cached_tokens": 384,
+          "output_tokens": 98,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000176304
+        },
+        {
+          "task_id": "mx-a04-k6-errors-jmeter",
+          "input_tokens": 533,
+          "cached_tokens": 384,
+          "output_tokens": 96,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00016220399999999997
+        },
+        {
+          "task_id": "mx-a04-k6-errors-k6",
+          "input_tokens": 638,
+          "cached_tokens": 384,
+          "output_tokens": 90,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00018650400000000002
+        },
+        {
+          "task_id": "mx-a04-k6-errors-locust",
+          "input_tokens": 551,
+          "cached_tokens": 384,
+          "output_tokens": 100,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000172404
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-gatling",
+          "input_tokens": 533,
+          "cached_tokens": 384,
+          "output_tokens": 105,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00017300399999999999
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-jmeter",
+          "input_tokens": 609,
+          "cached_tokens": 384,
+          "output_tokens": 105,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000195804
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-k6",
+          "input_tokens": 884,
+          "cached_tokens": 640,
+          "output_tokens": 105,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00020304
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-locust",
+          "input_tokens": 583,
+          "cached_tokens": 384,
+          "output_tokens": 216,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000321204
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-gatling",
+          "input_tokens": 630,
+          "cached_tokens": 384,
+          "output_tokens": 83,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000175704
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-jmeter",
+          "input_tokens": 620,
+          "cached_tokens": 384,
+          "output_tokens": 83,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000172704
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-k6",
+          "input_tokens": 620,
+          "cached_tokens": 384,
+          "output_tokens": 83,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000172704
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-locust",
+          "input_tokens": 566,
+          "cached_tokens": 384,
+          "output_tokens": 83,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.000156504
+        },
+        {
+          "task_id": "mx-c01-html-csrf-gatling",
+          "input_tokens": 1075,
+          "cached_tokens": 896,
+          "output_tokens": 3696,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004494276
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "input_tokens": 1128,
+          "cached_tokens": 896,
+          "output_tokens": 7247,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.008771376
+        },
+        {
+          "task_id": "mx-c01-html-csrf-k6",
+          "input_tokens": 1008,
+          "cached_tokens": 768,
+          "output_tokens": 4054,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004941408
+        },
+        {
+          "task_id": "mx-c01-html-csrf-locust",
+          "input_tokens": 1078,
+          "cached_tokens": 896,
+          "output_tokens": 4239,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005146776
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "input_tokens": 1058,
+          "cached_tokens": 896,
+          "output_tokens": 3456,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004201175999999999
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-jmeter",
+          "input_tokens": 1111,
+          "cached_tokens": 896,
+          "output_tokens": 7216,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.008729075999999999
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-k6",
+          "input_tokens": 991,
+          "cached_tokens": 768,
+          "output_tokens": 1936,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0023947079999999997
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "input_tokens": 1061,
+          "cached_tokens": 896,
+          "output_tokens": 4032,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004893276
+        },
+        {
+          "task_id": "mx-c04-json-pagination-gatling",
+          "input_tokens": 1059,
+          "cached_tokens": 896,
+          "output_tokens": 4246,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005149476
+        },
+        {
+          "task_id": "mx-c04-json-pagination-jmeter",
+          "input_tokens": 1112,
+          "cached_tokens": 896,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.019730975999999997
+        },
+        {
+          "task_id": "mx-c04-json-pagination-k6",
+          "input_tokens": 992,
+          "cached_tokens": 768,
+          "output_tokens": 3983,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004851408
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "input_tokens": 1062,
+          "cached_tokens": 896,
+          "output_tokens": 4672,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005661576
+        },
+        {
+          "task_id": "mx-c06-etag-update-gatling",
+          "input_tokens": 1115,
+          "cached_tokens": 896,
+          "output_tokens": 4045,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0049250760000000005
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "input_tokens": 1168,
+          "cached_tokens": 1024,
+          "output_tokens": 9164,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.011046143999999999
+        },
+        {
+          "task_id": "mx-c06-etag-update-k6",
+          "input_tokens": 1048,
+          "cached_tokens": 896,
+          "output_tokens": 3195,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.003884976
+        },
+        {
+          "task_id": "mx-c06-etag-update-locust",
+          "input_tokens": 1118,
+          "cached_tokens": 896,
+          "output_tokens": 5202,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006314375999999999
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "input_tokens": 1075,
+          "cached_tokens": 896,
+          "output_tokens": 3777,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004591476
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-jmeter",
+          "input_tokens": 1128,
+          "cached_tokens": 896,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.019735775999999997
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-k6",
+          "input_tokens": 1008,
+          "cached_tokens": 768,
+          "output_tokens": 3877,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004729008
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "input_tokens": 1078,
+          "cached_tokens": 896,
+          "output_tokens": 5477,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006632376
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "input_tokens": 1117,
+          "cached_tokens": 896,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.019732476
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "input_tokens": 1170,
+          "cached_tokens": 1024,
+          "output_tokens": 6674,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.008058744
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "input_tokens": 1050,
+          "cached_tokens": 896,
+          "output_tokens": 3519,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004274376
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "input_tokens": 1120,
+          "cached_tokens": 896,
+          "output_tokens": 3911,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004765776
+        },
+        {
+          "task_id": "mx-m01-basic-flow-gatling",
+          "input_tokens": 8730,
+          "cached_tokens": 8576,
+          "output_tokens": 1375,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.001747656
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "input_tokens": 2910,
+          "cached_tokens": 2688,
+          "output_tokens": 5039,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006129528
+        },
+        {
+          "task_id": "mx-m01-basic-flow-k6",
+          "input_tokens": 8663,
+          "cached_tokens": 8448,
+          "output_tokens": 2936,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0036383879999999998
+        },
+        {
+          "task_id": "mx-m01-basic-flow-locust",
+          "input_tokens": 8733,
+          "cached_tokens": 8576,
+          "output_tokens": 3235,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.003980556
+        },
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "input_tokens": 16296,
+          "cached_tokens": 16128,
+          "output_tokens": 2714,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.003403968
+        },
+        {
+          "task_id": "mx-m04-data-driven-jmeter",
+          "input_tokens": 2774,
+          "cached_tokens": 2560,
+          "output_tokens": 8265,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.009997559999999999
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "input_tokens": 16229,
+          "cached_tokens": 16000,
+          "output_tokens": 3524,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0043935
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "input_tokens": 16299,
+          "cached_tokens": 16128,
+          "output_tokens": 4451,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005489268
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "input_tokens": 9118,
+          "cached_tokens": 8960,
+          "output_tokens": 1171,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0015063600000000002
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "input_tokens": 3303,
+          "cached_tokens": 3072,
+          "output_tokens": 5310,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006459732
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "input_tokens": 9051,
+          "cached_tokens": 8832,
+          "output_tokens": 3383,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004178291999999999
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-locust",
+          "input_tokens": 9121,
+          "cached_tokens": 8960,
+          "output_tokens": 3864,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004738860000000001
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "input_tokens": 8717,
+          "cached_tokens": 8576,
+          "output_tokens": 1436,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0018169560000000002
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "input_tokens": 2899,
+          "cached_tokens": 2688,
+          "output_tokens": 4830,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005875428
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-k6",
+          "input_tokens": 8648,
+          "cached_tokens": 8448,
+          "output_tokens": 5211,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006363888
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-locust",
+          "input_tokens": 8724,
+          "cached_tokens": 8576,
+          "output_tokens": 3070,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.003779856
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-gatling",
+          "input_tokens": 5412,
+          "cached_tokens": 5248,
+          "output_tokens": 8652,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.010463088
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "input_tokens": 8990,
+          "cached_tokens": 8832,
+          "output_tokens": 5956,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.007247592
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "input_tokens": 2800,
+          "cached_tokens": 2560,
+          "output_tokens": 1935,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00240936
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-locust",
+          "input_tokens": 4226,
+          "cached_tokens": 4092,
+          "output_tokens": 3670,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004468752
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "input_tokens": 5424,
+          "cached_tokens": 5248,
+          "output_tokens": 5110,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0062162879999999995
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "input_tokens": 8588,
+          "cached_tokens": 8448,
+          "output_tokens": 4064,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004969488
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-k6",
+          "input_tokens": 2934,
+          "cached_tokens": 2688,
+          "output_tokens": 1910,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0023819279999999997
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-locust",
+          "input_tokens": 4196,
+          "cached_tokens": 3968,
+          "output_tokens": 1856,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.002319408
+        },
+        {
+          "task_id": "mx-r04-status-recovery-gatling",
+          "input_tokens": 5443,
+          "cached_tokens": 5248,
+          "output_tokens": 6011,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.007303188
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "input_tokens": 8944,
+          "cached_tokens": 8704,
+          "output_tokens": 12155,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.014710224000000001
+        },
+        {
+          "task_id": "mx-r04-status-recovery-k6",
+          "input_tokens": 2991,
+          "cached_tokens": 2816,
+          "output_tokens": 1923,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.002376996
+        },
+        {
+          "task_id": "mx-r04-status-recovery-locust",
+          "input_tokens": 4141,
+          "cached_tokens": 3968,
+          "output_tokens": 3770,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004599707999999999
+        },
+        {
+          "task_id": "mx-r05-business-assertion-gatling",
+          "input_tokens": 5418,
+          "cached_tokens": 5248,
+          "output_tokens": 4629,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005637288000000001
+        },
+        {
+          "task_id": "mx-r05-business-assertion-jmeter",
+          "input_tokens": 8989,
+          "cached_tokens": 8832,
+          "output_tokens": 4765,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0058180919999999995
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "input_tokens": 2768,
+          "cached_tokens": 2560,
+          "output_tokens": 1832,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0022761599999999997
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "input_tokens": 4169,
+          "cached_tokens": 3968,
+          "output_tokens": 1870,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.002328108
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-gatling",
+          "input_tokens": 5495,
+          "cached_tokens": 5248,
+          "output_tokens": 4879,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005960388
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-jmeter",
+          "input_tokens": 9722,
+          "cached_tokens": 9472,
+          "output_tokens": 8628,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.010485432000000001
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-k6",
+          "input_tokens": 3077,
+          "cached_tokens": 2943,
+          "output_tokens": 1793,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.002209458
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-locust",
+          "input_tokens": 4266,
+          "cached_tokens": 4096,
+          "output_tokens": 1793,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.002227176
+        },
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "input_tokens": 5756,
+          "cached_tokens": 5504,
+          "output_tokens": 1635,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0020706239999999996
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "input_tokens": 13267,
+          "cached_tokens": 13056,
+          "output_tokens": 3523,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004369236
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "input_tokens": 3671,
+          "cached_tokens": 3456,
+          "output_tokens": 2123,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.002632836
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "input_tokens": 4523,
+          "cached_tokens": 4352,
+          "output_tokens": 3614,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004414212000000001
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "input_tokens": 5582,
+          "cached_tokens": 5376,
+          "output_tokens": 4875,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005944056
+        },
+        {
+          "task_id": "mx-r10-user-partition-jmeter",
+          "input_tokens": 9075,
+          "cached_tokens": 8832,
+          "output_tokens": 14000,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.016925892
+        },
+        {
+          "task_id": "mx-r10-user-partition-k6",
+          "input_tokens": 2846,
+          "cached_tokens": 2688,
+          "output_tokens": 1139,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.001430328
+        },
+        {
+          "task_id": "mx-r10-user-partition-locust",
+          "input_tokens": 4076,
+          "cached_tokens": 3840,
+          "output_tokens": 1427,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0018062399999999998
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "input_tokens": 6423,
+          "cached_tokens": 6272,
+          "output_tokens": 4872,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005929332
+        },
+        {
+          "task_id": "mx-r11-timer-scope-jmeter",
+          "input_tokens": 9706,
+          "cached_tokens": 9472,
+          "output_tokens": 4805,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.005893032
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "input_tokens": 3173,
+          "cached_tokens": 2944,
+          "output_tokens": 1850,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.002306364
+        },
+        {
+          "task_id": "mx-r11-timer-scope-locust",
+          "input_tokens": 4569,
+          "cached_tokens": 4352,
+          "output_tokens": 3172,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0038976119999999995
+        },
+        {
+          "task_id": "mx-r12-error-metric-gatling",
+          "input_tokens": 5420,
+          "cached_tokens": 5248,
+          "output_tokens": 5073,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006170687999999999
+        },
+        {
+          "task_id": "mx-r12-error-metric-jmeter",
+          "input_tokens": 35541,
+          "cached_tokens": 35328,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.019936667999999998
+        },
+        {
+          "task_id": "mx-r12-error-metric-k6",
+          "input_tokens": 2972,
+          "cached_tokens": 2816,
+          "output_tokens": 2084,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0025644959999999994
+        },
+        {
+          "task_id": "mx-r12-error-metric-locust",
+          "input_tokens": 4171,
+          "cached_tokens": 3968,
+          "output_tokens": 1519,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.001907508
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "input_tokens": 1373,
+          "cached_tokens": 1152,
+          "output_tokens": 4224,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0051420120000000005
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "input_tokens": 1428,
+          "cached_tokens": 1280,
+          "output_tokens": 3740,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.00454008
+        },
+        {
+          "task_id": "mx-w01-steady-starts-k6",
+          "input_tokens": 1306,
+          "cached_tokens": 1152,
+          "output_tokens": 1591,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.001962312
+        },
+        {
+          "task_id": "mx-w01-steady-starts-locust",
+          "input_tokens": 1376,
+          "cached_tokens": 1152,
+          "output_tokens": 1524,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.001902912
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-gatling",
+          "input_tokens": 1389,
+          "cached_tokens": 1152,
+          "output_tokens": 3759,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004588812
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "input_tokens": 1444,
+          "cached_tokens": 1280,
+          "output_tokens": 5434,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006577680000000001
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-k6",
+          "input_tokens": 1322,
+          "cached_tokens": 1152,
+          "output_tokens": 1548,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0019155119999999999
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "input_tokens": 1392,
+          "cached_tokens": 1152,
+          "output_tokens": 3699,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004517712
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "input_tokens": 1371,
+          "cached_tokens": 1152,
+          "output_tokens": 3595,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.004386612
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "input_tokens": 1426,
+          "cached_tokens": 1280,
+          "output_tokens": 16384,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.01971228
+        },
+        {
+          "task_id": "mx-w07-burst-control-k6",
+          "input_tokens": 1304,
+          "cached_tokens": 1152,
+          "output_tokens": 1762,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.0021669120000000004
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "input_tokens": 1374,
+          "cached_tokens": 1152,
+          "output_tokens": 5016,
+          "price_per_million": {
+            "input": 0.3,
+            "cached": 0.006,
+            "output": 1.2
+          },
+          "cost_usd": 0.006092711999999999
+        }
+      ],
+      "coverage": {
+        "run": 104,
+        "total": 104,
+        "partial": false,
+        "label": "104/104 tasks run"
+      },
+      "per_task_results": [
+        {
+          "task_id": "mx-a01-jtl-endpoints-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 107,
+          "latency_seconds": 0.8838890839979285,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 86,
+          "latency_seconds": 0.9520314410037827,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 107,
+          "latency_seconds": 1.0683027699997183,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 86,
+          "latency_seconds": 0.9914978049928322,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a04-k6-errors",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 98,
+          "latency_seconds": 0.7727819900028408,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a04-k6-errors",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 96,
+          "latency_seconds": 1.0906987950002076,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a04-k6-errors",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 90,
+          "latency_seconds": 0.9252326150017325,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a04-k6-errors",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 100,
+          "latency_seconds": 0.9164809159992728,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 105,
+          "latency_seconds": 0.8782014900061768,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 105,
+          "latency_seconds": 0.8528097670059651,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 105,
+          "latency_seconds": 1.0744011140050134,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 216,
+          "latency_seconds": 1.4798411740048323,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 83,
+          "latency_seconds": 0.8060785809939262,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 83,
+          "latency_seconds": 0.8399296179995872,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 83,
+          "latency_seconds": 0.7661068510060431,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 83,
+          "latency_seconds": 0.9267353580071358,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3696,
+          "latency_seconds": 12.571180020997417,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 7247,
+          "latency_seconds": 21.43977100600023,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c01-html-csrf",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 4054,
+          "latency_seconds": 12.571027412006515,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0.75,
+          "repeat": 0,
+          "output_tokens": 4239,
+          "latency_seconds": 13.226788111001952,
+          "after_repair_score": 0.75,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3456,
+          "latency_seconds": 11.187050287000602,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 7216,
+          "latency_seconds": 20.460948975000065,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1936,
+          "latency_seconds": 6.4535884100041585,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0.75,
+          "repeat": 0,
+          "output_tokens": 4032,
+          "latency_seconds": 12.281966264999937,
+          "after_repair_score": 0.75,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4246,
+          "latency_seconds": 14.023301321998588,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 81.98857368300378,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 3983,
+          "latency_seconds": 12.350117299007252,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4672,
+          "latency_seconds": 14.110321033003856,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c06-etag-update-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c06-etag-update",
+          "score": 0.225,
+          "repeat": 0,
+          "output_tokens": 4045,
+          "latency_seconds": 13.54196347600373,
+          "after_repair_score": 0.225,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 9164,
+          "latency_seconds": 26.458843968008296,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX executable expression outside the allowed subset"
+        },
+        {
+          "task_id": "mx-c06-etag-update-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c06-etag-update",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 3195,
+          "latency_seconds": 10.612187320992234,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c06-etag-update-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5202,
+          "latency_seconds": 16.36521196299873,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3777,
+          "latency_seconds": 13.276738022002974,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 73.68298951900215,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 3877,
+          "latency_seconds": 12.364401450002333,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 5477,
+          "latency_seconds": 16.521746643993538,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 42.678480300994124,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 6674,
+          "latency_seconds": 20.21731857699342,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0.55,
+          "repeat": 0,
+          "output_tokens": 3519,
+          "latency_seconds": 17.281324587995186,
+          "after_repair_score": 0.55,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3911,
+          "latency_seconds": 12.732712237004307,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 1375,
+          "latency_seconds": 9.363546293010586,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5039,
+          "latency_seconds": 24.393509872999857,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m01-basic-flow",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2936,
+          "latency_seconds": 14.582039795001037,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3235,
+          "latency_seconds": 10.324579431995517,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m04-data-driven",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 2714,
+          "latency_seconds": 10.221340645002783,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 8265,
+          "latency_seconds": 24.50240805798967,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m04-data-driven",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 3524,
+          "latency_seconds": 11.59142871000222,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4451,
+          "latency_seconds": 14.46577756300394,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 1171,
+          "latency_seconds": 5.470338540995726,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Grader error (AuditOverflow): Audit overflow; script exceeded the request evidence limit"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5310,
+          "latency_seconds": 16.6563305890013,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3383,
+          "latency_seconds": 11.223012895003194,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Grader error (AuditOverflow): Audit overflow; script exceeded the request evidence limit"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 3864,
+          "latency_seconds": 12.861318459996255,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 1436,
+          "latency_seconds": 6.2566146190074505,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4830,
+          "latency_seconds": 14.995514535999973,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5211,
+          "latency_seconds": 18.43708935698669,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 3070,
+          "latency_seconds": 15.138638720003655,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 8652,
+          "latency_seconds": 30.941381395998178,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5956,
+          "latency_seconds": 16.525118552002823,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 1935,
+          "latency_seconds": 5.716627904999768,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3670,
+          "latency_seconds": 11.16411024799163,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5110,
+          "latency_seconds": 15.247983198001748,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 4064,
+          "latency_seconds": 11.465744667992112,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1910,
+          "latency_seconds": 5.622268737992272,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1856,
+          "latency_seconds": 5.359417058003601,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 6011,
+          "latency_seconds": 19.43163812700368,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 12155,
+          "latency_seconds": 34.23897019699507,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r04-status-recovery",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1923,
+          "latency_seconds": 5.581607578002149,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3770,
+          "latency_seconds": 11.85764697700506,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4629,
+          "latency_seconds": 13.472120149002876,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 4765,
+          "latency_seconds": 13.230238269999973,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 1832,
+          "latency_seconds": 5.549157561006723,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r05-business-assertion",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1870,
+          "latency_seconds": 5.561139148994698,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4879,
+          "latency_seconds": 14.862094490003074,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 8628,
+          "latency_seconds": 22.907980592994136,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 1793,
+          "latency_seconds": 5.6161312790063675,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1793,
+          "latency_seconds": 5.182045716006542,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 1635,
+          "latency_seconds": 5.306810084002791,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3523,
+          "latency_seconds": 10.036037541998667,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ParseError): mismatched tag: line 1, column 13505"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 2123,
+          "latency_seconds": 6.530811320000794,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3614,
+          "latency_seconds": 10.742925541999284,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r10-user-partition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4875,
+          "latency_seconds": 14.896571178993327,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r10-user-partition",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 14000,
+          "latency_seconds": 40.63708066000254,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r10-user-partition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1139,
+          "latency_seconds": 4.0661750559957,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r10-user-partition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1427,
+          "latency_seconds": 4.292221714000334,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4872,
+          "latency_seconds": 15.307236310996814,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 4805,
+          "latency_seconds": 14.152496241993504,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r11-timer-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1850,
+          "latency_seconds": 5.928749419006635,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r11-timer-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3172,
+          "latency_seconds": 8.9671133189986,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5073,
+          "latency_seconds": 16.90802717200131,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 43.069693190002,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-r12-error-metric-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r12-error-metric",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 2084,
+          "latency_seconds": 6.846291887006373,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r12-error-metric",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1519,
+          "latency_seconds": 5.048034663006547,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 4224,
+          "latency_seconds": 14.672590254995157,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3740,
+          "latency_seconds": 12.927186165994499,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0.9,
+          "repeat": 0,
+          "output_tokens": 1591,
+          "latency_seconds": 5.736533879011404,
+          "after_repair_score": 0.9,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0.3,
+          "repeat": 0,
+          "output_tokens": 1524,
+          "latency_seconds": 4.963357233005809,
+          "after_repair_score": 0.3,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3759,
+          "latency_seconds": 13.34421164500236,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5434,
+          "latency_seconds": 18.46569152500888,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 1548,
+          "latency_seconds": 5.355125684000086,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0.1,
+          "repeat": 0,
+          "output_tokens": 3699,
+          "latency_seconds": 11.511568392990739,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 3595,
+          "latency_seconds": 12.723472722995211,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 16384,
+          "latency_seconds": 79.62154514000576,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ParseError): mismatched tag: line 305, column 4"
+        },
+        {
+          "task_id": "mx-w07-burst-control-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w07-burst-control",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1762,
+          "latency_seconds": 6.653676756992354,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 5016,
+          "latency_seconds": 16.453921238004114,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        }
+      ]
+    }
+  ]
+}

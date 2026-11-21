@@ -9,8 +9,16 @@ The legacy pack is `p95-v1`; its boolean scores and published artifacts are unch
 `v2_exec` and structured `v2_analysis` graders: 11 repair, 6 migration, 10 correlation,
 8 workload and 5 analysis. Selecting v2 with a legacy grader fails before requests.
 See [the pack contract](packs/p95-v2.0.0/README.md) for isolation, capacity qualification,
-checkpoint gating and offline golden/mutation verification. This is a public evaluation
-pack, not a calibrated model leaderboard; no v2 model results are claimed here.
+checkpoint gating and offline golden/mutation verification. The earlier `p95-v2.0.0`
+pack remains available; the current benchmark uses the separate Core pack below.
+
+## Core benchmark
+
+The current benchmark and site board use `p95-core`: 26 scenarios × 4 tools = 104
+tasks. Its locked scenario set is `r01 r02 r04 r05 r06 r08 r10 r11 r12 c01 c03
+c04 c06 c08 c09 m01 m04 m05 m06 w01 w02 w07 a01 a04 a05 a06`. The full
+`p95-matrix` pack remains available as the 40-scenario superset for historical
+runs; it is not the current board.
 
 First publication uses **one repeat by default**, configurable with `--repeats`.
 Each task's repeat mean contributes equally within its category. V2 weights are
@@ -319,13 +327,11 @@ adding hatched placeholders only for missing tasks. Group pass rates exclude
 Not run. Use Left / Right, Home / End within the matrix to inspect a square,
 or open its semantic data table. Reduced motion disables regrouping animation.
 
-The header keeps pack and earlier-version choices in the URL. With no v2
-leaderboard, only v1 is offered. Generate `leaderboard-p95-v2.0.0.json` with
-`npm run data -- --pack p95-v2.0.0 <public-run-directories>` to enable v2;
-it becomes the default, including with a one-model board. Missing or invalid
-`pack` parameters select v2, while `?pack=v1` selects the legacy board. The header
-wordmark returns home to `/` on v2 without a pack parameter.
-The v2 control and copy describe the 40 public tasks. Quality, quality-gated efficiency and the 95/5 composite stay separate.
+The board shows Core only, with no pack/version switcher. Generate
+`leaderboard-p95-core.json` with `npm run data -- --pack p95-core
+<public-run-directories>`. Core contains 26 public scenarios across four tools
+(104 tasks); category counts are derived from its task inventory. Quality,
+quality-gated efficiency and the 95/5 composite stay separate.
 Models missing a selected-pack run remain visible without invented scores.
 Synthetic fixtures in `site/tests/` are test-only and must never be published as
 a leaderboard or copied into production data.

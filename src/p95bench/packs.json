@@ -15,5 +15,11 @@
     "default_repeats": 1,
     "efficiency_weight": 0.05,
     "weights": {"repair": 25, "migration": 15, "correlation": 25, "workload": 20, "analysis": 15}
+  },
+  "p95-core": {
+    "grade_schema_version": 2,
+    "default_repeats": 1,
+    "efficiency_weight": 0.05,
+    "weights": {"repair": 25, "migration": 15, "correlation": 25, "workload": 20, "analysis": 15}
   }
 }

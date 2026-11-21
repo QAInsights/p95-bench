@@ -5,13 +5,13 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/geist.css";
 import "../styles/board.css";
 import { parse } from "yaml";
-import data from "../data/leaderboard-p95-matrix.json";
-import { boardModels, boardTasks, categoryBlurbs, categoryLabels, taskCode, taskDetails, taskScore, toolLabel, TOOLS } from "../lib/board.mjs";
+import data from "../data/leaderboard-p95-core.json";
+import { boardModels, boardTasks, categoryBlurbs, categoryLabels, hasRepairScores as modelsHaveRepairScores, taskCode, taskDetails, taskScore, toolLabel, TOOLS } from "../lib/board.mjs";
 
-const sources = import.meta.glob("../../../packs/p95-matrix/tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
+const sources = import.meta.glob("../../../packs/p95-core/tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
 const models = boardModels(data);
 const tasks = taskDetails(Object.values(sources).map(source => parse(source)), boardTasks(data));
-const hasRepairScores = models.some(m => m.repairRounds !== 0 && Number.isFinite(m.afterRepair?.score));
+const hasRepairScores = modelsHaveRepairScores(models);
 const scoreModes = hasRepairScores ? ["first", "repair"] : ["first"];
 const modelsForScore = mode => models.map(m => mode === "repair" && m.afterRepair
   ? { ...m, score: m.afterRepair.score } : m)
@@ -45,8 +45,8 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
 
     <main>
       <section class="page-intro">
-        <h1><span class="lime">{tasks.length}</span> scenarios × {tools.length} tools</h1>
-        <p>Each task gives a model one performance-testing job in JMeter, k6, Locust or Gatling; every scenario exists in all four tools. The generated script runs against a demo shop, and graders award points for each check it passes. Every task file is <a href={`${repo}/tree/main/packs/p95-matrix/tasks`}>in the repo</a>.</p>
+        <h1><span class="lime">{tasks.length}</span> scenarios × {tools.length} tools = {tasks.length * tools.length} tasks</h1>
+        <p>Core covers {tasks.length} scenarios across JMeter, k6, Locust and Gatling, for {tasks.length * tools.length} tasks. Each task gives a model one performance-testing job; the generated script runs against a demo shop, and graders award points for each check it passes. Every task file is <a href={`${repo}/tree/main/packs/p95-core/tasks`}>in the repo</a>.</p>
       </section>
 
       <section aria-labelledby="count-title">

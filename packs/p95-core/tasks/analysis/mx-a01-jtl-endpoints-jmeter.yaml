@@ -1,0 +1,67 @@
+id: mx-a01-jtl-endpoints-jmeter
+category: analysis
+tool: jmeter
+grader: v2_analysis
+prompt: 'Analyze a labeled JTL slice; identify the slow endpoint after removing warmup
+  and transaction parent samples.
+
+
+  Return only JSON with exactly this structure (leaves are types, not answers):
+
+  {"observations": {"included": "number", "errors": "number", "p95_ms": {"browse":
+  "number", "checkout": "number"}}, "diagnosis": {"ranking": ["string", "string"],
+  "bottleneck": "string"}, "evidence": {"rows": ["string", "string"], "excluded":
+  ["string", "string"]}}
+
+  Nearest-rank p95=ceil(.95*n), includes failed responses; exclude warmup=true or
+  parent=true. Timestamp ms. Numeric absolute tolerance1e-6. Sort row IDs; rank descending
+  p95. Never invent unobserved latencies.
+
+  Sort all evidence ID/key arrays lexicographically. Enum choices: {}. Other string
+  values must exactly match fixture identifiers.
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — JSON schema Requires: none.
+
+  setup: 30 points — correct included sample/error counts Requires: loads.
+
+  behavior: 40 points — correct endpoint ranking and nearest-rank p95 Requires: loads.
+
+  safety: 20 points — cites the relevant row IDs and exclusions. Requires: loads.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.
+
+
+  Native fixture: a01-jmeter.jtl.csv.'
+params:
+  analysis: endpoints
+  rubric:
+  - id: loads
+    points: 10
+    description: JSON schema
+    requires: []
+  - id: setup
+    points: 30
+    description: correct included sample/error counts
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: correct endpoint ranking and nearest-rank p95
+    requires:
+    - loads
+  - id: safety
+    points: 20
+    description: cites the relevant row IDs and exclusions.
+    requires:
+    - loads
+  fixture_aliases: {}
+  tool: jmeter
+  native_files:
+    data: a01-jmeter.jtl.csv
+fixtures:
+- a01-jmeter.jtl.csv
+scenario: mx-a01-jtl-endpoints

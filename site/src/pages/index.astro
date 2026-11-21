@@ -4,13 +4,14 @@ import "@fontsource/bricolage-grotesque/latin-600.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/geist.css";
 import "../styles/board.css";
-import data from "../data/leaderboard-p95-matrix.json";
-import { boardModels, boardTasks, categoryLabels, scatter, taskCode, taskScore, toolLabel, toolScores, TOOLS, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
+import data from "../data/leaderboard-p95-core.json";
+import { boardModels, boardTasks, categoryLabels, hasRepairScores as modelsHaveRepairScores, scatter, taskCode, taskScore, toolLabel, toolScores, TOOLS, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
 
 const models = boardModels(data);
 const tasks = boardTasks(data);
+const derivedModels = data.models.filter(m => Array.isArray(m.derived_from) && m.derived_from.length);
 const categories = Object.keys(data.weights);
-const hasRepairScores = models.some(m => m.repairRounds !== 0 && Number.isFinite(m.afterRepair?.score));
+const hasRepairScores = modelsHaveRepairScores(models);
 const scoreModes = hasRepairScores ? ["first", "repair"] : ["first"];
 const scoreModel = (model, mode) => mode === "repair" && model.afterRepair
   ? { ...model, score: model.afterRepair.score, quality: model.afterRepair.quality,
@@ -58,7 +59,7 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
     <main>
       <section class="intro">
         <h1><span class="lime">P95 Bench</span> measures how well language models write, fix and analyse performance tests in JMeter, k6, Locust and Gatling.</h1>
-        <p class="meta">Matrix · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
+        <p class="meta">Core · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
       </section>
 
       <div class="filter" role="group" aria-label="Filter scores by tool">
@@ -202,9 +203,9 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         <h2 id="method-title" class="label">Method</h2>
         <ul>
           <li>{tasks.length} public scenarios across {categories.length} categories, each written for all {tools.length} tools ({tasks.length * tools.length} tasks): {categories.map(c => (categoryLabels[c] ?? c).toLowerCase()).join(", ")}. Every task is in the repo.</li>
-          <li>Each model answers every task once at temperature 0 with a 16,384-token output cap, through the provider's own API.</li>
+          <li>Each model answers every task once through the provider's own API; the run metadata records reasoning mode and output cap.</li>
           <li>Generated JMeter, k6, Locust and Gatling scripts run in isolated containers against a demo shop; the same graders score every tool.</li>
-          <li>Known limit: the JMeter three-phase workload reference reaches 92/100, because JMeter timers cannot hold the exact phase rates.</li>
+          {derivedModels.length > 0 && <li>Derived from the Matrix run: {derivedModels.map(m => `${m.model} (${m.derived_from.map(source => source.run).join(", ")})`).join("; ")}.</li>}
           <li>Score = 95% quality + 5% efficiency. Efficiency is scaled by quality and uses per-task output-token and latency budgets.</li>
           <li>Cost is reported token usage at list price, not a provider invoice.</li>
         </ul>

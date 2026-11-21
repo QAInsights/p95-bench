@@ -1,0 +1,6 @@
+REQUEST checkout warmup 0 50000 OK warmup=true
+REQUEST checkout checkout-1 1000 1100 OK warmup=false
+REQUEST checkout checkout-2 2000 2900 KO warmup=false
+REQUEST browse browse-1 1100 1120 OK warmup=false
+REQUEST browse browse-2 2100 2130 OK warmup=false
+GROUP transaction parent 2000 7000 OK warmup=false

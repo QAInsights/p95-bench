@@ -19,6 +19,7 @@ export function boardModels(data) {
         efficiency: m.after_repair.efficiency_score, categories: m.after_repair.category_scores,
       } : null,
       repairRounds: m.repair_rounds ?? null, reasoningMode: m.reasoning_mode ?? null,
+      derivedFrom: m.derived_from ?? null,
       cost: m.cost, outputTokens: m.tokens?.output ?? null, latency: m.latency,
       categories: m.category_scores, tasks: m.per_task_results,
     }))
@@ -34,6 +35,9 @@ export function boardTasks(data) {
     .map(t => ({ id: t.task_id, category: t.category, tool: t.tool, label: taskLabel(t.task_id) }))
     .sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category) || a.id.localeCompare(b.id));
 }
+
+export const hasRepairScores = models => models.some(m =>
+  m.repairRounds > 0 && Number.isFinite(m.afterRepair?.score));
 
 export const taskLabel = id => id.replace(/^(?:v2|mx)-[a-z]\d+-/i, '').replaceAll('-', ' ');
 export const taskCode = id => id.match(/^(?:v2|mx)-([a-z]\d+)/i)?.[1].toUpperCase() ?? id;

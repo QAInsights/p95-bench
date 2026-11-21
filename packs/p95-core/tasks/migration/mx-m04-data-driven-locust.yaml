@@ -1,0 +1,85 @@
+id: mx-m04-data-driven-locust
+category: migration
+tool: locust
+grader: v2_exec
+prompt: 'Convert CSV-driven JMeter users and parameter substitution into deterministic
+  Locust fixture use.
+
+
+  Translate the supplied JMX to Locust.
+
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "data"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout": 1,
+  "reverse_catalog": true}]. Negative-control overrides: [].
+
+  Use accounts.json rows per VU, preserve numeric quantity, use each row once per
+  iteration. JMX CSVs represent the same records.
+
+  Read-only /fixtures aliases: {"m04-accounts.json": "accounts.json", "m04-account-1.csv":
+  "account-1.csv", "m04-account-2.csv": "account-2.csv"}
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — target loads the allowed fixture Requires: none.
+
+  setup: 25 points — all record fields retain their types Requires: loads.
+
+  behavior: 40 points — correct per-user rows/cookies across iterations Requires:
+  loads, setup.
+
+  safety: 25 points — no skipped/duplicated records and required checkout totals match.
+  Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: locust
+  contract:
+    users: 2
+    iterations: 2
+    mode: data
+  rubric:
+  - id: loads
+    points: 10
+    description: target loads the allowed fixture
+    requires: []
+  - id: setup
+    points: 25
+    description: all record fields retain their types
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: correct per-user rows/cookies across iterations
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: no skipped/duplicated records and required checkout totals match.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases:
+    m04-accounts.json: accounts.json
+    m04-account-1.csv: account-1.csv
+    m04-account-2.csv: account-2.csv
+fixtures:
+- protocol-locust.md
+- source-m04.jmx
+- m04-accounts.json
+- m04-account-1.csv
+- m04-account-2.csv
+scenario: mx-m04-data-driven

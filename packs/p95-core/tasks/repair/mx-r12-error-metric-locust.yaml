@@ -1,0 +1,78 @@
+id: mx-r12-error-metric-locust
+category: repair
+tool: locust
+grader: v2_exec
+prompt: 'Fix failure marking that counts expected expiry and scheduled 429 as errors
+  and accepts unexpected 500s.
+
+
+  Repair the supplied artifact.
+
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "errors"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{"expire_after": 2},
+  {"expire_after": 2, "html_layout": 1, "reverse_catalog": true}]. Negative-control
+  overrides: [{"unexpected_every": 3}].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — script loads Requires: none.
+
+  setup: 25 points — correct success/failure event population Requires: loads.
+
+  behavior: 40 points — expected versus unexpected errors are classified correctly
+  Requires: loads, setup.
+
+  safety: 25 points — both healthy and injected-failure controls give the expected
+  threshold outcome/counts. Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: locust
+  contract:
+    users: 2
+    iterations: 2
+    mode: errors
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: correct success/failure event population
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: expected versus unexpected errors are classified correctly
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: both healthy and injected-failure controls give the expected threshold
+      outcome/counts.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      expire_after: 2
+  - name: reordered
+    profile:
+      expire_after: 2
+      html_layout: 1
+      reverse_catalog: true
+  controls:
+  - unexpected_every: 3
+  fixture_aliases: {}
+fixtures:
+- protocol-locust.md
+- broken-r12.py
+scenario: mx-r12-error-metric
