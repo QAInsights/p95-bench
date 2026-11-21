@@ -2,25 +2,33 @@
 
 import fcntl
 import json
+import os
 from contextlib import contextmanager
-from decimal import ROUND_CEILING, Decimal
+from decimal import ROUND_CEILING, Decimal, InvalidOperation
 from pathlib import Path
 from uuid import uuid4
 
-from p95bench.packs import finite
 from p95bench.providers import SpendLimitExceeded
 
 DEFAULT_LEDGER = Path.home() / ".local/state/p95-bench/p95-v2.0.0-budget.json"
 
 
 def micros(value):
-    if not finite(value):
+    try:
+        amount = Decimal(str(value))
+    except (InvalidOperation, TypeError, ValueError) as error:
+        raise ValueError("Invalid budget amount") from error
+    if not amount.is_finite():
         raise ValueError("Invalid budget amount")
-    return int((Decimal(str(value)) * 1_000_000).to_integral_value(rounding=ROUND_CEILING))
+    return int((amount * 1_000_000).to_integral_value(rounding=ROUND_CEILING))
 
 
 class BudgetLedger:
-    def __init__(self, path=DEFAULT_LEDGER, limit=100):
+    def __init__(self, path=None, limit=None):
+        if path is None:
+            path = os.environ.get("P95_BUDGET_LEDGER", DEFAULT_LEDGER)
+        if limit is None:
+            limit = os.environ.get("P95_BUDGET_LIMIT_USD", "100")
         self.path = Path(path)
         self.limit = micros(limit)
         if not 0 < self.limit <= 100_000_000:

@@ -7,6 +7,7 @@ results/*
 !results/published/
 !results/p95-v2.0.0/
 !results/p95-matrix/
+!results/p95-core/
 site/node_modules/
 site/.astro/
 build/

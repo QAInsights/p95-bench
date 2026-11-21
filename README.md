@@ -54,10 +54,11 @@ v2 builder uses `npm run data -- --pack p95-v2.0.0 --tasks PUBLIC_TASK_ROOT RUN_
 and writes `leaderboard-p95-v2.0.0.json`, never overwriting v1. The site lands on v2
 by default; `?pack=v1` selects the legacy board.
 
-V2 has a shared **$100 maximum budget across all models**, backed by
-`~/.local/state/p95-bench/p95-v2.0.0-budget.json`. Do not delete/reset that ledger
-between models. File-locked, persistent maximum-cost reservations happen before
-generation and include every possible transport retry. Returned usage releases
+By default, local V2 runs share a **$100 maximum budget across all models**, backed
+by `~/.local/state/p95-bench/p95-v2.0.0-budget.json`. `P95_BUDGET_LEDGER` and
+`P95_BUDGET_LIMIT_USD` can override the path and limit. Do not delete/reset the
+shared local ledger between models. File-locked, persistent maximum-cost
+reservations happen before generation and include every possible transport retry. Returned usage releases
 unused reserve; requests without usage retain their conservative bounds, including
 interrupted processes. Bounds use uncached input at serialized-message bytes plus
 4,096 framing tokens, the configured output cap and recorded prices. This is a
@@ -68,6 +69,40 @@ summary. API keys are not needed for the synthetic tests; no paid runs ship here
 
 v2 is public-only: all 40 tasks are checked in and there are no held-out tasks.
 Runs are always marked public, and the site builder rejects any private run.
+
+## Run on GitHub Actions
+
+The workflow file is not included in this repository; a maintainer must first add
+`.github/workflows/benchmark.yml` (its contents are in the description of PR #48).
+
+Dispatch the `Benchmark` workflow with one `provider model` entry per line or
+comma-separated in **models**, for example `deepseek deepseek-flash`. Add the
+matching repository secret for every selected provider: `DEEPSEEK_API_KEY`,
+`MODELSCOPE_API_KEY`, `MODEL_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`,
+`TINKER_API_KEY`, or `OPENAI_API_KEY`. Only secrets for selected providers are
+needed.
+
+Set **cap_usd_per_model** for the total spend limit of each model, and choose
+**repair_rounds** (`1` by default, or `0`). The cap is per model and is split
+evenly across its four tool shards; each shard checks a conservative reservation
+against its ledger before every provider call. **scenarios** optionally selects
+comma-separated Core scenario codes for a smoke run. A scenario-filtered run
+skips the Core merge.
+
+The workflow plans a JMeter, k6, Locust and Gatling shard per model and uploads
+each as `shard-<slug>-<tool>`. For a full run, the merge job validates and
+combines those sources into a `core-<slug>` artifact containing one Core run.
+For publication, download each `core-<slug>` artifact, commit its run files
+under `results/p95-core/<model>/`, then regenerate the site data from the
+published run directories:
+
+```sh
+cd site
+npm run data -- --pack p95-core ../results/p95-core/deepseek-flash
+```
+
+Replace the example directory with the published model run, and pass additional
+run directories to that command when publishing multiple models together.
 
 An open-source benchmark for AI performance test scripting and engineering.
 General purpose and independent of any AI assistant product. Compare model
