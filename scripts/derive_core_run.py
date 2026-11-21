@@ -125,6 +125,8 @@ def derive_core_run(model_runs, out_dir, core_pack_root=None):
             "run": run_dir.name,
             "harness_commit": metadata.get("harness_commit"),
         }
+        if "spend_cap_usd" in metadata:
+            source_record["spend_cap_usd"] = metadata["spend_cap_usd"]
         metadata_by_run.append((metadata, source_record))
         for attempt in _read_attempts(attempts_path):
             task_id = attempt.get("task_id")
@@ -161,6 +163,7 @@ def derive_core_run(model_runs, out_dir, core_pack_root=None):
     out_dir.mkdir(parents=True, exist_ok=True)
     attempts = [attempts_by_task[task_id] for task_id in sorted(core_inventory)]
     metadata = dict(metadata_by_run[0][0])
+    metadata.pop("spend_cap_usd", None)
     metadata.update(
         pack_id=CORE_PACK,
         pack_digest=core_manifest["digest"],

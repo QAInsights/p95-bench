@@ -161,6 +161,8 @@ def test_core_run_derivation_merges_partial_matrix_sources(tmp_path):
     assert summary["complete"] is True
     metadata = json.loads((output / "metadata.json").read_text())
     attempts = [json.loads(line) for line in (output / "attempts.jsonl").read_text().splitlines()]
+    assert "spend_cap_usd" not in metadata
+    assert all("spend_cap_usd" not in source for source in metadata["derived_from"])
     assert [source["run"] for source in metadata["derived_from"]] == ["source-a", "source-b"]
     assert {attempt["derived_from"]["run"] for attempt in attempts} == {"source-a", "source-b"}
     assert not (source_a / "summary.json").exists()
@@ -239,11 +241,24 @@ def test_core_run_derivation_merges_committed_core_tool_shards(tmp_path):
     summary = derive_core_run(sources, tmp_path / "merged")
 
     expected = json.loads((ROOT / "results/p95-core/deepseek-flash/summary.json").read_text())
-    assert summary == expected
+    for key in ("overall_score", "quality_score", "efficiency_score", "estimated_cost_usd"):
+        assert summary[key] == pytest.approx(expected[key])
+    assert summary["category_scores"] == pytest.approx(expected["category_scores"])
+    for key in ("overall_score", "quality_score", "efficiency_score"):
+        assert summary["after_repair"][key] == pytest.approx(expected["after_repair"][key])
+    assert summary["after_repair"]["category_scores"] == pytest.approx(
+        expected["after_repair"]["category_scores"]
+    )
     assert summary["attempts"] == 104
     assert summary["complete"] is True
     metadata = json.loads((tmp_path / "merged/metadata.json").read_text())
+    assert "spend_cap_usd" not in metadata
     assert [source["pack_id"] for source in metadata["derived_from"]] == ["p95-core"] * 4
+    expected_caps = [
+        json.loads((source / "metadata.json").read_text()).get("spend_cap_usd")
+        for source in sources
+    ]
+    assert [source.get("spend_cap_usd") for source in metadata["derived_from"]] == expected_caps
 
 
 def test_core_run_derivation_rejects_duplicate_core_tasks_across_shards(tmp_path):

@@ -97,8 +97,9 @@ def build_plan(environment=None):
     return models, shards
 
 
-def _tool_scores(run_dir, manifest):
-    task_tools = {task["id"]: task["tool"] for task in manifest["tasks"]}
+def _tool_scores(run_dir):
+    tasks = load_tasks(ROOT / "packs/p95-core/tasks", pack_config("p95-core")["weights"])
+    task_tools = {task.id: task.tool for task in tasks}
     scores = defaultdict(lambda: [[], []])
     attempts_path = run_dir / "attempts.jsonl"
     for line in attempts_path.read_text().splitlines():
@@ -107,7 +108,7 @@ def _tool_scores(run_dir, manifest):
         attempt = json.loads(line)
         tool = task_tools.get(attempt.get("task_id"))
         if tool is None:
-            raise ValueError(f"Attempt task is missing from the pack snapshot: {attempt.get('task_id')}")
+            raise ValueError(f"Attempt task is not in the Core pack: {attempt.get('task_id')}")
         first_score = attempt["grade"]["score"]
         repair = attempt.get("repair") or {}
         repair_grade = repair.get("grade")
@@ -127,7 +128,6 @@ def _summary_markdown(run_dir):
     run_dir = Path(run_dir)
     summary = json.loads((run_dir / "summary.json").read_text())
     metadata = json.loads((run_dir / "metadata.json").read_text())
-    manifest = json.loads((run_dir / "pack.json").read_text())
     model = str(metadata.get("model") or run_dir.name).replace("|", "\\|")
     first = summary.get("overall_score")
     after = (summary.get("after_repair") or {}).get("overall_score")
@@ -137,7 +137,7 @@ def _summary_markdown(run_dir):
     cost_text = f"${cost:.6f}" if isinstance(cost, (int, float)) else "—"
     tokens = summary.get("output_tokens")
     token_text = f"{tokens:,}" if isinstance(tokens, int) else "—"
-    per_tool = _tool_scores(run_dir, manifest)
+    per_tool = _tool_scores(run_dir)
     return "\n".join([
         "| Model | Overall first try | Overall after repair | Per-tool score (first → after) | Cost | Output tokens |",
         "| --- | ---: | ---: | --- | ---: | ---: |",

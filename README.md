@@ -72,6 +72,10 @@ Runs are always marked public, and the site builder rejects any private run.
 
 ## Run on GitHub Actions
 
+The workflow file is not included in this repository; a maintainer must add
+`.github/workflows/benchmark.yml` using the attached `~/notes/benchmark.yml`
+contents before dispatching it.
+
 Dispatch the `Benchmark` workflow with one `provider model` entry per line or
 comma-separated in **models**, for example `deepseek deepseek-flash`. Add the
 matching repository secret for every selected provider: `DEEPSEEK_API_KEY`,

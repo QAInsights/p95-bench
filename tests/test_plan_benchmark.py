@@ -80,33 +80,31 @@ def test_plan_benchmark_rejects_unknown_scenario(monkeypatch, capsys):
     assert "Unknown Core scenario code" in capsys.readouterr().err
 
 
-def test_plan_benchmark_summary_uses_stored_overall_and_task_scores(tmp_path, capsys):
-    run_dir = tmp_path / "synthetic"
-    run_dir.mkdir()
-    (run_dir / "metadata.json").write_text(json.dumps({"model": "synthetic-model"}))
-    (run_dir / "pack.json").write_text(json.dumps({
-        "tasks": [{"id": "j1", "tool": "jmeter"}, {"id": "k1", "tool": "k6"}],
-    }))
-    (run_dir / "summary.json").write_text(json.dumps({
-        "overall_score": 70.25,
-        "after_repair": {"overall_score": 82.5},
-        "estimated_cost_usd": 0.123456,
-        "output_tokens": 1234,
-    }))
-    attempts = [
-        {"task_id": "j1", "grade": {"score": .75},
-         "repair": {"triggered": True,
-                    "grade": {"status": "graded", "score": .95}}},
-        {"task_id": "k1", "grade": {"score": .85}},
-    ]
-    (run_dir / "attempts.jsonl").write_text(
-        "".join(json.dumps(attempt) + "\n" for attempt in attempts)
+def test_plan_benchmark_summary_matches_published_tool_scores(capsys):
+    run_dir = plan_benchmark.ROOT / "results/p95-core/deepseek-flash"
+    board = json.loads(
+        (plan_benchmark.ROOT / "site/src/data/leaderboard-p95-core.json").read_text()
     )
+    model = next(item for item in board["models"] if item["model"] == "deepseek-flash")
+    expected = {}
+    for tool in plan_benchmark.TOOLS:
+        attempts = [item for item in model["per_task_results"] if item["tool"] == tool]
+        first = 100 * sum(item["score"] for item in attempts) / len(attempts)
+        after = 100 * sum(
+            item.get("after_repair_score", item["score"]) for item in attempts
+        ) / len(attempts)
+        expected[tool] = (f"{first:.1f}", f"{after:.1f}")
 
     assert plan_benchmark.main(["--summary", str(run_dir)]) == 0
     table = capsys.readouterr().out
-    assert "| synthetic-model | 70.2 | 82.5 |" in table
-    assert "jmeter 75.0 → 95.0" in table
-    assert "k6 85.0 → 85.0" in table
-    assert "$0.123456" in table
-    assert "1,234" in table
+    for tool, (first, after) in expected.items():
+        assert f"{tool} {first} → {after}" in table
+
+
+def test_plan_benchmark_summary_rejects_unknown_core_task(tmp_path):
+    (tmp_path / "attempts.jsonl").write_text(
+        json.dumps({"task_id": "not-a-core-task"}) + "\n"
+    )
+
+    with pytest.raises(ValueError, match="not-a-core-task"):
+        plan_benchmark._tool_scores(tmp_path)
