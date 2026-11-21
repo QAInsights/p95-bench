@@ -213,11 +213,13 @@ test('generator preserves pricing provenance and native output caps without rela
       await writeFile(path.join(directory, name), await readFile(path.join(runs[0], name)));
     }
     const metadata = { cost_note: 'List-price estimate, run via ModelScope free tier.',
-      pricing_source: 'https://www.alibabacloud.com/help/en/model-studio/model-pricing' };
+      pricing_source: 'https://www.alibabacloud.com/help/en/model-studio/model-pricing',
+      derived_from: [{ pack_id: 'p95-matrix', run: 'matrix-run' }] };
     await writeFile(path.join(directory, 'metadata.json'), JSON.stringify(metadata));
     const { models } = await buildData([directory]);
     assert.equal(models[0].cost_note, metadata.cost_note);
     assert.equal(models[0].pricing_source, metadata.pricing_source);
+    assert.deepEqual(models[0].derived_from, metadata.derived_from);
     await writeFile(path.join(directory, 'metadata.json'), JSON.stringify({ maxOutputTokens: 8192 }));
     assert.equal((await buildData([directory])).models[0].output_cap, 8192);
     await writeFile(path.join(directory, 'metadata.json'), '{}');

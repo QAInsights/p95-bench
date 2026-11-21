@@ -1,0 +1,98 @@
+id: mx-r05-business-assertion-jmeter
+category: repair
+tool: jmeter
+grader: v2_exec
+prompt: 'Fix an HTTP-200-only assertion that accepts a declined business transaction.
+
+  Repair the supplied artifact.
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "decline"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout": 1,
+  "reverse_catalog": true}]. Negative-control overrides: [{"decline_orders": true}].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — plan loads Requires: none.
+
+  setup: 25 points — successful control flow completes Requires: loads.
+
+  behavior: 40 points — detects the declared JSON decline and avoids an invalid checkout
+  Requires: loads, setup.
+
+  safety: 25 points — negative control fails the intended assertion rather than merely
+  crashing the plan. Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.
+
+
+  Repair the supplied artifact.
+
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "decline"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout": 1,
+  "reverse_catalog": true}]. Negative-control overrides: [{"decline_orders": true}].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — plan loads Requires: none.
+
+  setup: 25 points — successful control flow completes Requires: loads.
+
+  behavior: 40 points — detects the declared JSON decline and avoids an invalid checkout
+  Requires: loads, setup.
+
+  safety: 25 points — negative control fails the intended assertion rather than merely
+  crashing the plan. Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: jmeter
+  contract:
+    users: 2
+    iterations: 2
+    mode: decline
+  rubric:
+  - id: loads
+    points: 10
+    description: plan loads
+    requires: []
+  - id: setup
+    points: 25
+    description: successful control flow completes
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: detects the declared JSON decline and avoids an invalid checkout
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: negative control fails the intended assertion rather than merely
+      crashing the plan.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls:
+  - decline_orders: true
+  fixture_aliases: {}
+fixtures:
+- protocol-jmeter.md
+- broken-r05.jmx
+scenario: mx-r05-business-assertion

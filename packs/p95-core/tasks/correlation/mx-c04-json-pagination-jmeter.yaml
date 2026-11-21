@@ -1,0 +1,70 @@
+id: mx-c04-json-pagination-jmeter
+category: correlation
+tool: jmeter
+grader: v2_exec
+prompt: 'Follow JSON cursors to find an eligible item; extract the resulting cart/order
+  IDs.
+
+  Write a complete executable solution.
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "pagination"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout": 1,
+  "reverse_catalog": true}]. Negative-control overrides: [].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — plan loads Requires: none.
+
+  setup: 25 points — follows dynamic cursor links Requires: loads.
+
+  behavior: 40 points — selects the right record and correlates all downstream IDs
+  Requires: loads, setup.
+
+  safety: 25 points — handles first/last-page cases with bounded traversal. Requires:
+  loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: jmeter
+  contract:
+    users: 2
+    iterations: 2
+    mode: pagination
+  rubric:
+  - id: loads
+    points: 10
+    description: plan loads
+    requires: []
+  - id: setup
+    points: 25
+    description: follows dynamic cursor links
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: selects the right record and correlates all downstream IDs
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: handles first/last-page cases with bounded traversal.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile: {}
+  - name: reordered
+    profile:
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-jmeter.md
+scenario: mx-c04-json-pagination

@@ -1,0 +1,140 @@
+{
+  "pack_id": "p95-matrix",
+  "grade_schema_version": 2,
+  "default_repeats": 1,
+  "efficiency_weight": 0.05,
+  "weights": {
+    "repair": 25,
+    "migration": 15,
+    "correlation": 25,
+    "workload": 20,
+    "analysis": 15
+  },
+  "tasks": [
+    {
+      "id": "mx-r01-extractor-scope-k6",
+      "category": "repair",
+      "scenario": "mx-r01-extractor-scope",
+      "task_digest": "d0efbd55283053f9c96a73715a47a03adf4bab84968cde08074277f6535d0b49"
+    },
+    {
+      "id": "mx-r02-cookie-lifetime-k6",
+      "category": "repair",
+      "scenario": "mx-r02-cookie-lifetime",
+      "task_digest": "a4b3ebe73ca29999fb311dfd103946ff382201704f77484b31a5d38457de9938"
+    },
+    {
+      "id": "mx-r04-status-recovery-k6",
+      "category": "repair",
+      "scenario": "mx-r04-status-recovery",
+      "task_digest": "cb8d11c61c742d9d8f8f205271773cb1ad7e45f06246d65f4e5943ed1583e43e"
+    },
+    {
+      "id": "mx-r05-business-assertion-k6",
+      "category": "repair",
+      "scenario": "mx-r05-business-assertion",
+      "task_digest": "6e818529a4088e765d75602e6e91c9db4e71b5445bf7496c4177726f03ed50f7"
+    },
+    {
+      "id": "mx-r06-threshold-tags-k6",
+      "category": "repair",
+      "scenario": "mx-r06-threshold-tags",
+      "task_digest": "9d613e56ddff32efd204f9d05bb983f3b7ca3a68bf287cee07b7a4bea7a6c634"
+    },
+    {
+      "id": "mx-r08-arrival-options-k6",
+      "category": "repair",
+      "scenario": "mx-r08-arrival-options",
+      "task_digest": "fb4d9c500ab11338a0141aeae95938023c5b9787e5c1c9cd3813390eefec88b8"
+    },
+    {
+      "id": "mx-r10-user-partition-k6",
+      "category": "repair",
+      "scenario": "mx-r10-user-partition",
+      "task_digest": "f47a63927bdeca85d7e2b7f5524925ab2762e6cca6ccd8e32ec4bbe5d652e7d9"
+    },
+    {
+      "id": "mx-r11-timer-scope-k6",
+      "category": "repair",
+      "scenario": "mx-r11-timer-scope",
+      "task_digest": "39d8f541f91b50345cf1c53dafd44f04791bb983e43bd97d51e3d3eaa3bc6280"
+    },
+    {
+      "id": "mx-r12-error-metric-k6",
+      "category": "repair",
+      "scenario": "mx-r12-error-metric",
+      "task_digest": "a7c7707ea914032a356b5e1bfdb1f418e02d87d75145ccd58e73e877bd0e0c5f"
+    },
+    {
+      "id": "mx-w01-steady-starts-k6",
+      "category": "workload",
+      "scenario": "mx-w01-steady-starts",
+      "task_digest": "c97797d8d708465138a4dbff5be34fb4d76cfcfdbe82463e17996b8d19e8e27e"
+    },
+    {
+      "id": "mx-w02-open-arrivals-k6",
+      "category": "workload",
+      "scenario": "mx-w02-open-arrivals",
+      "task_digest": "015c128d53d04c4eecb44a732b4054863e0a725ce46c2016300eb67fe81ce1b6"
+    },
+    {
+      "id": "mx-w07-burst-control-k6",
+      "category": "workload",
+      "scenario": "mx-w07-burst-control",
+      "task_digest": "0e557171c72174d481d74c13fab1938d2ae1872632782c395b7b4004a9d6725a"
+    }
+  ],
+  "repeats": 1,
+  "efficiency_budgets": {
+    "mx-r01-extractor-scope-k6": {
+      "latency_seconds": 180,
+      "tokens": 4839
+    },
+    "mx-r02-cookie-lifetime-k6": {
+      "latency_seconds": 180,
+      "tokens": 4839
+    },
+    "mx-r04-status-recovery-k6": {
+      "latency_seconds": 180,
+      "tokens": 4842
+    },
+    "mx-r05-business-assertion-k6": {
+      "latency_seconds": 180,
+      "tokens": 4842
+    },
+    "mx-r06-threshold-tags-k6": {
+      "latency_seconds": 180,
+      "tokens": 4932
+    },
+    "mx-r08-arrival-options-k6": {
+      "latency_seconds": 180,
+      "tokens": 5007
+    },
+    "mx-r10-user-partition-k6": {
+      "latency_seconds": 180,
+      "tokens": 3900
+    },
+    "mx-r11-timer-scope-k6": {
+      "latency_seconds": 180,
+      "tokens": 5076
+    },
+    "mx-r12-error-metric-k6": {
+      "latency_seconds": 180,
+      "tokens": 4839
+    },
+    "mx-w01-steady-starts-k6": {
+      "latency_seconds": 180,
+      "tokens": 5007
+    },
+    "mx-w02-open-arrivals-k6": {
+      "latency_seconds": 180,
+      "tokens": 5007
+    },
+    "mx-w07-burst-control-k6": {
+      "latency_seconds": 180,
+      "tokens": 5007
+    }
+  },
+  "visibility": "public",
+  "digest": "5633278a7867c84c4be63e78607b4ac37bded947ccd381bd621abb515217f440"
+}

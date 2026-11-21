@@ -22,6 +22,7 @@ def main(argv=None):
     execute.add_argument("--repeats", type=int, default=1)
     execute.add_argument("--pack", choices=PACKS, default="p95-v1")
     execute.add_argument("--efficiency-budgets", type=Path)
+    execute.add_argument("--repair-rounds", type=int, choices=(0, 1))
     execute.add_argument("--tool", choices=sorted(TOOLS), action="append")
     score = commands.add_parser("score")
     score.add_argument("directory", type=Path)
@@ -44,8 +45,11 @@ def main(argv=None):
                 tasks = [task for task in tasks if task.tool in args.tool]
                 if not tasks:
                     raise ValueError("No tasks match the selected tools")
-            options = ({"pack_id": args.pack, "efficiency_budgets": budgets}
-                       if args.pack != "p95-v1" else {})
+            options = {}
+            if args.repair_rounds is not None:
+                options["repair_rounds"] = args.repair_rounds
+            if args.pack != "p95-v1":
+                options.update(pack_id=args.pack, efficiency_budgets=budgets)
             if args.pack == "p95-v1" and budgets is not None:
                 raise ValueError("Efficiency budgets require a v2 pack")
             directory, summary = run(get_provider(args.provider), args.provider, args.model,

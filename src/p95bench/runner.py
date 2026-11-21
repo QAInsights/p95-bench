@@ -1,5 +1,7 @@
 """Benchmark orchestration and reproducible scoring from saved attempts."""
 
+import csv
+import io
 import json
 import subprocess
 from collections import defaultdict
@@ -123,10 +125,118 @@ def _grade_response(task, text, workdir, v2):
         return result.to_dict(), metadata
 
 
+def _fixture_secrets(task):
+    sensitive = ("password", "secret", "token", "credential", "api_key", "api-key", "authorization")
+    found = set()
+
+    def visit(value, key=""):
+        if isinstance(value, dict):
+            for name, item in value.items():
+                visit(item, str(name).lower())
+        elif isinstance(value, list):
+            for item in value:
+                visit(item, key)
+        elif isinstance(value, str) and any(name in key for name in sensitive):
+            found.add(value)
+
+    for fixture in task.fixtures.values():
+        try:
+            visit(json.loads(fixture))
+        except (ValueError, TypeError):
+            reader = csv.DictReader(io.StringIO(fixture))
+            for row in reader:
+                visit(row)
+            for line in fixture.splitlines():
+                for separator in (":", "="):
+                    key, marker, value = line.partition(separator)
+                    if marker and any(name in key.lower() for name in sensitive):
+                        found.add(value.strip().strip("\"', "))
+    return sorted((value for value in found if value), key=len, reverse=True)
+
+
+def _safe_feedback(text, task, *, tail=False):
+    for secret in _fixture_secrets(task):
+        text = text.replace(secret, "[redacted fixture secret]")
+    encoded = text.encode("utf-8", errors="replace")
+    bounded = encoded[-4096:] if tail else encoded[:4096]
+    return bounded.decode("utf-8", errors="ignore")
+
+
+def _repair_trigger(task, result, workdir):
+    if result.get("status") != "graded":
+        return None
+    detail = str(result.get("detail", ""))
+    if detail.startswith("Invalid model artifact"):
+        return "invalid_model_artifact", _safe_feedback(detail, task)
+    if detail.startswith("Invalid model answer"):
+        return "invalid_model_answer", _safe_feedback(detail, task)
+    if task.grader != "v2_exec":
+        return None
+
+    grade = CheckpointGrade.from_dict(result)
+    loads = next((item for item in grade.checkpoints if item.id == "loads"), None)
+    if loads is None or loads.earned != 0:
+        return None
+
+    native_artifacts = {
+        "gatling": "requests.jsonl",
+        "jmeter": "samples.jtl",
+        "k6": "points.json",
+        "locust": "requests.jsonl",
+    }
+    for path in sorted(Path(workdir).glob("case-*/execution.json")):
+        if not path.parent.name.removeprefix("case-").isdigit():
+            continue
+        try:
+            execution = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        audit_path = path.parent / "audit.json"
+        try:
+            request_evidence = bool(json.loads(audit_path.read_text()))
+        except (OSError, ValueError):
+            request_evidence = False
+        artifact_errors = execution.get("artifact_errors") or {}
+        native = path.parent / native_artifacts.get(task.tool, "")
+        missing_native = not native.name or not native.is_file() or native.stat().st_size == 0
+        returncode = execution.get("returncode")
+        failed_before_request = returncode not in (None, 0) and not request_evidence
+        output = str(execution.get("output") or "")
+        compile_failure = (task.tool == "gatling" and returncode not in (None, 0)
+                           and "compil" in output.lower()
+                           and any(word in output.lower() for word in ("error", "fail")))
+        if not (artifact_errors or missing_native or failed_before_request or compile_failure):
+            continue
+
+        parts = []
+        if artifact_errors:
+            parts.extend(str(value) for value in artifact_errors.values())
+        if output:
+            parts.append(output)
+        if not parts:
+            parts.append("No request evidence was produced.")
+        reason = ("gatling_compile_failure" if compile_failure else
+                  "tool_failed_before_request" if failed_before_request else
+                  "missing_request_evidence")
+        return reason, _safe_feedback("\n\n".join(parts), task, tail=True)
+    return None
+
+
+def _output_cap(config):
+    extra = config.extra if config else {}
+    return next((extra[key] for key in
+                 ("max_tokens", "max_completion_tokens", "maxOutputTokens")
+                 if extra.get(key) is not None), 16384)
+
+
 def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
-        pack_id="p95-v1", efficiency_budgets=None, budget_ledger=None):
+        pack_id="p95-v1", efficiency_budgets=None, budget_ledger=None, repair_rounds=None):
     manifest = snapshot(pack_id, tasks, repeats, efficiency_budgets)
     v2 = manifest["grade_schema_version"] == 2
+    repair_rounds = (1 if v2 else 0) if repair_rounds is None else repair_rounds
+    if (not isinstance(repair_rounds, int) or isinstance(repair_rounds, bool)
+            or repair_rounds not in (0, 1)):
+        raise ValueError("repair_rounds must be 0 or 1")
     registry = CHECKPOINT_GRADERS if v2 else GRADERS
     for task in tasks:
         if task.grader not in registry:
@@ -153,26 +263,26 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
     config = getattr(provider, "config", None)
     ledger = (budget_ledger or BudgetLedger()) if v2 else None
     provider.measure_transport = v2
-    if v2 or (config and config.cost_note):
-        metadata = {"run_date": started.isoformat(), "pack_id": pack_id,
-                    "pack_digest": manifest["digest"], "visibility": manifest["visibility"],
-                    "provider": provider_name, "model": model,
-                    "base_url": getattr(config, "base_url", None),
-                    "cost_note": getattr(config, "cost_note", None),
-                    "pricing_source": getattr(config, "pricing_source", None),
-                    "temperature": getattr(config, "temperature", None),
-                    **(config.extra if config else {})}
-        task_scenarios = {task.id: task.scenario for task in tasks if task.scenario is not None}
-        if task_scenarios:
-            metadata["task_scenarios"] = dict(sorted(task_scenarios.items()))
-        if provider_name == "gemini":
-            metadata.update(pricing_date_utc=started.date().isoformat(),
-                            price_per_million=asdict(price))
-        if v2:
-            metadata["spend_cap_usd"] = ledger.limit / 1_000_000
-            metadata.update(harness_revision())
-        (directory / "metadata.json").write_text(
-            json.dumps(metadata, indent=2) + "\n")
+    metadata = {"run_date": started.isoformat(), "pack_id": pack_id,
+                "pack_digest": manifest["digest"], "visibility": manifest["visibility"],
+                "provider": provider_name, "model": model,
+                "base_url": getattr(config, "base_url", None),
+                "cost_note": getattr(config, "cost_note", None),
+                "pricing_source": getattr(config, "pricing_source", None),
+                "temperature": getattr(config, "temperature", None),
+                "reasoning_mode": getattr(config, "reasoning_mode", None),
+                "repair_rounds": repair_rounds,
+                **(config.extra if config else {})}
+    task_scenarios = {task.id: task.scenario for task in tasks if task.scenario is not None}
+    if task_scenarios:
+        metadata["task_scenarios"] = dict(sorted(task_scenarios.items()))
+    if provider_name == "gemini":
+        metadata.update(pricing_date_utc=started.date().isoformat(),
+                        price_per_million=asdict(price))
+    if v2:
+        metadata["spend_cap_usd"] = ledger.limit / 1_000_000
+        metadata.update(harness_revision())
+    (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     budget_error = None
     grading_stop = None
     with (directory / "attempts.jsonl").open("w") as stream:
@@ -189,10 +299,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                     if budget_error is not None:
                         raise SpendLimitExceeded(budget_error)
                     if ledger:
-                        extra = config.extra if config else {}
-                        output_cap = next((extra[k] for k in
-                                           ("max_tokens", "max_completion_tokens", "maxOutputTokens")
-                                           if k in extra), 16384)
+                        output_cap = _output_cap(config)
                         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
                                    + output_cap * price.output) / 1_000_000
                         retries = (getattr(config, "max_retries", 0)
@@ -238,6 +345,69 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                                                   else latency),
                         transport_attempts=requests,
                         backoff_seconds=getattr(provider, "backoff_seconds", 0))
+                repair = {"triggered": False}
+                if repair_rounds:
+                    if (getattr(response, "finish_reason", None) == "length"
+                            or response.output_tokens >= _output_cap(config)):
+                        repair["skipped"] = "truncated_at_cap"
+                        trigger = None
+                    else:
+                        trigger = _repair_trigger(task, result, workdir)
+                    if trigger is not None:
+                        reason, feedback = trigger
+                        appended = [
+                            {"role": "assistant", "content": response.text},
+                            {"role": "user", "content": (
+                                "Your previous answer failed before it could be scored:\n\n"
+                                f"{feedback}\n\n"
+                                "Return the complete corrected answer under the same output contract.")},
+                        ]
+                        repair_messages = messages + appended
+                        repair = {"triggered": True, "reason": reason, "feedback": feedback,
+                                  "messages_appended": appended, "response": None, "grade": None,
+                                  "cost_usd": 0}
+                        repair_reservation = None
+                        try:
+                            repair_maximum = None
+                            if ledger:
+                                output_cap = _output_cap(config)
+                                repair_maximum = ((len(json.dumps(repair_messages).encode()) + 4096)
+                                                  * price.input + output_cap * price.output) / 1_000_000
+                                retries = (getattr(config, "max_retries", 0)
+                                           + getattr(config, "transport_retries", 0)) if config else 0
+                                repair_reservation = ledger.reserve(repair_maximum * (1 + retries))
+                                provider.transport_attempts = 0
+                                provider.response_latency_seconds = None
+                            repair_response = provider.send(model, repair_messages)
+                            repair_cost = price.cost(repair_response)
+                            if ledger:
+                                repair_requests = getattr(provider, "transport_attempts", 0) or (
+                                    1 + (config.max_retries if config else 0))
+                                ledger.settle(repair_reservation,
+                                              repair_cost + repair_maximum * (repair_requests - 1))
+                            repair_workdir = directory / f"task-{index}-{repeat}-repair"
+                            repair_grade, repair_grading_error = _grade_response(
+                                task, repair_response.text, repair_workdir, v2)
+                            repair["response"] = asdict(repair_response)
+                            repair["grade"] = repair_grade
+                            repair["cost_usd"] = repair_cost
+                            if v2:
+                                latency = getattr(provider, "response_latency_seconds", None)
+                                repair["response"].update(
+                                    response_latency_seconds=(repair_response.latency_seconds
+                                                              if latency is None else latency),
+                                    transport_attempts=repair_requests,
+                                    backoff_seconds=getattr(provider, "backoff_seconds", 0))
+                            if repair_grading_error is not None:
+                                repair["grading_error"] = repair_grading_error
+                                if (repair_grade.get("status") == "not_run"
+                                        or repair_grading_error.get("stop_run")):
+                                    grading_stop = "Grading stopped: " + repair_grade["detail"]
+                        except (ProviderUnavailable, SpendLimitExceeded) as error:
+                            repair["error"] = str(error)
+                            if isinstance(error, SpendLimitExceeded):
+                                budget_error = str(error)
+                attempt["repair"] = repair
                 if result.get("status") == "not_run" or grading_error and grading_error.get("stop_run"):
                     attempt.update(status="not_run", error=result["detail"])
                     with (directory / "not-run.jsonl").open("a") as skipped:

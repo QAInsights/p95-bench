@@ -58,6 +58,28 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     assert.equal(data.models[0].per_task_results[0].repeat, 0);
     assert.equal(data.models[0].per_task_results[0].output_tokens, 20);
     assert.equal(data.models[0].per_task_results[0].latency_seconds, 2);
+    const repairedAttempt = { ...attempt, repair: { triggered: true, reason: 'invalid_model_artifact',
+      feedback: 'invalid input', messages_appended: [], response: { input_tokens: 30,
+        output_tokens: 15, cached_tokens: 0, latency_seconds: 1 },
+      grade: { schema_version: 2, status: 'graded', score: 1, passed: true, detail: 'Fixed' },
+      cost_usd: .01 } };
+    const repairedSummary = { ...summary, estimated_cost_usd: .03, input_tokens: 230,
+      output_tokens: 55, latency_seconds: 5, repairs_triggered: 1, repairs_succeeded: 1,
+      after_repair: { overall_score: 95, quality_score: 96, efficiency_score: 76,
+        category_scores: { repair: 96 } } };
+    await save('metadata.json', { ...metadata, repair_rounds: 1, reasoning_mode: 'thinking' });
+    await save('summary.json', repairedSummary);
+    await writeFile(path.join(directory, 'attempts.jsonl'),
+      [repairedAttempt, { ...attempt, repeat: 1 }].map(JSON.stringify).join('\n'));
+    const repairedData = await buildData([directory], options);
+    const repairedModel = repairedData.models[0];
+    assert.deepEqual(repairedModel.after_repair, repairedSummary.after_repair);
+    assert.equal(repairedModel.repair_rounds, 1);
+    assert.equal(repairedModel.reasoning_mode, 'thinking');
+    assert.equal(repairedModel.per_task_results[0].after_repair_score, 1);
+    assert.equal(repairedModel.per_task_results[1].after_repair_score, .8);
+    assert.equal(repairedModel.cost_attempts.length, 3);
+    assert.equal(repairedModel.cost_attempts.find(item => item.status === 'repair').cost_usd, .01);
     const notRun = { ...attempt, repeat: 1, status: 'not_run', cost_usd: .02,
       grade: { status: 'not_run' } };
     const partial = { ...summary, attempts: 1, not_run: 1, complete: false, estimated_cost_usd: .03 };

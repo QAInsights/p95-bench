@@ -4,7 +4,14 @@ import json
 import pytest
 
 from p95bench.cli import main
-from p95bench.providers import PROVIDERS, OpenAICompatible, Price, Response, get_provider
+from p95bench.providers import (
+    PROVIDERS,
+    DeepSeekResponse,
+    OpenAICompatible,
+    Price,
+    Response,
+    get_provider,
+)
 from p95bench.runner import SYSTEM_PROMPT
 
 
@@ -30,6 +37,44 @@ def test_optional_prompt_token_details(monkeypatch, details, expected):
         'choices': [{'message': {'content': 'answer'}}],
         'usage': {'prompt_tokens': 100, 'completion_tokens': 20, **details}})
     assert provider.send('gpt-6.2-sol', []).cached_tokens == expected
+
+
+def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
+    provider = get_provider('deepseek')
+    assert provider.config.extra == {
+        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'high', 'max_tokens': 65536}
+    assert provider.config.reasoning_mode == 'thinking-high'
+    assert provider.config.temperature is None
+    assert PROVIDERS['qwen'].reasoning_mode == 'disabled'
+    assert all(config.reasoning_mode == 'provider-default'
+               for name, config in PROVIDERS.items() if name not in {'deepseek', 'qwen'})
+    captured = {}
+
+    def request(path, body):
+        captured.update(body)
+        return {
+            'choices': [{'message': {'content': 'answer only',
+                                     'reasoning_content': 'private reasoning'},
+                         'finish_reason': 'stop'}],
+            'usage': {'prompt_tokens': 30, 'completion_tokens': 50,
+                      'completion_tokens_details': {'reasoning_tokens': 18}},
+        }
+
+    monkeypatch.setattr(provider, '_request', request)
+    response = provider.send('deepseek-flash', [{'role': 'user', 'content': 'Solve'}])
+
+    assert captured['thinking'] == {'type': 'enabled'}
+    assert captured['reasoning_effort'] == 'high'
+    assert captured['max_tokens'] == 65536
+    assert 'temperature' not in captured
+    assert isinstance(response, DeepSeekResponse)
+    assert response.text == 'answer only'
+    assert response.output_tokens == 50
+    assert response.reasoning_tokens == 18
+    assert not hasattr(response, 'reasoning_content')
+    assert not response.thinking_exhausted
+    assert DeepSeekResponse('', 30, 50, reasoning_tokens=18,
+                            finish_reason='length').thinking_exhausted
 
 
 @pytest.mark.parametrize('model,rates', [

@@ -1,0 +1,36 @@
+{
+  "run_date": "2026-11-21T15:15:08.078667+00:00",
+  "pack_id": "p95-matrix",
+  "pack_digest": "2038916d942c5630ba184828e50ead5e45ae36de9f44f5efaee20c659202e231",
+  "visibility": "public",
+  "provider": "deepseek",
+  "model": "deepseek-v4-pro",
+  "base_url": "https://api.deepseek.com",
+  "cost_note": null,
+  "pricing_source": null,
+  "temperature": null,
+  "reasoning_mode": "thinking-high",
+  "repair_rounds": 1,
+  "thinking": {
+    "type": "enabled"
+  },
+  "reasoning_effort": "high",
+  "max_tokens": 65536,
+  "task_scenarios": {
+    "mx-r01-extractor-scope-gatling": "mx-r01-extractor-scope",
+    "mx-r02-cookie-lifetime-gatling": "mx-r02-cookie-lifetime",
+    "mx-r04-status-recovery-gatling": "mx-r04-status-recovery",
+    "mx-r05-business-assertion-gatling": "mx-r05-business-assertion",
+    "mx-r06-threshold-tags-gatling": "mx-r06-threshold-tags",
+    "mx-r08-arrival-options-gatling": "mx-r08-arrival-options",
+    "mx-r10-user-partition-gatling": "mx-r10-user-partition",
+    "mx-r11-timer-scope-gatling": "mx-r11-timer-scope",
+    "mx-r12-error-metric-gatling": "mx-r12-error-metric",
+    "mx-w01-steady-starts-gatling": "mx-w01-steady-starts",
+    "mx-w02-open-arrivals-gatling": "mx-w02-open-arrivals",
+    "mx-w07-burst-control-gatling": "mx-w07-burst-control"
+  },
+  "spend_cap_usd": 100.0,
+  "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807",
+  "harness_dirty": false
+}

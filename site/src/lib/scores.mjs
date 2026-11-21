@@ -49,25 +49,27 @@ export const bestWithin = (models, budget) => [...models].filter((m) => Number.i
   && Number.isFinite(m.overall_score) && m.cost <= budget)
   .sort((a, b) => b.overall_score - a.overall_score || a.cost - b.cost)[0] ?? null;
 
-export function attemptFraction(attempt) {
-  if (Number.isFinite(attempt?.score) && attempt.score >= 0 && attempt.score <= 1) return attempt.score;
+export function attemptFraction(attempt, scoreMode = 'first') {
+  const score = scoreMode === 'repair' ? attempt?.after_repair_score ?? attempt?.score : attempt?.score;
+  if (Number.isFinite(score) && score >= 0 && score <= 1) return score;
   return typeof attempt?.passed === 'boolean' ? Number(attempt.passed) : null;
 }
 
-export function toolScore(model, tool) {
-  const values = model.per_task_results.filter(t => t.tool === tool).map(attemptFraction).filter(value => value !== null);
+export function toolScore(model, tool, scoreMode = 'first') {
+  const values = model.per_task_results.filter(t => t.tool === tool)
+    .map(attempt => attemptFraction(attempt, scoreMode)).filter(value => value !== null);
   return values.length ? 100 * values.reduce((sum, value) => sum + value, 0) / values.length : null;
 }
 
-export function toolScoreLabel(model, tool) {
-  const value = toolScore(model, tool);
+export function toolScoreLabel(model, tool, scoreMode = 'first') {
+  const value = toolScore(model, tool, scoreMode);
   return value === null ? 'Not run' : value.toFixed(1);
 }
 
-export function taskResult(model, taskId) {
+export function taskResult(model, taskId, scoreMode = 'first') {
   const attempts = model.per_task_results.filter((task) => task.task_id === taskId);
   if (!attempts.length) return null;
-  const values = attempts.map(attemptFraction).filter(value => value !== null);
+  const values = attempts.map(attempt => attemptFraction(attempt, scoreMode)).filter(value => value !== null);
   if (!values.length) return null;
   const passed = values.filter(value => value === 1).length;
   if (attempts.some(attempt => Number.isFinite(attempt.score))) {

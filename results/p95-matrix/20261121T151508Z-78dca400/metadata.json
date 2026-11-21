@@ -1,0 +1,36 @@
+{
+  "run_date": "2026-11-21T15:15:08.083337+00:00",
+  "pack_id": "p95-matrix",
+  "pack_digest": "60e05b6d2893996db33a25a5973cac3f5a386776e1d0681813a83438622e7b32",
+  "visibility": "public",
+  "provider": "deepseek",
+  "model": "deepseek-v4-pro",
+  "base_url": "https://api.deepseek.com",
+  "cost_note": null,
+  "pricing_source": null,
+  "temperature": null,
+  "reasoning_mode": "thinking-high",
+  "repair_rounds": 1,
+  "thinking": {
+    "type": "enabled"
+  },
+  "reasoning_effort": "high",
+  "max_tokens": 65536,
+  "task_scenarios": {
+    "mx-r01-extractor-scope-jmeter": "mx-r01-extractor-scope",
+    "mx-r02-cookie-lifetime-jmeter": "mx-r02-cookie-lifetime",
+    "mx-r04-status-recovery-jmeter": "mx-r04-status-recovery",
+    "mx-r05-business-assertion-jmeter": "mx-r05-business-assertion",
+    "mx-r06-threshold-tags-jmeter": "mx-r06-threshold-tags",
+    "mx-r08-arrival-options-jmeter": "mx-r08-arrival-options",
+    "mx-r10-user-partition-jmeter": "mx-r10-user-partition",
+    "mx-r11-timer-scope-jmeter": "mx-r11-timer-scope",
+    "mx-r12-error-metric-jmeter": "mx-r12-error-metric",
+    "mx-w01-steady-starts-jmeter": "mx-w01-steady-starts",
+    "mx-w02-open-arrivals-jmeter": "mx-w02-open-arrivals",
+    "mx-w07-burst-control-jmeter": "mx-w07-burst-control"
+  },
+  "spend_cap_usd": 100.0,
+  "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807",
+  "harness_dirty": false
+}

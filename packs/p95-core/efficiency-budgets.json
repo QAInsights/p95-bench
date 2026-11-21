@@ -1,0 +1,418 @@
+{
+  "mx-a01-jtl-endpoints-gatling": {
+    "latency_seconds": 90,
+    "tokens": 258
+  },
+  "mx-a01-jtl-endpoints-jmeter": {
+    "latency_seconds": 90,
+    "tokens": 258
+  },
+  "mx-a01-jtl-endpoints-k6": {
+    "latency_seconds": 90,
+    "tokens": 258
+  },
+  "mx-a01-jtl-endpoints-locust": {
+    "latency_seconds": 90,
+    "tokens": 258
+  },
+  "mx-a04-k6-errors-gatling": {
+    "latency_seconds": 90,
+    "tokens": 324
+  },
+  "mx-a04-k6-errors-jmeter": {
+    "latency_seconds": 90,
+    "tokens": 297
+  },
+  "mx-a04-k6-errors-k6": {
+    "latency_seconds": 90,
+    "tokens": 276
+  },
+  "mx-a04-k6-errors-locust": {
+    "latency_seconds": 90,
+    "tokens": 321
+  },
+  "mx-a05-jtl-omission-gatling": {
+    "latency_seconds": 90,
+    "tokens": 291
+  },
+  "mx-a05-jtl-omission-jmeter": {
+    "latency_seconds": 90,
+    "tokens": 291
+  },
+  "mx-a05-jtl-omission-k6": {
+    "latency_seconds": 90,
+    "tokens": 291
+  },
+  "mx-a05-jtl-omission-locust": {
+    "latency_seconds": 90,
+    "tokens": 291
+  },
+  "mx-a06-k6-decomposition-gatling": {
+    "latency_seconds": 90,
+    "tokens": 225
+  },
+  "mx-a06-k6-decomposition-jmeter": {
+    "latency_seconds": 90,
+    "tokens": 225
+  },
+  "mx-a06-k6-decomposition-k6": {
+    "latency_seconds": 90,
+    "tokens": 225
+  },
+  "mx-a06-k6-decomposition-locust": {
+    "latency_seconds": 90,
+    "tokens": 225
+  },
+  "mx-c01-html-csrf-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-c01-html-csrf-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21048
+  },
+  "mx-c01-html-csrf-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-c01-html-csrf-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-c03-json-parent-child-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-c03-json-parent-child-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21048
+  },
+  "mx-c03-json-parent-child-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-c03-json-parent-child-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-c04-json-pagination-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-c04-json-pagination-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 27849
+  },
+  "mx-c04-json-pagination-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-c04-json-pagination-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-c06-etag-update-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11862
+  },
+  "mx-c06-etag-update-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 29418
+  },
+  "mx-c06-etag-update-k6": {
+    "latency_seconds": 180,
+    "tokens": 4857
+  },
+  "mx-c06-etag-update-locust": {
+    "latency_seconds": 180,
+    "tokens": 8829
+  },
+  "mx-c08-expiry-resume-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-c08-expiry-resume-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 38793
+  },
+  "mx-c08-expiry-resume-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-c08-expiry-resume-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-c09-async-reservation-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-c09-async-reservation-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 28302
+  },
+  "mx-c09-async-reservation-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-c09-async-reservation-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-m01-basic-flow-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-m01-basic-flow-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21048
+  },
+  "mx-m01-basic-flow-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-m01-basic-flow-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-m04-data-driven-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-m04-data-driven-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 41307
+  },
+  "mx-m04-data-driven-k6": {
+    "latency_seconds": 180,
+    "tokens": 3900
+  },
+  "mx-m04-data-driven-locust": {
+    "latency_seconds": 180,
+    "tokens": 7890
+  },
+  "mx-m05-pacing-semantics-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11856
+  },
+  "mx-m05-pacing-semantics-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21267
+  },
+  "mx-m05-pacing-semantics-k6": {
+    "latency_seconds": 180,
+    "tokens": 5076
+  },
+  "mx-m05-pacing-semantics-locust": {
+    "latency_seconds": 180,
+    "tokens": 8916
+  },
+  "mx-m06-assertions-metrics-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11850
+  },
+  "mx-m06-assertions-metrics-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21048
+  },
+  "mx-m06-assertions-metrics-k6": {
+    "latency_seconds": 180,
+    "tokens": 4842
+  },
+  "mx-m06-assertions-metrics-locust": {
+    "latency_seconds": 180,
+    "tokens": 8814
+  },
+  "mx-r01-extractor-scope-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-r01-extractor-scope-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21048
+  },
+  "mx-r01-extractor-scope-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-r01-extractor-scope-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-r02-cookie-lifetime-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-r02-cookie-lifetime-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21048
+  },
+  "mx-r02-cookie-lifetime-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-r02-cookie-lifetime-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-r04-status-recovery-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11850
+  },
+  "mx-r04-status-recovery-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 38793
+  },
+  "mx-r04-status-recovery-k6": {
+    "latency_seconds": 180,
+    "tokens": 4842
+  },
+  "mx-r04-status-recovery-locust": {
+    "latency_seconds": 180,
+    "tokens": 8814
+  },
+  "mx-r05-business-assertion-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11850
+  },
+  "mx-r05-business-assertion-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21048
+  },
+  "mx-r05-business-assertion-k6": {
+    "latency_seconds": 180,
+    "tokens": 4842
+  },
+  "mx-r05-business-assertion-locust": {
+    "latency_seconds": 180,
+    "tokens": 8814
+  },
+  "mx-r06-threshold-tags-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-r06-threshold-tags-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21177
+  },
+  "mx-r06-threshold-tags-k6": {
+    "latency_seconds": 180,
+    "tokens": 4932
+  },
+  "mx-r06-threshold-tags-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-r08-arrival-options-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11796
+  },
+  "mx-r08-arrival-options-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 32493
+  },
+  "mx-r08-arrival-options-k6": {
+    "latency_seconds": 180,
+    "tokens": 5007
+  },
+  "mx-r08-arrival-options-locust": {
+    "latency_seconds": 180,
+    "tokens": 8847
+  },
+  "mx-r10-user-partition-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11847
+  },
+  "mx-r10-user-partition-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21423
+  },
+  "mx-r10-user-partition-k6": {
+    "latency_seconds": 180,
+    "tokens": 3900
+  },
+  "mx-r10-user-partition-locust": {
+    "latency_seconds": 180,
+    "tokens": 7890
+  },
+  "mx-r11-timer-scope-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11856
+  },
+  "mx-r11-timer-scope-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 21267
+  },
+  "mx-r11-timer-scope-k6": {
+    "latency_seconds": 180,
+    "tokens": 5076
+  },
+  "mx-r11-timer-scope-locust": {
+    "latency_seconds": 180,
+    "tokens": 8916
+  },
+  "mx-r12-error-metric-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11769
+  },
+  "mx-r12-error-metric-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 94296
+  },
+  "mx-r12-error-metric-k6": {
+    "latency_seconds": 180,
+    "tokens": 4839
+  },
+  "mx-r12-error-metric-locust": {
+    "latency_seconds": 180,
+    "tokens": 8811
+  },
+  "mx-w01-steady-starts-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11796
+  },
+  "mx-w01-steady-starts-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 32493
+  },
+  "mx-w01-steady-starts-k6": {
+    "latency_seconds": 180,
+    "tokens": 5007
+  },
+  "mx-w01-steady-starts-locust": {
+    "latency_seconds": 180,
+    "tokens": 8847
+  },
+  "mx-w02-open-arrivals-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11796
+  },
+  "mx-w02-open-arrivals-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 32493
+  },
+  "mx-w02-open-arrivals-k6": {
+    "latency_seconds": 180,
+    "tokens": 5007
+  },
+  "mx-w02-open-arrivals-locust": {
+    "latency_seconds": 180,
+    "tokens": 8847
+  },
+  "mx-w07-burst-control-gatling": {
+    "latency_seconds": 180,
+    "tokens": 11796
+  },
+  "mx-w07-burst-control-jmeter": {
+    "latency_seconds": 180,
+    "tokens": 32493
+  },
+  "mx-w07-burst-control-k6": {
+    "latency_seconds": 180,
+    "tokens": 5007
+  },
+  "mx-w07-burst-control-locust": {
+    "latency_seconds": 180,
+    "tokens": 8847
+  }
+}

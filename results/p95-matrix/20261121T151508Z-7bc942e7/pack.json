@@ -1,0 +1,140 @@
+{
+  "pack_id": "p95-matrix",
+  "grade_schema_version": 2,
+  "default_repeats": 1,
+  "efficiency_weight": 0.05,
+  "weights": {
+    "repair": 25,
+    "migration": 15,
+    "correlation": 25,
+    "workload": 20,
+    "analysis": 15
+  },
+  "tasks": [
+    {
+      "id": "mx-r01-extractor-scope-gatling",
+      "category": "repair",
+      "scenario": "mx-r01-extractor-scope",
+      "task_digest": "38081118184e91fbc668c582b4d9b6b1fc3ac272779bb00071ac1d4aa3496c2d"
+    },
+    {
+      "id": "mx-r02-cookie-lifetime-gatling",
+      "category": "repair",
+      "scenario": "mx-r02-cookie-lifetime",
+      "task_digest": "9d61050218fc6f0cb2e14c6be36af28ee33a1ddc4119052b0918d08861f5d837"
+    },
+    {
+      "id": "mx-r04-status-recovery-gatling",
+      "category": "repair",
+      "scenario": "mx-r04-status-recovery",
+      "task_digest": "002e00f11249b2e424ff3ad99ffea1955e0d0cd287473f82d8d806d27076cd46"
+    },
+    {
+      "id": "mx-r05-business-assertion-gatling",
+      "category": "repair",
+      "scenario": "mx-r05-business-assertion",
+      "task_digest": "9b56c29939d8dca822690a8591c00ca84f552bc92e61303dfceee480eeff8acf"
+    },
+    {
+      "id": "mx-r06-threshold-tags-gatling",
+      "category": "repair",
+      "scenario": "mx-r06-threshold-tags",
+      "task_digest": "0081feb5733a24fc9f0eef032a74d14e137fc727caaa44154a0fc37819bce377"
+    },
+    {
+      "id": "mx-r08-arrival-options-gatling",
+      "category": "repair",
+      "scenario": "mx-r08-arrival-options",
+      "task_digest": "590c972ba816384a78b6859e21b64ace1efd916573a476e8ec738108a9e19b9b"
+    },
+    {
+      "id": "mx-r10-user-partition-gatling",
+      "category": "repair",
+      "scenario": "mx-r10-user-partition",
+      "task_digest": "9720b3766bdf7221c1af03b0c6ab3475a6a0d4c5fc2e600cf8d18991a55c3222"
+    },
+    {
+      "id": "mx-r11-timer-scope-gatling",
+      "category": "repair",
+      "scenario": "mx-r11-timer-scope",
+      "task_digest": "253ead3c4609b8bbebc2953d72f53288fc887fa16dd16304ca92b470c2cb5680"
+    },
+    {
+      "id": "mx-r12-error-metric-gatling",
+      "category": "repair",
+      "scenario": "mx-r12-error-metric",
+      "task_digest": "18151f50524f7a615b8b90d0c76b5f18e068c63728f9d9ff28ef349061a32940"
+    },
+    {
+      "id": "mx-w01-steady-starts-gatling",
+      "category": "workload",
+      "scenario": "mx-w01-steady-starts",
+      "task_digest": "0c302a8b96288723fd37341a1621d9a41dc0db275cd6a5e488d600be8ae2d2bf"
+    },
+    {
+      "id": "mx-w02-open-arrivals-gatling",
+      "category": "workload",
+      "scenario": "mx-w02-open-arrivals",
+      "task_digest": "bc3891cc65cbd7d97c6ebcd7a0fe95b6669d28a7ac84832a3c8f118c734c8bea"
+    },
+    {
+      "id": "mx-w07-burst-control-gatling",
+      "category": "workload",
+      "scenario": "mx-w07-burst-control",
+      "task_digest": "178518e1b9a74c2cdc90e50970cd2c17819fd7967c0e2e03f8c540fd7f3e1a09"
+    }
+  ],
+  "repeats": 1,
+  "efficiency_budgets": {
+    "mx-r01-extractor-scope-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11847
+    },
+    "mx-r02-cookie-lifetime-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11847
+    },
+    "mx-r04-status-recovery-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11850
+    },
+    "mx-r05-business-assertion-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11850
+    },
+    "mx-r06-threshold-tags-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11847
+    },
+    "mx-r08-arrival-options-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11796
+    },
+    "mx-r10-user-partition-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11847
+    },
+    "mx-r11-timer-scope-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11856
+    },
+    "mx-r12-error-metric-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11769
+    },
+    "mx-w01-steady-starts-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11796
+    },
+    "mx-w02-open-arrivals-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11796
+    },
+    "mx-w07-burst-control-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11796
+    }
+  },
+  "visibility": "public",
+  "digest": "2038916d942c5630ba184828e50ead5e45ae36de9f44f5efaee20c659202e231"
+}

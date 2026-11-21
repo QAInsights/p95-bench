@@ -124,6 +124,8 @@ a.stat:hover b { color: var(--lime); }
 .filter button:hover { color: var(--ink); border-color: var(--mute); }
 .filter button[aria-pressed="true"] { color: var(--bg); background: var(--lime); border-color: var(--lime); }
 .filter button[aria-pressed="true"] small { color: var(--bg); }
+.score-toggle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
+.score-toggle > span { font-family: var(--mono); font-size: 12px; color: var(--dim); margin-right: 4px; }
 [hidden] { display: none !important; }
 .grid .dimmed { opacity: .12; }
 main > .filter { margin: -40px 0 -40px; }

@@ -14,6 +14,12 @@ export function boardModels(data) {
       key: `${m.provider}/${m.model}`, name: name(m.model), provider: m.provider,
       providerLabel: providerName(m.provider),
       score: m.overall_score, quality: m.quality_score, efficiency: m.efficiency_score,
+      afterRepair: m.after_repair ? {
+        score: m.after_repair.overall_score, quality: m.after_repair.quality_score,
+        efficiency: m.after_repair.efficiency_score, categories: m.after_repair.category_scores,
+      } : null,
+      repairRounds: m.repair_rounds ?? null, reasoningMode: m.reasoning_mode ?? null,
+      derivedFrom: m.derived_from ?? null,
       cost: m.cost, outputTokens: m.tokens?.output ?? null, latency: m.latency,
       categories: m.category_scores, tasks: m.per_task_results,
     }))
@@ -30,13 +36,17 @@ export function boardTasks(data) {
     .sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category) || a.id.localeCompare(b.id));
 }
 
+export const hasRepairScores = models => models.some(m =>
+  m.repairRounds > 0 && Number.isFinite(m.afterRepair?.score));
+
 export const taskLabel = id => id.replace(/^(?:v2|mx)-[a-z]\d+-/i, '').replaceAll('-', ' ');
 export const taskCode = id => id.match(/^(?:v2|mx)-([a-z]\d+)/i)?.[1].toUpperCase() ?? id;
 
 export const TOOLS = ['jmeter', 'k6', 'locust', 'gatling'];
 const scenarioId = t => t.scenario ?? t.task_id;
-export function taskScore(model, taskId, tool = null) {
-  const values = model.tasks.filter(t => scenarioId(t) === taskId && (!tool || tool === 'all' || t.tool === tool)).map(attemptFraction).filter(v => v !== null);
+export function taskScore(model, taskId, tool = null, scoreMode = 'first') {
+  const values = model.tasks.filter(t => scenarioId(t) === taskId && (!tool || tool === 'all' || t.tool === tool))
+    .map(attempt => attemptFraction(attempt, scoreMode)).filter(v => v !== null);
   return values.length ? Math.round(100 * values.reduce((s, v) => s + v, 0) / values.length) : null;
 }
 
@@ -98,10 +108,11 @@ export function taskDetails(definitions, tasks) {
   });
 }
 
-export function toolScores(model, tasks) {
+export function toolScores(model, tasks, scoreMode = 'first') {
   const tools = [...new Set(tasks.map(t => t.tool))].sort();
   return Object.fromEntries(tools.map(tool => {
-    const values = tasks.filter(t => t.tool === tool).map(t => taskScore(model, t.id)).filter(v => v !== null);
+    const values = tasks.filter(t => t.tool === tool)
+      .map(t => taskScore(model, t.id, null, scoreMode)).filter(v => v !== null);
     return [tool, values.length ? values.reduce((s, v) => s + v, 0) / values.length : null];
   }));
 }

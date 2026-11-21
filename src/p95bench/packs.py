@@ -109,6 +109,8 @@ def summarize_v2(attempts, manifest):
     repeats = manifest["repeats"]
     seen = set()
     task_quality, task_efficiency = defaultdict(float), defaultdict(float)
+    after_quality, after_efficiency = defaultdict(float), defaultdict(float)
+    repairs_triggered = repairs_succeeded = 0
     for attempt in attempts:
         key = (attempt["task_id"], attempt["repeat"])
         if (key in seen or key[0] not in inventory or not isinstance(key[1], int)
@@ -123,15 +125,48 @@ def summarize_v2(attempts, manifest):
         task_quality[key[0]] += quality / repeats
         task_efficiency[key[0]] += efficiency(
             quality, attempt["response"], manifest["efficiency_budgets"][key[0]]) / repeats
+        repair = attempt.get("repair") or {}
+        triggered = repair.get("triggered") is True
+        repairs_triggered += int(triggered)
+        repair_grade = repair.get("grade")
+        repair_response = repair.get("response")
+        if triggered and isinstance(repair_grade, dict) and repair_grade.get("status") == "graded":
+            after_grade = CheckpointGrade.from_dict(repair_grade).score
+            repairs_succeeded += int(repair_grade["passed"])
+        else:
+            after_grade = quality
+        if triggered and isinstance(repair_response, dict):
+            combined_response = dict(attempt["response"])
+            for field in ("input_tokens", "output_tokens", "cached_tokens", "latency_seconds"):
+                combined_response[field] = (attempt["response"].get(field, 0)
+                                            + (repair_response or {}).get(field, 0))
+            combined_response["response_latency_seconds"] = (
+                attempt["response"].get("response_latency_seconds",
+                                        attempt["response"]["latency_seconds"])
+                + (repair_response or {}).get(
+                    "response_latency_seconds", (repair_response or {}).get("latency_seconds", 0)))
+        else:
+            combined_response = attempt["response"]
+        after_quality[key[0]] += after_grade / repeats
+        after_efficiency[key[0]] += efficiency(
+            after_grade, combined_response, manifest["efficiency_budgets"][key[0]]) / repeats
     categories, efficiencies = defaultdict(list), defaultdict(list)
+    after_categories, after_efficiencies = defaultdict(list), defaultdict(list)
     for task_id, category in inventory.items():
         categories[category].append(task_quality[task_id])
         efficiencies[category].append(task_efficiency[task_id])
+        after_categories[category].append(after_quality[task_id])
+        after_efficiencies[category].append(after_efficiency[task_id])
     scores = {k: 100 * sum(categories[k]) / len(categories[k]) if categories[k] else 0
               for k in weights}
     quality = sum(weights[k] * scores[k] for k in weights) / 100
     efficient = sum(weights[k] * (sum(efficiencies[k]) / len(efficiencies[k])
                                  if efficiencies[k] else 0) for k in weights)
+    after_scores = {k: 100 * sum(after_categories[k]) / len(after_categories[k])
+                    if after_categories[k] else 0 for k in weights}
+    after_quality_score = sum(weights[k] * after_scores[k] for k in weights) / 100
+    after_efficient = sum(weights[k] * (sum(after_efficiencies[k]) / len(after_efficiencies[k])
+                                        if after_efficiencies[k] else 0) for k in weights)
     weight = manifest["efficiency_weight"]
     expected = len(inventory) * repeats
     return {"pack_id": manifest["pack_id"], "pack_digest": manifest["digest"],
@@ -141,6 +176,22 @@ def summarize_v2(attempts, manifest):
             "repeats": repeats,
             "complete": len(seen) == expected and set(inventory.values()) == set(weights),
             "passed": sum(a["grade"]["passed"] for a in attempts),
-            "estimated_cost_usd": sum(a["cost_usd"] for a in attempts),
-            **{k: sum(a["response"][k] for a in attempts)
-               for k in ("input_tokens", "output_tokens", "latency_seconds")}}
+            "after_repair": {
+                "overall_score": (1 - weight) * after_quality_score + weight * after_efficient,
+                "quality_score": after_quality_score,
+                "efficiency_score": after_efficient,
+                "category_scores": after_scores,
+            },
+            "repairs_triggered": repairs_triggered,
+            "repairs_succeeded": repairs_succeeded,
+            "estimated_cost_usd": sum(a["cost_usd"] + (a.get("repair") or {}).get("cost_usd", 0)
+                                      for a in attempts),
+            "input_tokens": sum(a["response"]["input_tokens"]
+                                + ((a.get("repair") or {}).get("response") or {}).get("input_tokens", 0)
+                                for a in attempts),
+            "output_tokens": sum(a["response"]["output_tokens"]
+                                 + ((a.get("repair") or {}).get("response") or {}).get("output_tokens", 0)
+                                 for a in attempts),
+            "latency_seconds": sum(a["response"]["latency_seconds"]
+                                   + ((a.get("repair") or {}).get("response") or {}).get("latency_seconds", 0)
+                                   for a in attempts)}

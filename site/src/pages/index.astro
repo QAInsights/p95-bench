@@ -4,24 +4,35 @@ import "@fontsource/bricolage-grotesque/latin-600.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/geist.css";
 import "../styles/board.css";
-import data from "../data/leaderboard-p95-matrix.json";
-import { boardModels, boardTasks, categoryLabels, scatter, taskCode, taskScore, toolLabel, toolScores, TOOLS, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
+import data from "../data/leaderboard-p95-core.json";
+import { boardModels, boardTasks, categoryLabels, hasRepairScores as modelsHaveRepairScores, scatter, taskCode, taskScore, toolLabel, toolScores, TOOLS, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
 
 const models = boardModels(data);
 const tasks = boardTasks(data);
+const derivedModels = data.models.filter(m => Array.isArray(m.derived_from) && m.derived_from.length);
 const categories = Object.keys(data.weights);
-const plot = scatter(models);
+const hasRepairScores = modelsHaveRepairScores(models);
+const scoreModes = hasRepairScores ? ["first", "repair"] : ["first"];
+const scoreModel = (model, mode) => mode === "repair" && model.afterRepair
+  ? { ...model, score: model.afterRepair.score, quality: model.afterRepair.quality,
+    efficiency: model.afterRepair.efficiency, categories: model.afterRepair.categories }
+  : model;
+const scoreModels = mode => models.map(m => scoreModel(m, mode))
+  .sort((a, b) => b.score - a.score || a.cost - b.cost || a.name.localeCompare(b.name));
+const plots = scoreModes.map(mode => ({ mode, plot: scatter(scoreModels(mode)) }));
 const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
 const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";
 const tools = TOOLS;
 const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
-const viewModels = tool => tool === "all" ? models : models.map(m => {
+const viewModels = (tool, scoreMode) => tool === "all" ? scoreModels(scoreMode) : scoreModels(scoreMode).map(m => {
   const own = tasks;
-  const cat = Object.fromEntries(categories.map(c => [c, mean(own.filter(t => t.category === c).map(t => taskScore(m, t.id, tool)).filter(v => v !== null))]));
-  return { ...m, score: mean(own.map(t => taskScore(m, t.id, tool)).filter(v => v !== null)) ?? 0, categories: cat };
+  const cat = Object.fromEntries(categories.map(c => [c, mean(own.filter(t => t.category === c)
+    .map(t => taskScore(m, t.id, tool, scoreMode)).filter(v => v !== null))]));
+  return { ...m, score: mean(own.map(t => taskScore(m, t.id, tool, scoreMode)).filter(v => v !== null)) ?? 0, categories: cat };
 }).sort((a, b) => b.score - a.score);
-const views = ["all", ...tools].map(tool => ({ tool, models: viewModels(tool) }));
+const views = scoreModes.flatMap(scoreMode => ["all", ...tools]
+  .map(tool => ({ tool, scoreMode, models: viewModels(tool, scoreMode) })));
 const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
 ---
 
@@ -48,18 +59,25 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
     <main>
       <section class="intro">
         <h1><span class="lime">P95 Bench</span> measures how well language models write, fix and analyse performance tests in JMeter, k6, Locust and Gatling.</h1>
-        <p class="meta">Matrix · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
+        <p class="meta">Core · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
       </section>
 
       <div class="filter" role="group" aria-label="Filter scores by tool">
         <span>Tool</span>
         <button type="button" data-tool="all" aria-pressed="true">All <small>{tasks.length * tools.length}</small></button>
         {tools.map(t => <button type="button" data-tool={t} aria-pressed="false">{toolLabel(t)} <small>{tasks.length}</small></button>)}
+        {hasRepairScores && <div class="score-toggle" role="group" aria-label="Select score view">
+          <span>Score</span>
+          <button type="button" data-score="first" aria-pressed="true">First try</button>
+          <button type="button" data-score="repair" aria-pressed="false">After 1 repair</button>
+        </div>}
       </div>
 
       {views.map(v => (
-<section data-view={v.tool} hidden={v.tool !== "all"} aria-labelledby={`score-title-${v.tool}`}>
-        <h2 id={`score-title-${v.tool}`} class="label">Score <span>{v.tool === "all" ? "/ 100, all tools" : `average ${toolLabel(v.tool)} task score / 100`}</span></h2>
+<section data-view={v.tool} data-score-view={v.scoreMode}
+        hidden={v.tool !== "all" || v.scoreMode !== "first"}
+        aria-labelledby={`score-title-${v.tool}-${v.scoreMode}`}>
+        <h2 id={`score-title-${v.tool}-${v.scoreMode}`} class="label">Score <span>{v.tool === "all" ? "/ 100, all tools" : `average ${toolLabel(v.tool)} task score / 100`}</span></h2>
         <ol class="bars">
           {v.models.map(m => (
             <li>
@@ -72,27 +90,29 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
       </section>
       ))}
 
-      {plot.points.length > 1 && (
-        <section aria-labelledby="value-title">
-          <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length * tools.length} tasks, log scale</span></h2>
+      {plots.map(({ mode, plot }) => plot.points.length > 1 && (
+        <section data-score-view={mode} hidden={mode !== "first"} aria-labelledby={`value-title-${mode}`}>
+          <h2 id={`value-title-${mode}`} class="label">Score versus cost <span>list price for all {tasks.length * tools.length} tasks, log scale</span></h2>
           <div class="table-wrap"><svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost">
             {plot.yTicks.map(t => <g><line x1={plot.left} x2={plot.width - plot.right} y1={t.y} y2={t.y} /><text x={plot.left - 10} y={t.y + 4} text-anchor="end">{t.value}</text></g>)}
             {plot.xTicks.map(t => <text x={t.x} y={plot.height - 10} text-anchor="middle">{t.label}</text>)}
             {plot.points.map(p => <g class="point"><circle cx={p.x} cy={p.y} r="6" fill={p.color} />{p.rank < 5 && <text class="point-label" x={p.x + 12} y={p.y + 4}>{p.name}</text>}<title>{`${p.name}: ${p.score.toFixed(1)} · $${p.cost.toFixed(2)}`}</title></g>)}
           </svg></div>
         </section>
-      )}
+      ))}
 
       <section id="rankings" aria-labelledby="rankings-title">
         <h2 id="rankings-title" class="label">Rankings <span>all tools</span></h2>
         <div class="table-wrap">
           <table class="rankings">
-            <thead><tr><th>#</th><th>Model</th><th class="n">Score</th><th class="n">Quality</th><th class="n">Efficiency</th><th class="n">Cost</th><th class="n">Output tokens</th><th class="n">Time</th></tr></thead>
-            <tbody>
-              {models.map((m, i) => (
+            <thead><tr><th>#</th><th>Model</th><th>Reasoning mode</th><th class="n">Score</th><th class="n">Quality</th><th class="n">Efficiency</th><th class="n">Cost</th><th class="n">Output tokens</th><th class="n">Time</th></tr></thead>
+            {scoreModes.map(scoreMode => (
+            <tbody data-score-view={scoreMode} hidden={scoreMode !== "first"}>
+              {scoreModels(scoreMode).map((m, i) => (
                 <tr>
                   <td class="rank">{i + 1}</td>
                   <td><span class="swatch" style={`background:${m.color}`}></span>{m.name} <span class="provider">{m.providerLabel}</span></td>
+                  <td>{m.reasoningMode ?? "—"}</td>
                   <td class="n strong">{m.score.toFixed(1)}</td>
                   <td class="n">{m.quality.toFixed(1)}</td>
                   <td class="n">{m.efficiency.toFixed(1)}</td>
@@ -102,13 +122,16 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
                 </tr>
               ))}
             </tbody>
+            ))}
           </table>
         </div>
       </section>
 
       {views.map(v => (
-<section data-view={v.tool} hidden={v.tool !== "all"} aria-labelledby={`categories-title-${v.tool}`}>
-        <h2 id={`categories-title-${v.tool}`} class="label">By category <span>{v.tool === "all" ? "quality / 100, weight in brackets" : `${toolLabel(v.tool)} tasks only, average score / 100`}</span></h2>
+<section data-view={v.tool} data-score-view={v.scoreMode}
+        hidden={v.tool !== "all" || v.scoreMode !== "first"}
+        aria-labelledby={`categories-title-${v.tool}-${v.scoreMode}`}>
+        <h2 id={`categories-title-${v.tool}-${v.scoreMode}`} class="label">By category <span>{v.tool === "all" ? "quality / 100, weight in brackets" : `${toolLabel(v.tool)} tasks only, average score / 100`}</span></h2>
         <div class="table-wrap">
           <table class="categories">
             <thead><tr><th>Model</th>{categories.map(c => <th class="n">{categoryLabels[c] ?? c} <span class="weight">({data.weights[c]}%)</span></th>)}</tr></thead>
@@ -130,21 +153,27 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         <div class="table-wrap">
           <table class="categories">
             <thead><tr><th>Model</th>{tools.map(t => <th class="n">{toolLabel(t)} <span class="weight">({tasks.length})</span></th>)}</tr></thead>
-            <tbody>
-              {models.map(m => { const scores = Object.fromEntries(tools.map(t => [t, mean(tasks.map(x => taskScore(m, x.id, t)).filter(v => v !== null))])); return (
+          {scoreModes.map(scoreMode => (
+          <tbody data-score-view={scoreMode} hidden={scoreMode !== "first"}>
+              {scoreModels(scoreMode).map(m => { const scores = Object.fromEntries(tools.map(t =>
+                [t, mean(tasks.map(x => taskScore(m, x.id, t, scoreMode)).filter(v => v !== null))])); return (
                 <tr>
                   <td><span class="swatch" style={`background:${m.color}`}></span>{m.name}</td>
                   {tools.map(t => <td class="n heat" style={`--t:${tone(scores[t]) ?? 0}%`}>{scores[t] === null ? "—" : scores[t].toFixed(0)}</td>)}
                 </tr>
               ); })}
             </tbody>
+          ))}
           </table>
         </div>
       </section>
 
       {views.map(v => (
-<section data-view={v.tool} hidden={v.tool !== "all"} id={v.tool === "all" ? "tasks" : `tasks-${v.tool}`} aria-labelledby="tasks-title">
-        <h2 id="tasks-title" class="label">Every task <span>{v.tool === "all" ? "40 scenarios, average over 4 tools" : `40 scenarios in ${toolLabel(v.tool)}`} · brighter is better · hover a cell for details</span></h2>
+<section data-view={v.tool} data-score-view={v.scoreMode}
+        hidden={v.tool !== "all" || v.scoreMode !== "first"}
+        id={v.tool === "all" && v.scoreMode === "first" ? "tasks" : `tasks-${v.tool}-${v.scoreMode}`}
+        aria-labelledby={`tasks-title-${v.tool}-${v.scoreMode}`}>
+        <h2 id={`tasks-title-${v.tool}-${v.scoreMode}`} class="label">Every task <span>{v.tool === "all" ? `${tasks.length} scenarios, average over ${tools.length} tools` : `${tasks.length} scenarios in ${toolLabel(v.tool)}`} · brighter is better · hover a cell for details</span></h2>
         <div class="table-wrap">
           <div class="grid" style={`--cols:${tasks.length + groups.length - 1}`}>
             <span class="grid-corner"></span>
@@ -157,7 +186,7 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
               {groups.map((g, gi) => <>
                 {gi > 0 && <span class="grid-gap"></span>}
                 {g.tasks.map(t => {
-                  const value = taskScore(m, t.id, v.tool);
+                  const value = taskScore(m, t.id, v.tool, v.scoreMode);
                   return <span data-tool={t.tool} class:list={["cell", value === null && "missing"]} style={value === null ? "" : `--t:${value}%`}
                     title={`${taskCode(t.id)} · ${t.label} · ${toolLabel(t.tool)}\n${m.name}: ${value === null ? "not run" : `${value}/100`}`}
                     aria-label={`${m.name}, ${t.label}: ${value === null ? "not run" : `${value} of 100`}`}></span>;
@@ -174,9 +203,9 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         <h2 id="method-title" class="label">Method</h2>
         <ul>
           <li>{tasks.length} public scenarios across {categories.length} categories, each written for all {tools.length} tools ({tasks.length * tools.length} tasks): {categories.map(c => (categoryLabels[c] ?? c).toLowerCase()).join(", ")}. Every task is in the repo.</li>
-          <li>Each model answers every task once at temperature 0 with a 16,384-token output cap, through the provider's own API.</li>
+          <li>Each model answers every task once through the provider's own API; the run metadata records reasoning mode and output cap.</li>
           <li>Generated JMeter, k6, Locust and Gatling scripts run in isolated containers against a demo shop; the same graders score every tool.</li>
-          <li>Known limit: the JMeter three-phase workload reference reaches 92/100, because JMeter timers cannot hold the exact phase rates.</li>
+          {derivedModels.length > 0 && <li>Derived from the Matrix run: {derivedModels.map(m => `${m.model} (${m.derived_from.map(source => source.run).join(", ")})`).join("; ")}.</li>}
           <li>Score = 95% quality + 5% efficiency. Efficiency is scaled by quality and uses per-task output-token and latency budgets.</li>
           <li>Cost is reported token usage at list price, not a provider invoice.</li>
         </ul>
@@ -184,11 +213,19 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
     </main>
 
     <script>
-      const buttons = [...document.querySelectorAll(".filter button")];
-      const apply = tool => {
+      const buttons = [...document.querySelectorAll(".filter [data-tool]")];
+      const scoreButtons = [...document.querySelectorAll(".filter [data-score]")];
+      let selectedScore = "first";
+      const apply = (tool, score = selectedScore) => {
         if (!buttons.some(b => b.dataset.tool === tool)) tool = "all";
+        if (!scoreButtons.some(b => b.dataset.score === score)) score = "first";
+        selectedScore = score;
         buttons.forEach(x => x.setAttribute("aria-pressed", String(x.dataset.tool === tool)));
-        document.querySelectorAll("[data-view]").forEach(el => { el.hidden = el.dataset.view !== tool; });
+        scoreButtons.forEach(x => x.setAttribute("aria-pressed", String(x.dataset.score === score)));
+        document.querySelectorAll("[data-score-view]").forEach(el => {
+          el.hidden = el.dataset.scoreView !== score
+            || (el.dataset.view !== undefined && el.dataset.view !== tool);
+        });
       };
       buttons.forEach(b => b.addEventListener("click", () => {
         apply(b.dataset.tool);
@@ -196,7 +233,14 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         b.dataset.tool === "all" ? url.searchParams.delete("tool") : url.searchParams.set("tool", b.dataset.tool);
         history.replaceState(null, "", url);
       }));
-      apply(new URLSearchParams(location.search).get("tool") ?? "all");
+      scoreButtons.forEach(b => b.addEventListener("click", () => {
+        apply(new URLSearchParams(location.search).get("tool") ?? "all", b.dataset.score);
+        const url = new URL(location.href);
+        b.dataset.score === "first" ? url.searchParams.delete("score") : url.searchParams.set("score", "repair");
+        history.replaceState(null, "", url);
+      }));
+      const params = new URLSearchParams(location.search);
+      apply(params.get("tool") ?? "all", params.get("score") === "repair" ? "repair" : "first");
     </script>
 
     <footer class="bottom">
