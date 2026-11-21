@@ -12,22 +12,22 @@
     {
       "provider": "deepseek",
       "model": "deepseek-flash",
-      "overall_score": 39.50299508955517,
+      "overall_score": 41.696745089555165,
       "pack_id": "p95-core",
       "pack_digest": "5a5d08825662410062545ffd7e7d35b6bfe3dddcf956f2d0e08693fea9da5a8a",
-      "quality_score": 40.49971064816667,
-      "efficiency_score": 20.565399475936754,
+      "quality_score": 42.74971064816666,
+      "efficiency_score": 21.690399475936754,
       "repeats": 1,
       "after_repair": {
-        "overall_score": 48.41778670284955,
-        "quality_score": 49.7236689815,
-        "efficiency_score": 23.606023408490973,
+        "overall_score": 49.880286702849546,
+        "quality_score": 51.2236689815,
+        "efficiency_score": 24.356023408490973,
         "category_scores": {
           "repair": 66.875,
           "migration": 53.28125,
           "correlation": 49.791666666666664,
           "workload": 17.824074074166667,
-          "analysis": 60
+          "analysis": 70
         }
       },
       "repair_rounds": 1,
@@ -37,17 +37,17 @@
         "migration": 41.09375,
         "correlation": 40.208333333333336,
         "workload": 15.324074074166667,
-        "analysis": 55.00000000000001
+        "analysis": 70
       },
-      "cost": 5.886688728,
+      "cost": 5.870177244,
       "tokens": {
-        "input": 722940,
-        "output": 4781284
+        "input": 720731,
+        "output": 4767669
       },
-      "latency": 23595.01982869809,
+      "latency": 23517.2625421501,
       "run_date": "2026-11-21T04:59:07.895063+00:00",
       "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807",
-      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices; Core cost $5.886689 for 104 first tries and 36 repair responses. Not an invoice.",
+      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 104 Core first tries and 33 repair responses; Core usage cost $5.870177. Not an invoice.",
       "pricing_source": "Frozen provider list-price snapshot in saved attempts",
       "derived_from": [
         {
@@ -1314,45 +1314,6 @@
           "cost_usd": 0.045174804
         },
         {
-          "task_id": "mx-a01-jtl-endpoints-gatling",
-          "input_tokens": 596,
-          "cached_tokens": 384,
-          "output_tokens": 7395,
-          "price_per_million": {
-            "input": 0.3,
-            "cached": 0.006,
-            "output": 1.2
-          },
-          "cost_usd": 0.008939904,
-          "status": "repair"
-        },
-        {
-          "task_id": "mx-a01-jtl-endpoints-k6",
-          "input_tokens": 946,
-          "cached_tokens": 768,
-          "output_tokens": 1759,
-          "price_per_million": {
-            "input": 0.3,
-            "cached": 0.006,
-            "output": 1.2
-          },
-          "cost_usd": 0.0021688079999999995,
-          "status": "repair"
-        },
-        {
-          "task_id": "mx-a01-jtl-endpoints-locust",
-          "input_tokens": 667,
-          "cached_tokens": 512,
-          "output_tokens": 4461,
-          "price_per_million": {
-            "input": 0.3,
-            "cached": 0.006,
-            "output": 1.2
-          },
-          "cost_usd": 0.005402772,
-          "status": "repair"
-        },
-        {
           "task_id": "mx-a04-k6-errors-gatling",
           "input_tokens": 722,
           "cached_tokens": 512,
@@ -1794,13 +1755,13 @@
           "category": "analysis",
           "tool": "gatling",
           "scenario": "mx-a01-jtl-endpoints",
-          "score": 0,
+          "score": 0.8,
           "repeat": 0,
           "output_tokens": 2777,
           "latency_seconds": 15.926675048001925,
           "after_repair_score": 0.8,
           "passed": false,
-          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "mx-a01-jtl-endpoints-jmeter",
@@ -1820,26 +1781,26 @@
           "category": "analysis",
           "tool": "k6",
           "scenario": "mx-a01-jtl-endpoints",
-          "score": 0,
+          "score": 0.8,
           "repeat": 0,
           "output_tokens": 1283,
           "latency_seconds": 7.644815622988972,
-          "after_repair_score": 0,
+          "after_repair_score": 0.8,
           "passed": false,
-          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "mx-a01-jtl-endpoints-locust",
           "category": "analysis",
           "tool": "locust",
           "scenario": "mx-a01-jtl-endpoints",
-          "score": 0,
+          "score": 0.8,
           "repeat": 0,
           "output_tokens": 1086,
           "latency_seconds": 6.733119092008565,
-          "after_repair_score": 0,
+          "after_repair_score": 0.8,
           "passed": false,
-          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "mx-a04-k6-errors-gatling",
@@ -3141,28 +3102,27 @@
           "passed": false,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ],
-      "budget_file_sha256": "4952b2e098f4a3bf886a68e8fb56cf78c9188e0736ce3fc7b37ae111ebb78cda"
+      ]
     },
     {
       "provider": "deepseek",
       "model": "deepseek-v4-pro",
-      "overall_score": 36.54177162597234,
+      "overall_score": 38.73552162597233,
       "pack_id": "p95-core",
       "pack_digest": "5a5d08825662410062545ffd7e7d35b6bfe3dddcf956f2d0e08693fea9da5a8a",
-      "quality_score": 37.57523148152778,
-      "efficiency_score": 16.90603437041898,
+      "quality_score": 39.82523148152777,
+      "efficiency_score": 18.03103437041898,
       "repeats": 1,
       "after_repair": {
-        "overall_score": 43.16509940803078,
-        "quality_score": 44.476273148194444,
-        "efficiency_score": 18.25279834492114,
+        "overall_score": 45.35884940803078,
+        "quality_score": 46.726273148194444,
+        "efficiency_score": 19.37779834492114,
         "category_scores": {
           "repair": 78.19444444444444,
           "migration": 35.9375,
           "correlation": 35,
           "workload": 12.685185185416666,
-          "analysis": 55.00000000000001
+          "analysis": 70
         }
       },
       "repair_rounds": 1,
@@ -3172,17 +3132,17 @@
         "migration": 15,
         "correlation": 31.458333333333332,
         "workload": 7.6851851854166675,
-        "analysis": 55.00000000000001
+        "analysis": 70
       },
-      "cost": 15.838996096,
+      "cost": 15.802498448,
       "tokens": {
-        "input": 769695,
-        "output": 3804347
+        "input": 767226,
+        "output": 3795376
       },
-      "latency": 42395.56033111908,
+      "latency": 42307.171444100095,
       "run_date": "2026-11-21T04:59:07.905278+00:00",
       "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807",
-      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices; Core cost $15.838996 for 104 first tries and 41 repair responses. Not an invoice.",
+      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 104 Core first tries and 38 repair responses; Core usage cost $15.802498. Not an invoice.",
       "pricing_source": "Frozen provider list-price snapshot in saved attempts",
       "derived_from": [
         {
@@ -4467,45 +4427,6 @@
           "cost_usd": 0.16832376000000002
         },
         {
-          "task_id": "mx-a01-jtl-endpoints-gatling",
-          "input_tokens": 666,
-          "cached_tokens": 512,
-          "output_tokens": 6370,
-          "price_per_million": {
-            "input": 1.32,
-            "cached": 0.044,
-            "output": 3.96
-          },
-          "cost_usd": 0.025451008,
-          "status": "repair"
-        },
-        {
-          "task_id": "mx-a01-jtl-endpoints-k6",
-          "input_tokens": 1041,
-          "cached_tokens": 768,
-          "output_tokens": 1152,
-          "price_per_million": {
-            "input": 1.32,
-            "cached": 0.044,
-            "output": 3.96
-          },
-          "cost_usd": 0.004956072,
-          "status": "repair"
-        },
-        {
-          "task_id": "mx-a01-jtl-endpoints-locust",
-          "input_tokens": 762,
-          "cached_tokens": 512,
-          "output_tokens": 1449,
-          "price_per_million": {
-            "input": 1.32,
-            "cached": 0.044,
-            "output": 3.96
-          },
-          "cost_usd": 0.006090568,
-          "status": "repair"
-        },
-        {
           "task_id": "mx-a04-k6-errors-gatling",
           "input_tokens": 811,
           "cached_tokens": 640,
@@ -5012,13 +4933,13 @@
           "category": "analysis",
           "tool": "gatling",
           "scenario": "mx-a01-jtl-endpoints",
-          "score": 0,
+          "score": 0.8,
           "repeat": 0,
           "output_tokens": 2008,
           "latency_seconds": 20.411997870003688,
-          "after_repair_score": 0,
+          "after_repair_score": 0.8,
           "passed": false,
-          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "mx-a01-jtl-endpoints-jmeter",
@@ -5038,26 +4959,26 @@
           "category": "analysis",
           "tool": "k6",
           "scenario": "mx-a01-jtl-endpoints",
-          "score": 0,
+          "score": 0.8,
           "repeat": 0,
           "output_tokens": 1936,
           "latency_seconds": 20.217902374002733,
-          "after_repair_score": 0,
+          "after_repair_score": 0.8,
           "passed": false,
-          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "mx-a01-jtl-endpoints-locust",
           "category": "analysis",
           "tool": "locust",
           "scenario": "mx-a01-jtl-endpoints",
-          "score": 0,
+          "score": 0.8,
           "repeat": 0,
           "output_tokens": 3190,
           "latency_seconds": 32.9567135959951,
-          "after_repair_score": 0,
+          "after_repair_score": 0.8,
           "passed": false,
-          "detail": "Invalid model answer (ValueError): Expected the answer schema with finite numeric values"
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
         },
         {
           "task_id": "mx-a04-k6-errors-gatling",
@@ -6359,8 +6280,7 @@
           "passed": false,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ],
-      "budget_file_sha256": "4952b2e098f4a3bf886a68e8fb56cf78c9188e0736ce3fc7b37ae111ebb78cda"
+      ]
     }
   ],
   "budget_file_sha256": "4952b2e098f4a3bf886a68e8fb56cf78c9188e0736ce3fc7b37ae111ebb78cda",
