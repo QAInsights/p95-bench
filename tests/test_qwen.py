@@ -212,7 +212,7 @@ def test_transport_retries_reuse_one_budget_reservation(monkeypatch, tmp_path):
     config = replace(PROVIDERS['deepseek'], extra={'max_tokens': 64})
 
     class Ledger:
-        limit = 60_000_000
+        limit = 100_000_000
 
         def __init__(self):
             self.reservations = []

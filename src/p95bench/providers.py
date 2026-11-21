@@ -135,8 +135,10 @@ PROVIDERS = {
         "https://api.deepseek.com", "DEEPSEEK_API_KEY",
         {"deepseek-flash": Price(0.30, 0.006, 1.20),
          "deepseek-v4-pro": Price(1.32, 0.044, 3.96)},
-        extra={"thinking": {"type": "enabled"}, "max_tokens": 16384},
-        reasoning_mode="thinking",
+        temperature=None,
+        extra={"thinking": {"type": "enabled"}, "reasoning_effort": "high",
+               "max_tokens": 65536},
+        reasoning_mode="thinking-high",
     ),
     "anthropic": ProviderConfig(
         "https://api.anthropic.com/v1", "ANTHROPIC_API_KEY",
@@ -263,7 +265,7 @@ class OpenAICompatible:
         cached = usage.get("prompt_cache_hit_tokens",
                            (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0))
         choice = data["choices"][0]
-        if self.config.reasoning_mode == "thinking":
+        if self.config.reasoning_mode.startswith("thinking"):
             reasoning = ((usage.get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
                          or 0)
             return DeepSeekResponse(

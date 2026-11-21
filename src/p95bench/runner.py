@@ -222,6 +222,13 @@ def _repair_trigger(task, result, workdir):
     return None
 
 
+def _output_cap(config):
+    extra = config.extra if config else {}
+    return next((extra[key] for key in
+                 ("max_tokens", "max_completion_tokens", "maxOutputTokens")
+                 if extra.get(key) is not None), 16384)
+
+
 def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
         pack_id="p95-v1", efficiency_budgets=None, budget_ledger=None, repair_rounds=None):
     manifest = snapshot(pack_id, tasks, repeats, efficiency_budgets)
@@ -292,10 +299,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                     if budget_error is not None:
                         raise SpendLimitExceeded(budget_error)
                     if ledger:
-                        extra = config.extra if config else {}
-                        output_cap = next((extra[k] for k in
-                                           ("max_tokens", "max_completion_tokens", "maxOutputTokens")
-                                           if k in extra), 16384)
+                        output_cap = _output_cap(config)
                         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
                                    + output_cap * price.output) / 1_000_000
                         retries = (getattr(config, "max_retries", 0)
@@ -343,7 +347,12 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         backoff_seconds=getattr(provider, "backoff_seconds", 0))
                 repair = {"triggered": False}
                 if repair_rounds:
-                    trigger = _repair_trigger(task, result, workdir)
+                    if (getattr(response, "finish_reason", None) == "length"
+                            or response.output_tokens >= _output_cap(config)):
+                        repair["skipped"] = "truncated_at_cap"
+                        trigger = None
+                    else:
+                        trigger = _repair_trigger(task, result, workdir)
                     if trigger is not None:
                         reason, feedback = trigger
                         appended = [
@@ -361,10 +370,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         try:
                             repair_maximum = None
                             if ledger:
-                                extra = config.extra if config else {}
-                                output_cap = next((extra[k] for k in
-                                                   ("max_tokens", "max_completion_tokens", "maxOutputTokens")
-                                                   if k in extra), 16384)
+                                output_cap = _output_cap(config)
                                 repair_maximum = ((len(json.dumps(repair_messages).encode()) + 4096)
                                                   * price.input + output_cap * price.output) / 1_000_000
                                 retries = (getattr(config, "max_retries", 0)

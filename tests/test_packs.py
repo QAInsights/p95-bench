@@ -13,7 +13,15 @@ from p95bench.execution import AuditOverflow
 from p95bench.graders import CHECKPOINT_GRADERS, GRADERS, Grade
 from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import efficiency, pack_config, snapshot, summarize_v2
-from p95bench.providers import OpenAICompatible, Price, ProviderConfig, Response, SpendLimitExceeded
+from p95bench.providers import (
+    PROVIDERS,
+    DeepSeekResponse,
+    OpenAICompatible,
+    Price,
+    ProviderConfig,
+    Response,
+    SpendLimitExceeded,
+)
 from p95bench.runner import (
     _grade_response,
     _repair_trigger,
@@ -326,6 +334,84 @@ def test_loaded_low_score_does_not_trigger_repair(tmp_path, monkeypatch):
     assert summary["after_repair"]["quality_score"] == summary["quality_score"]
 
 
+@pytest.mark.parametrize(("finish_reason", "output_tokens"), [
+    ("length", 100), ("stop", 65536),
+])
+def test_repair_is_skipped_for_truncated_responses(
+        finish_reason, output_tokens, tmp_path, monkeypatch):
+    task_item = task()
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint",
+                        lambda *args: result(0, "Invalid model artifact: broken response"))
+
+    class TruncatedProvider:
+        config = PROVIDERS["deepseek"]
+
+        def __init__(self):
+            self.calls = 0
+
+        def send(self, model, messages):
+            self.calls += 1
+            return DeepSeekResponse("broken response", 100, output_tokens, 0, 1,
+                                    reasoning_tokens=50, finish_reason=finish_reason)
+
+    provider = TruncatedProvider()
+    ledger = BudgetLedger(tmp_path / "truncated-ledger.json")
+    directory, _ = run(
+        provider, "deepseek", "deepseek-flash", Price(1, .5, 2), [task_item], tmp_path,
+        pack_id=V2, efficiency_budgets={
+            task_item.id: {"tokens": 100, "latency_seconds": 10}},
+        budget_ledger=ledger)
+    attempt = json.loads((directory / "attempts.jsonl").read_text())
+
+    assert provider.calls == 1
+    assert attempt["repair"] == {"triggered": False, "skipped": "truncated_at_cap"}
+    assert len(json.loads(ledger.path.read_text())["charges"]) == 1
+
+
+def test_65536_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch):
+    task_item = task()
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint",
+                        Mock(side_effect=[
+                            result(0, "Invalid model artifact: broken response"), result(100)]))
+    provider = RepairProvider()
+    provider.config = PROVIDERS["deepseek"]
+
+    class RecordingLedger:
+        limit = 100_000_000
+
+        def __init__(self):
+            self.reservations = []
+
+        def reserve(self, maximum):
+            self.reservations.append(maximum)
+            return str(len(self.reservations))
+
+        def settle(self, key, amount):
+            return None
+
+    ledger = RecordingLedger()
+    price = Price(1, .5, 2)
+    directory, _ = run(
+        provider, "deepseek", "deepseek-flash", price, [task_item], tmp_path,
+        pack_id=V2, efficiency_budgets={
+            task_item.id: {"tokens": 100, "latency_seconds": 10}},
+        budget_ledger=ledger)
+    attempt = json.loads((directory / "attempts.jsonl").read_text())
+    repair_messages = attempt["messages"] + attempt["repair"]["messages_appended"]
+    retries = provider.config.max_retries + provider.config.transport_retries
+
+    def expected_reservation(messages):
+        maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
+                   + 65536 * price.output) / 1_000_000
+        return maximum * (1 + retries)
+
+    assert attempt["repair"]["triggered"]
+    assert ledger.reservations == pytest.approx([
+        expected_reservation(attempt["messages"]),
+        expected_reservation(repair_messages),
+    ])
+
+
 def test_zero_loads_from_gatling_compile_failure_is_repairable(tmp_path):
     task = Task("synthetic-gatling", "repair", "gatling", "Synthetic", "v2_exec", {}, {})
     workdir = tmp_path / "task-0-0"
@@ -425,15 +511,15 @@ def test_shared_cap_stops_requests_but_writes_summary(tmp_path, monkeypatch):
 def test_budget_shared_models_processes_and_fail_closed(tmp_path):
     path = tmp_path / "ledger.json"
     first, second = BudgetLedger(path), BudgetLedger(path)
-    reservation = first.reserve(40)
+    reservation = first.reserve(70)
     with pytest.raises(SpendLimitExceeded):
-        second.reserve(21)
+        second.reserve(31)
     first.settle(reservation, 1)
-    second.reserve(59)
+    second.reserve(99)
     with pytest.raises(SpendLimitExceeded):
         first.reserve(.000001)
     with pytest.raises(ValueError):
-        BudgetLedger(path, limit=61)
+        BudgetLedger(path, limit=101)
     with pytest.raises(ValueError):
         BudgetLedger(path, limit=1).reserve(.1)
     path.write_text("corrupted")
@@ -446,13 +532,13 @@ def test_concurrent_budget_reservations(tmp_path):
 
     def reserve(_):
         try:
-            ledger.reserve(10)
+            ledger.reserve(20)
             return True
         except SpendLimitExceeded:
             return False
 
     with ThreadPoolExecutor(max_workers=8) as pool:
-        assert sum(pool.map(reserve, range(8))) == 6
+        assert sum(pool.map(reserve, range(8))) == 5
 
 
 def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
@@ -502,8 +588,8 @@ def test_budget_overrun_is_persisted_and_blocks_future_spend(tmp_path):
     ledger = BudgetLedger(tmp_path / "ledger.json")
     key = ledger.reserve(1)
     with pytest.raises(ValueError, match="reservation"):
-        ledger.settle(key, 61)
-    assert json.loads(ledger.path.read_text())["charges"][key] == 61_000_000
+        ledger.settle(key, 101)
+    assert json.loads(ledger.path.read_text())["charges"][key] == 101_000_000
     with pytest.raises(SpendLimitExceeded):
         BudgetLedger(ledger.path).reserve(.000001)
 

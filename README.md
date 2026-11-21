@@ -46,7 +46,7 @@ v2 builder uses `npm run data -- --pack p95-v2.0.0 --tasks PUBLIC_TASK_ROOT RUN_
 and writes `leaderboard-p95-v2.0.0.json`, never overwriting v1. The site lands on v2
 by default; `?pack=v1` selects the legacy board.
 
-V2 has a shared **$60 maximum budget across all models**, backed by
+V2 has a shared **$100 maximum budget across all models**, backed by
 `~/.local/state/p95-bench/p95-v2.0.0-budget.json`. Do not delete/reset that ledger
 between models. File-locked, persistent maximum-cost reservations happen before
 generation and include every possible transport retry. Returned usage releases
@@ -200,8 +200,9 @@ cached input $0.044, output $3.96. DeepSeek advertises half-price off-peak rates
 reported costs are conservative estimates, not invoices. Cache-hit input tokens
 are not charged twice. Each attempt records its price snapshot. Calls use
 temperature 0 where supported, a fixed system prompt and identical task/fixture messages across
-models. DeepSeek thinking is disabled for this initial chat benchmark, with an
-16384-token output cap. Provider failures abort the run rather than count as
+models. DeepSeek thinking uses high reasoning effort with a 65,536-token output cap.
+Temperature is omitted because it is ignored in thinking mode; the cap includes
+reasoning and visible output. Provider failures abort the run rather than count as
 incorrect answers; already-written attempt lines remain available to score.
 
 ## Add a task
