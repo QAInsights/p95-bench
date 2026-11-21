@@ -10,7 +10,8 @@ from p95bench.tasks import load_tasks
 
 MATRIX_PACK = "p95-matrix"
 CORE_PACK = "p95-core"
-OUTPUT_CAP_KEYS = ("max_tokens", "max_completion_tokens", "maxOutputTokens")
+SOURCE_PACKS = (MATRIX_PACK, CORE_PACK)
+OUTPUT_CAP_KEYS = ("output_cap", "max_tokens", "max_completion_tokens", "maxOutputTokens")
 CONSISTENT_METADATA = (
     "model", "provider", "harness_commit", "harness_dirty", "repair_rounds",
     "reasoning_mode",
@@ -18,8 +19,11 @@ CONSISTENT_METADATA = (
 
 
 def _output_cap(metadata):
-    values = [metadata[key] for key in OUTPUT_CAP_KEYS
-              if metadata.get(key) is not None]
+    if metadata.get("output_cap") is not None:
+        values = [metadata["output_cap"]]
+    else:
+        values = [metadata[key] for key in OUTPUT_CAP_KEYS[1:]
+                  if metadata.get(key) is not None]
     if len(set(values)) > 1:
         raise ValueError("Source metadata has conflicting output caps")
     if not values or not isinstance(values[0], int) or isinstance(values[0], bool):
@@ -76,11 +80,12 @@ def derive_core_run(model_runs, out_dir, core_pack_root=None):
         manifest = json.loads(manifest_path.read_text())
         metadata = json.loads(metadata_path.read_text())
         validate_snapshot(manifest)
-        if manifest.get("pack_id") != MATRIX_PACK:
-            raise ValueError(f"Expected a {MATRIX_PACK} source: {run_dir}")
-        if (metadata.get("pack_id") != MATRIX_PACK
+        source_pack_id = manifest.get("pack_id")
+        if source_pack_id not in SOURCE_PACKS:
+            raise ValueError(f"Expected a {MATRIX_PACK} or {CORE_PACK} source: {run_dir}")
+        if (metadata.get("pack_id") != source_pack_id
                 or metadata.get("pack_digest") != manifest["digest"]):
-            raise ValueError(f"Source metadata and Matrix snapshot disagree: {run_dir}")
+            raise ValueError(f"Source metadata and pack snapshot disagree: {run_dir}")
         if metadata.get("harness_dirty") is not False:
             raise ValueError(f"Source harness is not clean: {run_dir}")
         if any(not isinstance(metadata.get(key), str) or not metadata[key]
@@ -106,6 +111,8 @@ def derive_core_run(model_runs, out_dir, core_pack_root=None):
         matrix_budgets = manifest.get("efficiency_budgets", {})
         if set(matrix_budgets) != set(matrix_inventory):
             raise ValueError(f"Source budget inventory mismatch: {run_dir}")
+        if source_pack_id == CORE_PACK and not set(matrix_inventory) <= set(core_inventory):
+            raise ValueError(f"Core source contains non-Core tasks: {run_dir}")
         for task_id in core_inventory.keys() & matrix_inventory.keys():
             if matrix_inventory[task_id]["task_digest"] != core_inventory[task_id]["task_digest"]:
                 raise ValueError(f"Task digest mismatch for {task_id} in {run_dir}")
@@ -113,19 +120,21 @@ def derive_core_run(model_runs, out_dir, core_pack_root=None):
                 raise ValueError(f"Efficiency budget mismatch for {task_id} in {run_dir}")
 
         source_record = {
-            "pack_id": MATRIX_PACK,
+            "pack_id": source_pack_id,
             "pack_digest": manifest["digest"],
             "run": run_dir.name,
             "harness_commit": metadata.get("harness_commit"),
         }
+        if "spend_cap_usd" in metadata:
+            source_record["spend_cap_usd"] = metadata["spend_cap_usd"]
         metadata_by_run.append((metadata, source_record))
         for attempt in _read_attempts(attempts_path):
             task_id = attempt.get("task_id")
             matrix_task = matrix_inventory.get(task_id)
-            if (matrix_task is None or attempt.get("pack_id") != MATRIX_PACK
+            if (matrix_task is None or attempt.get("pack_id") != source_pack_id
                     or attempt.get("pack_digest") != manifest["digest"]
                     or attempt.get("category") != matrix_task["category"]):
-                raise ValueError(f"Attempt does not match its Matrix snapshot: {task_id}")
+                raise ValueError(f"Attempt does not match its source snapshot: {task_id}")
             if (attempt.get("model") != values["model"]
                     or attempt.get("provider") != values["provider"]):
                 raise ValueError(f"Attempt model/provider does not match metadata: {task_id}")
@@ -154,6 +163,7 @@ def derive_core_run(model_runs, out_dir, core_pack_root=None):
     out_dir.mkdir(parents=True, exist_ok=True)
     attempts = [attempts_by_task[task_id] for task_id in sorted(core_inventory)]
     metadata = dict(metadata_by_run[0][0])
+    metadata.pop("spend_cap_usd", None)
     metadata.update(
         pack_id=CORE_PACK,
         pack_digest=core_manifest["digest"],
