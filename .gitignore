@@ -6,6 +6,7 @@ __pycache__/
 results/*
 !results/published/
 !results/p95-v2.0.0/
+!results/p95-matrix/
 site/node_modules/
 site/.astro/
 build/

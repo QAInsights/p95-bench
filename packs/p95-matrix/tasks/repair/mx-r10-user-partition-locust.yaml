@@ -1,0 +1,85 @@
+id: mx-r10-user-partition-locust
+category: repair
+tool: locust
+grader: v2_exec
+prompt: 'Fix credential assignment so users do not invalidate each other''s exclusive
+  sessions.
+
+
+  Repair the supplied artifact.
+
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "partition"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{"exclusive_accounts":
+  true}, {"exclusive_accounts": true, "html_layout": 1, "reverse_catalog": true}].
+  Negative-control overrides: [].
+
+  Read-only /fixtures aliases: {"r10-accounts.json": "accounts.json", "r10-account-1.csv":
+  "account-1.csv", "r10-account-2.csv": "account-2.csv"}
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — script loads Requires: none.
+
+  setup: 25 points — valid fixture indexing Requires: loads.
+
+  behavior: 40 points — distinct accounts cover all required users and iterations
+  Requires: loads, setup.
+
+  safety: 25 points — audit proves overlapping activity and no account/session swaps.
+  Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: locust
+  contract:
+    users: 2
+    iterations: 2
+    mode: partition
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: valid fixture indexing
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: distinct accounts cover all required users and iterations
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: audit proves overlapping activity and no account/session swaps.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      exclusive_accounts: true
+  - name: reordered
+    profile:
+      exclusive_accounts: true
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases:
+    r10-accounts.json: accounts.json
+    r10-account-1.csv: account-1.csv
+    r10-account-2.csv: account-2.csv
+fixtures:
+- protocol-locust.md
+- broken-r10.py
+- r10-accounts.json
+- r10-account-1.csv
+- r10-account-2.csv
+scenario: mx-r10-user-partition

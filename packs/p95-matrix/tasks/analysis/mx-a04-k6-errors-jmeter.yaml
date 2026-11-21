@@ -1,0 +1,75 @@
+id: mx-a04-k6-errors-jmeter
+category: analysis
+tool: jmeter
+grader: v2_analysis
+prompt: 'Diagnose a misleading error rate in JMeter results where expected expiry
+  responses and unexpected failures were merged.
+
+
+  Return only JSON with exactly this structure (leaves are types, not answers):
+
+  {"observations": {"denominator": "number", "expected": "number", "unexpected": "number",
+  "corrected_rate": "number"}, "diagnosis": {"route": "string", "classification":
+  "string"}, "evidence": {"keys": ["string", "string"], "fix": "string"}}
+
+  Nearest-rank p95=ceil(.95*n), includes failed responses; exclude warmup=true or
+  parent=true. Timestamp ms. Numeric absolute tolerance1e-6. Sort row IDs; rank descending
+  p95. Never invent unobserved latencies.
+
+  Sort all evidence ID/key arrays lexicographically. Enum choices: {"classification":
+  ["expected_recovery_is_not_failure", "all_4xx_are_unexpected", "all_non_200_are_expected"],
+  "fix": ["exclude_expected_from_numerator_only", "exclude_expected_from_denominator",
+  "count_all_4xx_as_failures"]}. Other string values must exactly match fixture identifiers.
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — JSON schema Requires: none.
+
+  setup: 30 points — reconstructs the declared error denominator/counts Requires:
+  loads.
+
+  behavior: 40 points — separates expected recovery from the actual failing route
+  Requires: loads.
+
+  safety: 20 points — evidence keys and a corrected check/threshold classification.
+  Requires: loads.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.
+
+
+  Native fixture: a04-jmeter.jtl.csv.
+
+
+  Native answer strings: failed_metric="unexpected_work_failures"; evidence.keys=["JTL.expiry-1",
+  "JTL.work-500"]; fix="exclude_expected_from_numerator_only".'
+params:
+  analysis: errors
+  rubric:
+  - id: loads
+    points: 10
+    description: JSON schema
+    requires: []
+  - id: setup
+    points: 30
+    description: reconstructs the declared error denominator/counts
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: separates expected recovery from the actual failing route
+    requires:
+    - loads
+  - id: safety
+    points: 20
+    description: evidence keys and a corrected check/threshold classification.
+    requires:
+    - loads
+  fixture_aliases: {}
+  tool: jmeter
+  native_files:
+    data: a04-jmeter.jtl.csv
+fixtures:
+- a04-jmeter.jtl.csv
+scenario: mx-a04-k6-errors

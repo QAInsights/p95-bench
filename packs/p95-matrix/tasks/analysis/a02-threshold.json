@@ -1,0 +1,5 @@
+{
+  "checkout": {
+    "limit_ms": 500
+  }
+}

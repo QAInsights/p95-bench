@@ -33,6 +33,12 @@ def operations(trial, path, completion=False):
     return result
 
 
+def capacity_rate(rate, completion=False, fail_every=0):
+    success_fraction = ((fail_every - 1) / fail_every
+                        if completion and fail_every > 1 else 1)
+    return math.ceil(rate * 3.2 / success_fraction)
+
+
 def capacity_preflight(tool, contract, profile, directory):
     pools = contract.get("pools") or {"work": {"path": contract.get("path", "/v2/work"),
         "rate": max(contract.get("rates", [contract.get("rate", 5)])),
@@ -45,7 +51,9 @@ def capacity_preflight(tool, contract, profile, directory):
     key = hashlib.sha256(json.dumps([tool_image(tool), pools, worst], sort_keys=True).encode()).hexdigest()
     if key in QUALIFIED:
         return QUALIFIED[key]
-    scaled = {name: dict(pool, rate=math.ceil(pool["rate"] * 3.2)) for name, pool in pools.items()}
+    scaled = {name: dict(pool, rate=capacity_rate(
+        pool["rate"], contract.get("completion", False), profile.get("fail_every", 0)))
+        for name, pool in pools.items()}
     config = {"workload": True, "duration": 12, "capacity": True,
               "completion": contract.get("completion", False)}
     if len(scaled) > 1:

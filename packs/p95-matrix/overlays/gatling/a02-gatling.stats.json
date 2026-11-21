@@ -1,0 +1,18 @@
+{
+  "all-requests": {
+    "name": "all-requests",
+    "percentiles": {
+      "percentile3": 100
+    }
+  },
+  "checkout": {
+    "failed": true,
+    "name": "checkout",
+    "percentiles": {
+      "percentile3": 850
+    }
+  },
+  "threshold": {
+    "limitMs": 500
+  }
+}

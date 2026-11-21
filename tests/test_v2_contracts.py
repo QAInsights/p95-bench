@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from p95bench.capacity import capacity_preflight
+from p95bench.capacity import capacity_preflight, capacity_rate
 from p95bench.demo_v2 import Profile, Shop
 from p95bench.execution import AuditOverflow, Trial, artifact_source, k6_evidence, run_artifact
 from p95bench.graders import grade
@@ -38,6 +38,11 @@ def test_jmx_executable_components_forbidden(component):
 def test_jmx_unsafe_serialization_and_evaluation_rejected(body):
     with pytest.raises(ValueError):
         artifact_source("jmeter", body)
+
+
+def test_k6_scenario_artifact_ignores_legacy_iterations_shortcut():
+    source = "export const options = { scenarios: {} };\noptions.iterations=1;"
+    assert artifact_source("k6", source) == "export const options = { scenarios: {} };\n"
 
 
 def test_console_cannot_forge_http_debug_provenance():
@@ -157,6 +162,15 @@ def test_capacity_insufficiency_is_infrastructure(tmp_path, monkeypatch):
     monkeypatch.setattr("p95bench.capacity.run_artifact", lambda *args, **kwargs: Trial(True, "completed", 0, [], [], []))
     with pytest.raises(WorkerUnavailable, match="preflight"):
         capacity_preflight("k6", {"rate": 543}, {}, tmp_path)
+
+
+@pytest.mark.parametrize("rate,completion,fail_every,expected", [
+    (8, False, 5, 26), (8, True, 0, 26), (8, True, 5, 32),
+])
+def test_capacity_rate_accounts_for_scheduled_failed_completions(
+    rate, completion, fail_every, expected
+):
+    assert capacity_rate(rate, completion, fail_every) == expected
 
 
 def test_capacity_qualifies_steady_rate_after_startup_pileup(tmp_path, monkeypatch):

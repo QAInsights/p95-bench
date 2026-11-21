@@ -1,0 +1,6 @@
+REQUEST checkout warmup -1000 0 OK warmup=true
+REQUEST checkout r1 0 1000 OK warmup=false
+REQUEST checkout r2 1000 2000 OK warmup=false
+REQUEST checkout r3 2000 3000 OK warmup=false
+REQUEST checkout r4 3000 4000 OK warmup=false
+REQUEST checkout r5 4000 5000 OK warmup=false

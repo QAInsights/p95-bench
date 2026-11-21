@@ -1,0 +1,7 @@
+row_id,timestamp,name,request_type,response_time,success,warmup
+warmup,-1000,checkout,POST,1000,true,true
+r1,0,checkout,POST,1000,true,false
+r2,1000,checkout,POST,1000,true,false
+r3,2000,checkout,POST,1000,true,false
+r4,3000,checkout,POST,1000,true,false
+r5,4000,checkout,POST,1000,true,false

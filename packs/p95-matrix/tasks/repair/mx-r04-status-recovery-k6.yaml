@@ -1,0 +1,102 @@
+id: mx-r04-status-recovery-k6
+category: repair
+tool: k6
+grader: v2_exec
+prompt: 'Repair code that treats every 401 as success and never renews the session.
+
+  Repair the supplied artifact.
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "denial"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{"expire_after": 2},
+  {"expire_after": 2, "html_layout": 1, "reverse_catalog": true}]. Negative-control
+  overrides: [{"deny_orders": true}].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — script loads Requires: none.
+
+  setup: 25 points — expected expiry is recognized Requires: loads.
+
+  behavior: 40 points — fresh login/token and retry complete the interrupted flow
+  Requires: loads, setup.
+
+  safety: 25 points — an unrelated denied request still fails its assertion in a negative-control
+  run. Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.
+
+
+  Repair the supplied artifact.
+
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "denial"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{"expire_after": 2},
+  {"expire_after": 2, "html_layout": 1, "reverse_catalog": true}]. Negative-control
+  overrides: [{"deny_orders": true}].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — script loads Requires: none.
+
+  setup: 25 points — expected expiry is recognized Requires: loads.
+
+  behavior: 40 points — fresh login/token and retry complete the interrupted flow
+  Requires: loads, setup.
+
+  safety: 25 points — an unrelated denied request still fails its assertion in a negative-control
+  run. Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: k6
+  contract:
+    users: 2
+    iterations: 2
+    mode: denial
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: expected expiry is recognized
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: fresh login/token and retry complete the interrupted flow
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: an unrelated denied request still fails its assertion in a negative-control
+      run.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      expire_after: 2
+  - name: reordered
+    profile:
+      expire_after: 2
+      html_layout: 1
+      reverse_catalog: true
+  controls:
+  - deny_orders: true
+  fixture_aliases: {}
+fixtures:
+- protocol-k6.md
+- broken-r04.js
+scenario: mx-r04-status-recovery

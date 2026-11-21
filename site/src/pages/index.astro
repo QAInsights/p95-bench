@@ -4,8 +4,8 @@ import "@fontsource/bricolage-grotesque/latin-600.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/geist.css";
 import "../styles/board.css";
-import data from "../data/leaderboard-p95-v2.0.0.json";
-import { boardModels, boardTasks, categoryLabels, scatter, taskCode, taskScore, toolLabel, toolScores, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
+import data from "../data/leaderboard-p95-matrix.json";
+import { boardModels, boardTasks, categoryLabels, scatter, taskCode, taskScore, toolLabel, toolScores, TOOLS, tone, formatCost, formatTokens, formatMinutes } from "../lib/board.mjs";
 
 const models = boardModels(data);
 const tasks = boardTasks(data);
@@ -14,12 +14,12 @@ const plot = scatter(models);
 const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
 const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";
-const tools = [...new Set(tasks.map(t => t.tool))].sort();
+const tools = TOOLS;
 const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 const viewModels = tool => tool === "all" ? models : models.map(m => {
-  const own = tasks.filter(t => t.tool === tool);
-  const cat = Object.fromEntries(categories.map(c => [c, mean(own.filter(t => t.category === c).map(t => taskScore(m, t.id)).filter(v => v !== null))]));
-  return { ...m, score: mean(own.map(t => taskScore(m, t.id)).filter(v => v !== null)) ?? 0, categories: cat };
+  const own = tasks;
+  const cat = Object.fromEntries(categories.map(c => [c, mean(own.filter(t => t.category === c).map(t => taskScore(m, t.id, tool)).filter(v => v !== null))]));
+  return { ...m, score: mean(own.map(t => taskScore(m, t.id, tool)).filter(v => v !== null)) ?? 0, categories: cat };
 }).sort((a, b) => b.score - a.score);
 const views = ["all", ...tools].map(tool => ({ tool, models: viewModels(tool) }));
 const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
@@ -30,7 +30,7 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="P95 Bench measures how well language models write, fix and analyse performance tests in JMeter and k6." />
+    <meta name="description" content="P95 Bench measures how well language models write, fix and analyse performance tests in JMeter, k6, Locust and Gatling." />
     <meta name="theme-color" content="#0c0b10" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -47,14 +47,14 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
 
     <main>
       <section class="intro">
-        <h1><span class="lime">P95 Bench</span> measures how well language models write, fix and analyse performance tests in JMeter and k6.</h1>
-        <p class="meta">{tasks.length} public tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
+        <h1><span class="lime">P95 Bench</span> measures how well language models write, fix and analyse performance tests in JMeter, k6, Locust and Gatling.</h1>
+        <p class="meta">Matrix · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
       </section>
 
       <div class="filter" role="group" aria-label="Filter scores by tool">
         <span>Tool</span>
-        <button type="button" data-tool="all" aria-pressed="true">All <small>{tasks.length}</small></button>
-        {tools.map(t => <button type="button" data-tool={t} aria-pressed="false">{toolLabel(t)} <small>{tasks.filter(x => x.tool === t).length}</small></button>)}
+        <button type="button" data-tool="all" aria-pressed="true">All <small>{tasks.length * tools.length}</small></button>
+        {tools.map(t => <button type="button" data-tool={t} aria-pressed="false">{toolLabel(t)} <small>{tasks.length}</small></button>)}
       </div>
 
       {views.map(v => (
@@ -74,11 +74,11 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
 
       {plot.points.length > 1 && (
         <section aria-labelledby="value-title">
-          <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length} tasks, log scale</span></h2>
+          <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length * tools.length} tasks, log scale</span></h2>
           <div class="table-wrap"><svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost">
             {plot.yTicks.map(t => <g><line x1={plot.left} x2={plot.width - plot.right} y1={t.y} y2={t.y} /><text x={plot.left - 10} y={t.y + 4} text-anchor="end">{t.value}</text></g>)}
             {plot.xTicks.map(t => <text x={t.x} y={plot.height - 10} text-anchor="middle">{t.label}</text>)}
-            {plot.points.map(p => <g class="point"><circle cx={p.x} cy={p.y} r="6" fill={p.color} /><text class="point-label" x={p.x + 12} y={p.y + 4}>{p.name}</text></g>)}
+            {plot.points.map(p => <g class="point"><circle cx={p.x} cy={p.y} r="6" fill={p.color} />{p.rank < 5 && <text class="point-label" x={p.x + 12} y={p.y + 4}>{p.name}</text>}<title>{`${p.name}: ${p.score.toFixed(1)} · $${p.cost.toFixed(2)}`}</title></g>)}
           </svg></div>
         </section>
       )}
@@ -129,9 +129,9 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         <h2 id="tools-title" class="label">By tool <span>average task score / 100 · task count in brackets</span></h2>
         <div class="table-wrap">
           <table class="categories">
-            <thead><tr><th>Model</th>{tools.map(t => <th class="n">{toolLabel(t)} <span class="weight">({tasks.filter(x => x.tool === t).length})</span></th>)}</tr></thead>
+            <thead><tr><th>Model</th>{tools.map(t => <th class="n">{toolLabel(t)} <span class="weight">({tasks.length})</span></th>)}</tr></thead>
             <tbody>
-              {models.map(m => { const scores = toolScores(m, tasks); return (
+              {models.map(m => { const scores = Object.fromEntries(tools.map(t => [t, mean(tasks.map(x => taskScore(m, x.id, t)).filter(v => v !== null))])); return (
                 <tr>
                   <td><span class="swatch" style={`background:${m.color}`}></span>{m.name}</td>
                   {tools.map(t => <td class="n heat" style={`--t:${tone(scores[t]) ?? 0}%`}>{scores[t] === null ? "—" : scores[t].toFixed(0)}</td>)}
@@ -142,8 +142,9 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         </div>
       </section>
 
-      <section id="tasks" aria-labelledby="tasks-title">
-        <h2 id="tasks-title" class="label">Every task <span>J = JMeter, k6 = k6 · brighter is better · hover a cell for details</span></h2>
+      {views.map(v => (
+<section data-view={v.tool} hidden={v.tool !== "all"} id={v.tool === "all" ? "tasks" : `tasks-${v.tool}`} aria-labelledby="tasks-title">
+        <h2 id="tasks-title" class="label">Every task <span>{v.tool === "all" ? "40 scenarios, average over 4 tools" : `40 scenarios in ${toolLabel(v.tool)}`} · brighter is better · hover a cell for details</span></h2>
         <div class="table-wrap">
           <div class="grid" style={`--cols:${tasks.length + groups.length - 1}`}>
             <span class="grid-corner"></span>
@@ -151,17 +152,12 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
               {gi > 0 && <span class="grid-gap"></span>}
               <span class="grid-group" style={`grid-column: span ${g.tasks.length}`}>{categoryLabels[g.category]}</span>
             </>)}
-            <span class="grid-name tool-key">Tool</span>
-            {groups.map((g, gi) => <>
-              {gi > 0 && <span class="grid-gap"></span>}
-              {g.tasks.map(t => <span data-tool={t.tool} class:list={["tool-mark", t.tool]} title={toolLabel(t.tool)}>{t.tool === "k6" ? "k6" : t.tool === "jmeter" ? "J" : toolLabel(t.tool)[0]}</span>)}
-            </>)}
-            {models.map(m => <>
+            {v.models.map(m => <>
               <span class="grid-name">{m.name}</span>
               {groups.map((g, gi) => <>
                 {gi > 0 && <span class="grid-gap"></span>}
                 {g.tasks.map(t => {
-                  const value = taskScore(m, t.id);
+                  const value = taskScore(m, t.id, v.tool);
                   return <span data-tool={t.tool} class:list={["cell", value === null && "missing"]} style={value === null ? "" : `--t:${value}%`}
                     title={`${taskCode(t.id)} · ${t.label} · ${toolLabel(t.tool)}\n${m.name}: ${value === null ? "not run" : `${value}/100`}`}
                     aria-label={`${m.name}, ${t.label}: ${value === null ? "not run" : `${value} of 100`}`}></span>;
@@ -172,13 +168,15 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         </div>
         <p class="more"><a href="/tasks">All {tasks.length} tasks with scores and checks →</a></p>
       </section>
+      ))}
 
       <section id="method" aria-labelledby="method-title" class="method">
         <h2 id="method-title" class="label">Method</h2>
         <ul>
-          <li>{tasks.length} public tasks across {categories.length} categories: {categories.map(c => (categoryLabels[c] ?? c).toLowerCase()).join(", ")}. Every task is in the repo.</li>
+          <li>{tasks.length} public scenarios across {categories.length} categories, each written for all {tools.length} tools ({tasks.length * tools.length} tasks): {categories.map(c => (categoryLabels[c] ?? c).toLowerCase()).join(", ")}. Every task is in the repo.</li>
           <li>Each model answers every task once at temperature 0 with a 16,384-token output cap, through the provider's own API.</li>
-          <li>Generated JMeter and k6 scripts run in isolated containers against a demo shop; graders award weighted checkpoints.</li>
+          <li>Generated JMeter, k6, Locust and Gatling scripts run in isolated containers against a demo shop; the same graders score every tool.</li>
+          <li>Known limit: the JMeter three-phase workload reference reaches 92/100, because JMeter timers cannot hold the exact phase rates.</li>
           <li>Score = 95% quality + 5% efficiency. Efficiency is scaled by quality and uses per-task output-token and latency budgets.</li>
           <li>Cost is reported token usage at list price, not a provider invoice.</li>
         </ul>
@@ -191,7 +189,6 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         if (!buttons.some(b => b.dataset.tool === tool)) tool = "all";
         buttons.forEach(x => x.setAttribute("aria-pressed", String(x.dataset.tool === tool)));
         document.querySelectorAll("[data-view]").forEach(el => { el.hidden = el.dataset.view !== tool; });
-        document.querySelectorAll(".grid [data-tool]").forEach(el => { el.classList.toggle("dimmed", tool !== "all" && el.dataset.tool !== tool); });
       };
       buttons.forEach(b => b.addEventListener("click", () => {
         apply(b.dataset.tool);

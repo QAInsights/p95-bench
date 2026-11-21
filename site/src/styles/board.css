@@ -127,3 +127,6 @@ a.stat:hover b { color: var(--lime); }
 [hidden] { display: none !important; }
 .grid .dimmed { opacity: .12; }
 main > .filter { margin: -40px 0 -40px; }
+.badges { white-space: nowrap; } .badges .tool-badge { margin: 0 3px 3px 0; } .tool-badge.off { opacity: .2; }
+.tasks .n span { font-variant-numeric: tabular-nums; }
+.strip { display: inline-flex; gap: 3px; } .strip .sq { width: 12px; height: 12px; border-radius: 2px; background: color-mix(in srgb, var(--lime) var(--t), #1c1b22); }

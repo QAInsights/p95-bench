@@ -60,6 +60,253 @@ def truth(kind, fixtures):
     raise ValueError("Unknown analysis fixture contract")
 
 
+TOOL_ANSWER_STRINGS = {
+    "thresholds": {
+        "jmeter": ("DurationAssertion.checkout",
+                   ["JTL.checkout.elapsed", "JTL.checkout.assertions"],
+                   "attach_duration_assertion_to_checkout"),
+        "k6": ("http_req_duration{route:checkout}",
+               ["metrics.http_req_duration{route:checkout}.thresholds",
+                "metrics.http_req_duration{route:checkout}.values.p(95)"],
+               "scope_checkout_threshold"),
+        "locust": ("checkout", ["stats.csv.checkout.95%", "threshold.checkout.limit_ms"],
+                   "threshold_checkout_request_only"),
+        "gatling": ("checkout.responseTime.percentile95",
+                    ["stats.json.checkout.percentiles.percentile3",
+                     "stats.json.threshold.limitMs"],
+                    "assert_checkout_group_p95"),
+    },
+    "errors": {
+        "jmeter": ("unexpected_work_failures", ["JTL.expiry-1", "JTL.work-500"],
+                   "exclude_expected_from_numerator_only"),
+        "k6": ("business_failure", ["status:401", "status:500"],
+               "exclude_expected_from_numerator_only"),
+        "locust": ("failed /v2/work requests",
+                   ["failures.csv./v2/work-401", "failures.csv./v2/work-500"],
+                   "fail_unexpected_work_only"),
+        "gatling": ("failedRequests{request:/v2/work}",
+                    ["REQUEST./v2/work.401", "REQUEST./v2/work.500"],
+                    "check_only_unexpected_work_failures"),
+    },
+}
+
+
+def _csv_rows(text):
+    return list(csv.DictReader(io.StringIO(text)))
+
+
+def _canonical_samples(rows):
+    output = io.StringIO(newline="")
+    columns = ("row_id", "timestamp_ms", "route", "elapsed_ms", "success", "warmup", "parent")
+    writer = csv.DictWriter(output, fieldnames=columns, lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+
+def _analysis_samples(kind, tool, text):
+    rows = []
+    if tool == "jmeter":
+        for row in _csv_rows(text):
+            parent = row["request_type"] == "transaction" or row.get("parent") == "true"
+            rows.append({
+                "row_id": row["sample_id"],
+                "timestamp_ms": row["timeStamp"],
+                "route": row["label"],
+                "elapsed_ms": row["elapsed"],
+                "success": row["success"].lower(),
+                "warmup": row["warmup"].lower(),
+                "parent": str(parent).lower(),
+            })
+    elif tool == "k6":
+        for line in text.splitlines():
+            point = json.loads(line)
+            tags = point["data"]["tags"]
+            rows.append({
+                "row_id": tags["row_id"], "timestamp_ms": str(point["data"]["time"]),
+                "route": tags["route"], "elapsed_ms": str(_number(point["data"]["value"])),
+                "success": tags["success"], "warmup": tags["warmup"],
+                "parent": tags["parent"],
+            })
+    elif tool == "locust":
+        for row in _csv_rows(text):
+            parent = row["request_type"] == "Transaction"
+            rows.append({
+                "row_id": row["row_id"], "timestamp_ms": row["timestamp"],
+                "route": row["name"], "elapsed_ms": row["response_time"],
+                "success": row["success"].lower(), "warmup": row["warmup"].lower(),
+                "parent": str(parent).lower(),
+            })
+    else:
+        for line in text.splitlines():
+            parts = line.split()
+            record_type, route, row_id, start, end, status, warmup = parts
+            rows.append({
+                "row_id": row_id, "timestamp_ms": str(_number(start)), "route": route,
+                "elapsed_ms": str(_number(float(end) - float(start))),
+                "success": str(status == "OK").lower(),
+                "warmup": warmup.partition("=")[2],
+                "parent": str(record_type == "GROUP").lower(),
+            })
+    return {"samples.csv": _canonical_samples(rows)}
+
+
+def _number(value):
+    number = float(value)
+    return int(number) if number.is_integer() else number
+
+
+def _native_summary(kind, tool, text, fixtures, files):
+    if tool == "k6" and kind == "thresholds":
+        return {"summary.json": text}
+    if tool == "k6" and kind == "errors":
+        data = json.loads(text)
+        outcomes = [{
+            "id": f"status:{row['status']}",
+            "status": row["status"],
+            "class": row["class"],
+            "route": row["route"],
+            "count": row["count"],
+        } for row in data["outcomes"]]
+        return {"summary.json": json.dumps({
+            "denominator": "all business responses, including expected expiry",
+            "outcomes": outcomes,
+        })}
+    if kind == "thresholds":
+        if tool == "jmeter":
+            rows = {row["label"]: row for row in _csv_rows(text)}
+            aggregate, checkout = rows["all-requests"], rows["checkout"]
+            limit = int(checkout["assertion"].split("limit=", 1)[1].split(")", 1)[0])
+            p95 = _number(aggregate["elapsed"])
+            checkout_p95 = _number(checkout["elapsed"])
+            threshold_passed = checkout["success"].lower() == "true"
+        elif tool == "locust":
+            rows = {row["Name"]: row for row in _csv_rows(text)}
+            aggregate, checkout = rows["all-requests"], rows["checkout"]
+            limit = int(json.loads(fixtures[files["threshold"]])["checkout"]["limit_ms"])
+            p95 = _number(aggregate["95%"])
+            checkout_p95 = _number(checkout["95%"])
+            threshold_passed = checkout_p95 < limit
+        else:
+            data = json.loads(text)
+            aggregate, checkout = data["all-requests"], data["checkout"]
+            limit = _number(data["threshold"]["limitMs"])
+            p95 = _number(aggregate["percentiles"]["percentile3"])
+            checkout_p95 = _number(checkout["percentiles"]["percentile3"])
+            threshold_passed = not checkout["failed"]
+        threshold = f"p(95)<{limit}"
+        return {"summary.json": json.dumps({
+            "limit_ms": limit,
+            "metrics": {
+                "http_req_duration": {"values": {"p(95)": p95}},
+                "http_req_duration{route:checkout}": {
+                    "values": {"p(95)": checkout_p95},
+                    "thresholds": {threshold: threshold_passed},
+                },
+            },
+        })}
+    if kind == "errors":
+        if tool == "jmeter":
+            outcomes = [{
+                "id": f"status:{int(row['responseCode'])}",
+                "status": int(row["responseCode"]), "class": row["errorClass"],
+                "route": row["route"], "count": int(row["count"]),
+            } for row in _csv_rows(text)]
+        elif tool == "locust":
+            stats = _csv_rows(fixtures[files["stats"]])[0]
+            failures = _csv_rows(text)
+            success_count = int(stats["Request Count"]) - int(stats["Failure Count"])
+            outcomes = [{
+                "id": "status:200", "status": 200, "class": "success",
+                "route": failures[0]["Route"], "count": success_count,
+            }]
+            outcomes.extend(
+                {
+                    "id": f"status:{int(row['Error'].split()[0])}",
+                    "status": int(row["Error"].split()[0]),
+                    "class": row["Classification"], "route": row["Route"],
+                    "count": int(row["Occurrences"]),
+                } for row in failures
+            )
+        else:
+            outcomes = []
+            for line in text.splitlines():
+                parts = line.split()
+                if parts[0] != "REQUEST":
+                    continue
+                _, _, _, _, _, _, status, klass, count, route = parts
+                outcomes.append({
+                    "id": f"status:{int(status.split('=', 1)[1])}",
+                    "status": int(status.split("=", 1)[1]),
+                    "class": klass.split("=", 1)[1],
+                    "route": route.split("=", 1)[1],
+                    "count": int(count.split("=", 1)[1]),
+                })
+        return {"summary.json": json.dumps({
+            "denominator": "all business responses, including expected expiry",
+            "outcomes": outcomes,
+        })}
+    if kind == "decomposition":
+        spans = json.loads(fixtures[files["spans"]])
+        if tool == "locust":
+            rows = _csv_rows(text)
+            windows = [{
+                "id": row["Name"], "route": row["Route"], "interval": row["Interval"],
+                "p95_ms": _number(row["95%"]),
+            } for row in rows]
+            distractor = {
+                "cpu_percent": _number(rows[0]["Distractor CPU %"]),
+                "route": rows[0]["Distractor route"],
+            }
+        elif tool == "gatling":
+            data = json.loads(text)
+            windows = [{
+                "id": name, "route": value["route"], "interval": value["interval"],
+                "p95_ms": _number(value["percentiles"]["percentile3"]),
+            } for name, value in data["contents"].items()]
+            distractor = data["distractor"]
+        else:
+            data = json.loads(text)
+            windows = data["windows"]
+            distractor = data["distractor"]
+        return {"summary.json": json.dumps({
+            "windows": windows, "spans": spans, "distractor": distractor,
+        })}
+    raise ValueError(f"Unsupported native analysis adapter: {tool}/{kind}")
+
+
+def adapt_native(kind, tool, fixtures, native_files):
+    """Convert one Matrix tool's fixture bundle to the canonical v2 fixture files."""
+    text = fixtures[native_files["data"]]
+    if kind in ("endpoints", "omission"):
+        canonical = _analysis_samples(kind, tool, text)
+        if kind == "omission":
+            canonical["schedule.json"] = fixtures[native_files["schedule"]]
+        return canonical
+    return _native_summary(kind, tool, text, fixtures, native_files)
+
+
+def answer_for_tool(kind, tool, answer):
+    if tool not in ("jmeter", "k6", "locust", "gatling"):
+        return answer
+    if kind not in TOOL_ANSWER_STRINGS:
+        return answer
+    metric, keys, fix = TOOL_ANSWER_STRINGS[kind][tool]
+    answer["diagnosis"]["failed_metric"] = metric
+    answer["evidence"]["keys"] = keys
+    answer["evidence"]["fix"] = fix
+    return answer
+
+
+def analysis_reference(params, fixtures):
+    if "native_files" not in params:
+        aliases = params.get("fixture_aliases", {})
+        logical = {aliases.get(name, name): value for name, value in fixtures.items()}
+        return truth(params["analysis"], logical)
+    logical = adapt_native(params["analysis"], params["tool"], fixtures, params["native_files"])
+    return answer_for_tool(params["analysis"], params["tool"], truth(params["analysis"], logical))
+
+
 def equal(actual, expected):
     if isinstance(expected, bool):
         return type(actual) is bool and actual == expected
@@ -98,8 +345,7 @@ def analysis(text, params, workdir, fixtures):
     except (ValueError, TypeError, RecursionError, OverflowError) as error:
         return CheckpointGrade(award(params["rubric"], {}),
                                f"Invalid model answer ({type(error).__name__}): {error}")
-    logical = {params.get("fixture_aliases", {}).get(name, name): value for name, value in fixtures.items()}
-    expected = truth(params["analysis"], logical)
+    expected = analysis_reference(params, fixtures)
     try:
         schema = same_shape(value, expected)
         if not schema:

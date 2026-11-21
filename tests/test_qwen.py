@@ -2,6 +2,7 @@ import io
 import json
 from dataclasses import replace
 from http.client import IncompleteRead, RemoteDisconnected
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 
 import pytest
@@ -62,7 +63,7 @@ def test_key_and_base_url_override(monkeypatch):
 
 
 @pytest.mark.parametrize('retry_after,expected', [(None, 1), ('3', 3), ('bad', 1), ('120', 60)])
-def test_rate_limit_backoff_then_success(monkeypatch, retry_after, expected):
+def test_server_error_backoff_then_success(monkeypatch, retry_after, expected):
     monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
     sleeps, calls = [], []
     monkeypatch.setattr('p95bench.providers.time.sleep', sleeps.append)
@@ -70,7 +71,7 @@ def test_rate_limit_backoff_then_success(monkeypatch, retry_after, expected):
     def request(req, timeout):
         calls.append(req)
         if len(calls) == 1:
-            raise HTTPError(req.full_url, 429, 'rate limit',
+            raise HTTPError(req.full_url, 503, 'server unavailable',
                             {'Retry-After': retry_after} if retry_after else {}, None)
         return io.BytesIO(b'{"data":[{"id":"Qwen-Ambassador/Qwen3.8-Max"}]}')
 
@@ -80,7 +81,7 @@ def test_rate_limit_backoff_then_success(monkeypatch, retry_after, expected):
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize('error', [429, 503, 'network', 'timeout',
+@pytest.mark.parametrize('error', [503, 'network', 'timeout',
                                   RemoteDisconnected('closed'), IncompleteRead(b'partial'),
                                   ConnectionResetError('reset')])
 def test_exhausted_transport_is_not_a_model_failure(monkeypatch, error):
@@ -98,9 +99,11 @@ def test_exhausted_transport_is_not_a_model_failure(monkeypatch, error):
         raise HTTPError(req.full_url, error, 'unavailable', {}, None)
 
     monkeypatch.setattr('urllib.request.urlopen', request)
-    with pytest.raises(ProviderUnavailable, match='No response after 6 requests'):
+    attempts = 6 if error == 503 else 3
+    expected_sleeps = [1, 2, 4, 8, 16] if error == 503 else [1, 2]
+    with pytest.raises(ProviderUnavailable, match=f'No response after {attempts} requests'):
         get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
-    assert sleeps == [1, 2, 4, 8, 16]
+    assert sleeps == expected_sleeps
 
 
 @pytest.mark.parametrize('error', [RemoteDisconnected('closed'), IncompleteRead(b'partial'),
@@ -127,10 +130,122 @@ def test_response_read_disconnects_retry(monkeypatch, error, recover):
         assert len(calls) == 2
         assert sleeps == [1]
     else:
-        with pytest.raises(ProviderUnavailable, match='No response after 6 requests'):
+        with pytest.raises(ProviderUnavailable, match='No response after 3 requests'):
             get_provider('qwen').models()
-        assert len(calls) == 6
-        assert sleeps == [1, 2, 4, 8, 16]
+        assert len(calls) == 3
+        assert sleeps == [1, 2]
+
+
+def test_http_429_is_not_retried(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    calls, sleeps = [], []
+    monkeypatch.setattr('p95bench.providers.time.sleep', sleeps.append)
+
+    def request(req, timeout):
+        calls.append(req)
+        raise HTTPError(req.full_url, 429, 'rate limited', {}, None)
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    with pytest.raises(HTTPError, match='429'):
+        get_provider('qwen').models()
+    assert len(calls) == 1
+    assert sleeps == []
+
+
+@pytest.mark.parametrize('error', [IncompleteRead(b'partial'),
+                                  ConnectionResetError('reset'), TimeoutError('timed out')])
+def test_deepseek_transport_failures_retry_three_attempts(monkeypatch, error):
+    monkeypatch.setenv('DEEPSEEK_API_KEY', 'test-key')
+    calls, sleeps = [], []
+    monkeypatch.setattr('p95bench.providers.time.sleep', sleeps.append)
+    provider = get_provider('deepseek')
+    provider.measure_transport = True
+
+    class InterruptedBody(io.BytesIO):
+        def read(self, *args):
+            raise error
+
+    def request(req, timeout):
+        calls.append(req)
+        if len(calls) == 1:
+            if isinstance(error, IncompleteRead):
+                return InterruptedBody()
+            raise error
+        return io.BytesIO(b'{"data":[{"id":"model"}]}')
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    assert provider.models() == ['model']
+    assert len(calls) == 2
+    assert sleeps == [1]
+    assert provider.transport_attempts == 2
+
+
+def test_deepseek_transport_retry_limit(monkeypatch):
+    monkeypatch.setenv('DEEPSEEK_API_KEY', 'test-key')
+    calls, sleeps = [], []
+    monkeypatch.setattr('p95bench.providers.time.sleep', sleeps.append)
+
+    def request(req, timeout):
+        calls.append(req)
+        raise TimeoutError('timed out')
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    provider = get_provider('deepseek')
+    provider.measure_transport = True
+    with pytest.raises(ProviderUnavailable, match='No response after 3 requests'):
+        provider.models()
+    assert len(calls) == 3
+    assert sleeps == [1, 2]
+    assert provider.transport_attempts == 3
+
+
+def test_transport_retries_reuse_one_budget_reservation(monkeypatch, tmp_path):
+    from p95bench.analysis_v2 import analysis_reference
+    from p95bench.packs import pack_config
+    from p95bench.runner import run
+    from p95bench.tasks import load_tasks
+
+    task = next(task for task in load_tasks(
+        Path('packs/p95-v2.0.0/tasks'), pack_config('p95-v2.0.0')['weights'])
+        if task.grader == 'v2_analysis')
+    answer = json.dumps(analysis_reference(task.params, task.fixtures))
+    config = replace(PROVIDERS['deepseek'], extra={'max_tokens': 64})
+
+    class Ledger:
+        limit = 30_000_000
+
+        def __init__(self):
+            self.reservations = []
+            self.settlements = []
+
+        def reserve(self, maximum):
+            self.reservations.append(maximum)
+            return 'one-reservation'
+
+        def settle(self, key, amount):
+            self.settlements.append((key, amount))
+
+    class StubProvider:
+        def __init__(self):
+            self.config = config
+
+        def send(self, model, messages):
+            self.transport_attempts = 3
+            self.response_latency_seconds = .1
+            self.backoff_seconds = 3
+            return Response(answer, 10, 10)
+
+    ledger = Ledger()
+    monkeypatch.setattr('p95bench.runner.BudgetLedger', lambda: ledger)
+    monkeypatch.setattr('p95bench.runner.prepare_workloads', lambda *_: None)
+    budgets = {task.id: {'tokens': 1000, 'latency_seconds': 90}}
+    run(StubProvider(), 'deepseek', 'deepseek-flash', PROVIDERS['deepseek'].prices['deepseek-flash'],
+        [task], tmp_path, pack_id='p95-v2.0.0', efficiency_budgets=budgets)
+
+    assert len(ledger.reservations) == 1
+    assert len(ledger.settlements) == 1
+    assert ledger.settlements[0][0] == 'one-reservation'
+    assert ledger.settlements[0][1] <= ledger.reservations[0]
 
 
 def test_auth_error_does_not_retry(monkeypatch):

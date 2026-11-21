@@ -1,0 +1,74 @@
+id: mx-a05-jtl-omission-locust
+category: analysis
+tool: locust
+grader: v2_analysis
+prompt: 'Compare requested arrivals with achieved Locust throughput; recognize coordinated-omission
+  risk without inventing missing latencies.
+
+
+  Return only JSON with exactly this structure (leaves are types, not answers):
+
+  {"observations": {"actual_rate": "number", "observed_p95_ms": "number", "requested_rate":
+  "number"}, "diagnosis": {"target_met": "boolean", "risk": "string", "missing_latency":
+  "string"}, "evidence": {"rows": ["string", "string", "string", "string", "string"],
+  "schedule": "string"}}
+
+  Nearest-rank p95=ceil(.95*n), includes failed responses; exclude warmup=true or
+  parent=true. Timestamp ms. Numeric absolute tolerance1e-6. Sort row IDs; rank descending
+  p95. Never invent unobserved latencies.
+
+  Sort all evidence ID/key arrays lexicographically. Enum choices: {"risk": ["coordinated_omission",
+  "latency_regression_only", "no_risk"], "missing_latency": ["not_identifiable", "zero",
+  "equal_to_observed"]}. Other string values must exactly match fixture identifiers.
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — JSON schema Requires: none.
+
+  setup: 30 points — actual rate and observed percentiles correct Requires: loads.
+
+  behavior: 40 points — identifies insufficient arrivals/measurement bias rather than
+  claiming the system met target Requires: loads.
+
+  safety: 20 points — cites schedule/JTL evidence and states what cannot be inferred.
+  Requires: loads.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.
+
+
+  Native fixture: a05-locust.requests.csv. Arrival schedule: a05-schedule.json. This
+  per-request CSV is exported by the events.request listener.'
+params:
+  analysis: omission
+  rubric:
+  - id: loads
+    points: 10
+    description: JSON schema
+    requires: []
+  - id: setup
+    points: 30
+    description: actual rate and observed percentiles correct
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: identifies insufficient arrivals/measurement bias rather than claiming
+      the system met target
+    requires:
+    - loads
+  - id: safety
+    points: 20
+    description: cites schedule/JTL evidence and states what cannot be inferred.
+    requires:
+    - loads
+  fixture_aliases: {}
+  tool: locust
+  native_files:
+    data: a05-locust.requests.csv
+    schedule: a05-schedule.json
+fixtures:
+- a05-locust.requests.csv
+- a05-schedule.json
+scenario: mx-a05-jtl-omission

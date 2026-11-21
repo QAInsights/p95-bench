@@ -1,0 +1,24 @@
+{
+  "pack_id": "p95-matrix",
+  "pack_digest": "e1172becde2abd9fdcbef9ea343ed25e95728a55d0a023cd8d554016a2f50ed7",
+  "overall_score": 25.655965909090906,
+  "quality_score": 25.65596590909091,
+  "efficiency_score": 25.65596590909091,
+  "category_scores": {
+    "repair": 37.38636363636363,
+    "migration": 14.583333333333334,
+    "correlation": 23.4375,
+    "workload": 12.812500000000002,
+    "analysis": 38.0
+  },
+  "attempts": 160,
+  "expected_attempts": 160,
+  "repeats": 1,
+  "complete": true,
+  "passed": 28,
+  "estimated_cost_usd": 0.839072394,
+  "input_tokens": 603314,
+  "output_tokens": 688575,
+  "latency_seconds": 2306.383946036134,
+  "not_run": 0
+}

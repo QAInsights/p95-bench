@@ -1,0 +1,37 @@
+{
+  "metrics": {
+    "business_failure": {
+      "values": {
+        "count": 2
+      }
+    },
+    "http_reqs": {
+      "values": {
+        "count": 100
+      }
+    }
+  },
+  "outcomes": [
+    {
+      "class": "success",
+      "count": 90,
+      "id": "work-ok",
+      "route": "/v2/orders",
+      "status": 200
+    },
+    {
+      "class": "expected_expiry",
+      "count": 8,
+      "id": "expiry-1",
+      "route": "/v2/orders",
+      "status": 401
+    },
+    {
+      "class": "unexpected",
+      "count": 2,
+      "id": "work-500",
+      "route": "/v2/orders",
+      "status": 500
+    }
+  ]
+}

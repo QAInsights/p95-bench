@@ -1,0 +1,22 @@
+{
+  "contents": {
+    "browse-window-3": {
+      "interval": "20-30",
+      "percentiles": {
+        "percentile3": 120
+      },
+      "route": "browse"
+    },
+    "checkout-window-3": {
+      "interval": "20-30",
+      "percentiles": {
+        "percentile3": 850
+      },
+      "route": "checkout"
+    }
+  },
+  "distractor": {
+    "cpu_percent": 85,
+    "route": "browse"
+  }
+}

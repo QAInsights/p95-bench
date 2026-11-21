@@ -9,7 +9,8 @@ import pytest
 from p95bench import analysis_v2
 from p95bench.analysis_v2 import truth
 from p95bench.budget import BudgetLedger
-from p95bench.checkpoint_graders import award, rate_fraction
+from p95bench.checkpoint_graders import award, flow_fractions, rate_fraction
+from p95bench.execution import Trial, jmeter_evidence
 from p95bench.graders import grade
 from p95bench.packs import pack_config
 from p95bench.providers import Price, Response
@@ -41,6 +42,102 @@ def test_rate_curve_and_fraction_gates():
     assert rate_fraction(14, 10) == 0
     rubric = TASKS[0].params["rubric"]
     assert [item.earned for item in award(rubric, {})] == [0, 0, 0, 0]
+
+
+@pytest.mark.parametrize("points,samples,expected", [
+    ([{"metric": "business_failure", "value": 0},
+      {"metric": "business_failure", "value": 1}], [], 1),
+    ([], [{"method": "POST", "path": "/v2/work", "assertion_failures": 0},
+          {"method": "POST", "path": "/v2/work", "assertion_failures": 1}], 1),
+    ([], [{"method": "POST", "path": "/v2/work", "assertion_failures": 0},
+          {"method": "POST", "path": "/v2/work", "assertion_failures": 0}], 0),
+])
+def test_r12_error_rate_uses_native_samples_without_points(points, samples, expected):
+    work_events = []
+    for index, (outcome, error) in enumerate(((200, None), (500, "unexpected"))):
+        request = "request-" + str(index) * 20
+        work_events.extend([
+            {"kind": "start", "request": request, "method": "POST", "path": "/v2/work"},
+            {"kind": "end", "request": request, "outcome": outcome, "error": error},
+        ])
+        if samples:
+            samples[index]["request"] = request
+    trial = Trial(True, "completed", 0, work_events, samples, points)
+    fractions = flow_fractions(trial, [], {"mode": "errors", "users": 1, "iterations": 1})
+    assert fractions["behavior"] == expected
+
+
+def _threshold_trial(assertion_failures, *, returncode=0, points=None, name="checkout"):
+    events, samples = [], []
+    for index in range(2):
+        request = "request-" + str(index) * 20
+        events.extend([
+            {"kind": "start", "request": request, "method": "POST", "path": "/v2/orders"},
+            {"kind": "end", "request": request, "outcome": 201},
+            {"kind": "commit", "request": request, "resource": f"cart-{index}"},
+        ])
+        samples.append({
+            "request": request, "worker": "user-1", "name": name, "method": "POST",
+            "path": "/v2/orders", "response_time": 300,
+            "assertion_failures": assertion_failures,
+        })
+    return Trial(True, "completed", returncode, events, samples, points or [])
+
+
+def test_jmeter_threshold_uses_duration_assertion_samples():
+    trial = _threshold_trial(0)
+    control = _threshold_trial(1)
+    fractions = flow_fractions(
+        trial, [control],
+        {"mode": "threshold", "tool": "jmeter", "users": 2, "iterations": 1},
+    )
+    assert fractions["setup"] == 1
+    assert fractions["behavior"] == 1
+
+
+@pytest.mark.parametrize("control_returncode,expected", [(99, 1), (0, 0)])
+def test_k6_threshold_still_uses_exit_99(control_returncode, expected):
+    points = [{"metric": "http_req_duration", "tags": {"name": "checkout"}}] * 2
+    trial = _threshold_trial(0, points=points)
+    control = _threshold_trial(0, returncode=control_returncode)
+    fractions = flow_fractions(
+        trial, [control],
+        {"mode": "threshold", "tool": "k6", "users": 2, "iterations": 1},
+    )
+    assert fractions["behavior"] == expected
+
+
+def test_jmeter_evidence_includes_label_duration_and_assertion_failures():
+    request = "request-" + "a" * 20
+    jtl = (
+        '<testResults><httpSample t="275" lb="checkout" tn="Thread Group 1-1" na="1" '
+        's="false" rc="201"><responseHeader>'
+        f"X-P95-Request-ID: {request}\n"
+        '</responseHeader><assertionResult><failure>true</failure>'
+        '<error>false</error></assertionResult></httpSample></testResults>'
+    ).encode()
+    samples, points = jmeter_evidence({"samples.jtl": jtl})
+    assert samples == [{
+        "request": request,
+        "worker": "Thread Group 1-1",
+        "active_users": 1,
+        "name": "checkout",
+        "response_time": 275.0,
+        "success": False,
+        "status": "201",
+        "assertion_failures": 1,
+    }]
+    assert points == []
+
+
+def test_jmeter_threshold_reference_labels_and_asserts_checkout_duration():
+    root = ET.fromstring(reference(
+        "jmeter", {"mode": "threshold", "users": 2, "iterations": 2}))
+    checkout = next(sample for sample in root.iter("HTTPSamplerProxy")
+                    if sample.get("testname") == "checkout")
+    assert checkout.findtext("stringProp[@name='HTTPSampler.path']") == "/v2/orders"
+    assertion = next(node for node in root.iter("DurationAssertion"))
+    assert assertion.findtext("stringProp[@name='DurationAssertion.duration']") == "250"
 
 
 @pytest.mark.parametrize("count,target,window,expected", [

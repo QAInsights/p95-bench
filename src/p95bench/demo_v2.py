@@ -523,6 +523,7 @@ def demo_app_v2(profile=None, seed="public-development", *, socket_path=None, cl
 
     class Server(base):
         daemon_threads = True
+        request_queue_size = 128
 
         def process_request(self, request, address):
             if not slots.acquire(blocking=False):

@@ -11,13 +11,14 @@ dependencies = ["PyYAML>=6.0"]
 license = "MIT"
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.9"]
+dev = ["pytest>=8", "ruff>=0.9", "tiktoken>=0.7,<1"]
 
 [project.scripts]
 p95bench = "p95bench.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.setuptools.package-data]
 p95bench = ["category-weights.json", "packs.json"]

@@ -1,0 +1,3 @@
+label,elapsed,success,assertion,metric
+all-requests,100,true,,aggregate
+checkout,850,false,Duration Assertion failed (limit=500),checkout

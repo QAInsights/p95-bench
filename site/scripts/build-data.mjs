@@ -114,14 +114,22 @@ export async function buildData(directories, options = {}) {
       const repeats = manifest.repeats;
       if (!tasks.length || !Array.isArray(inventory) || inventory.length !== tasks.length
         || new Set(inventory.map(t => t.id)).size !== tasks.length
-        || inventory.some(t => taskMap.get(t.id)?.category !== t.category)
+        || inventory.some(t => taskMap.get(t.id)?.category !== t.category
+          || taskMap.get(t.id)?.scenario !== t.scenario)
         || !Number.isInteger(repeats) || repeats < 1 || summary.repeats !== repeats
         || attempts.length !== tasks.length * repeats
         || attempts.some(a => !taskMap.has(a.task_id)
           || a.category !== taskMap.get(a.task_id).category
+          || a.scenario !== taskMap.get(a.task_id).scenario
           || !Number.isInteger(a.repeat) || a.repeat < 0 || a.repeat >= repeats)
         || new Set(attempts.map(a => JSON.stringify([a.task_id, a.repeat]))).size !== attempts.length) {
         throw new Error('Public task inventory or repeat coverage mismatch');
+      }
+      const taskScenarios = Object.fromEntries(tasks.filter(task => task.scenario)
+        .map(task => [task.id, task.scenario]).sort(([a], [b]) => a.localeCompare(b)));
+      if (Object.keys(taskScenarios).length
+        && JSON.stringify(metadata.task_scenarios) !== JSON.stringify(taskScenarios)) {
+        throw new Error('Run scenario metadata mismatch');
       }
       digests.add(summary.pack_digest);
     }
@@ -157,6 +165,7 @@ export async function buildData(directories, options = {}) {
         const task = taskMap.get(a.task_id);
         if (!task) throw new Error(`Unknown task: ${a.task_id}`);
         return { task_id: a.task_id, category: a.category, tool: task.tool,
+          ...(task.scenario ? { scenario: task.scenario } : {}),
           ...(v2 ? { score: a.grade.score, repeat: a.repeat,
             output_tokens: a.response.output_tokens, latency_seconds: a.response.latency_seconds } : {}),
           passed: a.grade.passed, detail: String(a.grade.detail).slice(0, 180) };

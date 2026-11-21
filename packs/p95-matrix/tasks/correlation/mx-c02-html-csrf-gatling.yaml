@@ -1,0 +1,71 @@
+id: mx-c02-html-csrf-gatling
+category: correlation
+tool: gatling
+grader: v2_exec
+prompt: 'Extract HTML CSRF with a decoy hidden field and changed attribute ordering.
+
+  Write a complete executable solution.
+
+  Execution contract: {"users": 2, "iterations": 2, "mode": "flow"}. Non-workload
+  counts are iterations per user. One committed order per journey, no duplicate/extra
+  carts. Two fixture variants count equally; the same artifact is reused without feedback.
+  Fresh owner seeds are recorded after execution. Profiles: [{"login_csrf": true},
+  {"login_csrf": true, "html_layout": 1, "reverse_catalog": true}]. Negative-control
+  overrides: [].
+
+  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
+  all cases, never best case):
+
+  loads: 10 points — script loads Requires: none.
+
+  setup: 25 points — actual CSRF field selected Requires: loads.
+
+  behavior: 40 points — authorized login and checkout Requires: loads, setup.
+
+  safety: 25 points — both fixture layouts work without a literal token or positional
+  assumption. Requires: loads, behavior.
+
+  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
+  fault can lose multiple checkpoints.'
+params:
+  tool: gatling
+  contract:
+    users: 2
+    iterations: 2
+    mode: flow
+  rubric:
+  - id: loads
+    points: 10
+    description: script loads
+    requires: []
+  - id: setup
+    points: 25
+    description: actual CSRF field selected
+    requires:
+    - loads
+  - id: behavior
+    points: 40
+    description: authorized login and checkout
+    requires:
+    - loads
+    - setup
+  - id: safety
+    points: 25
+    description: both fixture layouts work without a literal token or positional assumption.
+    requires:
+    - loads
+    - behavior
+  trials:
+  - name: baseline
+    profile:
+      login_csrf: true
+  - name: reordered
+    profile:
+      login_csrf: true
+      html_layout: 1
+      reverse_catalog: true
+  controls: []
+  fixture_aliases: {}
+fixtures:
+- protocol-gatling.md
+scenario: mx-c02-html-csrf

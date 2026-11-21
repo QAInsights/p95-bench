@@ -77,6 +77,7 @@ class ProviderConfig:
     max_retries: int = 0
     cost_note: str | None = None
     pricing_source: str | None = None
+    transport_retries: int = 2
 
 
 PROVIDERS = {
@@ -185,7 +186,11 @@ class OpenAICompatible:
         if measured:
             self.transport_attempts, self.backoff_seconds = 0, 0
             self.response_latency_seconds = None
-        for attempt in range(self.config.max_retries + 1):
+        http_retries = 0
+        transport_retries = 0
+        request_count = 0
+        while True:
+            request_count += 1
             try:
                 if measured:
                     self.transport_attempts += 1
@@ -194,24 +199,34 @@ class OpenAICompatible:
                 if measured:
                     self.response_latency_seconds = time.perf_counter() - started
                 return result
-            except (URLError, TimeoutError, HTTPException, ConnectionResetError) as error:
-                if not self.config.max_retries or (
-                    isinstance(error, HTTPError) and error.code not in {429, 500, 502, 503, 504}
-                ):
-                    raise
-                retry_after = error.headers.get("Retry-After") if isinstance(error, HTTPError) else None
-                status = f"HTTP {error.code}" if isinstance(error, HTTPError) else type(error).__name__
-                if isinstance(error, HTTPError):
+            except HTTPError as error:
+                if error.code not in {500, 502, 503, 504}:
                     error.close()
-                if attempt == self.config.max_retries:
+                    raise
+                if http_retries >= self.config.max_retries:
+                    status = error.code
+                    error.close()
                     raise ProviderUnavailable(
-                        f"No response after {attempt + 1} requests ({status})"
+                        f"No response after {request_count} requests (HTTP {status})"
                     ) from None
+                retry_after = error.headers.get("Retry-After")
+                error.close()
                 try:
-                    delay = float(retry_after) if retry_after is not None else 2 ** attempt
+                    delay = float(retry_after) if retry_after is not None else 2 ** http_retries
                 except ValueError:
-                    delay = 2 ** attempt
+                    delay = 2 ** http_retries
                 delay = max(0, min(delay, 60))
+                http_retries += 1
+                if measured:
+                    self.backoff_seconds += delay
+                time.sleep(delay)
+            except (URLError, TimeoutError, HTTPException, ConnectionError) as error:
+                if transport_retries >= self.config.transport_retries:
+                    raise ProviderUnavailable(
+                        f"No response after {request_count} requests ({type(error).__name__})"
+                    ) from None
+                delay = 2 ** transport_retries
+                transport_retries += 1
                 if measured:
                     self.backoff_seconds += delay
                 time.sleep(delay)

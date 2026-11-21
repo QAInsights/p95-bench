@@ -108,6 +108,17 @@ def test_completion_raw_ceiling_applies_to_each_scored_second(extra, expected):
     assert result["safety"] == expected
 
 
+def test_workload_duration_accepts_float_rounding_at_boundary():
+    trial = workload_trial()
+    trial.events = [event for event in trial.events if event.get("request") != 35]
+    for event in trial.events:
+        if event.get("request") == 34 and event["kind"] == "start":
+            event["time"] = 34 - 3e-5
+        elif event.get("request") == 34 and event["kind"] == "end":
+            event["time"] = 34 - 3e-5 + .001
+    assert workload_fractions(trial, {"rate": 1, "warmup": 5, "measured": 30})["safety"] == 1
+
+
 @pytest.mark.parametrize("fault", ["exit", "check", "assertion", "sample"])
 def test_positive_flow_requires_clean_native_outcome(fault):
     trial = flow_trial()

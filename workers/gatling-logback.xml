@@ -1,0 +1,16 @@
+<configuration>
+  <appender name="GATLING" class="ch.qos.logback.core.FileAppender">
+    <file>/output/gatling.log</file>
+    <append>false</append>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <logger name="io.gatling.http.engine.response.DefaultStatsProcessor" level="TRACE" additivity="false">
+    <appender-ref ref="GATLING"/>
+  </logger>
+  <logger name="io.gatling.http.client.impl.HttpAppHandler" level="DEBUG" additivity="false">
+    <appender-ref ref="GATLING"/>
+  </logger>
+  <root level="WARN"/>
+</configuration>

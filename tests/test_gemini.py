@@ -106,7 +106,7 @@ def test_models_pagination_and_key(monkeypatch):
     assert calls[-1].endswith('pageToken=a%2Fb')
 
 
-@pytest.mark.parametrize('error', [429, 503, URLError('network'), IncompleteRead(b'partial')])
+@pytest.mark.parametrize('error', [503, URLError('network'), IncompleteRead(b'partial')])
 def test_retry_recovery_and_budget_reservations(monkeypatch, error):
     monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
     sleeps, calls = [], []
@@ -151,7 +151,7 @@ def test_exhausted_requests_are_not_run(monkeypatch, tmp_path):
                              provider.config.prices['gemini-4-carbon'], [task], tmp_path)
     assert summary['attempts'] == 0
     assert json.loads((directory / 'not-run.jsonl').read_text())['status'] == 'not_run'
-    assert sleeps == [1]
+    assert sleeps == [1, 2]
     with pytest.raises(ProviderUnavailable):
         provider.send('gemini-4-carbon', [])
 

@@ -24,17 +24,19 @@ export function boardModels(data) {
 export function boardTasks(data) {
   const order = Object.keys(data.weights);
   const seen = new Map();
-  for (const m of data.models) for (const t of m.per_task_results) seen.set(t.task_id, t);
+  for (const m of data.models) for (const t of m.per_task_results) seen.set(scenarioId(t), { ...t, task_id: scenarioId(t), tool: 'all' });
   return [...seen.values()]
     .map(t => ({ id: t.task_id, category: t.category, tool: t.tool, label: taskLabel(t.task_id) }))
     .sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category) || a.id.localeCompare(b.id));
 }
 
-export const taskLabel = id => id.replace(/^v2-[a-z]\d+-/i, '').replaceAll('-', ' ');
-export const taskCode = id => id.match(/^v2-([a-z]\d+)/i)?.[1].toUpperCase() ?? id;
+export const taskLabel = id => id.replace(/^(?:v2|mx)-[a-z]\d+-/i, '').replaceAll('-', ' ');
+export const taskCode = id => id.match(/^(?:v2|mx)-([a-z]\d+)/i)?.[1].toUpperCase() ?? id;
 
-export function taskScore(model, taskId) {
-  const values = model.tasks.filter(t => t.task_id === taskId).map(attemptFraction).filter(v => v !== null);
+export const TOOLS = ['jmeter', 'k6', 'locust', 'gatling'];
+const scenarioId = t => t.scenario ?? t.task_id;
+export function taskScore(model, taskId, tool = null) {
+  const values = model.tasks.filter(t => scenarioId(t) === taskId && (!tool || tool === 'all' || t.tool === tool)).map(attemptFraction).filter(v => v !== null);
   return values.length ? Math.round(100 * values.reduce((s, v) => s + v, 0) / values.length) : null;
 }
 
@@ -53,7 +55,7 @@ export function scatter(models, { width = 880, height = 280, left = 44, right = 
   for (let s = yMin; s <= yMax; s += 10) yTicks.push({ value: s, y: y(s) });
   return {
     width, height, left, right, top, bottom,
-    points: priced.map(m => ({ ...m, x: x(m.cost), y: y(m.score) })),
+    points: priced.map((m, rank) => ({ ...m, rank, x: x(m.cost), y: y(m.score) })),
     xTicks: costTicks.filter(c => Math.log10(c) >= lo && Math.log10(c) <= hi)
       .map(c => ({ value: c, x: x(c), label: `$${c < 1 ? c.toFixed(c < 0.1 ? 2 : 1) : c}` })),
     yTicks,
@@ -81,10 +83,17 @@ export const toolLabel = tool => tool === 'k6' ? 'k6' : tool === 'jmeter' ? 'JMe
 export const taskSummary = prompt => String(prompt ?? '').split('\n')[0].trim();
 
 export function taskDetails(definitions, tasks) {
-  const byId = new Map(definitions.map(d => [d.id, d]));
+  const byId = new Map();
+  for (const d of definitions) {
+    const key = d.scenario ?? d.id;
+    if (!byId.has(key) || d.tool === 'k6') byId.set(key, d);
+  }
   return tasks.map(t => {
     const d = byId.get(t.id) ?? {};
-    return { ...t, summary: taskSummary(d.prompt),
+    const summary = taskSummary(d.prompt);
+    return { ...t, summary: t.category === 'migration'
+      ? summary.replace(/\bto k6\b/, 'to the target tool').replace(/\b(?:a )?JMX\b/, 'a source').replace(/\bJMeter\b/, 'source').replace(/\bk6 /, '')
+      : summary,
       checks: (d.params?.rubric ?? []).map(item => item.id) };
   });
 }

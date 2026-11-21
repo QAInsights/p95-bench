@@ -20,6 +20,7 @@ class Task:
     grader: str
     params: dict
     fixtures: dict[str, str]
+    scenario: str | None = None
 
     def user_prompt(self):
         return self.prompt + "".join(
@@ -39,6 +40,9 @@ def load_tasks(root: Path, categories=None) -> list[Task]:
             raise ValueError(f"Invalid category/tool: {path}")
         if any(not isinstance(data[k], str) or not data[k].strip() for k in required):
             raise ValueError(f"Task fields must be nonempty strings: {path}")
+        scenario = data.get("scenario")
+        if scenario is not None and (not isinstance(scenario, str) or not scenario.strip()):
+            raise ValueError(f"Task scenario must be a nonempty string: {path}")
         if data["id"] in ids:
             raise ValueError(f"Duplicate task id: {data['id']}")
         ids.add(data["id"])
@@ -49,8 +53,7 @@ def load_tasks(root: Path, categories=None) -> list[Task]:
                 raise ValueError(f"Fixture escapes task directory: {name}")
             fixtures[name] = fixture.read_text()
         tasks.append(Task(**{k: data[k] for k in required},
-                          params=data.get("params", {}), fixtures=fixtures))
+                          params=data.get("params", {}), fixtures=fixtures, scenario=scenario))
     if not tasks:
         raise ValueError(f"No YAML tasks found in {root}")
     return tasks
-

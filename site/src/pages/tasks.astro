@@ -5,15 +5,15 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "../styles/geist.css";
 import "../styles/board.css";
 import { parse } from "yaml";
-import data from "../data/leaderboard-p95-v2.0.0.json";
-import { boardModels, boardTasks, categoryBlurbs, categoryLabels, taskCode, taskDetails, taskScore, toolLabel } from "../lib/board.mjs";
+import data from "../data/leaderboard-p95-matrix.json";
+import { boardModels, boardTasks, categoryBlurbs, categoryLabels, taskCode, taskDetails, taskScore, toolLabel, TOOLS } from "../lib/board.mjs";
 
-const sources = import.meta.glob("../../../packs/p95-v2.0.0/tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
+const sources = import.meta.glob("../../../packs/p95-matrix/tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
 const models = boardModels(data);
 const tasks = taskDetails(Object.values(sources).map(source => parse(source)), boardTasks(data));
 const categories = Object.keys(data.weights);
 const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
-const tools = [...new Set(tasks.map(t => t.tool))].sort().map(tool => ({ tool, count: tasks.filter(t => t.tool === tool).length }));
+const tools = TOOLS.map(tool => ({ tool, count: tasks.length }));
 const repo = "https://github.com/QAInsights/p95-bench";
 const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : value === 100 ? "score-full" : "";
 ---
@@ -40,8 +40,8 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
 
     <main>
       <section class="page-intro">
-        <h1><span class="lime">{tasks.length}</span> public tasks</h1>
-        <p>Each task gives a model one performance-testing job in JMeter or k6. The generated script runs against a demo shop, and graders award points for each check it passes. Every task file is <a href={`${repo}/tree/main/packs/p95-v2.0.0/tasks`}>in the repo</a>.</p>
+        <h1><span class="lime">{tasks.length}</span> scenarios × {tools.length} tools</h1>
+        <p>Each task gives a model one performance-testing job in JMeter, k6, Locust or Gatling; every scenario exists in all four tools. The generated script runs against a demo shop, and graders award points for each check it passes. Every task file is <a href={`${repo}/tree/main/packs/p95-matrix/tasks`}>in the repo</a>.</p>
       </section>
 
       <section aria-labelledby="count-title">
@@ -56,7 +56,7 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
 
       <div class="filter" role="group" aria-label="Filter tasks by tool">
         <span>Tool</span>
-        <button type="button" data-tool="all" aria-pressed="true">All <small>{tasks.length}</small></button>
+        <button type="button" data-tool="all" aria-pressed="true">All <small>{tasks.length * tools.length}</small></button>
         {tools.map(t => <button type="button" data-tool={t.tool} aria-pressed="false">{toolLabel(t.tool)} <small>{t.count}</small></button>)}
       </div>
 
@@ -66,15 +66,19 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
           <p class="blurb">{categoryBlurbs[g.category]}</p>
           <div class="table-wrap">
             <table class="tasks">
-              <thead><tr><th>Code</th><th>Task</th><th>Tool</th><th>Checks</th>{models.map(m => <th class="n">{m.name}</th>)}</tr></thead>
+              <thead><tr><th>Code</th><th>Task</th><th>Checks</th><th class="n">Avg</th><th class="n">Solved</th><th>All {models.length} models <span class="weight">best → worst on the board</span></th></tr></thead>
               <tbody>
                 {g.tasks.map(t => (
-                  <tr data-tool={t.tool}>
+                  <tr>
                     <td class="code">{taskCode(t.id)}</td>
                     <td class="summary"><b>{t.label}</b><span>{t.summary}</span></td>
-                    <td><span class:list={["tool-badge", t.tool]}>{toolLabel(t.tool)}</span></td>
+                    
                     <td class="checks">{t.checks.length ? t.checks.join(" → ") : "JSON fields"}</td>
-                    {models.map(m => { const v = taskScore(m, t.id); return <td class:list={["n", scoreClass(v)]}>{v ?? "—"}</td>; })}
+                    {["all", ...tools.map(x => x.tool)].map(tool => { const vs = models.map(m => taskScore(m, t.id, tool)); const ok = vs.filter(v => v !== null); const avg = ok.length ? Math.round(ok.reduce((a, b) => a + b, 0) / ok.length) : null; return <>
+                      <td class="n" data-view={tool} hidden={tool !== "all"}>{avg ?? "—"}</td>
+                      <td class="n" data-view={tool} hidden={tool !== "all"}>{ok.filter(v => v === 100).length}/{models.length}</td>
+                      <td data-view={tool} hidden={tool !== "all"}><span class="strip">{models.map((m, i) => <span class="sq" style={`--t:${vs[i] ?? 0}%`} title={`${m.name}: ${vs[i] ?? "—"}`}></span>)}</span></td>
+                    </>; })}
                   </tr>
                 ))}
               </tbody>
@@ -91,7 +95,8 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
         buttons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tool === tool)));
         document.querySelectorAll(".task-group").forEach(group => {
           const rows = [...group.querySelectorAll("tbody tr")];
-          rows.forEach(row => { row.hidden = tool !== "all" && row.dataset.tool !== tool; });
+          group.querySelectorAll("[data-view]").forEach(el => { el.hidden = el.dataset.view !== tool; });
+          group.querySelectorAll("[data-badge]").forEach(el => { el.classList.toggle("off", tool !== "all" && el.dataset.badge !== tool); });
           const shown = rows.filter(row => !row.hidden).length;
           group.querySelector(".visible-count").textContent = String(shown);
           group.hidden = shown === 0;
