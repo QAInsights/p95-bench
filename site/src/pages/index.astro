@@ -173,7 +173,7 @@ const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.ca
         hidden={v.tool !== "all" || v.scoreMode !== "first"}
         id={v.tool === "all" && v.scoreMode === "first" ? "tasks" : `tasks-${v.tool}-${v.scoreMode}`}
         aria-labelledby={`tasks-title-${v.tool}-${v.scoreMode}`}>
-        <h2 id={`tasks-title-${v.tool}-${v.scoreMode}`} class="label">Every task <span>{v.tool === "all" ? "40 scenarios, average over 4 tools" : `40 scenarios in ${toolLabel(v.tool)}`} · brighter is better · hover a cell for details</span></h2>
+        <h2 id={`tasks-title-${v.tool}-${v.scoreMode}`} class="label">Every task <span>{v.tool === "all" ? `${tasks.length} scenarios, average over ${tools.length} tools` : `${tasks.length} scenarios in ${toolLabel(v.tool)}`} · brighter is better · hover a cell for details</span></h2>
         <div class="table-wrap">
           <div class="grid" style={`--cols:${tasks.length + groups.length - 1}`}>
             <span class="grid-corner"></span>

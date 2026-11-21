@@ -107,6 +107,8 @@ test('pages use the Core leaderboard and task pack without Matrix-only copy', as
   assert.deepEqual(jsonImports, ['../data/leaderboard-p95-core.json']);
   assert.doesNotMatch(page, /leaderboard\.json|pack-switch|show-versions/);
   assert.match(page, /Core · \{tasks\.length\} scenarios × \{tools\.length\} tools = \{tasks\.length \* tools\.length\} tasks/);
+  assert.match(page, /tasks\.length\} scenarios, average over \$\{tools\.length\} tools/);
+  assert.doesNotMatch(page, /40 scenarios/);
   assert.match(page, /Derived from the Matrix run/);
   assert.doesNotMatch(page, /JMeter three-phase workload reference/);
   assert.match(page, /href="\/tasks"/);

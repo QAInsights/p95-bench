@@ -1,0 +1,28 @@
+{
+  "run_date": "2026-11-21T15:20:48.212146+00:00",
+  "pack_id": "p95-matrix",
+  "pack_digest": "57ff97490a9becb17e39e1870f0a51cd91a29a274e1b8f6be4edeee87d372a12",
+  "visibility": "public",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "base_url": "https://api.deepseek.com",
+  "cost_note": null,
+  "pricing_source": null,
+  "temperature": null,
+  "reasoning_mode": "thinking-high",
+  "repair_rounds": 1,
+  "thinking": {
+    "type": "enabled"
+  },
+  "reasoning_effort": "high",
+  "max_tokens": 65536,
+  "task_scenarios": {
+    "mx-w07-burst-control-gatling": "mx-w07-burst-control",
+    "mx-w07-burst-control-jmeter": "mx-w07-burst-control",
+    "mx-w07-burst-control-k6": "mx-w07-burst-control",
+    "mx-w07-burst-control-locust": "mx-w07-burst-control"
+  },
+  "spend_cap_usd": 100.0,
+  "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807",
+  "harness_dirty": false
+}

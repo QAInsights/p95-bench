@@ -1,0 +1,60 @@
+{
+  "pack_id": "p95-matrix",
+  "grade_schema_version": 2,
+  "default_repeats": 1,
+  "efficiency_weight": 0.05,
+  "weights": {
+    "repair": 25,
+    "migration": 15,
+    "correlation": 25,
+    "workload": 20,
+    "analysis": 15
+  },
+  "tasks": [
+    {
+      "id": "mx-w07-burst-control-gatling",
+      "category": "workload",
+      "scenario": "mx-w07-burst-control",
+      "task_digest": "178518e1b9a74c2cdc90e50970cd2c17819fd7967c0e2e03f8c540fd7f3e1a09"
+    },
+    {
+      "id": "mx-w07-burst-control-jmeter",
+      "category": "workload",
+      "scenario": "mx-w07-burst-control",
+      "task_digest": "605d059ea382d05e40d757f508acdce4219ac95859da771863798af47d351735"
+    },
+    {
+      "id": "mx-w07-burst-control-k6",
+      "category": "workload",
+      "scenario": "mx-w07-burst-control",
+      "task_digest": "0e557171c72174d481d74c13fab1938d2ae1872632782c395b7b4004a9d6725a"
+    },
+    {
+      "id": "mx-w07-burst-control-locust",
+      "category": "workload",
+      "scenario": "mx-w07-burst-control",
+      "task_digest": "90e1424319d7c377813a8c59ec91414019162741c7fc3b6479339c8328bcc0a6"
+    }
+  ],
+  "repeats": 1,
+  "efficiency_budgets": {
+    "mx-w07-burst-control-gatling": {
+      "latency_seconds": 180,
+      "tokens": 11796
+    },
+    "mx-w07-burst-control-jmeter": {
+      "latency_seconds": 180,
+      "tokens": 32493
+    },
+    "mx-w07-burst-control-k6": {
+      "latency_seconds": 180,
+      "tokens": 5007
+    },
+    "mx-w07-burst-control-locust": {
+      "latency_seconds": 180,
+      "tokens": 8847
+    }
+  },
+  "visibility": "public",
+  "digest": "57ff97490a9becb17e39e1870f0a51cd91a29a274e1b8f6be4edeee87d372a12"
+}

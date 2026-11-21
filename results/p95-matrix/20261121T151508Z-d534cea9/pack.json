@@ -1,0 +1,150 @@
+{
+  "pack_id": "p95-matrix",
+  "grade_schema_version": 2,
+  "default_repeats": 1,
+  "efficiency_weight": 0.05,
+  "weights": {
+    "repair": 25,
+    "migration": 15,
+    "correlation": 25,
+    "workload": 20,
+    "analysis": 15
+  },
+  "tasks": [
+    {
+      "id": "mx-m06-assertions-metrics-locust",
+      "category": "migration",
+      "scenario": "mx-m06-assertions-metrics",
+      "task_digest": "71b56de262ed54f7b2a57215e3a9f3b5dda400f97dcee00fb93ad9e24bafaa7a"
+    },
+    {
+      "id": "mx-r01-extractor-scope-locust",
+      "category": "repair",
+      "scenario": "mx-r01-extractor-scope",
+      "task_digest": "e236d7a51de1dc8c4fc35c64aa05674987c4d3f3b6161f323a4a1dd3c9af3976"
+    },
+    {
+      "id": "mx-r02-cookie-lifetime-locust",
+      "category": "repair",
+      "scenario": "mx-r02-cookie-lifetime",
+      "task_digest": "bc4531ddd8c1c40b169f64a2666beac9d131918c0a68296240c9287eab97574c"
+    },
+    {
+      "id": "mx-r04-status-recovery-locust",
+      "category": "repair",
+      "scenario": "mx-r04-status-recovery",
+      "task_digest": "13f5946d25ab661f355dca1f65c6fb840e8636afec88bdf9a04e4bbcdc8ffd6e"
+    },
+    {
+      "id": "mx-r05-business-assertion-locust",
+      "category": "repair",
+      "scenario": "mx-r05-business-assertion",
+      "task_digest": "4492fff1400fe17e409f86a2f140251f68471d11e80e096c79d6916e6e7969bd"
+    },
+    {
+      "id": "mx-r06-threshold-tags-locust",
+      "category": "repair",
+      "scenario": "mx-r06-threshold-tags",
+      "task_digest": "0a3ce8e9f6019fc4d83580ea1f7d56bfa4a794a8b73ec4474c7274d1526a34e9"
+    },
+    {
+      "id": "mx-r08-arrival-options-locust",
+      "category": "repair",
+      "scenario": "mx-r08-arrival-options",
+      "task_digest": "c2005c7eba1d6726249ce67fc1c0eb8cc9755974ccbc42909c89a4df75f209ef"
+    },
+    {
+      "id": "mx-r10-user-partition-locust",
+      "category": "repair",
+      "scenario": "mx-r10-user-partition",
+      "task_digest": "baae04516ad55cffade0f81dad1779fc70967ccdabc5749ee678eb2a5cddc69f"
+    },
+    {
+      "id": "mx-r11-timer-scope-locust",
+      "category": "repair",
+      "scenario": "mx-r11-timer-scope",
+      "task_digest": "5f5dfba25e31d820318b0d0ff62a4c66718dae257080122dd41a5ff059917b42"
+    },
+    {
+      "id": "mx-r12-error-metric-locust",
+      "category": "repair",
+      "scenario": "mx-r12-error-metric",
+      "task_digest": "f3ddc675e45a4eb4e2b25194902e240f995da0494e2e4a6c1113ef275b519e77"
+    },
+    {
+      "id": "mx-w01-steady-starts-locust",
+      "category": "workload",
+      "scenario": "mx-w01-steady-starts",
+      "task_digest": "14ad33661f605d98a882cfb73dd69bb347ae70aa6b3ec7bef93f68a6b584bbd7"
+    },
+    {
+      "id": "mx-w02-open-arrivals-locust",
+      "category": "workload",
+      "scenario": "mx-w02-open-arrivals",
+      "task_digest": "400d87fc4f8a62748a83438cbecdffa4cdd50103c5252e6f7150d31845f27d74"
+    },
+    {
+      "id": "mx-w07-burst-control-locust",
+      "category": "workload",
+      "scenario": "mx-w07-burst-control",
+      "task_digest": "90e1424319d7c377813a8c59ec91414019162741c7fc3b6479339c8328bcc0a6"
+    }
+  ],
+  "repeats": 1,
+  "efficiency_budgets": {
+    "mx-m06-assertions-metrics-locust": {
+      "latency_seconds": 180,
+      "tokens": 8814
+    },
+    "mx-r01-extractor-scope-locust": {
+      "latency_seconds": 180,
+      "tokens": 8811
+    },
+    "mx-r02-cookie-lifetime-locust": {
+      "latency_seconds": 180,
+      "tokens": 8811
+    },
+    "mx-r04-status-recovery-locust": {
+      "latency_seconds": 180,
+      "tokens": 8814
+    },
+    "mx-r05-business-assertion-locust": {
+      "latency_seconds": 180,
+      "tokens": 8814
+    },
+    "mx-r06-threshold-tags-locust": {
+      "latency_seconds": 180,
+      "tokens": 8811
+    },
+    "mx-r08-arrival-options-locust": {
+      "latency_seconds": 180,
+      "tokens": 8847
+    },
+    "mx-r10-user-partition-locust": {
+      "latency_seconds": 180,
+      "tokens": 7890
+    },
+    "mx-r11-timer-scope-locust": {
+      "latency_seconds": 180,
+      "tokens": 8916
+    },
+    "mx-r12-error-metric-locust": {
+      "latency_seconds": 180,
+      "tokens": 8811
+    },
+    "mx-w01-steady-starts-locust": {
+      "latency_seconds": 180,
+      "tokens": 8847
+    },
+    "mx-w02-open-arrivals-locust": {
+      "latency_seconds": 180,
+      "tokens": 8847
+    },
+    "mx-w07-burst-control-locust": {
+      "latency_seconds": 180,
+      "tokens": 8847
+    }
+  },
+  "visibility": "public",
+  "digest": "27cbade7792648a9fe3ba1b65a37e8325a4c9c08094ec8111a939a721f02a989"
+}
