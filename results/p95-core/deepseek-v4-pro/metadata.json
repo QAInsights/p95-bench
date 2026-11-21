@@ -157,7 +157,7 @@
       "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807"
     }
   ],
-  "regraded": {
+  "regraded": [{
     "harness_commit": "19aeecb6b6edffaf3d6d30b8f32fe3ff35eae657",
     "grader": "v2_analysis",
     "reason": "Answer-list length is no longer part of the analysis answer schema.",
@@ -167,5 +167,5 @@
       "mx-a01-jtl-endpoints-locust"
     ],
     "superseded_repair_cost_usd": 0.036497648
-  }
+  }]
 }

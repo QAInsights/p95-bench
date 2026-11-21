@@ -7,28 +7,66 @@ kept only as a superseded record and its spend is left out of the run cost.
 
 import argparse
 import json
+import re
 import subprocess
 import tempfile
 from pathlib import Path
 
-from p95bench.packs import pack_config
+from p95bench.packs import pack_config, task_digest
 from p95bench.runner import _grade_response, _repair_trigger, score_run
 from p95bench.tasks import load_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
+COST_NOTE_PATTERN = re.compile(
+    r"USD list-price estimate from reported token usage at frozen registry prices for all "
+    r"\d+ Core first tries and \d+ repair responses; Core usage cost \$\d+\.\d{6}\. "
+    r"Not an invoice\."
+)
+
+
+def _summary_for_attempts(run_dir, attempts):
+    with tempfile.TemporaryDirectory() as tmp:
+        summary_dir = Path(tmp)
+        for name in ("pack.json", "not-run.jsonl"):
+            source = run_dir / name
+            if source.exists():
+                (summary_dir / name).write_bytes(source.read_bytes())
+        (summary_dir / "attempts.jsonl").write_text(
+            "".join(json.dumps(attempt) + "\n" for attempt in attempts))
+        return score_run(summary_dir)
 
 
 def regrade(run_dir, commit):
     run_dir = Path(run_dir)
     tasks = {t.id: t for t in load_tasks(ROOT / "packs/p95-core/tasks",
                                          pack_config("p95-core")["weights"])}
+    manifest = json.loads((run_dir / "pack.json").read_text())
+    inventory = {item["id"]: item.get("task_digest")
+                 for item in manifest.get("tasks", [])}
     lines = (run_dir / "attempts.jsonl").read_text().splitlines()
     attempts = [json.loads(line) for line in lines if line.strip()]
+    metadata_path = run_dir / "metadata.json"
+    metadata = json.loads(metadata_path.read_text())
+    analysis_tasks = {}
+    for attempt in attempts:
+        task_id = attempt["task_id"]
+        task = tasks.get(task_id)
+        if task is None:
+            raise RuntimeError(f"Task not found in Core pack: {task_id}")
+        if task.grader != "v2_analysis":
+            continue
+        if task_id not in inventory:
+            raise RuntimeError(f"Task missing from run pack manifest: {task_id}")
+        if task_digest(task) != inventory[task_id]:
+            raise RuntimeError(f"Task digest mismatch for {task_id}")
+        analysis_tasks[task_id] = task
+
+    repair_rounds = metadata.get("repair_rounds", 0)
     changed, superseded_cost = [], 0.0
     with tempfile.TemporaryDirectory() as tmp:
         for index, attempt in enumerate(attempts):
-            task = tasks[attempt["task_id"]]
-            if task.grader != "v2_analysis":
+            task = analysis_tasks.get(attempt["task_id"])
+            if task is None:
                 continue
             old_grade = attempt["grade"]
             old_repair = attempt.get("repair") or {"triggered": False}
@@ -36,7 +74,9 @@ def regrade(run_dir, commit):
                                            Path(tmp) / f"{index}", True)
             if error is not None:
                 raise RuntimeError(f"Grader error on {task.id}: {error}")
-            trigger = _repair_trigger(task, grade, Path(tmp) / f"{index}")
+            trigger = None
+            if (repair_rounds and old_repair.get("skipped") != "truncated_at_cap"):
+                trigger = _repair_trigger(task, grade, Path(tmp) / f"{index}")
             repair = old_repair
             if old_repair.get("triggered") and trigger is None:
                 repair = {"triggered": False, "superseded_repair": old_repair}
@@ -55,18 +95,35 @@ def regrade(run_dir, commit):
                 attempt["repair"] = repair
                 attempt["regraded"] = {"harness_commit": commit,
                                        "previous_score": old_grade["score"]}
-    (run_dir / "attempts.jsonl").write_text("".join(json.dumps(a) + "\n" for a in attempts))
-    metadata_path = run_dir / "metadata.json"
-    metadata = json.loads(metadata_path.read_text())
-    metadata["regraded"] = {
+
+    if not changed:
+        return changed, superseded_cost, _summary_for_attempts(run_dir, attempts)
+
+    cost_note = metadata.get("cost_note")
+    if not isinstance(cost_note, str) or COST_NOTE_PATTERN.fullmatch(cost_note) is None:
+        raise RuntimeError("Existing cost_note does not match the expected Core estimate pattern")
+    summary = _summary_for_attempts(run_dir, attempts)
+    repairs = sum(bool((attempt.get("repair") or {}).get("triggered")) for attempt in attempts)
+    metadata["cost_note"] = (
+        f"USD list-price estimate from reported token usage at frozen registry prices for all "
+        f"{len(attempts)} Core first tries and {repairs} repair responses; Core usage cost "
+        f"${summary['estimated_cost_usd']:.6f}. Not an invoice."
+    )
+    regraded = metadata.get("regraded", [])
+    if isinstance(regraded, dict):
+        regraded = [regraded]
+    if not isinstance(regraded, list):
+        raise TypeError("metadata regraded value must be an object or a list")
+    metadata["regraded"] = [*regraded, {
         "harness_commit": commit,
         "grader": "v2_analysis",
         "reason": "Answer-list length is no longer part of the analysis answer schema.",
         "tasks": changed,
         "superseded_repair_cost_usd": superseded_cost,
-    }
+    }]
+    (run_dir / "attempts.jsonl").write_text(
+        "".join(json.dumps(attempt) + "\n" for attempt in attempts))
     metadata_path.write_text(json.dumps(metadata, indent=2) + "\n")
-    summary = score_run(run_dir)
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     return changed, superseded_cost, summary
 

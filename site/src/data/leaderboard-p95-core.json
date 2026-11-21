@@ -3102,7 +3102,8 @@
           "passed": false,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ]
+      ],
+      "budget_file_sha256": "4952b2e098f4a3bf886a68e8fb56cf78c9188e0736ce3fc7b37ae111ebb78cda"
     },
     {
       "provider": "deepseek",
@@ -6280,7 +6281,8 @@
           "passed": false,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ]
+      ],
+      "budget_file_sha256": "4952b2e098f4a3bf886a68e8fb56cf78c9188e0736ce3fc7b37ae111ebb78cda"
     }
   ],
   "budget_file_sha256": "4952b2e098f4a3bf886a68e8fb56cf78c9188e0736ce3fc7b37ae111ebb78cda",
