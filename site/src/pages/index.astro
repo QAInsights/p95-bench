@@ -94,7 +94,7 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
         <h2 id="method-title" class="label">Method</h2>
         <ul>
           <li>{tasks.length} public scenarios across {categories.length} categories, each written for all {tools.length} tools ({tasks.length * tools.length} tasks). Every task is <a href="/tasks">listed</a> and in the repo.</li>
-          <li>Each model answers every task through the provider's own API in its standard reasoning mode. If a script fails to compile or run, the model sees the tool's error once and can fix it; the final script is scored.</li>
+          <li>Each model answers every task through the provider's own API in its standard reasoning mode. If a script fails to compile or run, or an analysis answer is malformed, the model sees the error once and can fix it; the final answer is scored.</li>
           <li>Scripts run in isolated containers against a demo shop; the same graders score every tool.</li>
           <li>Score = 95% quality + 5% efficiency (output tokens and latency). Cost is token usage at list price.</li>
           <li>Raw attempts and run metadata are <a href={`${repo}/tree/main/results/p95-core`}>on GitHub</a>.</li>

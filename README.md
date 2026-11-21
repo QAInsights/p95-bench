@@ -73,7 +73,7 @@ Runs are always marked public, and the site builder rejects any private run.
 ## Run on GitHub Actions
 
 The workflow file is not included in this repository; a maintainer must first add
-`.github/workflows/benchmark.yml` (its contents are in the description of PR #48).
+`.github/workflows/benchmark.yml` by copying `ci/benchmark.yml` there.
 
 Dispatch the `Benchmark` workflow with one `provider model` entry per line or
 comma-separated in **models**, for example `deepseek deepseek-flash`. Add the
@@ -98,11 +98,12 @@ published run directories:
 
 ```sh
 cd site
-npm run data -- --pack p95-core ../results/p95-core/deepseek-flash
+npm run data -- --pack p95-core ../results/p95-core/*/
 ```
 
-Replace the example directory with the published model run, and pass additional
-run directories to that command when publishing multiple models together.
+This command regenerates the whole board, so always pass every published Core
+run directory. The builder doesn't write `budget_file_sha256` or
+`publication_note`, so carry them over from the committed JSON when regenerating.
 
 An open-source benchmark for AI performance test scripting and engineering.
 General purpose and independent of any AI assistant product. Compare model

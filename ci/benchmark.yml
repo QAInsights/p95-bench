@@ -1,0 +1,158 @@
+name: Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: 'One "provider model" per line or comma-separated, e.g. "deepseek deepseek-flash"'
+        required: true
+        type: string
+      cap_usd_per_model:
+        description: Spend cap per model in USD, split evenly across its 4 tool shards
+        required: true
+        default: '40'
+        type: string
+      repair_rounds:
+        description: Repair rounds
+        required: true
+        default: '1'
+        type: choice
+        options: ['1', '0']
+      scenarios:
+        description: Optional smoke run, comma-separated scenario codes (e.g. "a01"). Skips the Core merge.
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benchmark-${{ github.run_id }}
+  cancel-in-progress: false
+
+env:
+  PACK: p95-core
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.plan.outputs.models }}
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: python -m pip install -e .
+      - id: plan
+        env:
+          MODELS: ${{ inputs.models }}
+          CAP_USD_PER_MODEL: ${{ inputs.cap_usd_per_model }}
+          SCENARIOS: ${{ inputs.scenarios }}
+        run: python scripts/plan_benchmark.py >> "$GITHUB_OUTPUT"
+
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.shards) }}
+    name: run (${{ matrix.slug }}, ${{ matrix.tool }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: python -m pip install -e .
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/state/p95-bench/apache-jmeter-5.6.3.tgz
+            ~/.local/state/p95-bench/gatling-jars
+          key: tool-downloads-${{ hashFiles('workers/**', 'src/p95bench/images.py') }}
+      - name: Build pinned tool images
+        run: python -m p95bench.images build
+      - name: Run shard
+        env:
+          API_KEY: ${{ secrets[matrix.key_env] }}
+          KEY_ENV: ${{ matrix.key_env }}
+          PROVIDER: ${{ matrix.provider }}
+          MODEL: ${{ matrix.model }}
+          TOOL: ${{ matrix.tool }}
+          SCENARIOS: ${{ inputs.scenarios }}
+          REPAIR_ROUNDS: ${{ inputs.repair_rounds }}
+          P95_BUDGET_LEDGER: ${{ runner.temp }}/p95-budget.json
+          P95_BUDGET_LIMIT_USD: ${{ matrix.cap_usd }}
+        run: |
+          if [ -z "$API_KEY" ]; then
+            echo "::error::Repository secret $KEY_ENV is not set"
+            exit 1
+          fi
+          export "$KEY_ENV=$API_KEY"
+          unset API_KEY
+          args=(--provider "$PROVIDER" --model "$MODEL" --pack "$PACK"
+                --efficiency-budgets "packs/$PACK/efficiency-budgets.json"
+                --tool "$TOOL" --repeats 1 --repair-rounds "$REPAIR_ROUNDS"
+                --out "$RUNNER_TEMP/shard")
+          IFS=',' read -ra codes <<< "$SCENARIOS"
+          for code in "${codes[@]}"; do
+            code="${code// /}"
+            [ -n "$code" ] && args+=(--scenario "$code")
+          done
+          p95bench run "${args[@]}"
+      - name: Upload shard
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.slug }}-${{ matrix.tool }}
+          path: ${{ runner.temp }}/shard/
+          if-no-files-found: error
+          retention-days: 30
+
+  merge:
+    needs: [plan, run]
+    if: ${{ !cancelled() && inputs.scenarios == '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.models) }}
+    name: merge (${{ matrix.slug }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-${{ matrix.slug }}-*
+          path: shards
+          merge-multiple: false
+      - name: Merge shards into one Core run
+        env:
+          SLUG: ${{ matrix.slug }}
+        run: |
+          args=()
+          for tool in jmeter k6 locust gatling; do
+            runs=(shards/"shard-$SLUG-$tool"/"$PACK"/*/)
+            if [ "${#runs[@]}" -ne 1 ] || [ ! -d "${runs[0]}" ]; then
+              echo "::error::Expected exactly one $PACK run in shard-$SLUG-$tool"
+              exit 1
+            fi
+            args+=(--model-run "${runs[0]}")
+          done
+          python scripts/derive_core_run.py "${args[@]}" "merged/$SLUG" > "merged-$SLUG.json"
+          python scripts/plan_benchmark.py --summary "merged/$SLUG" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-${{ matrix.slug }}
+          path: merged/
+          if-no-files-found: error
+          retention-days: 90

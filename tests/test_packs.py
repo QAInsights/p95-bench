@@ -547,6 +547,30 @@ def test_budget_ledger_rejects_invalid_environment_limit(tmp_path, monkeypatch, 
         BudgetLedger()
 
 
+def test_budget_ledger_rejects_negative_reservation(tmp_path):
+    path = tmp_path / "ledger.json"
+    ledger = BudgetLedger(path)
+
+    with pytest.raises(ValueError, match="Negative budget amount"):
+        ledger.reserve(-0.0000001)
+
+    assert not path.exists()
+
+
+def test_budget_ledger_rejects_negative_settlement_without_corruption(tmp_path):
+    path = tmp_path / "ledger.json"
+    ledger = BudgetLedger(path)
+    reservation = ledger.reserve(2)
+    original = json.loads(path.read_text())
+
+    with pytest.raises(ValueError, match="Negative budget amount"):
+        ledger.settle(reservation, -0.0000001)
+
+    assert json.loads(path.read_text()) == original
+    with ledger.transaction() as data:
+        assert data["charges"] == {reservation: 2_000_000}
+
+
 def test_concurrent_budget_reservations(tmp_path):
     ledger = BudgetLedger(tmp_path / "ledger.json")
 

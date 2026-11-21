@@ -50,7 +50,10 @@ class BudgetLedger:
             temporary.replace(self.path)
 
     def reserve(self, maximum):
-        amount, key = micros(maximum), uuid4().hex
+        amount = micros(maximum)
+        if amount < 0 or Decimal(str(maximum)) < 0:
+            raise ValueError("Negative budget amount")
+        key = uuid4().hex
         with self.transaction() as data:
             if sum(data["charges"].values()) + amount > self.limit:
                 raise SpendLimitExceeded("V2 shared spend cap: insufficient reserved budget")
@@ -59,6 +62,8 @@ class BudgetLedger:
 
     def settle(self, key, actual_upper_bound):
         amount = micros(actual_upper_bound)
+        if amount < 0 or Decimal(str(actual_upper_bound)) < 0:
+            raise ValueError("Negative budget amount")
         with self.transaction() as data:
             reserved = data["charges"][key]
             data["charges"][key] = amount
