@@ -266,10 +266,13 @@ def test_bad_analysis_number_is_graded_and_does_not_stop_provider_calls(tmp_path
         repeats=2, pack_id="p95-v2.0.0", budget_ledger=BudgetLedger(tmp_path / "ledger.json"),
         efficiency_budgets={task.id: {"tokens": 100, "latency_seconds": 10}})
     attempts = [json.loads(line) for line in (directory / "attempts.jsonl").read_text().splitlines()]
-    assert provider.calls == 2
+    assert provider.calls == 3
     assert [attempt["grade"]["score"] for attempt in attempts] == [0, 1]
+    assert attempts[0]["repair"]["triggered"]
+    assert attempts[0]["repair"]["grade"]["score"] == 1
     assert all("grading_error" not in attempt for attempt in attempts)
     assert summary["attempts"] == 2 and summary["not_run"] == 0
+    assert summary["repairs_triggered"] == 1
     assert "stop_reason" not in summary
     assert not (directory / "not-run.jsonl").exists()
 

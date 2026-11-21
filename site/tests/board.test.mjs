@@ -46,6 +46,28 @@ test('task scores average repetitions and use pass booleans when scores are abse
   assert.equal(taskScore(model, 'unknown'), null);
 });
 
+test('after-repair scores and provider reasoning metadata reach board models', () => {
+  const data = fakeV2();
+  const source = data.models[0];
+  source.after_repair = { overall_score: 91, quality_score: 92, efficiency_score: 72,
+    category_scores: { repair: 92 } };
+  source.repair_rounds = 1;
+  source.reasoning_mode = 'thinking';
+  source.per_task_results[0].after_repair_score = .9;
+  const model = boardModels(data).find(item => item.key === `${source.provider}/${source.model}`);
+  const taskId = source.per_task_results[0].task_id;
+
+  assert.equal(model.afterRepair.score, 91);
+  assert.equal(model.repairRounds, 1);
+  assert.equal(model.reasoningMode, 'thinking');
+  assert.equal(taskScore(model, taskId, null, 'first'), 60);
+  assert.equal(taskScore(model, taskId, null, 'repair'), 90);
+});
+
+test('legacy board data has no after-repair scores', () => {
+  assert.ok(boardModels(fakeV2()).every(model => model.afterRepair === null));
+});
+
 test('scatter plots priced models with x increasing by cost and y tracking score', () => {
   const models = boardModels(fakeV2());
   const points = scatter(models).points;
@@ -79,4 +101,10 @@ test('page data imports only the Matrix leaderboard and has no version switching
   assert.doesNotMatch(page, /leaderboard\.json|pack-switch|show-versions/);
   assert.match(page, /href="\/tasks"/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
+  assert.match(page, /data-score="repair"/);
+  assert.match(page, /hasRepairScores && <div class="score-toggle"/);
+  assert.match(page, /params\.get\("score"\)/);
+  const tasksPage = await readFile(new URL('../src/pages/tasks.astro', import.meta.url), 'utf8');
+  assert.match(tasksPage, /data-score-view/);
+  assert.match(tasksPage, /params\.get\("score"\)/);
 });

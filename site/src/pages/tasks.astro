@@ -11,6 +11,11 @@ import { boardModels, boardTasks, categoryBlurbs, categoryLabels, taskCode, task
 const sources = import.meta.glob("../../../packs/p95-matrix/tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
 const models = boardModels(data);
 const tasks = taskDetails(Object.values(sources).map(source => parse(source)), boardTasks(data));
+const hasRepairScores = models.some(m => m.repairRounds !== 0 && Number.isFinite(m.afterRepair?.score));
+const scoreModes = hasRepairScores ? ["first", "repair"] : ["first"];
+const modelsForScore = mode => models.map(m => mode === "repair" && m.afterRepair
+  ? { ...m, score: m.afterRepair.score } : m)
+  .sort((a, b) => b.score - a.score || a.cost - b.cost || a.name.localeCompare(b.name));
 const categories = Object.keys(data.weights);
 const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
 const tools = TOOLS.map(tool => ({ tool, count: tasks.length }));
@@ -58,6 +63,11 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
         <span>Tool</span>
         <button type="button" data-tool="all" aria-pressed="true">All <small>{tasks.length * tools.length}</small></button>
         {tools.map(t => <button type="button" data-tool={t.tool} aria-pressed="false">{toolLabel(t.tool)} <small>{t.count}</small></button>)}
+        {hasRepairScores && <div class="score-toggle" role="group" aria-label="Select score view">
+          <span>Score</span>
+          <button type="button" data-score="first" aria-pressed="true">First try</button>
+          <button type="button" data-score="repair" aria-pressed="false">After 1 repair</button>
+        </div>}
       </div>
 
       {groups.map(g => (
@@ -74,11 +84,23 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
                     <td class="summary"><b>{t.label}</b><span>{t.summary}</span></td>
                     
                     <td class="checks">{t.checks.length ? t.checks.join(" → ") : "JSON fields"}</td>
-                    {["all", ...tools.map(x => x.tool)].map(tool => { const vs = models.map(m => taskScore(m, t.id, tool)); const ok = vs.filter(v => v !== null); const avg = ok.length ? Math.round(ok.reduce((a, b) => a + b, 0) / ok.length) : null; return <>
-                      <td class="n" data-view={tool} hidden={tool !== "all"}>{avg ?? "—"}</td>
-                      <td class="n" data-view={tool} hidden={tool !== "all"}>{ok.filter(v => v === 100).length}/{models.length}</td>
-                      <td data-view={tool} hidden={tool !== "all"}><span class="strip">{models.map((m, i) => <span class="sq" style={`--t:${vs[i] ?? 0}%`} title={`${m.name}: ${vs[i] ?? "—"}`}></span>)}</span></td>
-                    </>; })}
+                    {["all", ...tools.map(x => x.tool)].map(tool => scoreModes.map(scoreMode => {
+                      const orderedModels = modelsForScore(scoreMode);
+                      const vs = orderedModels.map(m => taskScore(m, t.id, tool, scoreMode));
+                      const ok = vs.filter(v => v !== null);
+                      const avg = ok.length ? Math.round(ok.reduce((a, b) => a + b, 0) / ok.length) : null;
+                      return <>
+                        <td class="n" data-view={tool} data-score-view={scoreMode}
+                          hidden={tool !== "all" || scoreMode !== "first"}>{avg ?? "—"}</td>
+                        <td class="n" data-view={tool} data-score-view={scoreMode}
+                          hidden={tool !== "all" || scoreMode !== "first"}>{ok.filter(v => v === 100).length}/{orderedModels.length}</td>
+                        <td data-view={tool} data-score-view={scoreMode}
+                          hidden={tool !== "all" || scoreMode !== "first"}>
+                          <span class="strip">{orderedModels.map((m, i) => <span class="sq"
+                            style={`--t:${vs[i] ?? 0}%`} title={`${m.name}: ${vs[i] ?? "—"}`}></span>)}</span>
+                        </td>
+                      </>;
+                    }))}
                   </tr>
                 ))}
               </tbody>
@@ -89,13 +111,20 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
     </main>
 
     <script>
-      const buttons = [...document.querySelectorAll(".filter button")];
-      const apply = tool => {
+      const buttons = [...document.querySelectorAll(".filter [data-tool]")];
+      const scoreButtons = [...document.querySelectorAll(".filter [data-score]")];
+      let selectedScore = "first";
+      const apply = (tool, score = selectedScore) => {
         if (!buttons.some(b => b.dataset.tool === tool)) tool = "all";
+        if (!scoreButtons.some(b => b.dataset.score === score)) score = "first";
+        selectedScore = score;
         buttons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tool === tool)));
+        scoreButtons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.score === score)));
         document.querySelectorAll(".task-group").forEach(group => {
           const rows = [...group.querySelectorAll("tbody tr")];
-          group.querySelectorAll("[data-view]").forEach(el => { el.hidden = el.dataset.view !== tool; });
+          group.querySelectorAll("[data-view]").forEach(el => {
+            el.hidden = el.dataset.view !== tool || el.dataset.scoreView !== score;
+          });
           group.querySelectorAll("[data-badge]").forEach(el => { el.classList.toggle("off", tool !== "all" && el.dataset.badge !== tool); });
           const shown = rows.filter(row => !row.hidden).length;
           group.querySelector(".visible-count").textContent = String(shown);
@@ -108,7 +137,14 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
         b.dataset.tool === "all" ? url.searchParams.delete("tool") : url.searchParams.set("tool", b.dataset.tool);
         history.replaceState(null, "", url);
       }));
-      apply(new URLSearchParams(location.search).get("tool") ?? "all");
+      scoreButtons.forEach(b => b.addEventListener("click", () => {
+        apply(new URLSearchParams(location.search).get("tool") ?? "all", b.dataset.score);
+        const url = new URL(location.href);
+        b.dataset.score === "first" ? url.searchParams.delete("score") : url.searchParams.set("score", "repair");
+        history.replaceState(null, "", url);
+      }));
+      const params = new URLSearchParams(location.search);
+      apply(params.get("tool") ?? "all", params.get("score") === "repair" ? "repair" : "first");
     </script>
 
     <footer class="bottom">

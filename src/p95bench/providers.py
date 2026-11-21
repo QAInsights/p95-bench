@@ -53,6 +53,16 @@ class MuseResponse(Response):
         return not self.text.strip() and self.reasoning_tokens > 0 and self.finish_reason == "length"
 
 
+@dataclass
+class DeepSeekResponse(Response):
+    reasoning_tokens: int = 0
+    finish_reason: str = ""
+
+    @property
+    def thinking_exhausted(self):
+        return not self.text.strip() and self.reasoning_tokens > 0 and self.finish_reason == "length"
+
+
 @dataclass(frozen=True)
 class Price:
     input: float
@@ -78,6 +88,7 @@ class ProviderConfig:
     cost_note: str | None = None
     pricing_source: str | None = None
     transport_retries: int = 2
+    reasoning_mode: str = "provider-default"
 
 
 PROVIDERS = {
@@ -93,6 +104,7 @@ PROVIDERS = {
         max_retries=5,
         cost_note="USD · list-price estimate (includes reasoning tokens).",
         pricing_source="https://dev.meta.ai/products/meta-model-api",
+        reasoning_mode="provider-default",
     ),
     "gemini": ProviderConfig(
         "https://generativelanguage.googleapis.com/v1beta", "GEMINI_API_KEY",
@@ -106,6 +118,7 @@ PROVIDERS = {
         max_retries=5,
         cost_note="USD · list-price estimate (includes thinking tokens).",
         pricing_source="https://ai.google.dev/gemini-api/docs/pricing",
+        reasoning_mode="provider-default",
     ),
     "qwen": ProviderConfig(
         "https://api-inference.modelscope.ai/v1", "MODELSCOPE_API_KEY",
@@ -116,12 +129,14 @@ PROVIDERS = {
         max_retries=5,
         cost_note="List-price estimate, run via ModelScope free tier.",
         pricing_source="https://www.alibabacloud.com/help/en/model-studio/model-pricing",
+        reasoning_mode="disabled",
     ),
     "deepseek": ProviderConfig(
         "https://api.deepseek.com", "DEEPSEEK_API_KEY",
         {"deepseek-flash": Price(0.30, 0.006, 1.20),
          "deepseek-v4-pro": Price(1.32, 0.044, 3.96)},
-        extra={"thinking": {"type": "disabled"}, "max_tokens": 16384},
+        extra={"thinking": {"type": "enabled"}, "max_tokens": 16384},
+        reasoning_mode="thinking",
     ),
     "anthropic": ProviderConfig(
         "https://api.anthropic.com/v1", "ANTHROPIC_API_KEY",
@@ -129,6 +144,7 @@ PROVIDERS = {
          "claude-opus-5-5": Price(4, 4, 20)},
         temperature=None,
         extra={"max_tokens": 16384},
+        reasoning_mode="provider-default",
     ),
     "thinkingmachines": ProviderConfig(
         "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1", "TINKER_API_KEY",
@@ -137,6 +153,7 @@ PROVIDERS = {
          "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00)},
         extra={"max_tokens": 16384},
         timeout_seconds=600,
+        reasoning_mode="provider-default",
     ),
     "openai": ProviderConfig(
         "https://api.openai.com/v1", "OPENAI_API_KEY",
@@ -144,6 +161,7 @@ PROVIDERS = {
          "gpt-6.2-astra": Price(8, 8, 40)},
         temperature=None,
         extra={"max_completion_tokens": 16384},
+        reasoning_mode="provider-default",
     ),
 }
 
@@ -244,7 +262,15 @@ class OpenAICompatible:
         usage = data["usage"]
         cached = usage.get("prompt_cache_hit_tokens",
                            (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0))
-        return Response(data["choices"][0]["message"]["content"] or "",
+        choice = data["choices"][0]
+        if self.config.reasoning_mode == "thinking":
+            reasoning = ((usage.get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
+                         or 0)
+            return DeepSeekResponse(
+                choice["message"].get("content") or "", usage["prompt_tokens"],
+                usage["completion_tokens"], cached, elapsed, reasoning,
+                choice.get("finish_reason", ""))
+        return Response(choice["message"]["content"] or "",
                         usage["prompt_tokens"], usage["completion_tokens"], cached, elapsed)
 
 

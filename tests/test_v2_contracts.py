@@ -7,12 +7,14 @@ from unittest.mock import Mock
 
 import pytest
 
+from p95bench.budget import BudgetLedger
 from p95bench.capacity import capacity_preflight, capacity_rate
 from p95bench.demo_v2 import Profile, Shop
 from p95bench.execution import AuditOverflow, Trial, artifact_source, k6_evidence, run_artifact
 from p95bench.graders import grade
 from p95bench.images import tool_image
 from p95bench.packs import pack_config
+from p95bench.providers import Price, Response
 from p95bench.reference_plans import reference
 from p95bench.runner import run
 from p95bench.tasks import load_tasks
@@ -56,6 +58,38 @@ def test_malformed_xml_zeroes_every_execution_checkpoint(tmp_path):
                 and not task.params["contract"].get("workload"))
     result = grade(task, "<jmeterTestPlan><hashTree>", tmp_path, 2)
     assert [item.earned for item in result.checkpoints] == [0, 0, 0, 0]
+
+
+@pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1", reason="Opt-in native Docker tests")
+def test_repair_round_reruns_reference_gatling_answer(tmp_path):
+    tasks = load_tasks(ROOT / "packs/p95-matrix/tasks", pack_config("p95-matrix")["weights"])
+    task = next(item for item in tasks if item.tool == "gatling" and item.category == "correlation"
+                and not item.params["contract"].get("workload"))
+    correct = reference(task.tool, task.params["contract"])
+
+    class StubProvider:
+        def __init__(self):
+            self.calls = 0
+
+        def send(self, model, messages):
+            self.calls += 1
+            text = "<broken Gatling artifact>" if self.calls == 1 else correct
+            return Response(text, 100, 20, 0, .01)
+
+    provider = StubProvider()
+    directory, summary = run(
+        provider, "stub", "stub-model", Price(1, .5, 2), [task], tmp_path,
+        pack_id="p95-matrix",
+        efficiency_budgets={task.id: {"tokens": 16384, "latency_seconds": 30}},
+        budget_ledger=BudgetLedger(tmp_path / "repair-docker-ledger.json"),
+    )
+    attempt = json.loads((directory / "attempts.jsonl").read_text())
+
+    assert provider.calls == 2
+    assert attempt["grade"]["score"] == 0
+    assert attempt["repair"]["triggered"]
+    assert attempt["repair"]["grade"]["score"] == 1
+    assert summary["after_repair"]["category_scores"][task.category] == 100
 
 
 @pytest.mark.parametrize("error", [OverflowError, RecursionError])

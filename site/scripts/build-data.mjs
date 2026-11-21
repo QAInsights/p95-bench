@@ -31,19 +31,28 @@ export function snapshotDigest(value) {
 export function costBreakdown(attempts, skipped, { packId, taskMap, total }) {
   const first = attempts[0];
   const charged = skipped.filter(attempt => attempt.response != null);
+  const repairs = attempts.filter(attempt => attempt.repair?.triggered && attempt.repair.response != null);
   if (charged.some(a => a.status !== 'not_run' || a.model !== first.model
     || a.provider !== first.provider || (a.pack_id ?? 'p95-v1') !== packId
     || !taskMap.has(a.task_id) || !Number.isFinite(a.cost_usd) || a.cost_usd < 0
     || ![a.response.input_tokens, a.response.output_tokens].every(n => Number.isFinite(n) && n >= 0))) {
     throw new Error('Invalid charged not-run response');
   }
-  const result = [...attempts, ...charged].map(attempt => ({ task_id: attempt.task_id,
+  if (repairs.some(a => !Number.isFinite(a.repair.cost_usd) || a.repair.cost_usd < 0
+    || ![a.repair.response.input_tokens, a.repair.response.output_tokens]
+      .every(n => Number.isFinite(n) && n >= 0))) {
+    throw new Error('Invalid repair response');
+  }
+  const result = [...attempts, ...repairs.map(attempt => ({ ...attempt,
+    response: attempt.repair.response, cost_usd: attempt.repair.cost_usd, status: 'repair' })), ...charged]
+    .map(attempt => ({ task_id: attempt.task_id,
     input_tokens: attempt.response.input_tokens,
     cached_tokens: attempt.response.cached_tokens ?? 0,
     output_tokens: attempt.response.output_tokens,
     price_per_million: attempt.price_per_million, cost_usd: attempt.cost_usd,
-    ...(attempt.status === 'not_run' ? { status: 'not_run' } : {}) }));
-  if (charged.length && (!Number.isFinite(total)
+    ...(attempt.status === 'not_run' ? { status: 'not_run' } : {}),
+    ...(attempt.status === 'repair' ? { status: 'repair' } : {}) }));
+  if ((charged.length || repairs.length) && (!Number.isFinite(total)
     || Math.abs(result.reduce((sum, a) => sum + a.cost_usd, 0) - total) > 1e-9)) {
     throw new Error('Cost breakdown total mismatch');
   }
@@ -151,7 +160,10 @@ export async function buildData(directories, options = {}) {
       provider: first.provider, model: first.model, overall_score: summary.overall_score,
       ...(v2 ? { pack_id: packId, pack_digest: summary.pack_digest,
         quality_score: summary.quality_score, efficiency_score: summary.efficiency_score,
-        repeats: summary.repeats } : {}),
+        repeats: summary.repeats,
+        ...(summary.after_repair ? { after_repair: summary.after_repair } : {}),
+        ...(metadata.repair_rounds !== undefined ? { repair_rounds: metadata.repair_rounds } : {}),
+        ...(metadata.reasoning_mode !== undefined ? { reasoning_mode: metadata.reasoning_mode } : {}) } : {}),
       category_scores: summary.category_scores, cost: summary.estimated_cost_usd,
       tokens: { input: summary.input_tokens, output: summary.output_tokens },
       latency: summary.latency_seconds, run_date: runDate,
@@ -164,10 +176,13 @@ export async function buildData(directories, options = {}) {
       per_task_results: attempts.map((a) => {
         const task = taskMap.get(a.task_id);
         if (!task) throw new Error(`Unknown task: ${a.task_id}`);
+        const afterRepair = a.repair?.triggered && a.repair.grade?.status === 'graded'
+          ? a.repair.grade : a.grade;
         return { task_id: a.task_id, category: a.category, tool: task.tool,
           ...(task.scenario ? { scenario: task.scenario } : {}),
           ...(v2 ? { score: a.grade.score, repeat: a.repeat,
-            output_tokens: a.response.output_tokens, latency_seconds: a.response.latency_seconds } : {}),
+            output_tokens: a.response.output_tokens, latency_seconds: a.response.latency_seconds,
+            ...(summary.after_repair ? { after_repair_score: afterRepair.score } : {}) } : {}),
           passed: a.grade.passed, detail: String(a.grade.detail).slice(0, 180) };
       }),
     });
