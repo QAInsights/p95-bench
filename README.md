@@ -155,10 +155,11 @@ result files. Execution subprocesses do not need provider credentials.
 
 Use `--provider qwen` with `MODELSCOPE_API_KEY`. The OpenAI-compatible endpoint
 is `https://api-inference.modelscope.ai/v1` (override with `QWEN_BASE_URL`).
-Models: `Qwen-Ambassador/Qwen3.8-Max`, `Qwen-Ambassador/Qwen3.8-Flash-Next`,
-and `Qwen-Ambassador/Qwen3.7-Max`. Thinking is enabled (`enable_thinking: true`)
-at `reasoning_effort: xhigh` (Qwen's default and top level; no `thinking_budget`).
-Responses are streamed because ModelScope requires streaming for thinking.
+Models: `Qwen-Ambassador/Qwen4-Max`, `Qwen-Ambassador/Qwen3.8-Max`,
+`Qwen-Ambassador/Qwen3.8-Flash-Next`, and `Qwen-Ambassador/Qwen3.7-Max`.
+Thinking is enabled (`enable_thinking: true`) at `reasoning_effort: high`
+(Qwen4-Max's default; no `thinking_budget`). Responses are streamed, since some
+ModelScope models accept thinking only on streamed calls.
 Temperature is left at the provider default, and the output cap is 65,536 tokens
 via `max_completion_tokens`, which covers reasoning and reply, matching DeepSeek.
 The [Qwen API reference](https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-dashscope)
@@ -168,8 +169,9 @@ that includes 0. ModelScope compatibility is checked by the real runs.
 ModelScope inference uses a free tier with daily limits. Reported costs are
 **Model Studio list-price estimates, not charges from ModelScope**. Singapore
 [list prices](https://www.alibabacloud.com/help/en/model-studio/model-pricing)
-per million input/output tokens are $2/$6 for 3.8-Max, $0.15/$0.47 for
-3.8-Flash (used as the estimate for Flash-Next), and $2.50/$7.50 for 3.7-Max.
+per million input/output tokens are $1.50/$4.50 for 4-Max (cache hits $0.075),
+$2/$6 for 3.8-Max, $0.15/$0.47 for 3.8-Flash (used as the estimate for
+Flash-Next), and $2.50/$7.50 for 3.7-Max.
 Cache hits use 10% of the input rate. Run metadata preserves the pricing source
 and free-tier note, which also appear in Model focus and the cost explainer.
 

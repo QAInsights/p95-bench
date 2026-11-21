@@ -46,7 +46,7 @@ def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
         'thinking': {'type': 'enabled'}, 'reasoning_effort': 'high', 'max_tokens': 65536}
     assert provider.config.reasoning_mode == 'thinking-high'
     assert provider.config.temperature is None
-    assert PROVIDERS['qwen'].reasoning_mode == 'thinking-xhigh'
+    assert PROVIDERS['qwen'].reasoning_mode == 'thinking-high'
     assert all(config.reasoning_mode == 'provider-default'
                for name, config in PROVIDERS.items() if name not in {'deepseek', 'qwen'})
     captured = {}

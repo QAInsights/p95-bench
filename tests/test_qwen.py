@@ -10,6 +10,7 @@ import pytest
 from p95bench.providers import (
     PROVIDERS,
     OpenAICompatible,
+    Price,
     ProviderUnavailable,
     Response,
     get_provider,
@@ -22,6 +23,11 @@ def sse_response(*chunks):
     lines = [f"data: {json.dumps(chunk)}\n\n" for chunk in chunks]
     lines.append("data: [DONE]\n\n")
     return io.BytesIO("".join(lines).encode())
+
+
+def test_qwen4_max_price_is_registered():
+    assert PROVIDERS['qwen'].prices['Qwen-Ambassador/Qwen4-Max'] == Price(
+        1.5, .075, 4.5)
 
 
 @pytest.mark.parametrize('model,rates', [
@@ -43,7 +49,7 @@ def test_transport_and_estimated_prices(monkeypatch, model, rates, content):
         assert timeout == 600
         assert json.loads(req.data) == {
             'model': model, 'messages': [], 'enable_thinking': True,
-            'reasoning_effort': 'xhigh',
+            'reasoning_effort': 'high',
             'max_completion_tokens': 65536, 'stream': True,
             'stream_options': {'include_usage': True},
         }
