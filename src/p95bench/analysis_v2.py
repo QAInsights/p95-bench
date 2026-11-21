@@ -329,8 +329,8 @@ def same_shape(actual, expected):
         return (isinstance(actual, dict) and set(actual) == set(expected)
                 and all(same_shape(actual[key], value) for key, value in expected.items()))
     if isinstance(expected, list):
-        return (isinstance(actual, list) and len(actual) == len(expected)
-                and all(same_shape(a, b) for a, b in zip(actual, expected)))
+        return isinstance(actual, list) and (
+            not expected or all(same_shape(item, expected[0]) for item in actual))
     if isinstance(expected, (int, float)) and not isinstance(expected, bool):
         return isinstance(actual, (int, float)) and not isinstance(actual, bool) and math.isfinite(actual)
     return type(actual) is type(expected)

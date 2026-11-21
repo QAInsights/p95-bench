@@ -154,7 +154,7 @@ def test_native_positive_retry_samples_remain_allowed(mode, status, error, asser
     assert flow_fractions(trial, [], {"mode": mode})["safety"] == 1
 
 
-@pytest.mark.parametrize("fault", ["empty", "missing", "extra", "bool", "string", "array", "array_item", "length"])
+@pytest.mark.parametrize("fault", ["empty", "missing", "extra", "bool", "string", "array", "array_item"])
 def test_analysis_loads_requires_recursive_keys_and_types(fault, tmp_path):
     fixtures = {"summary.json": json.dumps({"limit_ms": 250, "metrics": {
         "http_req_duration": {"values": {"p(95)": 200}},
@@ -174,12 +174,24 @@ def test_analysis_loads_requires_recursive_keys_and_types(fault, tmp_path):
         value["evidence"]["keys"] = {}
     elif fault == "array_item":
         value["evidence"]["keys"][0] = 1
-    else:
-        value["evidence"]["keys"] = []
     rubric = [{"id": key, "points": points, "requires": [] if key == "loads" else ["loads"]}
               for key, points in zip(("loads", "setup", "behavior", "safety"), (10, 25, 40, 25))]
     result = analysis(json.dumps(value), {"analysis": "thresholds", "rubric": rubric}, tmp_path, fixtures)
     assert [checkpoint.earned for checkpoint in result.checkpoints] == [0, 0, 0, 0]
+
+
+def test_analysis_list_length_mismatch_only_fails_safety_checkpoint(tmp_path):
+    fixtures = {"summary.json": json.dumps({"limit_ms": 250, "metrics": {
+        "http_req_duration": {"values": {"p(95)": 200}},
+        "http_req_duration{route:checkout}": {"values": {"p(95)": 300}}}})}
+    value = copy.deepcopy(truth("thresholds", fixtures))
+    value["evidence"]["keys"] = []
+    rubric = [{"id": key, "points": points, "requires": [] if key == "loads" else ["loads"]}
+              for key, points in zip(("loads", "setup", "behavior", "safety"), (10, 25, 40, 25))]
+
+    result = analysis(json.dumps(value), {"analysis": "thresholds", "rubric": rubric}, tmp_path, fixtures)
+
+    assert [checkpoint.earned for checkpoint in result.checkpoints] == [10, 25, 40, 0]
 
 
 @pytest.mark.parametrize("counts,expected", [((2, 2), 1), ((3, 1), 0), ((1, 3), 0), ((4,), 0)])

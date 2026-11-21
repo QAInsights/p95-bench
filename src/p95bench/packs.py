@@ -20,19 +20,24 @@ def pack_config(pack_id):
     return config
 
 
+def task_digest(task):
+    task_content = {"tool": task.tool, "grader": task.grader, "prompt": task.prompt,
+                    "params": task.params, "fixtures": task.fixtures}
+    if task.scenario is not None:
+        task_content["scenario"] = task.scenario
+    return digest(task_content)
+
+
 def snapshot(pack_id, tasks, repeats=1, budgets=None):
     config = pack_config(pack_id)
     if not isinstance(repeats, int) or isinstance(repeats, bool) or repeats < 1:
         raise ValueError("repeats must be a positive integer")
     inventory = []
     for task in tasks:
-        task_content = {"tool": task.tool, "grader": task.grader, "prompt": task.prompt,
-                        "params": task.params, "fixtures": task.fixtures}
         inventory_item = {"id": task.id, "category": task.category}
         if task.scenario is not None:
-            task_content["scenario"] = task.scenario
             inventory_item["scenario"] = task.scenario
-        inventory_item["task_digest"] = digest(task_content)
+        inventory_item["task_digest"] = task_digest(task)
         inventory.append(inventory_item)
     inventory.sort(key=lambda item: item["id"])
     if ((not inventory and config["grade_schema_version"] == 2)

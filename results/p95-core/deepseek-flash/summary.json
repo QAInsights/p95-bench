@@ -1,15 +1,15 @@
 {
   "pack_id": "p95-core",
   "pack_digest": "5a5d08825662410062545ffd7e7d35b6bfe3dddcf956f2d0e08693fea9da5a8a",
-  "overall_score": 39.50299508955517,
-  "quality_score": 40.49971064816667,
-  "efficiency_score": 20.565399475936754,
+  "overall_score": 41.696745089555165,
+  "quality_score": 42.74971064816666,
+  "efficiency_score": 21.690399475936754,
   "category_scores": {
     "repair": 51.875,
     "migration": 41.09375,
     "correlation": 40.208333333333336,
     "workload": 15.324074074166667,
-    "analysis": 55.00000000000001
+    "analysis": 70.0
   },
   "attempts": 104,
   "expected_attempts": 104,
@@ -17,22 +17,22 @@
   "complete": true,
   "passed": 38,
   "after_repair": {
-    "overall_score": 48.41778670284955,
-    "quality_score": 49.7236689815,
-    "efficiency_score": 23.606023408490973,
+    "overall_score": 49.880286702849546,
+    "quality_score": 51.2236689815,
+    "efficiency_score": 24.356023408490973,
     "category_scores": {
       "repair": 66.875,
       "migration": 53.28125,
       "correlation": 49.791666666666664,
       "workload": 17.824074074166667,
-      "analysis": 60.0
+      "analysis": 70.0
     }
   },
-  "repairs_triggered": 36,
+  "repairs_triggered": 33,
   "repairs_succeeded": 7,
-  "estimated_cost_usd": 5.886688728,
-  "input_tokens": 722940,
-  "output_tokens": 4781284,
-  "latency_seconds": 23595.01982869809,
+  "estimated_cost_usd": 5.870177244,
+  "input_tokens": 720731,
+  "output_tokens": 4767669,
+  "latency_seconds": 23517.2625421501,
   "not_run": 0
 }

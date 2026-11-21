@@ -22,6 +22,27 @@ ROOT = Path(__file__).resolve().parents[1] / "packs/p95-v2.0.0/tasks"
 TASKS = load_tasks(ROOT, pack_config("p95-v2.0.0")["weights"])
 EXECUTABLE = [task for task in TASKS if task.grader == "v2_exec"]
 ANALYSIS = [task for task in TASKS if task.grader == "v2_analysis"]
+CORE_ANALYSIS_ROOT = Path(__file__).resolve().parents[1] / "packs/p95-core/tasks/analysis"
+CORE_A01 = next(
+    task for task in load_tasks(CORE_ANALYSIS_ROOT, pack_config("p95-core")["weights"])
+    if task.id == "mx-a01-jtl-endpoints-jmeter"
+)
+
+CORE_A01_ANSWER = {
+    "observations": {
+        "included": 4,
+        "errors": 1,
+        "p95_ms": {"browse": 30, "checkout": 900},
+    },
+    "diagnosis": {
+        "ranking": ["checkout", "browse"],
+        "bottleneck": "checkout",
+    },
+    "evidence": {
+        "rows": ["browse-1", "browse-2", "checkout-1", "checkout-2"],
+        "excluded": ["parent", "warmup"],
+    },
+}
 
 
 def test_complete_public_inventory_and_gates():
@@ -181,6 +202,51 @@ def test_analysis_goldens_and_independent_mutations(task, tmp_path):
         assert [item.earned for item in result.checkpoints] == vector
     for malformed in ("", "{", "null", "{}"):
         assert grade(task, malformed, tmp_path, 2).score == 0
+
+
+def test_core_a01_analysis_extra_evidence_rows_only_miss_safety(tmp_path):
+    result = grade(CORE_A01, json.dumps(CORE_A01_ANSWER), tmp_path, 2)
+
+    assert result.score == pytest.approx(0.8)
+    assert sum(checkpoint.earned for checkpoint in result.checkpoints) == 80
+    assert [checkpoint.earned for checkpoint in result.checkpoints] == [10, 30, 40, 0]
+    assert not result.detail.startswith("Invalid model answer")
+
+
+def test_core_a01_analysis_matching_evidence_rows_score_full_credit(tmp_path):
+    answer = copy.deepcopy(CORE_A01_ANSWER)
+    answer["evidence"]["rows"] = ["checkout-1", "checkout-2"]
+
+    result = grade(CORE_A01, json.dumps(answer), tmp_path, 2)
+
+    assert result.score == 1
+    assert sum(checkpoint.earned for checkpoint in result.checkpoints) == 100
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        (("evidence", "rows"), ["checkout-1", 2]),
+        (("observations", "included"), "4"),
+    ],
+)
+def test_core_a01_analysis_rejects_wrong_schema(path, value, tmp_path):
+    answer = copy.deepcopy(CORE_A01_ANSWER)
+    target = answer
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+
+    result = grade(CORE_A01, json.dumps(answer), tmp_path, 2)
+
+    assert result.score == 0
+    assert all(checkpoint.earned == 0 for checkpoint in result.checkpoints)
+    assert result.detail.startswith("Invalid model answer")
+
+
+@pytest.mark.parametrize(("actual", "expected"), [(["x"], []), ([], ["a"])])
+def test_analysis_schema_ignores_list_length(actual, expected):
+    assert analysis_v2.same_shape(actual, expected)
 
 
 @pytest.mark.parametrize("text", ["", "{", "[1,]", "NaN", '\ud800', None, [], "x" * 65537,
