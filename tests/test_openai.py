@@ -9,6 +9,7 @@ from p95bench.providers import (
     DeepSeekResponse,
     OpenAICompatible,
     Price,
+    ProviderUnavailable,
     Response,
     get_provider,
 )
@@ -45,7 +46,7 @@ def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
         'thinking': {'type': 'enabled'}, 'reasoning_effort': 'high', 'max_tokens': 65536}
     assert provider.config.reasoning_mode == 'thinking-high'
     assert provider.config.temperature is None
-    assert PROVIDERS['qwen'].reasoning_mode == 'disabled'
+    assert PROVIDERS['qwen'].reasoning_mode == 'thinking-high'
     assert all(config.reasoning_mode == 'provider-default'
                for name, config in PROVIDERS.items() if name not in {'deepseek', 'qwen'})
     captured = {}
@@ -75,6 +76,163 @@ def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
     assert not response.thinking_exhausted
     assert DeepSeekResponse('', 30, 50, reasoning_tokens=18,
                             finish_reason='length').thinking_exhausted
+
+
+def sse_response(*chunks):
+    lines = [f"data: {json.dumps(chunk)}\n\n" for chunk in chunks]
+    lines.append("data: [DONE]\n\n")
+    return io.BytesIO("".join(lines).encode())
+
+
+def test_qwen_stream_concatenates_content_reasoning_and_usage(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    chunks = [
+        {'choices': [{'delta': {'content': 'The '}}]},
+        {'choices': [{'delta': {'reasoning_content': 'first '}}]},
+        {'choices': [{'delta': {'content': 'answer', 'reasoning_content': 'second'},
+                      'finish_reason': 'stop'}]},
+        {'choices': [], 'usage': {
+            'prompt_tokens': 100, 'completion_tokens': 25,
+            'prompt_tokens_details': {'cached_tokens': 40},
+            'completion_tokens_details': {'reasoning_tokens': 15},
+        }},
+    ]
+    monkeypatch.setattr('urllib.request.urlopen', lambda *args, **kwargs: sse_response(*chunks))
+
+    response = get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert response.text == 'The answer'
+    assert response.reasoning_tokens == 15
+    assert response.input_tokens == 100
+    assert response.output_tokens == 25
+    assert response.cached_tokens == 40
+    assert response.finish_reason == 'stop'
+
+
+def test_qwen_stream_length_with_reasoning_only_is_thinking_exhausted(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    chunks = [
+        {'choices': [{'delta': {'reasoning_content': 'thinking'}, 'finish_reason': 'length'}]},
+        {'choices': [], 'usage': {
+            'prompt_tokens': 100, 'completion_tokens': 65536,
+            'completion_tokens_details': {'reasoning_tokens': 65536},
+        }},
+    ]
+    monkeypatch.setattr('urllib.request.urlopen', lambda *args, **kwargs: sse_response(*chunks))
+
+    response = get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert response.text == ''
+    assert response.reasoning_tokens == 65536
+    assert response.thinking_exhausted
+
+
+def test_qwen_stream_without_usage_retries_as_transport_error(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    provider = get_provider('qwen')
+    calls = []
+
+    def request(*args, **kwargs):
+        calls.append(None)
+        return sse_response({'choices': [{'delta': {'content': 'answer'}}]})
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+    expected_calls = 1 + provider.config.transport_retries
+
+    with pytest.raises(ProviderUnavailable,
+                       match=rf'No response after {expected_calls} requests \(StreamInterrupted\)'):
+        provider.send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert len(calls) == expected_calls
+
+
+def test_qwen_malformed_stream_event_retries_as_transport_error(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    provider = get_provider('qwen')
+    calls = []
+    truncated_stream = (
+        b'data: {"choices":[{"delta":{"content":"partial"}}]}\n\n'
+        b'data: {"usage": {"prompt_tok')
+
+    def request(*args, **kwargs):
+        calls.append(None)
+        return io.BytesIO(truncated_stream)
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+    expected_calls = 1 + provider.config.transport_retries
+
+    with pytest.raises(ProviderUnavailable,
+                       match=rf'No response after {expected_calls} requests \(StreamInterrupted\)'):
+        provider.send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert len(calls) == expected_calls
+
+
+def test_qwen_interrupted_stream_recovers_on_retry(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    calls = []
+    truncated_stream = (
+        b'data: {"choices":[{"delta":{"content":"partial"}}]}\n\n'
+        b'data: {"usage": {"prompt_tok')
+
+    def request(*args, **kwargs):
+        calls.append(None)
+        if len(calls) == 1:
+            return io.BytesIO(truncated_stream)
+        return sse_response(
+            {'choices': [{'delta': {'content': 'recovered'}, 'finish_reason': 'stop'}]},
+            {'choices': [], 'usage': {'prompt_tokens': 4, 'completion_tokens': 3}},
+        )
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+
+    response = get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert response.text == 'recovered'
+    assert response.input_tokens == 4
+    assert response.output_tokens == 3
+    assert response.finish_reason == 'stop'
+    assert len(calls) == 2
+
+
+def test_qwen_stream_error_is_unavailable(monkeypatch):
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    calls = []
+
+    def request(*args, **kwargs):
+        calls.append(None)
+        return sse_response({'error': {'message': 'stream rejected'}})
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+
+    with pytest.raises(ProviderUnavailable, match='Stream error: stream rejected'):
+        get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
+
+    assert len(calls) == 1
+
+
+def test_deepseek_non_stream_response_remains_plain_json(monkeypatch):
+    monkeypatch.setenv('DEEPSEEK_API_KEY', 'test-key')
+    payload = {
+        'choices': [{'message': {'content': 'answer'}, 'finish_reason': 'stop'}],
+        'usage': {'prompt_tokens': 30, 'completion_tokens': 50,
+                  'completion_tokens_details': {'reasoning_tokens': 18}},
+    }
+
+    def request(req, timeout):
+        assert 'stream' not in json.loads(req.data)
+        return io.BytesIO(json.dumps(payload).encode())
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+
+    response = get_provider('deepseek').send('deepseek-flash', [])
+
+    assert response.text == 'answer'
+    assert response.reasoning_tokens == 18
+    assert response.finish_reason == 'stop'
 
 
 @pytest.mark.parametrize('model,rates', [

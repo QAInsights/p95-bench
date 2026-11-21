@@ -155,9 +155,13 @@ result files. Execution subprocesses do not need provider credentials.
 
 Use `--provider qwen` with `MODELSCOPE_API_KEY`. The OpenAI-compatible endpoint
 is `https://api-inference.modelscope.ai/v1` (override with `QWEN_BASE_URL`).
-Models: `Qwen-Ambassador/Qwen3.8-Max`, `Qwen-Ambassador/Qwen3.8-Flash-Next`,
-and `Qwen-Ambassador/Qwen3.7-Max`. Hybrid thinking is disabled with
-`enable_thinking: false`; temperature is 0 and the output cap is 16384 tokens.
+Models: `Qwen-Ambassador/Qwen4-Max`, `Qwen-Ambassador/Qwen3.8-Max`,
+`Qwen-Ambassador/Qwen3.8-Flash-Next`, and `Qwen-Ambassador/Qwen3.7-Max`.
+Thinking is enabled (`enable_thinking: true`) at `reasoning_effort: high`
+(Qwen4-Max's default; no `thinking_budget`). Responses are streamed, since some
+ModelScope models accept thinking only on streamed calls.
+Temperature is left at the provider default, and the output cap is 65,536 tokens
+via `max_completion_tokens`, which covers reasoning and reply, matching DeepSeek.
 The [Qwen API reference](https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-dashscope)
 documents thinking control for the 3.8 and 3.7 series and a temperature range
 that includes 0. ModelScope compatibility is checked by the real runs.
@@ -165,13 +169,18 @@ that includes 0. ModelScope compatibility is checked by the real runs.
 ModelScope inference uses a free tier with daily limits. Reported costs are
 **Model Studio list-price estimates, not charges from ModelScope**. Singapore
 [list prices](https://www.alibabacloud.com/help/en/model-studio/model-pricing)
-per million input/output tokens are $2/$6 for 3.8-Max, $0.15/$0.47 for
-3.8-Flash (used as the estimate for Flash-Next), and $2.50/$7.50 for 3.7-Max.
-Cache hits use 10% of the input rate. Run metadata preserves the pricing source
-and free-tier note, which also appear in Model focus and the cost explainer.
+per million input/output tokens are $1.50/$4.50 for 4-Max (cache hits $0.075),
+$2/$6 for 3.8-Max, $0.15/$0.47 for 3.8-Flash (used as the estimate for
+Flash-Next), and $2.50/$7.50 for 3.7-Max.
+Cache hits use 10% of the input rate (5% for 4-Max). Run metadata preserves the
+pricing source and free-tier note, which also appear in Model focus and the cost
+explainer.
 
 Rate limits and transient transport/server errors retry five times, using
 exponential backoff or a numeric `Retry-After`, capped at 60 seconds per wait.
+A streamed response that ends mid-event or without usage counts as a transport
+error and is retried; its tokens are unknown, so it is left out of the
+published cost, while the spend ledger keeps its full reserved estimate.
 Exhausted requests are recorded in `not-run.jsonl`, not graded as failures.
 Authentication and other non-retryable errors abort the run. Published coverage
 counts only actual responses; an empty response is still a real, graded attempt.
