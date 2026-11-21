@@ -6,21 +6,14 @@ import "../styles/geist.css";
 import "../styles/board.css";
 import { parse } from "yaml";
 import data from "../data/leaderboard-p95-core.json";
-import { boardModels, boardTasks, categoryBlurbs, categoryLabels, hasRepairScores as modelsHaveRepairScores, taskCode, taskDetails, taskScore, toolLabel, TOOLS } from "../lib/board.mjs";
+import { boardTasks, categoryBlurbs, categoryLabels, taskCode, taskDetails, toolLabel, TOOLS } from "../lib/board.mjs";
 
 const sources = import.meta.glob("../../../packs/p95-core/tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
-const models = boardModels(data);
 const tasks = taskDetails(Object.values(sources).map(source => parse(source)), boardTasks(data));
-const hasRepairScores = modelsHaveRepairScores(models);
-const scoreModes = hasRepairScores ? ["first", "repair"] : ["first"];
-const modelsForScore = mode => models.map(m => mode === "repair" && m.afterRepair
-  ? { ...m, score: m.afterRepair.score } : m)
-  .sort((a, b) => b.score - a.score || a.cost - b.cost || a.name.localeCompare(b.name));
 const categories = Object.keys(data.weights);
 const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
 const tools = TOOLS.map(tool => ({ tool, count: tasks.length }));
 const repo = "https://github.com/QAInsights/p95-bench";
-const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : value === 100 ? "score-full" : "";
 ---
 
 <!doctype html>
@@ -28,7 +21,7 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={`The ${tasks.length} public P95 Bench tasks, with each model's score.`} />
+    <meta name="description" content={`The ${tasks.length} public P95 Bench scenarios, each written for JMeter, k6, Locust and Gatling.`} />
     <meta name="theme-color" content="#0c0b10" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -59,48 +52,19 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
         </div>
       </section>
 
-      <div class="filter" role="group" aria-label="Filter tasks by tool">
-        <span>Tool</span>
-        <button type="button" data-tool="all" aria-pressed="true">All <small>{tasks.length * tools.length}</small></button>
-        {tools.map(t => <button type="button" data-tool={t.tool} aria-pressed="false">{toolLabel(t.tool)} <small>{t.count}</small></button>)}
-        {hasRepairScores && <div class="score-toggle" role="group" aria-label="Select score view">
-          <span>Score</span>
-          <button type="button" data-score="first" aria-pressed="true">First try</button>
-          <button type="button" data-score="repair" aria-pressed="false">After 1 repair</button>
-        </div>}
-      </div>
-
       {groups.map(g => (
         <section id={g.category} class="task-group" aria-labelledby={`${g.category}-title`}>
-          <h2 id={`${g.category}-title`} class="label">{categoryLabels[g.category]} <span><span class="visible-count">{g.tasks.length}</span> tasks · {data.weights[g.category]}% of the score</span></h2>
+          <h2 id={`${g.category}-title`} class="label">{categoryLabels[g.category]} <span>{g.tasks.length} tasks · {data.weights[g.category]}% of the score</span></h2>
           <p class="blurb">{categoryBlurbs[g.category]}</p>
           <div class="table-wrap">
             <table class="tasks">
-              <thead><tr><th>Code</th><th>Task</th><th>Checks</th><th class="n">Avg</th><th class="n">Solved</th><th>All {models.length} models <span class="weight">best → worst on the board</span></th></tr></thead>
+              <thead><tr><th>Code</th><th>Task</th><th>Checks</th></tr></thead>
               <tbody>
                 {g.tasks.map(t => (
                   <tr>
                     <td class="code">{taskCode(t.id)}</td>
                     <td class="summary"><b>{t.label}</b><span>{t.summary}</span></td>
-                    
                     <td class="checks">{t.checks.length ? t.checks.join(" → ") : "JSON fields"}</td>
-                    {["all", ...tools.map(x => x.tool)].map(tool => scoreModes.map(scoreMode => {
-                      const orderedModels = modelsForScore(scoreMode);
-                      const vs = orderedModels.map(m => taskScore(m, t.id, tool, scoreMode));
-                      const ok = vs.filter(v => v !== null);
-                      const avg = ok.length ? Math.round(ok.reduce((a, b) => a + b, 0) / ok.length) : null;
-                      return <>
-                        <td class="n" data-view={tool} data-score-view={scoreMode}
-                          hidden={tool !== "all" || scoreMode !== "first"}>{avg ?? "—"}</td>
-                        <td class="n" data-view={tool} data-score-view={scoreMode}
-                          hidden={tool !== "all" || scoreMode !== "first"}>{ok.filter(v => v === 100).length}/{orderedModels.length}</td>
-                        <td data-view={tool} data-score-view={scoreMode}
-                          hidden={tool !== "all" || scoreMode !== "first"}>
-                          <span class="strip">{orderedModels.map((m, i) => <span class="sq"
-                            style={`--t:${vs[i] ?? 0}%`} title={`${m.name}: ${vs[i] ?? "—"}`}></span>)}</span>
-                        </td>
-                      </>;
-                    }))}
                   </tr>
                 ))}
               </tbody>
@@ -110,45 +74,8 @@ const scoreClass = value => value === null ? "" : value === 0 ? "score-0" : valu
       ))}
     </main>
 
-    <script>
-      const buttons = [...document.querySelectorAll(".filter [data-tool]")];
-      const scoreButtons = [...document.querySelectorAll(".filter [data-score]")];
-      let selectedScore = "first";
-      const apply = (tool, score = selectedScore) => {
-        if (!buttons.some(b => b.dataset.tool === tool)) tool = "all";
-        if (!scoreButtons.some(b => b.dataset.score === score)) score = "first";
-        selectedScore = score;
-        buttons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tool === tool)));
-        scoreButtons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.score === score)));
-        document.querySelectorAll(".task-group").forEach(group => {
-          const rows = [...group.querySelectorAll("tbody tr")];
-          group.querySelectorAll("[data-view]").forEach(el => {
-            el.hidden = el.dataset.view !== tool || el.dataset.scoreView !== score;
-          });
-          group.querySelectorAll("[data-badge]").forEach(el => { el.classList.toggle("off", tool !== "all" && el.dataset.badge !== tool); });
-          const shown = rows.filter(row => !row.hidden).length;
-          group.querySelector(".visible-count").textContent = String(shown);
-          group.hidden = shown === 0;
-        });
-      };
-      buttons.forEach(b => b.addEventListener("click", () => {
-        apply(b.dataset.tool);
-        const url = new URL(location.href);
-        b.dataset.tool === "all" ? url.searchParams.delete("tool") : url.searchParams.set("tool", b.dataset.tool);
-        history.replaceState(null, "", url);
-      }));
-      scoreButtons.forEach(b => b.addEventListener("click", () => {
-        apply(new URLSearchParams(location.search).get("tool") ?? "all", b.dataset.score);
-        const url = new URL(location.href);
-        b.dataset.score === "first" ? url.searchParams.delete("score") : url.searchParams.set("score", "repair");
-        history.replaceState(null, "", url);
-      }));
-      const params = new URLSearchParams(location.search);
-      apply(params.get("tool") ?? "all", params.get("score") === "repair" ? "repair" : "first");
-    </script>
-
     <footer class="bottom">
-      <span>Pack {data.pack_id} · scores out of 100</span>
+      <span>Pack {data.pack_id}</span>
       <a href="/">Back to the board</a>
     </footer>
   </body>

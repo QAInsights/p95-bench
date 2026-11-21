@@ -10,19 +10,16 @@ export const categoryLabels = {
 
 export function boardModels(data) {
   return data.models.filter(m => Number.isFinite(m.overall_score))
-    .map(m => ({
-      key: `${m.provider}/${m.model}`, name: name(m.model), provider: m.provider,
-      providerLabel: providerName(m.provider),
-      score: m.overall_score, quality: m.quality_score, efficiency: m.efficiency_score,
-      afterRepair: m.after_repair ? {
-        score: m.after_repair.overall_score, quality: m.after_repair.quality_score,
-        efficiency: m.after_repair.efficiency_score, categories: m.after_repair.category_scores,
-      } : null,
-      repairRounds: m.repair_rounds ?? null, reasoningMode: m.reasoning_mode ?? null,
-      derivedFrom: m.derived_from ?? null,
-      cost: m.cost, outputTokens: m.tokens?.output ?? null, latency: m.latency,
-      categories: m.category_scores, tasks: m.per_task_results,
-    }))
+    .map(m => {
+      const final = Number.isFinite(m.after_repair?.overall_score) ? m.after_repair : m;
+      return {
+        key: `${m.provider}/${m.model}`, name: name(m.model), provider: m.provider,
+        providerLabel: providerName(m.provider),
+        score: final.overall_score, categories: final.category_scores,
+        reasoningMode: m.reasoning_mode ?? null, derivedFrom: m.derived_from ?? null,
+        cost: m.cost, tasks: m.per_task_results,
+      };
+    })
     .sort((a, b) => b.score - a.score || a.cost - b.cost || a.name.localeCompare(b.name))
     .map((m, i) => ({ ...m, color: palette[i % palette.length] }));
 }
@@ -36,17 +33,14 @@ export function boardTasks(data) {
     .sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category) || a.id.localeCompare(b.id));
 }
 
-export const hasRepairScores = models => models.some(m =>
-  m.repairRounds > 0 && Number.isFinite(m.afterRepair?.score));
-
 export const taskLabel = id => id.replace(/^(?:v2|mx)-[a-z]\d+-/i, '').replaceAll('-', ' ');
 export const taskCode = id => id.match(/^(?:v2|mx)-([a-z]\d+)/i)?.[1].toUpperCase() ?? id;
 
 export const TOOLS = ['jmeter', 'k6', 'locust', 'gatling'];
 const scenarioId = t => t.scenario ?? t.task_id;
-export function taskScore(model, taskId, tool = null, scoreMode = 'first') {
+export function taskScore(model, taskId, tool = null) {
   const values = model.tasks.filter(t => scenarioId(t) === taskId && (!tool || tool === 'all' || t.tool === tool))
-    .map(attempt => attemptFraction(attempt, scoreMode)).filter(v => v !== null);
+    .map(attempt => attemptFraction(attempt, 'repair')).filter(v => v !== null);
   return values.length ? Math.round(100 * values.reduce((s, v) => s + v, 0) / values.length) : null;
 }
 
@@ -75,9 +69,6 @@ export function scatter(models, { width = 880, height = 280, left = 44, right = 
 export const tone = value => Number.isFinite(value) ? Math.round(Math.max(0, Math.min(100, value))) : null;
 
 export const formatCost = value => !Number.isFinite(value) ? '—' : `$${value.toFixed(2)}`;
-export const formatTokens = value => !Number.isFinite(value) ? '—'
-  : value >= 1000 ? `${Math.round(value / 1000)}k` : String(value);
-export const formatMinutes = seconds => !Number.isFinite(seconds) ? '—' : `${(seconds / 60).toFixed(1)} min`;
 
 export const categoryBlurbs = {
   repair: 'Fix a broken script so it runs the journey correctly.',
@@ -108,11 +99,11 @@ export function taskDetails(definitions, tasks) {
   });
 }
 
-export function toolScores(model, tasks, scoreMode = 'first') {
+export function toolScores(model, tasks) {
   const tools = [...new Set(tasks.map(t => t.tool))].sort();
   return Object.fromEntries(tools.map(tool => {
     const values = tasks.filter(t => t.tool === tool)
-      .map(t => taskScore(model, t.id, null, scoreMode)).filter(v => v !== null);
+      .map(t => taskScore(model, t.id, null)).filter(v => v !== null);
     return [tool, values.length ? values.reduce((s, v) => s + v, 0) / values.length : null];
   }));
 }
