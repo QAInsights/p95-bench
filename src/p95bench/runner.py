@@ -24,7 +24,13 @@ from p95bench.graders import (
 )
 from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import snapshot, summarize_v2, validate_snapshot
-from p95bench.providers import Gemini, ProviderUnavailable, SpendLimitExceeded, gemini_prices
+from p95bench.providers import (
+    DEFAULT_OUTPUT_TOKENS,
+    Gemini,
+    ProviderUnavailable,
+    SpendLimitExceeded,
+    gemini_prices,
+)
 from p95bench.tasks import CATEGORIES
 from p95bench.worker import WorkerUnavailable
 
@@ -222,11 +228,8 @@ def _repair_trigger(task, result, workdir):
     return None
 
 
-def _output_cap(config):
-    extra = config.extra if config else {}
-    return next((extra[key] for key in
-                 ("max_tokens", "max_completion_tokens", "maxOutputTokens")
-                 if extra.get(key) is not None), 16384)
+def _output_cap(config, model=None):
+    return config.output_cap(model) if config else DEFAULT_OUTPUT_TOKENS
 
 
 def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
@@ -272,7 +275,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                 "temperature": getattr(config, "temperature", None),
                 "reasoning_mode": getattr(config, "reasoning_mode", None),
                 "repair_rounds": repair_rounds,
-                **(config.extra if config else {})}
+                **(config.request_extra(model) if config else {})}
     task_scenarios = {task.id: task.scenario for task in tasks if task.scenario is not None}
     if task_scenarios:
         metadata["task_scenarios"] = dict(sorted(task_scenarios.items()))
@@ -280,7 +283,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
         metadata.update(pricing_date_utc=started.date().isoformat(),
                         price_per_million=asdict(price))
     if v2:
-        metadata["output_cap"] = _output_cap(config)
+        metadata["output_cap"] = _output_cap(config, model)
         metadata["spend_cap_usd"] = ledger.limit / 1_000_000
         metadata.update(harness_revision())
     (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
@@ -300,7 +303,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                     if budget_error is not None:
                         raise SpendLimitExceeded(budget_error)
                     if ledger:
-                        output_cap = _output_cap(config)
+                        output_cap = _output_cap(config, model)
                         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
                                    + output_cap * price.output) / 1_000_000
                         retries = getattr(config, "transport_retries", 0) if config else 0
@@ -352,7 +355,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                 repair = {"triggered": False}
                 if repair_rounds:
                     if (getattr(response, "finish_reason", None) in ("length", "MAX_TOKENS", "max_tokens")
-                            or response.output_tokens >= _output_cap(config)):
+                            or response.output_tokens >= _output_cap(config, model)):
                         repair["skipped"] = "truncated_at_cap"
                         trigger = None
                     else:
@@ -374,7 +377,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         try:
                             repair_maximum = None
                             if ledger:
-                                output_cap = _output_cap(config)
+                                output_cap = _output_cap(config, model)
                                 repair_maximum = ((len(json.dumps(repair_messages).encode()) + 4096)
                                                   * price.input + output_cap * price.output) / 1_000_000
                                 retries = getattr(config, "transport_retries", 0) if config else 0

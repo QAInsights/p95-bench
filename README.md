@@ -151,6 +151,50 @@ result files. Execution subprocesses do not need provider credentials.
 
 ## Providers and prices
 
+All providers use `DEFAULT_OUTPUT_TOKENS = 64_000` in `providers.py` for their
+native output-limit field. `ProviderConfig.output_cap(model)` and
+`request_extra(model)` share the effective cap with initial/repair reservations,
+truncation checks and run metadata. Only documented lower output maxima belong
+in `model_output_limits`; no such lower maximum was found for the registry below.
+Unknown maxima retain the requested shared default, not a claim of API support.
+
+Output-limit documentation audit (2026-11-22; all effective caps are **64,000**):
+
+| Provider/models | Documented maximum output | Source |
+| --- | --- | --- |
+| Anthropic Sonnet 5.5 / Opus 5.5 | 128K each | [Models](https://platform.claude.com/docs/en/about-claude/models/overview) |
+| OpenAI GPT-6.2 Sol / Astra | 128,000 each | [Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol), [Astra](https://developers.openai.com/api/docs/models/gpt-6.2-astra) |
+| Gemini 4 Carbon / Argon / Hydrogen | 65,536 synchronous each | [Carbon](https://ai.google.dev/gemini-api/docs/models/gemini-4-carbon), [Argon](https://ai.google.dev/gemini-api/docs/models/gemini-4-argon), [Hydrogen](https://ai.google.dev/gemini-api/docs/models/gemini-4-hydrogen) |
+| Gemini 3.8 Flash | 65,536 | [Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) |
+| DeepSeek Flash / V4 Pro | 384K each | [Models](https://api-docs.deepseek.com/quick_start/pricing) |
+| Qwen4-Max | 262,144 thinking + answer; 131,072 non-thinking | [Model](https://www.alibabacloud.com/help/en/model-studio/qwen4-max) |
+| Qwen3.8-Max / Qwen3.7-Max | 131,072 each | [3.8](https://www.alibabacloud.com/help/en/model-studio/qwen3-8-max), [3.7](https://www.alibabacloud.com/help/en/model-studio/qwen3-7-max) |
+| Qwen3.8-Flash-Next | Unknown; no hosted output maximum verified | [Vendor announcement](https://www.alibabacloud.com/blog/603501) |
+| Muse Spark 1.3 | 131,072 in official agent configuration | [Official configuration](https://dev.meta.ai/docs/quickstart) |
+| Muse Ember 1.0 | 524,288 | [Model](https://dev.meta.ai/docs/muse-ember) |
+| Muse Wonder 1.0 / Spark 1.2 | Unknown; model pages specify context, not maximum output | [Wonder](https://dev.meta.ai/docs/muse-wonder), [Spark](https://dev.meta.ai/docs/muse-spark) |
+| Inkling / Inkling-Small / Inkling-2-Small | Unknown; context is not a separate output maximum | [Models](https://tinker-docs.thinkingmachines.ai/tinker/models/models_and_pricing/), [Chat API](https://tinker-docs.thinkingmachines.ai/inference/openai/chat-completions/) |
+
+Qwen limits above are the vendor's model specifications; ModelScope's hosted
+alias limits have not been independently verified. Tinker lists 64K contexts for
+base Inkling/Inkling-Small (1M sampling for Inkling-2-Small); a 64,000 output
+request may not fit alongside a long prompt. No output limit was inferred from
+those context lengths. Verify these unknown/host-specific limits before paid runs.
+
+Requests allow 600 seconds of socket inactivity. Anthropic and Meta stream long
+generations (Qwen already streams), avoiding the non-streaming timeout path;
+this is not a 600-second total generation deadline. Anthropic's native SSE
+accumulator requires final usage and `message_stop`, excludes thinking text,
+and retries incomplete streams as uncertain, potentially billable attempts.
+See [Anthropic streaming](https://platform.claude.com/docs/en/api/streaming) and
+[Meta streaming](https://dev.meta.ai/docs/protocols/chat-completions).
+
+For a fixed prompt, the output portion of each worst-case reservation changes
+by `(effective_cap - old_cap) * output_price / 1_000_000`, multiplied by
+`1 + transport_retries` (currently 3) for the shared v2 ledger. Moving from
+16,384 to 64,000 multiplies that portion by 3.90625; moving from 65,536 to
+64,000 reduces it by 2.34375%. Initial and repair calls use the same formula.
+
 ### Qwen via ModelScope
 
 Use `--provider qwen` with `MODELSCOPE_API_KEY`. The OpenAI-compatible endpoint
@@ -160,7 +204,7 @@ Models: `Qwen-Ambassador/Qwen4-Max`, `Qwen-Ambassador/Qwen3.8-Max`,
 Thinking is enabled (`enable_thinking: true`) at `reasoning_effort: high`
 (Qwen4-Max's default; no `thinking_budget`). Responses are streamed, since some
 ModelScope models accept thinking only on streamed calls.
-Temperature is left at the provider default, and the output cap is 65,536 tokens
+Temperature is left at the provider default, and the output cap is 64,000 tokens
 via `max_completion_tokens`, which covers reasoning and reply, matching DeepSeek.
 The [Qwen API reference](https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-dashscope)
 documents thinking control for the 3.8 and 3.7 series and a temperature range
@@ -195,8 +239,12 @@ The runner supports dependency injection for testing and custom adapters.
 
 For Anthropic, set `ANTHROPIC_API_KEY` and use `--provider anthropic` with
 `--model claude-sonnet-5-5` or `--model claude-opus-5-5`. The adapter sends the
-fixed prompt through the top-level `system` field with the same 16384-token output
-cap. Temperature is omitted for Sonnet 5.5 and Opus 5.5 because their API rejects
+fixed prompt through the top-level `system` field with the shared 64,000-token output
+cap, `stream: true`, `thinking: {type: adaptive}` and
+`output_config: {effort: high}`. Metadata records `reasoning_mode: thinking-high`.
+See Anthropic's [thinking](https://platform.claude.com/docs/en/build-with-claude/thinking)
+and [effort](https://platform.claude.com/docs/en/build-with-claude/effort) documentation.
+Temperature is omitted for Sonnet 5.5 and Opus 5.5 because their API rejects
 the parameter as deprecated; published run metadata records this exception.
 It uses `x-api-key` authentication and API version
 `2023-06-01`, without an SDK. Discover IDs in Python with
@@ -211,7 +259,7 @@ Thinking Machines (Tinker) uses the existing OpenAI-compatible adapter. Set
 `TINKER_API_KEY` and use `--provider thinkingmachines`. The beta endpoint is
 `https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1`, with bearer
 authentication and `/chat/completions`. Temperature is 0 and the output cap is
-16384 tokens, including reasoning. If reasoning exhausts that cap, null answer
+64,000 tokens, including reasoning. If reasoning exhausts that cap, null answer
 content is graded as empty text; reasoning is not substituted for the answer.
 No explicit reasoning effort is set. Any future `reasoning_effort` override must
 be a top-level request field, not nested under `extra_body`, whose fields the
@@ -236,7 +284,7 @@ Set `OPENAI_API_KEY` and select `--provider openai` with `gpt-6.2-sol` or
 are $2/$10 for Sol and $8/$40 for Astra, from <https://openai.com/api/pricing/>.
 Cached input is conservatively priced at the ordinary input rate pending a
 verified cache discount. Both models reject `max_tokens` and temperature 0:
-requests use `max_completion_tokens: 16384` and omit temperature, leaving the
+requests use `max_completion_tokens: 64000` and omit temperature, leaving the
 API default. Published metadata records these exceptions. Reasoning tokens
 count toward the completion cap and reported output usage.
 
@@ -253,7 +301,7 @@ cached input $0.044, output $3.96. DeepSeek advertises half-price off-peak rates
 reported costs are conservative estimates, not invoices. Cache-hit input tokens
 are not charged twice. Each attempt records its price snapshot. Calls use
 temperature 0 where supported, a fixed system prompt and identical task/fixture messages across
-models. DeepSeek thinking uses high reasoning effort with a 65,536-token output cap.
+models. DeepSeek thinking uses high reasoning effort with a 64,000-token output cap.
 Temperature is omitted because it is ignored in thinking mode; the cap includes
 reasoning and visible output. Provider failures abort the run rather than count as
 incorrect answers; already-written attempt lines remain available to score.
@@ -431,7 +479,7 @@ p95bench run --provider gemini --model gemini-4-carbon --out results
 ```
 
 Temperature is omitted, retaining the API's default of 1. Default thinking is
-unchanged. `maxOutputTokens` is 16384, shared by thinking and answer tokens.
+unchanged. `maxOutputTokens` is 64000, shared by thinking and answer tokens.
 Published response output tokens include both `candidatesTokenCount` and
 `thoughtsTokenCount`; `thinking_tokens` and `finish_reason` are also recorded.
 Thinking text is never substituted for an answer. A thinking-only `MAX_TOKENS`
@@ -471,7 +519,7 @@ The `meta` provider uses OpenAI-compatible Chat Completions at
 Contributor variants and Spark 1.1 are not included.
 
 Temperature is omitted per Meta's recommendation (default 1). Reasoning effort
-is omitted: Wonder and Ember default to max, Spark to high. The 16384
+is omitted: Wonder and Ember default to max, Spark to high. The 64000
 `max_completion_tokens` cap includes reasoning and visible output. Returned
 `completion_tokens` already includes reasoning; the harness does not add
 `completion_tokens_details.reasoning_tokens` again. It records the latter
