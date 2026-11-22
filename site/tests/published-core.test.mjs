@@ -16,7 +16,7 @@ test('Core publishes only the complete public Sonnet run with current provenance
   assert.equal(data.pack_digest, 'f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de');
   assert.equal(data.budget_file_sha256, budgetHash);
   assert.match(data.publication_note, /45066297860/);
-  assert.match(data.publication_note, /first answer/);
+  assert.match(data.publication_note, /final answer after the one allowed repair/);
   assert.doesNotMatch(JSON.stringify(data), /deepseek|5a5d088256624100/);
   assert.deepEqual(await readdir(runs), ['claude-sonnet-5-5']);
   assert.deepEqual(data.models.map(model => model.model), ['claude-sonnet-5-5']);
@@ -39,9 +39,9 @@ test('Core publishes only the complete public Sonnet run with current provenance
   near(model.overall_score, 62.6305997442996);
   near(model.overall_score, .95 * model.quality_score + .05 * model.efficiency_score);
   const [displayed] = boardModels(data);
-  assert.equal(displayed.score.toFixed(1), '62.6');
-  assert.deepEqual(displayed.categories, model.category_scores);
-  assert.notEqual(displayed.score, model.after_repair.overall_score);
+  assert.equal(displayed.score.toFixed(1), '81.2');
+  assert.deepEqual(displayed.categories, model.after_repair.category_scores);
+  assert.equal(displayed.score, model.after_repair.overall_score);
 });
 
 test('published Core data reproduces from stored runs apart from documented annotations', async () => {

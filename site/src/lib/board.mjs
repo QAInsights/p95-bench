@@ -11,12 +11,11 @@ export const categoryLabels = {
 export function boardModels(data) {
   return data.models.filter(m => Number.isFinite(m.overall_score))
     .map(m => {
-      const scoreMode = data.pack_id === 'p95-core' ? 'first' : 'repair';
-      const final = scoreMode === 'repair' && Number.isFinite(m.after_repair?.overall_score) ? m.after_repair : m;
+      const final = Number.isFinite(m.after_repair?.overall_score) ? m.after_repair : m;
       return {
         key: `${m.provider}/${m.model}`, name: name(m.model), provider: m.provider,
         providerLabel: providerName(m.provider),
-        score: final.overall_score, categories: final.category_scores, scoreMode,
+        score: final.overall_score, categories: final.category_scores,
         reasoningMode: m.reasoning_mode ?? null, derivedFrom: m.derived_from ?? null,
         cost: m.cost, tasks: m.per_task_results,
       };
@@ -41,7 +40,7 @@ export const TOOLS = ['jmeter', 'k6', 'locust', 'gatling'];
 const scenarioId = t => t.scenario ?? t.task_id;
 export function taskScore(model, taskId, tool = null) {
   const values = model.tasks.filter(t => scenarioId(t) === taskId && (!tool || tool === 'all' || t.tool === tool))
-    .map(attempt => attemptFraction(attempt, model.scoreMode ?? 'repair')).filter(v => v !== null);
+    .map(attempt => attemptFraction(attempt, 'repair')).filter(v => v !== null);
   return values.length ? Math.round(100 * values.reduce((s, v) => s + v, 0) / values.length) : null;
 }
 

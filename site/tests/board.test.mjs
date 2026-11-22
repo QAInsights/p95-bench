@@ -74,22 +74,6 @@ test('models without a fix round keep their recorded score', () => {
   }
 });
 
-test('Core uses first-answer model and task scores even when a repair is recorded', () => {
-  const data = fakeV2();
-  data.pack_id = 'p95-core';
-  const source = data.models[0];
-  source.after_repair = { overall_score: 91, category_scores: { repair: 92 } };
-  source.per_task_results[0].after_repair_score = .9;
-  const model = boardModels(data).find(item => item.key === `${source.provider}/${source.model}`);
-
-  assert.equal(model.score, source.overall_score);
-  assert.deepEqual(model.categories, source.category_scores);
-  assert.equal(model.scoreMode, 'first');
-  assert.equal(taskScore(model, source.per_task_results[0].task_id), 60);
-  assert.equal(taskScore(model, 'unknown'), null);
-  assert.deepEqual(boardModels({ pack_id: 'p95-core', models: [] }), []);
-});
-
 test('scatter plots priced models with x increasing by cost and y tracking score', () => {
   const models = boardModels(fakeV2());
   const points = scatter(models).points;
