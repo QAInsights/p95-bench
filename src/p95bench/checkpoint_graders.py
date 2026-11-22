@@ -10,7 +10,7 @@ from pathlib import Path
 from statistics import mean
 from uuid import uuid4
 
-from p95bench.capacity import capacity_preflight, operations
+from p95bench.capacity import capacity_preflight, operations, startup_allowance
 from p95bench.execution import run_artifact
 from p95bench.grades import Checkpoint, CheckpointGrade
 
@@ -119,7 +119,7 @@ def workload_fractions(trial, contract):
     drain_ok = max(event["time"] for event in ends) <= anchor + warmup + duration + 5
     limits = (len(unexpected) <= len(all_operations) * .01 and not extra_routes
               and native_drops <= len(all_operations) * .01 and duration_ok and drain_ok
-              and (not trial.started or anchor - trial.started <= 10)
+              and (not trial.started or anchor - trial.started <= startup_allowance(contract.get("tool")))
               and max_vus <= contract.get("max_vus", 64 if contract.get("pools") else 32)
               and trial.status == "completed" and trial.returncode == 0
               and sum(point["value"] == 0 for point in native_checks) <= len(native_checks) * .01)
@@ -312,13 +312,14 @@ def executable(text, params, workdir, fixtures):
         contract["records"] = json.loads(inputs["accounts.json"])
     try:
         for index, case in enumerate(params["trials"]):
+            startup_headroom = startup_allowance(tool) - 10 if contract.get("workload") else 0
             common = {"fixtures": inputs, "profile": case.get("profile", {}), "seed": uuid4().hex,
-                      "timeout": contract.get("timeout", 60)}
+                      "timeout": contract.get("timeout", 60) + startup_headroom}
             trial = run_artifact(tool, text, Path(workdir) / f"case-{index}", **common)
             controls = [run_artifact(tool, text, Path(workdir) / f"case-{index}-control-{position}",
                 **dict(common, profile={**case.get("profile", {}), **control}))
                 for position, control in enumerate(params.get("controls", []))]
-            fractions = (workload_fractions(trial, contract) if contract.get("workload")
+            fractions = (workload_fractions(trial, {**contract, "tool": tool}) if contract.get("workload")
                          else flow_fractions(trial, controls, {
                              **contract, "poll_interval": case.get("profile", {}).get("poll_interval", 0),
                              "tool": tool}))

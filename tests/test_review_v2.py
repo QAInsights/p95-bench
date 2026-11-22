@@ -119,6 +119,22 @@ def test_workload_duration_accepts_float_rounding_at_boundary():
     assert workload_fractions(trial, {"rate": 1, "warmup": 5, "measured": 30})["safety"] == 1
 
 
+@pytest.mark.parametrize("tool,startup,expected", [
+    ("gatling", 15, 1), ("gatling", 60, 1), ("gatling", 60.1, 0),
+    ("jmeter", 10, 1), ("k6", 10, 1), ("locust", 10, 1),
+    ("jmeter", 10.1, 0), ("k6", 10.1, 0), ("locust", 10.1, 0),
+])
+def test_workload_startup_allowance_matches_capacity(tool, startup, expected):
+    trial = workload_trial()
+    trial.started = 100
+    for event in trial.events:
+        if "time" in event:
+            event["time"] += 100 + startup
+    fractions = workload_fractions(trial, {"tool": tool, "rate": 1})
+    assert fractions["setup"] == fractions["behavior"] == 1
+    assert fractions["safety"] == expected
+
+
 @pytest.mark.parametrize("fault", ["exit", "check", "assertion", "sample"])
 def test_positive_flow_requires_clean_native_outcome(fault):
     trial = flow_trial()

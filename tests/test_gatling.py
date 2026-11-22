@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from p95bench.capacity import capacity_preflight
 from p95bench.checkpoint_graders import flow_fractions
 from p95bench.execution import (
     Trial,
@@ -160,3 +161,35 @@ def test_gatling_compiles_within_trial_timeout(tmp_path):
         print(f"GATLING_COMPILE_SECONDS={compile_seconds:.3f}")
     assert execution["duration_seconds"] < 60
     print(f"GATLING_TRIAL_SECONDS={execution['duration_seconds']:.3f}")
+
+
+@pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1", reason="Opt-in native Docker tests")
+@pytest.mark.parametrize("startup_delay", [0, 12])
+def test_gatling_capacity_preflight_with_cold_start_headroom(tmp_path, monkeypatch, startup_delay):
+    monkeypatch.setattr("p95bench.capacity.QUALIFIED", {})
+
+    def delayed_reference(tool, config):
+        source = reference(tool, config)
+        if startup_delay:
+            source = source.replace("public class ModelSimulation extends Simulation {",
+                "public class ModelSimulation extends Simulation {\n"
+                f"static {{ try {{ Thread.sleep({startup_delay * 1000}); }} "
+                "catch (InterruptedException e) { throw new RuntimeException(e); } }")
+        return source
+
+    monkeypatch.setattr("p95bench.capacity.reference", delayed_reference)
+    result = capacity_preflight("gatling", {"rate": 5}, {"delay_seconds": .2}, tmp_path)
+    startup = result["startup_seconds"]["work"]
+    assert startup >= startup_delay
+    if startup_delay:
+        assert startup > 10
+    assert startup <= result["startup_allowance_seconds"] == 60
+    assert result["observed_rates"]["work"] >= 15
+    assert result["duration_seconds"] == 12
+    execution = json.loads((Path(result["evidence_directory"]) / "execution.json").read_text())
+    print(f"GATLING_PREFLIGHT startup_seconds={startup:.3f} "
+          f"injected_class_init_delay_seconds={startup_delay} "
+          f"observed_rate={result['observed_rates']['work']:.3f}/s "
+          f"duration_seconds={execution['duration_seconds']:.3f} PASS")
+    print(execution["output"])
+    assert execution["duration_seconds"] < result["timeout_seconds"]
