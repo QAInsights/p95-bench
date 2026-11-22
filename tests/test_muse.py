@@ -10,6 +10,7 @@ from p95bench.providers import (
     PROVIDERS,
     Muse,
     ProviderUnavailable,
+    Response,
     SpendLimitExceeded,
     get_provider,
 )
@@ -108,6 +109,69 @@ def test_transient_retry_and_exhaustion(monkeypatch, error, recover):
     assert len(calls) == expected_calls
     assert sleeps == ([1] if expected_calls == 2 else [1, 2])
     assert 0 < provider.spent_upper_bound < 5
+
+
+@pytest.mark.parametrize('error', [
+    {'type': 'server_error'}, {'type': 'overloaded_error'}, {'type': 'rate_limit_error'},
+    {'code': 'service_overloaded'}, {'code': 'server_shutting_down'},
+    {'code': 'backend_unavailable'}, {'code': 'gateway_timeout'}, {'code': 'rate_limit_exceeded'},
+])
+@pytest.mark.parametrize('recover', [True, False])
+def test_transient_stream_error_retries_with_uncertain_accounting(monkeypatch, error, recover):
+    monkeypatch.setenv('MODEL_API_KEY', 'test-key')
+    calls, sleeps = [], []
+    monkeypatch.setattr('p95bench.providers.time.sleep', sleeps.append)
+    partial = {'choices': [{'delta': {'content': 'discard this'}}]}
+
+    def request(req, timeout):
+        calls.append(req)
+        if recover and len(calls) > 1:
+            return stream_reply(reply())
+        events = [partial, {'error': {**error, 'message': 'temporarily unavailable'}}]
+        return io.BytesIO(''.join(f'data: {json.dumps(e)}\n\n' for e in events).encode())
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    provider = Muse(PROVIDERS['meta'], spend_limit=5)
+    provider.measure_transport = True
+    if recover:
+        response = provider.send('muse-wonder-1.0', [])
+        assert response.text == '10'
+        assert response.output_tokens == 22
+    else:
+        with pytest.raises(ProviderUnavailable, match='3 requests'):
+            provider.send('muse-wonder-1.0', [])
+    assert len(calls) == provider.transport_attempts == (2 if recover else 3)
+    assert provider.uncertain_attempts == (1 if recover else 3)
+    assert sleeps == ([1] if recover else [1, 2])
+    assert provider.backoff_seconds == sum(sleeps)
+    maximum = provider.config.prices['muse-wonder-1.0'].cost(
+        Response('', len(calls[0].data) + 1024, 64000))
+    expected = maximum * provider.uncertain_attempts
+    if recover:
+        expected += provider.config.prices['muse-wonder-1.0'].cost(response)
+    assert provider.spent_upper_bound == pytest.approx(expected)
+
+
+@pytest.mark.parametrize('error', [
+    {'type': 'authentication_error'}, {'type': 'invalid_request_error'},
+    {'type': 'billing_error'}, {'code': 'content_policy_violation'}, {},
+])
+def test_nontransient_stream_error_does_not_retry(monkeypatch, error):
+    monkeypatch.setenv('MODEL_API_KEY', 'test-key')
+    calls = []
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: pytest.fail('must not retry'))
+
+    def request(req, timeout):
+        calls.append(req)
+        return io.BytesIO(f'data: {json.dumps({"error": error})}\n\n'.encode())
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    provider = get_provider('meta')
+    provider.measure_transport = True
+    with pytest.raises(ProviderUnavailable, match='Stream error'):
+        provider.send('muse-wonder-1.0', [])
+    assert len(calls) == provider.transport_attempts == 1
+    assert provider.uncertain_attempts == 0
 
 
 def test_missing_key_auth_budget_and_ember_context_guards(monkeypatch):

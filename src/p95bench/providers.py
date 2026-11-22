@@ -251,6 +251,13 @@ class OpenAICompatible:
             if "error" in chunk:
                 error = chunk["error"]
                 message = error.get("message", error) if isinstance(error, dict) else error
+                if isinstance(error, dict) and (
+                    error.get("type") in {"server_error", "overloaded_error", "rate_limit_error"}
+                    or error.get("code") in {"service_overloaded", "server_shutting_down",
+                                             "backend_unavailable", "gateway_timeout",
+                                             "rate_limit_exceeded"}
+                ):
+                    raise StreamInterrupted(f"Transient stream error: {message}")
                 raise ProviderUnavailable(f"Stream error: {message}")
             if "usage" in chunk:
                 usage = chunk["usage"]
