@@ -61,3 +61,35 @@ def test_shared_fallback_and_provider_defaults():
     for config in PROVIDERS.values():
         assert config.output_cap() == 64000
         assert replace(config, extra={}).output_cap() == 64000
+
+
+@pytest.mark.parametrize('provider_name,model', [
+    (name, model) for name, config in PROVIDERS.items() for model in config.prices
+])
+@pytest.mark.parametrize('cap', [64000, 32000])
+def test_empty_extras_send_effective_cap_in_native_field(monkeypatch, provider_name, model, cap):
+    provider = get_provider(provider_name)
+    original = provider.config
+    provider.config = replace(original, extra={}, model_output_limits={model: cap})
+    monkeypatch.setenv(original.key_env, 'test-key')
+    native_field = next(key for key in OUTPUT_LIMIT_FIELDS if key in original.extra)
+
+    def request(req, timeout):
+        body = json.loads(req.data)
+        options = body.get('generationConfig', body)
+        assert options[native_field] == _output_cap(provider.config, model) == cap
+        assert [key for key in OUTPUT_LIMIT_FIELDS if key in options] == [native_field]
+        if provider_name == 'gemini':
+            data = {'usageMetadata': {'promptTokenCount': 2, 'candidatesTokenCount': 1},
+                    'candidates': [{'content': {'parts': [{'text': 'ok'}]}}]}
+        elif provider_name == 'anthropic':
+            data = {'content': [{'type': 'text', 'text': 'ok'}],
+                    'usage': {'input_tokens': 2, 'output_tokens': 1}}
+        else:
+            data = {'choices': [{'message': {'content': 'ok'}}],
+                    'usage': {'prompt_tokens': 2, 'completion_tokens': 1}}
+        return io.BytesIO(json.dumps(data).encode())
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    assert provider.send(model, []).text == 'ok'
+    assert provider.config.extra == {}

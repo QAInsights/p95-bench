@@ -136,6 +136,7 @@ def test_adapter(monkeypatch):
     def request(req, timeout):
         assert req.full_url == "https://example.invalid/chat/completions"
         assert json.loads(req.data)["temperature"] == 0
+        assert json.loads(req.data)["max_tokens"] == config.output_cap("model") == 64000
         assert timeout == 600
         return Reply()
 

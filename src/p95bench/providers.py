@@ -106,6 +106,7 @@ class ProviderConfig:
     transport_retries: int = 2
     reasoning_mode: str = "provider-default"
     model_output_limits: dict[str, int] = field(default_factory=dict)
+    output_limit_field: str = "max_tokens"
 
     def output_cap(self, model=None):
         cap = next((self.extra[key] for key in OUTPUT_LIMIT_FIELDS
@@ -113,8 +114,9 @@ class ProviderConfig:
         return min(cap, self.model_output_limits.get(model, cap))
 
     def request_extra(self, model):
-        return {**self.extra, **{key: self.output_cap(model) for key in OUTPUT_LIMIT_FIELDS
-                                if key in self.extra}}
+        fields = [key for key in OUTPUT_LIMIT_FIELDS if key in self.extra]
+        return {**self.extra, **{key: self.output_cap(model)
+                                for key in fields or [self.output_limit_field]}}
 
 
 PROVIDERS = {
@@ -127,6 +129,7 @@ PROVIDERS = {
         temperature=None,
         extra={"max_completion_tokens": DEFAULT_OUTPUT_TOKENS, "stream": True,
                "stream_options": {"include_usage": True}},
+        output_limit_field="max_completion_tokens",
         timeout_seconds=600,
         max_retries=5,
         cost_note="USD · list-price estimate (includes reasoning tokens).",
@@ -141,6 +144,7 @@ PROVIDERS = {
          "gemini-3.8-flash": Price(.75, .075, 3.75)},
         temperature=None,
         extra={"maxOutputTokens": DEFAULT_OUTPUT_TOKENS},
+        output_limit_field="maxOutputTokens",
         timeout_seconds=600,
         max_retries=5,
         cost_note="USD · list-price estimate (includes thinking tokens).",
@@ -157,6 +161,7 @@ PROVIDERS = {
         extra={"enable_thinking": True, "reasoning_effort": "high",
                "max_completion_tokens": DEFAULT_OUTPUT_TOKENS, "stream": True,
                "stream_options": {"include_usage": True}},
+        output_limit_field="max_completion_tokens",
         timeout_seconds=600,
         max_retries=5,
         cost_note="List-price estimate, run via ModelScope free tier.",
@@ -199,6 +204,7 @@ PROVIDERS = {
          "gpt-6.2-astra": Price(8, 8, 40)},
         temperature=None,
         extra={"max_completion_tokens": DEFAULT_OUTPUT_TOKENS},
+        output_limit_field="max_completion_tokens",
         max_retries=3,
         reasoning_mode="provider-default",
     ),
