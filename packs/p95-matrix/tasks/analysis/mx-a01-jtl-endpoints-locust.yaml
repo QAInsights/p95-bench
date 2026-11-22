@@ -37,8 +37,10 @@ prompt: 'Analyze a Locust per-request CSV exported by an events.request listener
   fault can lose multiple checkpoints.
 
 
-  Native fixture: a01-locust.requests.csv. request_type=Transaction identifies the
-  transaction rows fired through events.request.'
+  Native fixture: a01-locust.requests.csv. In evidence.rows, cite only the included
+  (non-warmup, non-parent) row IDs for the bottleneck route, sorted lexicographically;
+  in evidence.excluded, cite the excluded warmup and parent row IDs, sorted lexicographically.
+  request_type=Transaction identifies the transaction rows fired through events.request.'
 params:
   analysis: endpoints
   rubric:

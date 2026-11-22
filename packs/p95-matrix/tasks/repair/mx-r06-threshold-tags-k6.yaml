@@ -4,7 +4,9 @@ tool: k6
 grader: v2_exec
 prompt: 'Fix a checkout latency threshold accidentally attached to fast health requests.
 
+
   Repair the supplied artifact.
+
 
   Execution contract: {"users": 2, "iterations": 2, "mode": "threshold"}. Non-workload
   counts are iterations per user. One committed order per journey, no duplicate/extra
@@ -31,32 +33,7 @@ prompt: 'Fix a checkout latency threshold accidentally attached to fast health r
   fault can lose multiple checkpoints.
 
 
-  Repair the supplied artifact.
-
-
-  Execution contract: {"users": 2, "iterations": 2, "mode": "threshold"}. Non-workload
-  counts are iterations per user. One committed order per journey, no duplicate/extra
-  carts. Two fixture variants count equally; the same artifact is reused without feedback.
-  Fresh owner seeds are recorded after execution. Profiles: [{"checkout_delay_seconds":
-  0.01}, {"checkout_delay_seconds": 0.01, "html_layout": 1, "reverse_catalog": true,
-  "catalog_delay_seconds": 0.5}]. Negative-control overrides: [{"checkout_delay_seconds":
-  0.5}].
-
-  Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
-  all cases, never best case):
-
-  loads: 10 points — script loads Requires: none.
-
-  setup: 25 points — tags real checkout requests correctly Requires: loads.
-
-  behavior: 40 points — checkout-only metric/threshold responds to the injected slowdown
-  Requires: loads, setup.
-
-  safety: 25 points — healthy control passes and slow control fails with the expected
-  threshold evidence. Requires: loads, behavior.
-
-  Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
-  fault can lose multiple checkpoints.'
+  Tag/name POST /v2/orders requests as "checkout" with a 250ms latency threshold/assertion.'
 params:
   tool: k6
   contract:

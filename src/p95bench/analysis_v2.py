@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import math
+import re
 
 from p95bench.checkpoint_graders import award
 from p95bench.grades import CheckpointGrade
@@ -77,16 +78,16 @@ TOOL_ANSWER_STRINGS = {
                     "assert_checkout_group_p95"),
     },
     "errors": {
-        "jmeter": ("unexpected_work_failures", ["JTL.expiry-1", "JTL.work-500"],
+        "jmeter": ("unexpected_orders_failures", ["JTL.expiry-1", "JTL.orders-500"],
                    "exclude_expected_from_numerator_only"),
         "k6": ("business_failure", ["status:401", "status:500"],
                "exclude_expected_from_numerator_only"),
-        "locust": ("failed /v2/work requests",
-                   ["failures.csv./v2/work-401", "failures.csv./v2/work-500"],
-                   "fail_unexpected_work_only"),
-        "gatling": ("failedRequests{request:/v2/work}",
-                    ["REQUEST./v2/work.401", "REQUEST./v2/work.500"],
-                    "check_only_unexpected_work_failures"),
+        "locust": ("failed /v2/orders requests",
+                   ["failures.csv./v2/orders-401", "failures.csv./v2/orders-500"],
+                   "fail_unexpected_orders_only"),
+        "gatling": ("failedRequests{request:/v2/orders}",
+                    ["REQUEST./v2/orders.401", "REQUEST./v2/orders.500"],
+                    "check_only_unexpected_orders_failures"),
     },
 }
 
@@ -336,12 +337,50 @@ def same_shape(actual, expected):
     return type(actual) is type(expected)
 
 
+def _schema_error(actual, expected, path="$"):
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict):
+            return f"Expected object at {path}"
+        missing = sorted(set(expected) - set(actual))
+        extra = sorted(set(actual) - set(expected))
+        if missing or extra:
+            parts = []
+            if missing:
+                parts.append(f"missing keys {missing}")
+            if extra:
+                parts.append(f"unexpected keys {extra}")
+            return f"Schema mismatch at {path}: {', '.join(parts)}"
+        for key, value in expected.items():
+            error = _schema_error(actual[key], value, f"{path}.{key}")
+            if error:
+                return error
+        return None
+    if isinstance(expected, list):
+        if not isinstance(actual, list):
+            return f"Expected array at {path}"
+        if expected:
+            for index, item in enumerate(actual):
+                error = _schema_error(item, expected[0], f"{path}[{index}]")
+                if error:
+                    return error
+        return None
+    if isinstance(expected, (int, float)) and not isinstance(expected, bool):
+        if isinstance(actual, (int, float)) and not isinstance(actual, bool) and math.isfinite(actual):
+            return None
+        return f"Expected finite number at {path}"
+    if type(actual) is not type(expected):
+        return f"Expected {type(expected).__name__} at {path}"
+    return None
+
+
 def analysis(text, params, workdir, fixtures):
     fractions = {}
     try:
         if not isinstance(text, str) or len(text.encode()) > 65536:
             raise ValueError("Expected an answer of at most 64 KiB")
-        value = json.loads(text, parse_constant=invalid_constant)
+        fenced = re.fullmatch(r"\s*```(?:json)?\s*\n([\s\S]*?)\n```\s*", text, re.IGNORECASE)
+        raw = fenced[1] if fenced else text
+        value = json.loads(raw, parse_constant=invalid_constant)
     except (ValueError, TypeError, RecursionError, OverflowError) as error:
         return CheckpointGrade(award(params["rubric"], {}),
                                f"Invalid model answer ({type(error).__name__}): {error}")
@@ -349,7 +388,8 @@ def analysis(text, params, workdir, fixtures):
     try:
         schema = same_shape(value, expected)
         if not schema:
-            raise ValueError("Expected the answer schema with finite numeric values")
+            detail = _schema_error(value, expected) or "Expected the answer schema with finite numeric values"
+            raise ValueError(detail)
         fractions = {"loads": float(schema), "setup": float(schema and equal(value["observations"], expected["observations"])),
                      "behavior": float(schema and equal(value["diagnosis"], expected["diagnosis"])),
                      "safety": float(schema and equal(value["evidence"], expected["evidence"]))}

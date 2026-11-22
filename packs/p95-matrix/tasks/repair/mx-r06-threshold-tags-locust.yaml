@@ -31,7 +31,12 @@ prompt: 'Fix a checkout latency threshold whose request name is accidentally att
   threshold evidence. Requires: loads, behavior.
 
   Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
-  fault can lose multiple checkpoints.'
+  fault can lose multiple checkpoints.
+
+
+  Tag/name POST /v2/orders requests as "checkout" with a 250ms latency threshold/assertion.
+  When the checkout latency threshold is breached, call response.failure(...) and
+  set self.environment.process_exit_code = 99.'
 params:
   tool: locust
   contract:

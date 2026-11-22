@@ -35,7 +35,9 @@ prompt: 'Analyze a labeled JTL slice; identify the slow endpoint after removing 
   fault can lose multiple checkpoints.
 
 
-  Native fixture: a01-jmeter.jtl.csv.'
+  Native fixture: a01-jmeter.jtl.csv. In evidence.rows, cite only the included (non-warmup,
+  non-parent) row IDs for the bottleneck route, sorted lexicographically; in evidence.excluded,
+  cite the excluded warmup and parent row IDs, sorted lexicographically.'
 params:
   analysis: endpoints
   rubric:

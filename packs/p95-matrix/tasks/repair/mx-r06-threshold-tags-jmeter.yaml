@@ -31,7 +31,10 @@ prompt: 'Fix a checkout latency assertion and label accidentally attached to fas
   threshold evidence. Requires: loads, behavior.
 
   Malformed/non-executable artifacts earn zero execution-gated credit. A prerequisite
-  fault can lose multiple checkpoints.'
+  fault can lose multiple checkpoints.
+
+
+  Tag/name POST /v2/orders requests as "checkout" with a 250ms latency threshold/assertion.'
 params:
   tool: jmeter
   contract:

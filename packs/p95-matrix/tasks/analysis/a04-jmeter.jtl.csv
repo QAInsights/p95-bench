@@ -1,4 +1,4 @@
 sample_id,label,responseCode,success,errorClass,count,route
-work-ok,/v2/work,200,true,success,90,/v2/orders
-expiry-1,/v2/work,401,false,expected_expiry,8,/v2/orders
-work-500,/v2/work,500,false,unexpected,2,/v2/orders
+orders-ok,/v2/orders,200,true,success,90,/v2/orders
+expiry-1,/v2/orders,401,false,expected_expiry,8,/v2/orders
+orders-500,/v2/orders,500,false,unexpected,2,/v2/orders

@@ -303,16 +303,19 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         output_cap = _output_cap(config)
                         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
                                    + output_cap * price.output) / 1_000_000
-                        retries = (getattr(config, "max_retries", 0)
-                                   + getattr(config, "transport_retries", 0)) if config else 0
+                        retries = getattr(config, "transport_retries", 0) if config else 0
                         reservation = ledger.reserve(maximum * (1 + retries))
                         provider.transport_attempts = 0
+                        provider.uncertain_attempts = None
                         provider.response_latency_seconds = None
                     response = provider.send(model, messages)
                     if ledger:
+                        uncertain = getattr(provider, "uncertain_attempts", None)
                         requests = getattr(provider, "transport_attempts", 0) or (
-                            1 + (config.max_retries if config else 0))
-                        ledger.settle(reservation, price.cost(response) + maximum * (requests - 1))
+                            1 + (uncertain if uncertain is not None else 0))
+                        billable_retries = (max(0, requests - 1) if uncertain is None
+                                            else uncertain)
+                        ledger.settle(reservation, price.cost(response) + maximum * billable_retries)
                 except (ProviderUnavailable, SpendLimitExceeded) as error:
                     if isinstance(error, SpendLimitExceeded):
                         budget_error = str(error)
@@ -348,7 +351,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         backoff_seconds=getattr(provider, "backoff_seconds", 0))
                 repair = {"triggered": False}
                 if repair_rounds:
-                    if (getattr(response, "finish_reason", None) == "length"
+                    if (getattr(response, "finish_reason", None) in ("length", "MAX_TOKENS", "max_tokens")
                             or response.output_tokens >= _output_cap(config)):
                         repair["skipped"] = "truncated_at_cap"
                         trigger = None
@@ -374,18 +377,21 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                                 output_cap = _output_cap(config)
                                 repair_maximum = ((len(json.dumps(repair_messages).encode()) + 4096)
                                                   * price.input + output_cap * price.output) / 1_000_000
-                                retries = (getattr(config, "max_retries", 0)
-                                           + getattr(config, "transport_retries", 0)) if config else 0
+                                retries = getattr(config, "transport_retries", 0) if config else 0
                                 repair_reservation = ledger.reserve(repair_maximum * (1 + retries))
                                 provider.transport_attempts = 0
+                                provider.uncertain_attempts = None
                                 provider.response_latency_seconds = None
                             repair_response = provider.send(model, repair_messages)
                             repair_cost = price.cost(repair_response)
                             if ledger:
+                                repair_uncertain = getattr(provider, "uncertain_attempts", None)
                                 repair_requests = getattr(provider, "transport_attempts", 0) or (
-                                    1 + (config.max_retries if config else 0))
+                                    1 + (repair_uncertain if repair_uncertain is not None else 0))
+                                repair_billable = (max(0, repair_requests - 1)
+                                                   if repair_uncertain is None else repair_uncertain)
                                 ledger.settle(repair_reservation,
-                                              repair_cost + repair_maximum * (repair_requests - 1))
+                                              repair_cost + repair_maximum * repair_billable)
                             repair_workdir = directory / f"task-{index}-{repeat}-repair"
                             repair_grade, repair_grading_error = _grade_response(
                                 task, repair_response.text, repair_workdir, v2)

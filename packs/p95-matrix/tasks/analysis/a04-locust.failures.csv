@@ -1,3 +1,3 @@
 Request Type,Name,Error,Occurrences,Classification,Route
-POST,/v2/work,401 session expired,8,expected_expiry,/v2/orders
-POST,/v2/work,500 unexpected response,2,unexpected,/v2/orders
+POST,/v2/orders,401 session expired,8,expected_expiry,/v2/orders
+POST,/v2/orders,500 unexpected response,2,unexpected,/v2/orders

@@ -381,6 +381,13 @@ def _r07(tool, source):
 
 
 def _r08(tool, source):
+    if tool == "k6":
+        source = _replace_once(source, '"duration": "35s"', '"duration": "10s"',
+                               "R08 k6 duration")
+        source = _replace_once(source, '"preAllocatedVUs": 32, "maxVUs": 32',
+                               '"preAllocatedVUs": 1, "maxVUs": 1',
+                               "R08 k6 VU pool")
+        return source
     if tool == "jmeter":
         root = _jmeter_tree(source)
         for group in root.iter("ThreadGroup"):
@@ -598,7 +605,7 @@ def build_repair_overlays(source_pack, target_pack):
             overlay = target_pack / "overlays" / tool
             overlay.mkdir(parents=True, exist_ok=True)
             destination = overlay / f"broken-{code}.{EXTENSIONS[tool]}"
-            if tool == original_tool:
+            if tool == original_tool and (code, tool) != ("r08", "k6"):
                 shutil.copyfile(source_dir / original_fixture, destination)
                 continue
             text = reference(tool, task["params"]["contract"])

@@ -31,10 +31,7 @@ def artifact_source(tool, text):
         raise ValueError("Expected a nonempty artifact of at most 1 MiB")
     if tool == "k6":
         fenced = re.fullmatch(r"\s*```(?:javascript|js)?\s*\n([\s\S]*?)\n```\s*", text)
-        source = fenced[1] if fenced else text
-        if "scenarios" in source:
-            source = re.sub(r"(?m)^\s*options\.iterations\s*=\s*\d+\s*;\s*$", "", source)
-        return source
+        return fenced[1] if fenced else text
     if tool == "locust":
         fenced = re.fullmatch(r"\s*```(?:python|py)?\s*\n([\s\S]*?)\n```\s*", text, re.IGNORECASE)
         return fenced[1] if fenced else text

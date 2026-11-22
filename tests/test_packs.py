@@ -398,7 +398,7 @@ def test_65536_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch):
         budget_ledger=ledger)
     attempt = json.loads((directory / "attempts.jsonl").read_text())
     repair_messages = attempt["messages"] + attempt["repair"]["messages_appended"]
-    retries = provider.config.max_retries + provider.config.transport_retries
+    retries = provider.config.transport_retries
 
     def expected_reservation(messages):
         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input

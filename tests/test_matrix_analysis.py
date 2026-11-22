@@ -2,6 +2,7 @@ import copy
 import csv
 import json
 import os
+import re
 from io import StringIO
 from pathlib import Path
 
@@ -121,6 +122,42 @@ def test_matrix_a06_spans_sidecar_is_identical_across_tools():
              if task.params["analysis"] == "decomposition"]
     assert len({task.fixtures["spans.json"] for task in tasks}) == 1
     assert all("spans.json" in task.user_prompt() for task in tasks)
+
+
+@pytest.mark.parametrize("task", MATRIX_ANALYSIS, ids=lambda task: task.id)
+def test_matrix_analysis_prompt_schema_matches_expected_answer_keys(task, tmp_path):
+    expected = analysis_reference(task.params, task.fixtures)
+    match = re.search(
+        r"Return only JSON with exactly this structure \(leaves are types, not answers\):\s*\n+(\{.*?\})\n",
+        task.prompt, re.DOTALL,
+    )
+    assert match is not None, task.id
+    declared = json.loads(match.group(1))
+
+    def key_paths(obj, prefix=""):
+        out = set()
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                path = f"{prefix}.{key}" if prefix else key
+                out.add(path)
+                out |= key_paths(value, path)
+        return out
+
+    assert key_paths(declared) == key_paths(expected), task.id
+    if task.params["analysis"] == "errors":
+        assert "/v2/work" not in task.user_prompt()
+    if task.params["analysis"] == "endpoints":
+        assert "bottleneck route" in task.prompt
+
+    fenced = "```json\n" + json.dumps(expected) + "\n```"
+    assert grade(task, fenced, tmp_path / "fenced", 2).score == 1
+
+    missing_key = copy.deepcopy(expected)
+    removed = next(iter(missing_key["diagnosis"]))
+    del missing_key["diagnosis"][removed]
+    failed = grade(task, json.dumps(missing_key), tmp_path / "missing", 2)
+    assert failed.score == 0
+    assert removed in failed.detail
 
 
 @pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1",

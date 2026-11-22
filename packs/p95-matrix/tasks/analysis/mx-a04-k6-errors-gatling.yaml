@@ -10,7 +10,8 @@ prompt: 'Diagnose a misleading error rate in Gatling results where expected expi
 
   {"observations": {"denominator": "number", "expected": "number", "unexpected": "number",
   "corrected_rate": "number"}, "diagnosis": {"route": "string", "classification":
-  "string"}, "evidence": {"keys": ["string", "string"], "fix": "string"}}
+  "string", "failed_metric": "string"}, "evidence": {"keys": ["string", "string"],
+  "fix": "string"}}
 
   Nearest-rank p95=ceil(.95*n), includes failed responses; exclude warmup=true or
   parent=true. Timestamp ms. Numeric absolute tolerance1e-6. Sort row IDs; rank descending
@@ -18,7 +19,7 @@ prompt: 'Diagnose a misleading error rate in Gatling results where expected expi
 
   Sort all evidence ID/key arrays lexicographically. Enum choices: {"classification":
   ["expected_recovery_is_not_failure", "all_4xx_are_unexpected", "all_non_200_are_expected"],
-  "fix": ["check_only_unexpected_work_failures", "exclude_expected_from_denominator",
+  "fix": ["check_only_unexpected_orders_failures", "exclude_expected_from_denominator",
   "count_all_4xx_as_failures"]}. Other string values must exactly match fixture identifiers.
 
   Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
@@ -42,8 +43,8 @@ prompt: 'Diagnose a misleading error rate in Gatling results where expected expi
   Native fixture: a04-gatling.simulation.log.
 
 
-  Native answer strings: failed_metric="failedRequests{request:/v2/work}"; evidence.keys=["REQUEST./v2/work.401",
-  "REQUEST./v2/work.500"]; fix="check_only_unexpected_work_failures".'
+  Native answer strings: failed_metric="failedRequests{request:/v2/orders}"; evidence.keys=["REQUEST./v2/orders.401",
+  "REQUEST./v2/orders.500"]; fix="check_only_unexpected_orders_failures".'
 params:
   analysis: errors
   rubric:

@@ -11,6 +11,7 @@ test('model display names and artifact slugs preserve exact API IDs separately',
     ['gpt-6.2-astra', 'GPT-6.2 Astra', 'gpt-6-2-astra'],
     ['deepseek-flash', 'DeepSeek Flash', 'deepseek-flash'],
     ['claude-opus-5-5', 'Claude Opus 5.5', 'claude-opus-5-5'],
+    ['Qwen-Ambassador/Qwen4-Max', 'Qwen4 Max', 'qwen-ambassador-qwen4-max'],
   ]) {
     assert.equal(name(model), display);
     assert.equal(modelSlug(model), slug);

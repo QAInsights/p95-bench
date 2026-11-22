@@ -5,7 +5,7 @@ import {Rate} from 'k6/metrics';
 const cfg = {"users": 2, "iterations": 2, "mode": "flow", "workload": true, "rate": 5};
 const rows = [{"username": "bench-1", "password": "bench", "quantity": 2}, {"username": "bench-2", "password": "bench", "quantity": 3}, {"username": "bench-3", "password": "bench", "quantity": 4}, {"username": "bench-4", "password": "bench", "quantity": 5}, {"username": "bench-5", "password": "bench", "quantity": 6}, {"username": "bench-6", "password": "bench", "quantity": 7}, {"username": "bench-7", "password": "bench", "quantity": 8}, {"username": "bench-8", "password": "bench", "quantity": 9}, {"username": "bench-9", "password": "bench", "quantity": 10}, {"username": "bench-10", "password": "bench", "quantity": 11}, {"username": "bench-11", "password": "bench", "quantity": 12}, {"username": "bench-12", "password": "bench", "quantity": 13}, {"username": "bench-13", "password": "bench", "quantity": 14}, {"username": "bench-14", "password": "bench", "quantity": 15}, {"username": "bench-15", "password": "bench", "quantity": 16}, {"username": "bench-16", "password": "bench", "quantity": 17}];
 const failure = new Rate('business_failure');
-export const options = {"scenarios": {"phase0": {"executor": "constant-arrival-rate", "rate": 5, "timeUnit": "1s", "duration": "35s", "startTime": "0s", "preAllocatedVUs": 1, "maxVUs": 1, "gracefulStop": "5s"}}, "thresholds": {"checks": ["rate>=0.99"]}, "noCookiesReset": true};
+export const options = {"scenarios": {"phase0": {"executor": "constant-arrival-rate", "rate": 5, "timeUnit": "1s", "duration": "10s", "startTime": "0s", "preAllocatedVUs": 1, "maxVUs": 1, "gracefulStop": "5s"}}, "thresholds": {"checks": ["rate>=0.99"]}, "noCookiesReset": true};
 let csrf = '', cart = '', grant = '';
 const base = __ENV.BASE_URL;
 function body(r) { try { return r.json(); } catch (_) { return {}; } }
@@ -45,7 +45,9 @@ function work(override){
   check(r,{'operation or expected throttle':r=>(r.status===200 && body(r).ok===true) || (cfg.completion && r.status===429)});
 }
 function flow(){
-  csrf='';cart='';grant='';login();
+  csrf='';cart='';grant='';
+  if(cfg.mode==='ownership' && __VU===2) sleep(.5);
+  login();
   if(cfg.mode==='challenge'){
     let r=request('/v2/challenge-form');const form=r.html().find('form');
     const token=form.find('input[name="challenge"]').first().attr('value');
@@ -63,6 +65,7 @@ function flow(){
   let r=request('/v2/carts','POST',{product_id:product.id,variant_id:variant.id,grant_id:grant});
   cart=body(r).id;let etag=r.headers.Etag;
   check(r,{'cart':r=>r.status===201});
+  if(cfg.mode==='ownership') sleep(__VU===1 ? 1.2 : 1.6);
   if(cfg.mode==='etag'||cfg.mode==='data'){
     const quantity=cfg.mode==='data'?rows[(__VU-1)%rows.length].quantity:(cfg.quantity || 2);
     r=request('/v2/carts/'+cart,'PATCH',{quantity:quantity},{'If-Match':etag});
@@ -92,5 +95,3 @@ export default function(){
 }
 export function browse(){work('/v2/browse');}
 export function checkout(){flow();}
-
-options.iterations=1;

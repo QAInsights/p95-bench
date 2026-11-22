@@ -10,11 +10,12 @@ prompt: 'Fix failure marking that counts expected expiry and scheduled 429 as er
 
 
   Execution contract: {"users": 2, "iterations": 2, "mode": "errors"}. Non-workload
-  counts are iterations per user. One committed order per journey, no duplicate/extra
-  carts. Two fixture variants count equally; the same artifact is reused without feedback.
-  Fresh owner seeds are recorded after execution. Profiles: [{"expire_after": 2},
-  {"expire_after": 2, "html_layout": 1, "reverse_catalog": true}]. Negative-control
-  overrides: [{"unexpected_every": 3}].
+  counts are iterations per user. Four POST /v2/work operations per user iteration
+  (with session expiry recovery on 401 error=expired); no checkout/cart flow. Two
+  fixture variants count equally; the same artifact is reused without feedback. Fresh
+  owner seeds are recorded after execution. Profiles: [{"expire_after": 2}, {"expire_after":
+  2, "html_layout": 1, "reverse_catalog": true}]. Negative-control overrides: [{"unexpected_every":
+  3}].
 
   Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
   all cases, never best case):

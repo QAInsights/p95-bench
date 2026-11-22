@@ -15,7 +15,7 @@
     {
       "class": "success",
       "count": 90,
-      "id": "work-ok",
+      "id": "orders-ok",
       "route": "/v2/orders",
       "status": 200
     },
@@ -29,7 +29,7 @@
     {
       "class": "unexpected",
       "count": 2,
-      "id": "work-500",
+      "id": "orders-500",
       "route": "/v2/orders",
       "status": 500
     }

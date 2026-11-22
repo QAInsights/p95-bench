@@ -14,6 +14,7 @@ from p95bench.tasks import load_tasks
 from scripts.build_matrix_pack import (
     MIGRATION_PROMPTS,
     REPAIR_PROMPTS,
+    _clean_workload_prompt,
     _text_for_tool,
     build_matrix_pack,
 )
@@ -165,7 +166,10 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
                     rubric["description"], task.tool, task.scenario)}
                 for rubric in source.params["rubric"]
             ]
-            expected_prompt = _text_for_tool(source.prompt, task.tool, task.scenario)
+            expected_prompt = _clean_workload_prompt(
+                _text_for_tool(source.prompt, task.tool, task.scenario),
+                task.params["contract"],
+            )
             assert task.prompt == expected_prompt
             for name, content in source.fixtures.items():
                 if name != "protocol.md":
@@ -182,9 +186,12 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
         assert task.tool in TOOLS and task.params["tool"] == task.tool
         expected_prompt = REPAIR_PROMPTS.get(
             (code, task.tool),
-            _text_for_tool(source.prompt, task.tool, task.scenario).split("\n\n", 1)[0])
+            _text_for_tool(source.prompt, task.tool, task.scenario).splitlines()[0])
         assert task.prompt.split("\n\n", 1)[0] == expected_prompt
         assert task.prompt.split("\n\n", 1)[1].splitlines()[0] == "Repair the supplied artifact."
+        assert task.prompt.count("Repair the supplied artifact.") == 1
+        assert task.prompt.count("Execution contract:") == 1
+        assert task.prompt.count("Rubric/gates") == 1
         assert set(task.fixtures) >= {artifact_name, f"protocol-{task.tool}.md"}
         assert task.fixtures[artifact_name]
         protocol = task.fixtures[f"protocol-{task.tool}.md"]
@@ -204,7 +211,7 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
             assert set(task.fixtures) >= {
                 "r10-accounts.json", "r10-account-1.csv", "r10-account-2.csv",
             }
-        if task.tool == REPAIR_ORIGINAL_TOOLS[code]:
+        if task.tool == REPAIR_ORIGINAL_TOOLS[code] and (code, task.tool) != ("r08", "k6"):
             original_name = next(name for name in source.fixtures if name.startswith("broken-r"))
             assert task.fixtures[artifact_name] == source.fixtures[original_name]
 
@@ -237,7 +244,10 @@ def test_matrix_tasks_load_with_consistent_tool_scenario_and_protocol():
         for key in ("contract", "trials", "controls", "rubric"):
             assert task.params[key] == source.params[key]
         if task.tool == "k6":
-            assert task.prompt == source.prompt
+            head, sep, tail = source.prompt.partition("Execution contract:")
+            expected_k6 = head + sep + _text_for_tool(tail, "k6", task.scenario) if sep else source.prompt
+            expected_k6 = _clean_workload_prompt(expected_k6, task.params["contract"])
+            assert task.prompt == expected_k6
             assert task.fixtures[source_jmx] == source.fixtures[source_jmx]
         else:
             line_two = (

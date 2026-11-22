@@ -157,20 +157,21 @@ def test_response_read_disconnects_retry(monkeypatch, error, recover):
         assert sleeps == [1, 2]
 
 
-def test_http_429_is_not_retried(monkeypatch):
+@pytest.mark.parametrize('status', [429, 529])
+def test_http_rate_limit_and_overload_retry_then_unavailable(monkeypatch, status):
     monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
     calls, sleeps = [], []
     monkeypatch.setattr('p95bench.providers.time.sleep', sleeps.append)
 
     def request(req, timeout):
         calls.append(req)
-        raise HTTPError(req.full_url, 429, 'rate limited', {}, None)
+        raise HTTPError(req.full_url, status, 'throttled', {'Retry-After': '2'}, None)
 
     monkeypatch.setattr('urllib.request.urlopen', request)
-    with pytest.raises(HTTPError, match='429'):
+    with pytest.raises(ProviderUnavailable, match=f'No response after 6 requests \\(HTTP {status}\\)'):
         get_provider('qwen').models()
-    assert len(calls) == 1
-    assert sleeps == []
+    assert len(calls) == 6
+    assert sleeps == [2, 2, 2, 2, 2]
 
 
 @pytest.mark.parametrize('error', [IncompleteRead(b'partial'),
@@ -321,3 +322,46 @@ def test_all_unavailable_has_no_scored_attempts(tmp_path):
     assert summary['attempts'] == 0
     assert summary['category_scores'] == {}
     assert (directory / 'attempts.jsonl').read_text() == ''
+
+
+def test_http_429_retries_do_not_inflate_budget_settlement(monkeypatch, tmp_path):
+    from p95bench.analysis_v2 import analysis_reference
+    from p95bench.packs import pack_config
+    from p95bench.tasks import load_tasks
+
+    monkeypatch.setenv('MODELSCOPE_API_KEY', 'test-key')
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+    task = next(task for task in load_tasks(
+        Path('packs/p95-core/tasks'), pack_config('p95-core')['weights'])
+        if task.grader == 'v2_analysis')
+    answer = json.dumps(analysis_reference(task.params, task.fixtures))
+    calls = []
+
+    def request(req, timeout):
+        calls.append(req)
+        if len(calls) <= 2:
+            raise HTTPError(req.full_url, 429, 'rate limited', {'Retry-After': '1'}, None)
+        return sse_response(
+            {'choices': [{'delta': {'content': answer}, 'finish_reason': 'stop'}]},
+            {'choices': [], 'usage': {'prompt_tokens': 100, 'completion_tokens': 50}},
+        )
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    settled = []
+
+    class Ledger:
+        limit = 100_000_000
+
+        def reserve(self, maximum):
+            return 'res-1'
+
+        def settle(self, key, amount):
+            settled.append(amount)
+
+    price = PROVIDERS['qwen'].prices['Qwen-Ambassador/Qwen4-Max']
+    monkeypatch.setattr('p95bench.runner.prepare_workloads', lambda *_: None)
+    run(get_provider('qwen'), 'qwen', 'Qwen-Ambassador/Qwen4-Max', price, [task], tmp_path,
+        pack_id='p95-core', efficiency_budgets={task.id: {'tokens': 1000, 'latency_seconds': 90}},
+        budget_ledger=Ledger())
+    assert len(calls) == 3
+    assert settled == [pytest.approx(price.cost(Response(answer, 100, 50)))]

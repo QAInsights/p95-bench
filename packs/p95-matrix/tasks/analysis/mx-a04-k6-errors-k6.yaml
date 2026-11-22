@@ -10,7 +10,8 @@ prompt: 'Diagnose a misleading error rate in k6 results where expected expiry re
 
   {"observations": {"denominator": "number", "expected": "number", "unexpected": "number",
   "corrected_rate": "number"}, "diagnosis": {"route": "string", "classification":
-  "string"}, "evidence": {"keys": ["string", "string"], "fix": "string"}}
+  "string", "failed_metric": "string"}, "evidence": {"keys": ["string", "string"],
+  "fix": "string"}}
 
   Nearest-rank p95=ceil(.95*n), includes failed responses; exclude warmup=true or
   parent=true. Timestamp ms. Numeric absolute tolerance1e-6. Sort row IDs; rank descending

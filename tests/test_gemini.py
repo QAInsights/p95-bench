@@ -253,3 +253,24 @@ def test_explicit_gemini_price_is_preserved_for_builtin_and_custom_models(monkey
 def test_custom_gemini_model_without_price_has_clear_error(tmp_path):
     with pytest.raises(ValueError, match='No verified price for gemini-custom; supply an explicit price'):
         run(Gemini(PROVIDERS['gemini']), 'gemini', 'gemini-custom', None, [], tmp_path)
+
+
+def test_gemini_max_tokens_skips_repair_even_below_output_cap(monkeypatch, tmp_path):
+    from p95bench.budget import BudgetLedger
+    from p95bench.graders import CHECKPOINT_GRADERS
+    from p95bench.grades import Checkpoint, CheckpointGrade
+
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
+    data = reply([], 8192, 'MAX_TOKENS')
+    data['usageMetadata']['candidatesTokenCount'] = 0
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
+    monkeypatch.setitem(CHECKPOINT_GRADERS, 'test_trunc', lambda *a: CheckpointGrade(
+        (Checkpoint('loads', 0, 100),), 'Invalid model answer (JSONDecodeError): empty'))
+    task = Task('t1', 'analysis', 'k6', 'prompt', 'test_trunc', {}, {})
+    directory, _ = run(
+        get_provider('gemini'), 'gemini', 'gemini-4-carbon', Price(2, .1, 10), [task], tmp_path,
+        pack_id='p95-core', efficiency_budgets={'t1': {'tokens': 1000, 'latency_seconds': 90}},
+        budget_ledger=BudgetLedger(tmp_path / 'ledger.json'),
+    )
+    attempt = json.loads((directory / 'attempts.jsonl').read_text())
+    assert attempt['repair'] == {'triggered': False, 'skipped': 'truncated_at_cap'}

@@ -976,9 +976,10 @@ def jmeter_reference(config):
             "stopThread": False, "shareMode": "shareMode.thread"})
     if mode == "errors":
         login(children, reset=True)
-        for _ in range(4):
-            sampler(children, "/v2/work", "POST", "{}",
-                    status_assertion=r"^(?:200|401|429)$", recover=True)
+        _, loop = node(children, "LoopController", {"LoopController.continue_forever": True,
+                                                    "LoopController.loops": "4"})
+        sampler(loop, "/v2/work", "POST", "{}",
+                status_assertion=r"^(?:200|401|429)$", recover=True)
     elif workload and config.get("operation") != "journey":
         login(node(children, "OnceOnlyController")[1])
         completion = config.get("completion")

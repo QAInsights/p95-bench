@@ -1,21 +1,80 @@
 import json
-import shutil
 from pathlib import Path
 
 import pytest
 
-from p95bench.packs import digest
+from p95bench.analysis_v2 import analysis_reference
+from p95bench.graders import grade
+from p95bench.grades import Checkpoint, CheckpointGrade
+from p95bench.packs import digest, pack_config, snapshot
+from p95bench.runner import score_run
+from p95bench.tasks import load_tasks
 from scripts.regrade_core_analysis import regrade
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_RUN = ROOT / "results/p95-core/deepseek-flash"
+CORE_PACK = ROOT / "packs/p95-core"
 A01_TASK = "mx-a01-jtl-endpoints-jmeter"
 _UNSET = object()
 
 
 def _copy_run(tmp_path):
-    run_dir = tmp_path / "deepseek-flash"
-    shutil.copytree(SOURCE_RUN, run_dir)
+    run_dir = tmp_path / "synthetic-core"
+    run_dir.mkdir()
+    tasks = load_tasks(CORE_PACK / "tasks", pack_config("p95-core")["weights"])
+    budgets = json.loads((CORE_PACK / "efficiency-budgets.json").read_text())
+    manifest = snapshot("p95-core", tasks, repeats=1, budgets=budgets)
+    metadata = {
+        "pack_id": "p95-core",
+        "pack_digest": manifest["digest"],
+        "visibility": "public",
+        "model": "deepseek-flash",
+        "provider": "deepseek",
+        "harness_commit": "0123456789abcdef0123456789abcdef01234567",
+        "harness_dirty": False,
+        "repair_rounds": 1,
+        "reasoning_mode": "thinking-high",
+        "output_cap": 65536,
+        "cost_note": (
+            "USD list-price estimate from reported token usage at frozen registry prices for all "
+            "104 Core first tries and 0 repair responses; Core usage cost $0.104000. Not an invoice."
+        ),
+    }
+    (run_dir / "pack.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    exec_grade = CheckpointGrade((Checkpoint("correct", 100, 100),)).to_dict()
+    attempts = []
+    for task in tasks:
+        if task.grader == "v2_analysis":
+            text = json.dumps(analysis_reference(task.params, task.fixtures))
+            task_grade = grade(task, text, tmp_path / "grade-init" / task.id, 2).to_dict()
+        else:
+            text = "ok"
+            task_grade = exec_grade
+        attempts.append({
+            "task_id": task.id,
+            "category": task.category,
+            "scenario": task.scenario,
+            "repeat": 0,
+            "provider": "deepseek",
+            "model": "deepseek-flash",
+            "pack_id": "p95-core",
+            "pack_digest": manifest["digest"],
+            "grade": task_grade,
+            "response": {
+                "text": text,
+                "input_tokens": 100,
+                "output_tokens": 50,
+                "cached_tokens": 0,
+                "latency_seconds": 1.0,
+                "response_latency_seconds": 1.0,
+            },
+            "repair": {"triggered": False},
+            "cost_usd": 0.001,
+        })
+    (run_dir / "attempts.jsonl").write_text(
+        "".join(json.dumps(attempt) + "\n" for attempt in attempts)
+    )
+    score_run(run_dir)
     return run_dir
 
 

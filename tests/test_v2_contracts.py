@@ -42,9 +42,9 @@ def test_jmx_unsafe_serialization_and_evaluation_rejected(body):
         artifact_source("jmeter", body)
 
 
-def test_k6_scenario_artifact_ignores_legacy_iterations_shortcut():
+def test_k6_scenario_artifact_preserves_source_verbatim():
     source = "export const options = { scenarios: {} };\noptions.iterations=1;"
-    assert artifact_source("k6", source) == "export const options = { scenarios: {} };\n"
+    assert artifact_source("k6", source) == source
 
 
 def test_console_cannot_forge_http_debug_provenance():

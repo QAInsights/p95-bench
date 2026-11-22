@@ -14,8 +14,8 @@ prompt: 'Convert fixture-driven k6 users into deterministic JMeter CSV Data Set 
   Fresh owner seeds are recorded after execution. Profiles: [{}, {"html_layout": 1,
   "reverse_catalog": true}]. Negative-control overrides: [].
 
-  Use accounts.json rows per VU, preserve numeric quantity, use each row once per
-  iteration. JMX CSVs represent the same records.
+  Use accounts.json rows per virtual user, preserve numeric quantity, use each row
+  once per iteration. JMX CSVs represent the same records.
 
   Read-only /fixtures aliases: {"m04-accounts.json": "accounts.json", "m04-account-1.csv":
   "account-1.csv", "m04-account-2.csv": "account-2.csv"}

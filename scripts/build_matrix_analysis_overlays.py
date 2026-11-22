@@ -189,9 +189,9 @@ def _native_file(kind, tool, fixtures):
                 ["sample_id", "label", "responseCode", "success", "errorClass", "count", "route"],
                 [{
                     "sample_id": {
-                        200: "work-ok", 401: "expiry-1", 500: "work-500",
+                        200: "orders-ok", 401: "expiry-1", 500: "orders-500",
                     }[row["status"]],
-                    "label": "/v2/work",
+                    "label": row["route"],
                     "responseCode": row["status"],
                     "success": str(row["status"] < 400).lower(),
                     "errorClass": row["class"],
@@ -201,7 +201,7 @@ def _native_file(kind, tool, fixtures):
             )
         if tool == "k6":
             outcomes = []
-            sample_ids = {200: "work-ok", 401: "expiry-1", 500: "work-500"}
+            sample_ids = {200: "orders-ok", 401: "expiry-1", 500: "orders-500"}
             for row in data["outcomes"]:
                 outcomes.append({**row, "id": sample_ids[row["status"]]})
             unexpected = sum(
@@ -220,7 +220,7 @@ def _native_file(kind, tool, fixtures):
                 ["Request Type", "Name", "Error", "Occurrences", "Classification", "Route"],
                 [{
                     "Request Type": "POST",
-                    "Name": "/v2/work",
+                    "Name": row["route"],
                     "Error": (
                         "401 session expired" if row["status"] == 401
                         else "500 unexpected response"
@@ -232,16 +232,17 @@ def _native_file(kind, tool, fixtures):
             )
         records = []
         starts = {200: 1000, 401: 1010, 500: 1020}
-        ids = {200: "work-ok", 401: "expiry-1", 500: "work-500"}
+        ids = {200: "orders-ok", 401: "expiry-1", 500: "orders-500"}
         for row in data["outcomes"]:
             status = row["status"]
             status_text = "OK" if status < 400 else "KO"
             records.append(
-                f"REQUEST /v2/work {ids[status]} {starts[status]} {starts[status] + 10} "
+                f"REQUEST {row['route']} {ids[status]} {starts[status]} {starts[status] + 10} "
                 f"{status_text} status={status} class={row['class']} count={row['count']} "
                 f"route={row['route']}"
             )
-        records.append("GROUP work 1000 1100 OK requests=100 route=/v2/orders")
+        group_route = data["outcomes"][0]["route"]
+        records.append(f"GROUP orders 1000 1100 OK requests=100 route={group_route}")
         return "\n".join(records) + "\n"
     if kind == "decomposition":
         windows = data["windows"]
@@ -300,9 +301,10 @@ def build_matrix_analysis_overlays(source_pack, target_pack):
                 files["threshold"] = threshold_name
             if kind == "errors" and tool == "locust":
                 stats_name = f"{code}-stats.csv"
+                route = json.loads(fixtures["summary.json"])["outcomes"][0]["route"]
                 stats_text = _csv_text(
                     ["Type", "Name", "Request Count", "Failure Count", "Requests/s"],
-                    [{"Type": "POST", "Name": "/v2/work", "Request Count": 100,
+                    [{"Type": "POST", "Name": route, "Request Count": 100,
                       "Failure Count": 10, "Requests/s": 5}],
                 )
                 (overlay_root / tool / stats_name).write_text(stats_text)

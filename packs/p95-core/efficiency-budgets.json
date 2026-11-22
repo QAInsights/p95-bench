@@ -357,7 +357,7 @@
   },
   "mx-r12-error-metric-jmeter": {
     "latency_seconds": 180,
-    "tokens": 94296
+    "tokens": 33054
   },
   "mx-r12-error-metric-k6": {
     "latency_seconds": 180,

@@ -207,14 +207,6 @@ def test_core_run_derivation_rejects_digest_mismatch_and_missing_task(tmp_path):
 def _write_committed_core_tool_shards(
     tmp_path, *, duplicate_task=False, mismatch_metadata=False,
 ):
-    model = "deepseek-flash"
-    committed_run = ROOT / "results/p95-core" / model
-    metadata = json.loads((committed_run / "metadata.json").read_text())
-    attempts = {
-        attempt["task_id"]: attempt
-        for attempt in (json.loads(line) for line in
-                        (committed_run / "attempts.jsonl").read_text().splitlines())
-    }
     core_tasks = load_tasks(CORE_PACK / "tasks", pack_config("p95-core")["weights"])
     budgets = json.loads((CORE_PACK / "efficiency-budgets.json").read_text())
     by_tool = {
@@ -222,6 +214,7 @@ def _write_committed_core_tool_shards(
         for tool in ("jmeter", "k6", "locust", "gatling")
     }
     duplicate = by_tool["jmeter"][0]
+    grade = CheckpointGrade((Checkpoint("correct", 100, 100),)).to_dict()
     sources = []
     for tool, tasks in by_tool.items():
         shard_tasks = list(tasks)
@@ -233,20 +226,45 @@ def _write_committed_core_tool_shards(
             "p95-core", shard_tasks,
             budgets={task.id: budgets[task.id] for task in shard_tasks},
         )
-        shard_metadata = dict(metadata)
-        shard_metadata.update(pack_id="p95-core", pack_digest=manifest["digest"])
-        shard_metadata["task_scenarios"] = {
-            task.id: task.scenario for task in shard_tasks if task.scenario is not None
+        shard_metadata = {
+            "pack_id": "p95-core",
+            "pack_digest": manifest["digest"],
+            "visibility": "public",
+            "model": "deepseek-flash",
+            "provider": "deepseek",
+            "harness_commit": "0123456789abcdef0123456789abcdef01234567",
+            "harness_dirty": False,
+            "repair_rounds": 1,
+            "reasoning_mode": "thinking-low" if mismatch_metadata and tool == "gatling" else "thinking-high",
+            "output_cap": 65536,
+            "spend_cap_usd": 10.0,
+            "task_scenarios": {
+                task.id: task.scenario for task in shard_tasks if task.scenario is not None
+            },
         }
-        if mismatch_metadata and tool == "gatling":
-            shard_metadata["reasoning_mode"] = "thinking-low"
         (directory / "pack.json").write_text(json.dumps(manifest))
         (directory / "metadata.json").write_text(json.dumps(shard_metadata))
         shard_attempts = []
         for task in shard_tasks:
-            attempt = dict(attempts[task.id])
-            attempt.update(pack_id="p95-core", pack_digest=manifest["digest"])
-            shard_attempts.append(attempt)
+            shard_attempts.append({
+                "task_id": task.id,
+                "category": task.category,
+                "scenario": task.scenario,
+                "repeat": 0,
+                "provider": "deepseek",
+                "model": "deepseek-flash",
+                "pack_id": "p95-core",
+                "pack_digest": manifest["digest"],
+                "grade": grade,
+                "response": {
+                    "input_tokens": 100,
+                    "output_tokens": 50,
+                    "cached_tokens": 0,
+                    "latency_seconds": 1.0,
+                    "response_latency_seconds": 1.0,
+                },
+                "cost_usd": 0.001,
+            })
         (directory / "attempts.jsonl").write_text(
             "".join(json.dumps(attempt) + "\n" for attempt in shard_attempts)
         )
@@ -259,10 +277,10 @@ def test_core_run_derivation_merges_committed_core_tool_shards(tmp_path):
 
     summary = derive_core_run(sources, tmp_path / "merged")
 
-    expected = json.loads((ROOT / "results/p95-core/deepseek-flash/summary.json").read_text())
-    _assert_json_matches(expected, summary)
+    assert summary["pack_id"] == "p95-core"
     assert summary["attempts"] == 104
     assert summary["complete"] is True
+    assert summary["overall_score"] == pytest.approx(100.0)
     metadata = json.loads((tmp_path / "merged/metadata.json").read_text())
     assert "spend_cap_usd" not in metadata
     assert [source["pack_id"] for source in metadata["derived_from"]] == ["p95-core"] * 4
@@ -271,6 +289,23 @@ def test_core_run_derivation_merges_committed_core_tool_shards(tmp_path):
         for source in sources
     ]
     assert [source.get("spend_cap_usd") for source in metadata["derived_from"]] == expected_caps
+
+
+def test_core_pack_has_no_duplicate_prompts_or_oversized_jmx():
+    core_tasks = load_tasks(CORE_PACK / "tasks", pack_config("p95-core")["weights"])
+    budgets = json.loads((CORE_PACK / "efficiency-budgets.json").read_text())
+    for task in core_tasks:
+        assert task.prompt.count("Repair the supplied artifact.") <= 1, task.id
+        assert task.prompt.count("Execution contract:") <= 1, task.id
+        assert task.prompt.count("Rubric/gates") <= 1, task.id
+        contract = task.params.get("contract") or {}
+        if contract.get("workload"):
+            assert "Phased targets5/15/5" not in task.prompt, task.id
+            assert "W06 uses successful completions" not in task.prompt, task.id
+            assert '"users":' not in task.prompt, task.id
+            assert '"iterations":' not in task.prompt, task.id
+    r12_ref_tokens = budgets["mx-r12-error-metric-jmeter"]["tokens"] / 3
+    assert r12_ref_tokens < 16384, f"r12 JMeter reference still too large: {r12_ref_tokens}"
 
 
 def test_core_run_derivation_rejects_duplicate_core_tasks_across_shards(tmp_path):

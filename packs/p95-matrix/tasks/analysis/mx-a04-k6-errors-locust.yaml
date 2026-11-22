@@ -10,7 +10,8 @@ prompt: 'Diagnose a misleading error rate in Locust results where expected expir
 
   {"observations": {"denominator": "number", "expected": "number", "unexpected": "number",
   "corrected_rate": "number"}, "diagnosis": {"route": "string", "classification":
-  "string"}, "evidence": {"keys": ["string", "string"], "fix": "string"}}
+  "string", "failed_metric": "string"}, "evidence": {"keys": ["string", "string"],
+  "fix": "string"}}
 
   Nearest-rank p95=ceil(.95*n), includes failed responses; exclude warmup=true or
   parent=true. Timestamp ms. Numeric absolute tolerance1e-6. Sort row IDs; rank descending
@@ -18,7 +19,7 @@ prompt: 'Diagnose a misleading error rate in Locust results where expected expir
 
   Sort all evidence ID/key arrays lexicographically. Enum choices: {"classification":
   ["expected_recovery_is_not_failure", "all_4xx_are_unexpected", "all_non_200_are_expected"],
-  "fix": ["fail_unexpected_work_only", "exclude_expected_from_denominator", "count_all_4xx_as_failures"]}.
+  "fix": ["fail_unexpected_orders_only", "exclude_expected_from_denominator", "count_all_4xx_as_failures"]}.
   Other string values must exactly match fixture identifiers.
 
   Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
@@ -42,8 +43,8 @@ prompt: 'Diagnose a misleading error rate in Locust results where expected expir
   Native fixture: a04-locust.failures.csv. Request totals: a04-stats.csv.
 
 
-  Native answer strings: failed_metric="failed /v2/work requests"; evidence.keys=["failures.csv./v2/work-401",
-  "failures.csv./v2/work-500"]; fix="fail_unexpected_work_only".'
+  Native answer strings: failed_metric="failed /v2/orders requests"; evidence.keys=["failures.csv./v2/orders-401",
+  "failures.csv./v2/orders-500"]; fix="fail_unexpected_orders_only".'
 params:
   analysis: errors
   rubric:

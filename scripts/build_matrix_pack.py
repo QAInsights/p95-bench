@@ -43,6 +43,7 @@ REPAIR_PROMPTS = {
     ("r07", "k6"): "Fix a CSRF token captured once outside the iteration and reused after a session renewal.",
     ("r07", "locust"): "Fix a CSRF token captured only in on_start and reused after a session renewal.",
     ("r07", "gatling"): "Fix a CSRF token saved once before the repeat loop and reused after a session renewal.",
+    ("r08", "k6"): "Repair a short duration and an under-provisioned arrival executor for the target rate.",
     ("r08", "jmeter"): "Repair a conflicting loop count/duration and an under-provisioned thread pool for the target rate.",
     ("r08", "locust"): "Repair a conflicting stop time and an under-provisioned user count in the LoadTestShape for the target rate.",
     ("r08", "gatling"): "Repair conflicting injection steps and an under-provisioned user count for the target rate.",
@@ -203,6 +204,12 @@ def _analysis_prompt(task, tool, native_files):
         },
     }[kind][tool if kind == "endpoints" else tool_name]
     body = "\n".join(task["prompt"].splitlines()[1:]).lstrip()
+    if kind == "errors":
+        old_diag = '"diagnosis": {"route": "string", "classification": "string"}'
+        new_diag = '"diagnosis": {"route": "string", "classification": "string", "failed_metric": "string"}'
+        if old_diag not in body:
+            raise ValueError(f"Expected errors diagnosis schema in {task['id']}")
+        body = body.replace(old_diag, new_diag, 1)
     answer_strings = TOOL_ANSWER_STRINGS.get(kind, {}).get(tool)
     if answer_strings:
         metric, keys, fix = answer_strings
@@ -216,6 +223,12 @@ def _analysis_prompt(task, tool, native_files):
     else:
         answer_note = ""
     fixture_note = f"Native fixture: {native_files['data']}."
+    if kind == "endpoints":
+        fixture_note += (
+            " In evidence.rows, cite only the included (non-warmup, non-parent) row IDs"
+            " for the bottleneck route, sorted lexicographically; in evidence.excluded,"
+            " cite the excluded warmup and parent row IDs, sorted lexicographically."
+        )
     if kind == "omission":
         fixture_note += f" Arrival schedule: {native_files['schedule']}."
     if "threshold" in native_files:
@@ -230,6 +243,35 @@ def _analysis_prompt(task, tool, native_files):
         fixture_note += " This per-request CSV is exported by the events.request listener."
     notes = "\n\n".join(note for note in (fixture_note, answer_note) if note)
     return f"{headline}\n\n{body}\n\n{notes}"
+
+
+def _clean_workload_prompt(text, contract):
+    if not contract or not contract.get("workload"):
+        return text
+    shown = {k: v for k, v in contract.items() if k not in ("users", "iterations", "mode")}
+    text = re.sub(
+        r"Execution contract: \{[^\n]+\}\.",
+        f"Execution contract: {json.dumps(shown)}.",
+        text,
+        count=1,
+    )
+    if "rates" not in contract:
+        text = text.replace("Phased targets5/15/5 apply to three10s scored plateaus. ", "")
+    pools = contract.get("pools") or {}
+    has_journey = (
+        contract.get("operation") == "journey"
+        or any(pool.get("operation") == "journey" for pool in pools.values())
+    )
+    if not has_journey:
+        text = text.replace("Journey rate counts committed checkout starts, not HTTP requests. ", "")
+        text = text.replace("Journey rate counts committed checkout starts, not HTTP samplers. ", "")
+    if not contract.get("completion"):
+        text = text.replace(
+            "W06 uses successful completions (scheduled429 is expected, never a completion), "
+            "raw /work ceiling12/s and Retry-After per native worker, including across renewal. ",
+            "",
+        )
+    return text
 
 
 def _text_for_tool(text, tool, scenario):
@@ -331,22 +373,44 @@ def build_matrix_pack(source_pack, target_pack):
                     overlay.write_text(reference("k6", task["params"]["contract"]))
                 if category == "repair":
                     code = scenario.split("-", 2)[1]
-                    prompt = REPAIR_PROMPTS.get((code, tool), task["prompt"].split("\n\n", 1)[0])
                     prompt_lines = task["prompt"].splitlines()
                     if len(prompt_lines) < 2 or prompt_lines[1] != "Repair the supplied artifact.":
                         raise ValueError(f"Missing repair instruction line in {original['id']}")
+                    prompt = REPAIR_PROMPTS.get((code, tool), prompt_lines[0])
                     rest = "\n".join(prompt_lines[2:]).lstrip("\n")
+                    if task["params"]["contract"].get("mode") == "errors":
+                        rest = rest.replace(
+                            "One committed order per journey, no duplicate/extra carts.",
+                            "Four POST /v2/work operations per user iteration (with session expiry recovery on 401 error=expired); no checkout/cart flow.",
+                        )
+                    if task["params"]["contract"].get("mode") == "threshold":
+                        threshold_note = (
+                            'Tag/name POST /v2/orders requests as "checkout" with a 250ms latency threshold/assertion.'
+                        )
+                        if tool == "locust":
+                            threshold_note += (
+                                " When the checkout latency threshold is breached, call response.failure(...) "
+                                "and set self.environment.process_exit_code = 99."
+                            )
+                        rest = rest + "\n\n" + threshold_note
                     task["prompt"] = prompt + "\n\nRepair the supplied artifact.\n\n" + rest
                     artifact = f"broken-{code}.{TOOL_EXTENSIONS[tool]}"
                     task["fixtures"] = [
                         artifact if name.startswith("broken-r") else name
                         for name in task.get("fixtures", [])
                     ]
-                if category in ("correlation", "workload", "repair"):
-                    task["prompt"] = _text_for_tool(task["prompt"], tool, scenario)
-                    for rubric_item in task["params"].get("rubric", []):
-                        rubric_item["description"] = _text_for_tool(
-                            rubric_item["description"], tool, scenario)
+                if category in ("correlation", "workload", "repair", "migration"):
+                    if category == "migration":
+                        head, sep, tail = task["prompt"].partition("Execution contract:")
+                        if sep:
+                            task["prompt"] = head + sep + _text_for_tool(tail, tool, scenario)
+                    else:
+                        task["prompt"] = _text_for_tool(task["prompt"], tool, scenario)
+                        for rubric_item in task["params"].get("rubric", []):
+                            rubric_item["description"] = _text_for_tool(
+                                rubric_item["description"], tool, scenario)
+                    task["prompt"] = _clean_workload_prompt(
+                        task["prompt"], task["params"].get("contract"))
                 fixtures = []
                 for name in task.get("fixtures", []):
                     if category == "analysis":

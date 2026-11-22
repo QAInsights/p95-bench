@@ -9,11 +9,10 @@ prompt: 'Repair pacing applied after every HTTP request instead of once per busi
   Repair the supplied artifact.
 
 
-  Execution contract: {"users": 2, "iterations": 2, "mode": "flow", "workload": true,
-  "operation": "journey", "path": "/v2/orders", "rate": 1, "max_vus": 4}. Two fixture
-  variants count equally; the same artifact is reused without feedback. Fresh owner
-  seeds are recorded after execution. Profiles: [{}, {"html_layout": 1, "reverse_catalog":
-  true}]. Negative-control overrides: [].
+  Execution contract: {"workload": true, "operation": "journey", "path": "/v2/orders",
+  "rate": 1, "max_vus": 4}. Two fixture variants count equally; the same artifact
+  is reused without feedback. Fresh owner seeds are recorded after execution. Profiles:
+  [{}, {"html_layout": 1, "reverse_catalog": true}]. Negative-control overrides: [].
 
   Pool work: POST /v2/orders is a complete owned checkout. Count its checkout request
   start at the server request start timestamp, only when the owner records a committed
@@ -21,16 +20,14 @@ prompt: 'Repair pacing applied after every HTTP request instead of once per busi
   count as starts.
 
   First authenticated eligible POST anchors T0, within10s of launch. Warmup5s, score
-  [T0+5,T0+35) in six5s windows, drain<=5s. Phased targets5/15/5 apply to three10s
-  scored plateaus. Count only declared paths/pools; login/setup excluded, health/extra
-  routes forbidden. Journey rate counts committed checkout starts, not HTTP requests.
-  Rate fraction=1 within max(10% of expected arrivals, 1 arrival) count error, linear
-  to0 at40% relative error; average windows equally, with each window capped by the
-  full scored-window mean-rate fraction using the same quantization allowance. Each1s
-  burst<=ceil(1.5*target)+1. Unexpected error/dropped work<=1%; max concurrent VUs=4.
-  W06 uses successful completions (scheduled429 is expected, never a completion),
-  raw /work ceiling12/s and Retry-After per native worker, including across renewal.
-  Same-native-runtime capacity must sustain3x target before grading or this is infrastructure-unavailable.
+  [T0+5,T0+35) in six5s windows, drain<=5s. Count only declared paths/pools; login/setup
+  excluded, health/extra routes forbidden. Journey rate counts committed checkout
+  starts, not HTTP requests. Rate fraction=1 within max(10% of expected arrivals,
+  1 arrival) count error, linear to0 at40% relative error; average windows equally,
+  with each window capped by the full scored-window mean-rate fraction using the same
+  quantization allowance. Each1s burst<=ceil(1.5*target)+1. Unexpected error/dropped
+  work<=1%; max concurrent VUs=4. Same-native-runtime capacity must sustain3x target
+  before grading or this is infrastructure-unavailable.
 
   Rubric/gates (per case: earned fraction capped by every prerequisite fraction; average
   all cases, never best case):

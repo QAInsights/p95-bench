@@ -35,7 +35,9 @@ prompt: 'Analyze Gatling REQUEST/GROUP records; identify the slow endpoint after
   fault can lose multiple checkpoints.
 
 
-  Native fixture: a01-gatling.simulation.log.'
+  Native fixture: a01-gatling.simulation.log. In evidence.rows, cite only the included
+  (non-warmup, non-parent) row IDs for the bottleneck route, sorted lexicographically;
+  in evidence.excluded, cite the excluded warmup and parent row IDs, sorted lexicographically.'
 params:
   analysis: endpoints
   rubric:

@@ -147,6 +147,7 @@ PROVIDERS = {
         temperature=None,
         extra={"thinking": {"type": "enabled"}, "reasoning_effort": "high",
                "max_tokens": 65536},
+        max_retries=3,
         reasoning_mode="thinking-high",
     ),
     "anthropic": ProviderConfig(
@@ -155,6 +156,7 @@ PROVIDERS = {
          "claude-opus-5-5": Price(4, 4, 20)},
         temperature=None,
         extra={"max_tokens": 16384},
+        max_retries=3,
         reasoning_mode="provider-default",
     ),
     "thinkingmachines": ProviderConfig(
@@ -164,6 +166,7 @@ PROVIDERS = {
          "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00)},
         extra={"max_tokens": 16384},
         timeout_seconds=600,
+        max_retries=3,
         reasoning_mode="provider-default",
     ),
     "openai": ProviderConfig(
@@ -172,6 +175,7 @@ PROVIDERS = {
          "gpt-6.2-astra": Price(8, 8, 40)},
         temperature=None,
         extra={"max_completion_tokens": 16384},
+        max_retries=3,
         reasoning_mode="provider-default",
     ),
 }
@@ -248,7 +252,7 @@ class OpenAICompatible:
         )
         measured = getattr(self, "measure_transport", False)
         if measured:
-            self.transport_attempts, self.backoff_seconds = 0, 0
+            self.transport_attempts, self.uncertain_attempts, self.backoff_seconds = 0, 0, 0
             self.response_latency_seconds = None
         http_retries = 0
         transport_retries = 0
@@ -264,7 +268,7 @@ class OpenAICompatible:
                     self.response_latency_seconds = time.perf_counter() - started
                 return result
             except HTTPError as error:
-                if error.code not in {500, 502, 503, 504}:
+                if error.code not in {429, 500, 502, 503, 504, 529}:
                     error.close()
                     raise
                 if http_retries >= self.config.max_retries:
@@ -285,6 +289,8 @@ class OpenAICompatible:
                     self.backoff_seconds += delay
                 time.sleep(delay)
             except (URLError, TimeoutError, HTTPException, ConnectionError) as error:
+                if measured:
+                    self.uncertain_attempts += 1
                 if transport_retries >= self.config.transport_retries:
                     raise ProviderUnavailable(
                         f"No response after {request_count} requests ({type(error).__name__})"
