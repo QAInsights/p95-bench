@@ -9,6 +9,7 @@ import pytest
 
 from p95bench.budget import BudgetLedger
 from p95bench.capacity import capacity_preflight, capacity_rate
+from p95bench.checkpoint_graders import executable
 from p95bench.demo_v2 import Profile, Shop
 from p95bench.execution import AuditOverflow, Trial, artifact_source, k6_evidence, run_artifact
 from p95bench.graders import grade
@@ -221,6 +222,66 @@ def test_capacity_qualifies_steady_rate_after_startup_pileup(tmp_path, monkeypat
     result = capacity_preflight("k6", {"rate": 1}, {}, tmp_path)
     assert result["observed_rates"] == {"work": 4}
     assert result["warmup_seconds"] == 5
+
+
+@pytest.mark.parametrize("tool,startup,passes", [
+    ("gatling", 15, True), ("gatling", 60, True), ("gatling", 60.1, False),
+    ("jmeter", 10, True), ("k6", 10, True), ("locust", 10, True),
+    ("jmeter", 10.1, False), ("k6", 10.1, False), ("locust", 10.1, False),
+])
+@pytest.mark.parametrize("fault", [None, "empty", "rate", "loaded", "timeout", "exit"])
+def test_capacity_startup_headroom_preserves_gates(tmp_path, monkeypatch, tool, startup, passes, fault):
+    monkeypatch.setattr("p95bench.capacity.QUALIFIED", {})
+    monkeypatch.setattr("p95bench.capacity.tool_image", lambda tool: "sha256:" + "2" * 64)
+    configs = []
+    monkeypatch.setattr("p95bench.capacity.reference", lambda tool, config: configs.append(config) or "trusted")
+
+    def trusted_trial(tool, source, directory, **kwargs):
+        assert kwargs["timeout"] == (90 if tool == "gatling" else 40)
+        directory.mkdir(parents=True)
+        evidence = []
+        rate = 2 if fault == "rate" else 4
+        for index in range(0 if fault == "empty" else 12 * rate):
+            timestamp = 100 + startup + index / rate
+            evidence.extend([
+                {"kind": "start", "request": index, "path": "/v2/work", "method": "POST", "time": timestamp},
+                {"kind": "work", "request": index, "fault": None},
+                {"kind": "end", "request": index, "outcome": 200, "time": timestamp},
+            ])
+        return Trial(fault != "loaded", "timeout" if fault == "timeout" else "completed",
+                     1 if fault == "exit" else 0, evidence, [], [], 100)
+
+    monkeypatch.setattr("p95bench.capacity.run_artifact", trusted_trial)
+    if passes and fault is None:
+        result = capacity_preflight(tool, {"rate": 1}, {}, tmp_path)
+        assert result["observed_rates"] == {"work": 4}
+        assert result["startup_seconds"] == pytest.approx({"work": startup})
+        assert result["startup_allowance_seconds"] == (60 if tool == "gatling" else 10)
+        assert (result["duration_seconds"], result["warmup_seconds"], result["measurement_seconds"]) == (12, 5, 3)
+    else:
+        with pytest.raises(WorkerUnavailable, match="Capacity preflight failed"):
+            capacity_preflight(tool, {"rate": 1}, {}, tmp_path)
+    assert configs[0]["duration"] == 12
+    assert configs[0]["rate"] == 4
+
+
+@pytest.mark.parametrize("tool", ["gatling", "jmeter", "k6", "locust"])
+@pytest.mark.parametrize("workload", [True, False])
+def test_only_gatling_workloads_gain_grading_startup_headroom(tmp_path, monkeypatch, tool, workload):
+    trial = Trial(True, "completed", 0, [], [], [])
+    engine = Mock(return_value=trial)
+    fractions = Mock(return_value={"loads": 1})
+    monkeypatch.setattr("p95bench.checkpoint_graders.capacity_preflight", Mock())
+    monkeypatch.setattr("p95bench.checkpoint_graders.run_artifact", engine)
+    monkeypatch.setattr("p95bench.checkpoint_graders.workload_fractions", fractions)
+    monkeypatch.setattr("p95bench.checkpoint_graders.flow_fractions", fractions)
+    contract = {"workload": workload}
+    params = {"tool": tool, "contract": contract, "trials": [{"profile": {}}],
+              "rubric": [{"id": "loads", "points": 100}]}
+    assert executable("trusted", params, tmp_path, {}).score == 1
+    assert engine.call_args.kwargs["timeout"] == (110 if tool == "gatling" and workload else 60)
+    if workload:
+        fractions.assert_called_once_with(trial, {**contract, "tool": tool})
 
 
 @pytest.mark.skipif(os.environ.get("P95_TEST_DOCKER") != "1", reason="Opt-in native Docker tests")

@@ -602,6 +602,14 @@ The full native suite additionally requires the two built tool images:
 `P95_TEST_DOCKER=1 .venv/bin/python -m pytest -q`. It makes no provider calls.
 Before workload generation/grading, a trusted native reference qualifies the evaluator;
 an insufficient evaluator aborts as infrastructure-unavailable, not model score zero.
+Capacity references keep their 12-second duration configuration and measure the three seconds
+after five seconds of business-operation warmup at a minimum of 3× the task rate.
+Gatling allows 60 seconds from worker launch to the first business operation for
+cold JVM startup and Java compilation, with a 90-second preflight deadline.
+Its workload grader uses the same startup allowance and 50 seconds of additional
+wall-clock headroom; scored workload windows and drain limits are unchanged.
+JMeter, k6 and Locust retain their 10-second startup allowance and existing deadlines.
+`capacity.json` records per-pool measured startup, allowance and timeout.
 
 ## License
 

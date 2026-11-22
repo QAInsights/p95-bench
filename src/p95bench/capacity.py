@@ -12,6 +12,10 @@ from p95bench.worker import WorkerUnavailable
 QUALIFIED = {}
 
 
+def startup_allowance(tool):
+    return 60 if tool == "gatling" else 10
+
+
 def prepare_workloads(tasks, directory):
     QUALIFIED.clear()
     for task in tasks:
@@ -60,16 +64,20 @@ def capacity_preflight(tool, contract, profile, directory):
         config["pools"] = scaled
     else:
         config.update(next(iter(scaled.values())))
+    allowance = startup_allowance(tool)
+    timeout = 40 + allowance - 10
     trial = run_artifact(tool, reference(tool, config), directory / key,
-                         profile=worst, seed="public-capacity", timeout=40)
-    counts = {}
+                         profile=worst, seed="public-capacity", timeout=timeout)
+    counts, startups = {}, {}
     for name, pool in pools.items():
         events = operations(trial, pool["path"], contract.get("completion", False))
         if not events:
             raise WorkerUnavailable("Capacity preflight failed: no valid business operations")
         anchor = min(event["time"] for event in events)
-        if trial.started and anchor - trial.started > 10:
-            raise WorkerUnavailable("Capacity preflight failed: reference startup exceeded 10 seconds")
+        startups[name] = anchor - trial.started if trial.started else None
+        if trial.started and startups[name] > allowance:
+            raise WorkerUnavailable(
+                f"Capacity preflight failed: reference startup exceeded {allowance} seconds")
         count = sum(anchor + 5 <= event["time"] < anchor + 8 for event in events)
         counts[name] = count / 3
         if counts[name] < 3 * pool["rate"]:
@@ -78,6 +86,8 @@ def capacity_preflight(tool, contract, profile, directory):
         raise WorkerUnavailable("Capacity preflight failed: reference engine did not complete cleanly")
     report = {"image": tool_image(tool), "minimum_capacity_multiple": 3,
               "observed_rates": counts, "evidence_directory": str(directory / key),
+              "startup_seconds": startups, "startup_allowance_seconds": allowance,
+              "timeout_seconds": timeout,
               "resources": {"cpus": 1, "memory_mib": 768, "pids": 256, "nofile": 512},
               "duration_seconds": 12, "warmup_seconds": 5, "measurement_seconds": 3, "service_profile": worst,
               "pools": pools}
