@@ -81,11 +81,11 @@ def test_plan_benchmark_rejects_unknown_scenario(monkeypatch, capsys):
 
 
 def test_plan_benchmark_summary_matches_published_tool_scores(capsys):
-    run_dir = plan_benchmark.ROOT / "results/p95-core/deepseek-flash"
+    run_dir = plan_benchmark.ROOT / "results/p95-core/claude-sonnet-5-5"
     board = json.loads(
         (plan_benchmark.ROOT / "site/src/data/leaderboard-p95-core.json").read_text()
     )
-    model = next(item for item in board["models"] if item["model"] == "deepseek-flash")
+    model = next(item for item in board["models"] if item["model"] == "claude-sonnet-5-5")
     expected = {}
     for tool in plan_benchmark.TOOLS:
         attempts = [item for item in model["per_task_results"] if item["tool"] == tool]
