@@ -335,7 +335,7 @@ def test_loaded_low_score_does_not_trigger_repair(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize(("finish_reason", "output_tokens"), [
-    ("length", 100), ("stop", 65536),
+    ("length", 100), ("stop", 64000),
 ])
 def test_repair_is_skipped_for_truncated_responses(
         finish_reason, output_tokens, tmp_path, monkeypatch):
@@ -368,13 +368,14 @@ def test_repair_is_skipped_for_truncated_responses(
     assert len(json.loads(ledger.path.read_text())["charges"]) == 1
 
 
-def test_65536_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch):
+@pytest.mark.parametrize('cap', [64000, 32000])
+def test_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch, cap):
     task_item = task()
     monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint",
                         Mock(side_effect=[
                             result(0, "Invalid model artifact: broken response"), result(100)]))
     provider = RepairProvider()
-    provider.config = PROVIDERS["deepseek"]
+    provider.config = replace(PROVIDERS["deepseek"], model_output_limits={"deepseek-flash": cap})
 
     class RecordingLedger:
         limit = 100_000_000
@@ -398,11 +399,13 @@ def test_65536_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch):
         budget_ledger=ledger)
     attempt = json.loads((directory / "attempts.jsonl").read_text())
     repair_messages = attempt["messages"] + attempt["repair"]["messages_appended"]
+    metadata = json.loads((directory / "metadata.json").read_text())
+    assert metadata["output_cap"] == metadata["max_tokens"] == cap
     retries = provider.config.transport_retries
 
     def expected_reservation(messages):
         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
-                   + 65536 * price.output) / 1_000_000
+                   + cap * price.output) / 1_000_000
         return maximum * (1 + retries)
 
     assert attempt["repair"]["triggered"]
@@ -593,7 +596,7 @@ def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
     metadata = json.loads((directory / "metadata.json").read_text())
     assert metadata["repair_rounds"] == 1
     assert metadata["reasoning_mode"] is None
-    assert metadata["output_cap"] == 16384
+    assert metadata["output_cap"] == 64000
     head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True,
                           text=True, check=False).stdout.strip()
     assert metadata["harness_commit"] == (head or None)

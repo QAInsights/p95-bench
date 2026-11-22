@@ -136,7 +136,7 @@ def test_adapter(monkeypatch):
     def request(req, timeout):
         assert req.full_url == "https://example.invalid/chat/completions"
         assert json.loads(req.data)["temperature"] == 0
-        assert timeout == 180
+        assert timeout == 600
         return Reply()
 
     monkeypatch.setattr("urllib.request.urlopen", request)

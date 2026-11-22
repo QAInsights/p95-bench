@@ -43,12 +43,12 @@ def test_optional_prompt_token_details(monkeypatch, details, expected):
 def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
     provider = get_provider('deepseek')
     assert provider.config.extra == {
-        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'high', 'max_tokens': 65536}
+        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'high', 'max_tokens': 64000}
     assert provider.config.reasoning_mode == 'thinking-high'
     assert provider.config.temperature is None
     assert PROVIDERS['qwen'].reasoning_mode == 'thinking-high'
     assert all(config.reasoning_mode == 'provider-default'
-               for name, config in PROVIDERS.items() if name not in {'deepseek', 'qwen'})
+               for name, config in PROVIDERS.items() if name not in {'deepseek', 'qwen', 'anthropic'})
     captured = {}
 
     def request(path, body):
@@ -66,7 +66,7 @@ def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
 
     assert captured['thinking'] == {'type': 'enabled'}
     assert captured['reasoning_effort'] == 'high'
-    assert captured['max_tokens'] == 65536
+    assert captured['max_tokens'] == 64000
     assert 'temperature' not in captured
     assert isinstance(response, DeepSeekResponse)
     assert response.text == 'answer only'
@@ -114,8 +114,8 @@ def test_qwen_stream_length_with_reasoning_only_is_thinking_exhausted(monkeypatc
     chunks = [
         {'choices': [{'delta': {'reasoning_content': 'thinking'}, 'finish_reason': 'length'}]},
         {'choices': [], 'usage': {
-            'prompt_tokens': 100, 'completion_tokens': 65536,
-            'completion_tokens_details': {'reasoning_tokens': 65536},
+            'prompt_tokens': 100, 'completion_tokens': 64000,
+            'completion_tokens_details': {'reasoning_tokens': 64000},
         }},
     ]
     monkeypatch.setattr('urllib.request.urlopen', lambda *args, **kwargs: sse_response(*chunks))
@@ -123,7 +123,7 @@ def test_qwen_stream_length_with_reasoning_only_is_thinking_exhausted(monkeypatc
     response = get_provider('qwen').send('Qwen-Ambassador/Qwen3.8-Max', [])
 
     assert response.text == ''
-    assert response.reasoning_tokens == 65536
+    assert response.reasoning_tokens == 64000
     assert response.thinking_exhausted
 
 
@@ -250,9 +250,9 @@ def test_transport(monkeypatch, model, rates, content):
         assert req.full_url == 'https://api.openai.com/v1/chat/completions'
         assert req.get_method() == 'POST'
         assert req.get_header('Authorization') == 'Bearer test-key'
-        assert timeout == 180
+        assert timeout == 600
         assert json.loads(req.data) == {
-            'model': model, 'messages': messages, 'max_completion_tokens': 16384,
+            'model': model, 'messages': messages, 'max_completion_tokens': 64000,
         }
         return io.BytesIO(json.dumps({
             'choices': [{'message': {'content': content}}],

@@ -22,6 +22,14 @@ def reply(text='10', total=22, reasoning=20, finish='stop'):
                       'completion_tokens_details': {'reasoning_tokens': reasoning}}}
 
 
+def stream_reply(data):
+    choice = data['choices'][0]
+    events = [{'choices': [{'delta': choice['message'], 'finish_reason': choice['finish_reason']}]},
+              {'choices': [], 'usage': data['usage']}]
+    return io.BytesIO((''.join(f'data: {json.dumps(event)}\n\n' for event in events)
+                       + 'data: [DONE]\n\n').encode())
+
+
 @pytest.mark.parametrize('model,rates', [
     ('muse-wonder-1.0', (4, .2, 20)), ('muse-spark-1.3', (1.25, .15, 4.25)),
     ('muse-spark-1.2', (1.25, .15, 4.25)), ('muse-ember-1.0', (.1, .004, .5)),
@@ -34,9 +42,10 @@ def test_muse_payload_and_reasoning_inclusive_price(monkeypatch, model, rates):
     def request(req, timeout):
         assert req.full_url == 'https://api.meta.ai/v1/chat/completions'
         assert req.get_header('Authorization') == 'Bearer test-key'
-        assert json.loads(req.data) == {'model': model, 'messages': messages, 'max_completion_tokens': 16384}
+        assert json.loads(req.data) == {'model': model, 'messages': messages,
+            'max_completion_tokens': 64000, 'stream': True, 'stream_options': {'include_usage': True}}
         assert timeout == 600
-        return io.BytesIO(json.dumps(reply()).encode())
+        return stream_reply(reply())
 
     monkeypatch.setattr('urllib.request.urlopen', request)
     response = provider.send(model, messages)
@@ -54,8 +63,8 @@ def test_muse_payload_and_reasoning_inclusive_price(monkeypatch, model, rates):
 @pytest.mark.parametrize('text', [None, '', ' '])
 def test_reasoning_only_cap_is_empty_and_still_billed(monkeypatch, text):
     monkeypatch.setenv('MODEL_API_KEY', 'test-key')
-    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(
-        json.dumps(reply(text, 8192, 8192, 'length')).encode()))
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: stream_reply(
+        reply(text, 8192, 8192, 'length')))
     response = get_provider('meta').send('muse-wonder-1.0', [])
     assert response.thinking_exhausted
     assert response.output_tokens == 8192
@@ -66,7 +75,7 @@ def test_null_usage_details_and_non_reasoning_empty_response(monkeypatch):
     monkeypatch.setenv('MODEL_API_KEY', 'test-key')
     data = reply(None, 0, 0, 'content_filter')
     data['usage'].update(prompt_tokens_details=None, completion_tokens_details=None)
-    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: stream_reply(data))
     response = get_provider('meta').send('muse-wonder-1.0', [])
     assert response.text == ''
     assert response.cached_tokens == 0
@@ -86,10 +95,10 @@ def test_transient_retry_and_exhaustion(monkeypatch, error, recover):
         calls.append(req)
         if len(calls) == 1 or not recover:
             raise error if isinstance(error, Exception) else HTTPError(req.full_url, error, 'busy', {}, None)
-        return io.BytesIO(json.dumps(reply()).encode())
+        return stream_reply(reply())
 
     monkeypatch.setattr('urllib.request.urlopen', request)
-    provider = Muse(replace(PROVIDERS['meta'], max_retries=1), spend_limit=3)
+    provider = Muse(replace(PROVIDERS['meta'], max_retries=1), spend_limit=5)
     if recover:
         assert provider.send('muse-wonder-1.0', []).text == '10'
     else:
@@ -98,7 +107,7 @@ def test_transient_retry_and_exhaustion(monkeypatch, error, recover):
     expected_calls = 2 if error == 503 or recover else 3
     assert len(calls) == expected_calls
     assert sleeps == ([1] if expected_calls == 2 else [1, 2])
-    assert 0 < provider.spent_upper_bound < 3
+    assert 0 < provider.spent_upper_bound < 5
 
 
 def test_missing_key_auth_budget_and_ember_context_guards(monkeypatch):

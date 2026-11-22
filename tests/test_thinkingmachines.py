@@ -31,7 +31,7 @@ def test_transport(monkeypatch, model, rates, content):
         assert req.get_header('User-agent') == 'p95bench/0.1.0'
         assert timeout == 600
         assert json.loads(req.data) == {
-            'model': model, 'messages': messages, 'temperature': 0, 'max_tokens': 16384,
+            'model': model, 'messages': messages, 'temperature': 0, 'max_tokens': 64000,
         }
         return io.BytesIO(json.dumps({
             'choices': [{'message': {'content': content, 'reasoning_content': 'Private reasoning'}}],

@@ -46,7 +46,7 @@ def test_native_payload_usage_and_prices(monkeypatch, model, rates):
         assert json.loads(req.data) == {'systemInstruction': {'parts': [{'text': 'system'}]},
             'contents': [{'role': 'user', 'parts': [{'text': 'prompt'}]},
                          {'role': 'model', 'parts': [{'text': 'previous'}]}],
-            'generationConfig': {'maxOutputTokens': 16384}}
+            'generationConfig': {'maxOutputTokens': 64000}}
         return io.BytesIO(json.dumps(reply()).encode())
 
     monkeypatch.setattr('urllib.request.urlopen', request)
@@ -145,7 +145,7 @@ def test_exhausted_requests_are_not_run(monkeypatch, tmp_path):
         raise URLError('unavailable')
 
     monkeypatch.setattr('urllib.request.urlopen', request)
-    provider = Gemini(replace(PROVIDERS['gemini'], max_retries=1), spend_limit=3)
+    provider = Gemini(replace(PROVIDERS['gemini'], max_retries=1), spend_limit=5)
     task = Task('test', 'workload', 'none', 'prompt', 'numeric', {'answer': 10}, {})
     directory, summary = run(provider, 'gemini', 'gemini-4-carbon',
                              provider.config.prices['gemini-4-carbon'], [task], tmp_path)

@@ -11,6 +11,9 @@ from http.client import HTTPException
 from typing import Protocol
 from urllib.error import HTTPError, URLError
 
+DEFAULT_OUTPUT_TOKENS = 64_000
+OUTPUT_LIMIT_FIELDS = ("max_tokens", "max_completion_tokens", "maxOutputTokens")
+
 
 @dataclass
 class Response:
@@ -67,6 +70,15 @@ class DeepSeekResponse(Response):
         return not self.text.strip() and self.reasoning_tokens > 0 and self.finish_reason == "length"
 
 
+@dataclass
+class AnthropicResponse(Response):
+    finish_reason: str = ""
+
+    @property
+    def thinking_exhausted(self):
+        return not self.text.strip() and self.finish_reason == "max_tokens"
+
+
 @dataclass(frozen=True)
 class Price:
     input: float
@@ -87,12 +99,22 @@ class ProviderConfig:
     prices: dict[str, Price]
     temperature: float | None = 0
     extra: dict = field(default_factory=dict)
-    timeout_seconds: float = 180
+    timeout_seconds: float = 600
     max_retries: int = 0
     cost_note: str | None = None
     pricing_source: str | None = None
     transport_retries: int = 2
     reasoning_mode: str = "provider-default"
+    model_output_limits: dict[str, int] = field(default_factory=dict)
+
+    def output_cap(self, model=None):
+        cap = next((self.extra[key] for key in OUTPUT_LIMIT_FIELDS
+                    if self.extra.get(key) is not None), DEFAULT_OUTPUT_TOKENS)
+        return min(cap, self.model_output_limits.get(model, cap))
+
+    def request_extra(self, model):
+        return {**self.extra, **{key: self.output_cap(model) for key in OUTPUT_LIMIT_FIELDS
+                                if key in self.extra}}
 
 
 PROVIDERS = {
@@ -103,7 +125,8 @@ PROVIDERS = {
          "muse-spark-1.2": Price(1.25, .15, 4.25),
          "muse-ember-1.0": Price(.1, .004, .5)},
         temperature=None,
-        extra={"max_completion_tokens": 16384},
+        extra={"max_completion_tokens": DEFAULT_OUTPUT_TOKENS, "stream": True,
+               "stream_options": {"include_usage": True}},
         timeout_seconds=600,
         max_retries=5,
         cost_note="USD · list-price estimate (includes reasoning tokens).",
@@ -117,7 +140,7 @@ PROVIDERS = {
          "gemini-4-hydrogen": Price(1.5, .075, 7.5),
          "gemini-3.8-flash": Price(.75, .075, 3.75)},
         temperature=None,
-        extra={"maxOutputTokens": 16384},
+        extra={"maxOutputTokens": DEFAULT_OUTPUT_TOKENS},
         timeout_seconds=600,
         max_retries=5,
         cost_note="USD · list-price estimate (includes thinking tokens).",
@@ -132,7 +155,7 @@ PROVIDERS = {
          "Qwen-Ambassador/Qwen3.7-Max": Price(2.5, .25, 7.5)},
         temperature=None,
         extra={"enable_thinking": True, "reasoning_effort": "high",
-               "max_completion_tokens": 65536, "stream": True,
+               "max_completion_tokens": DEFAULT_OUTPUT_TOKENS, "stream": True,
                "stream_options": {"include_usage": True}},
         timeout_seconds=600,
         max_retries=5,
@@ -146,7 +169,7 @@ PROVIDERS = {
          "deepseek-v4-pro": Price(1.32, 0.044, 3.96)},
         temperature=None,
         extra={"thinking": {"type": "enabled"}, "reasoning_effort": "high",
-               "max_tokens": 65536},
+               "max_tokens": DEFAULT_OUTPUT_TOKENS},
         max_retries=3,
         reasoning_mode="thinking-high",
     ),
@@ -155,16 +178,17 @@ PROVIDERS = {
         {"claude-sonnet-5-5": Price(2, 2, 10),
          "claude-opus-5-5": Price(4, 4, 20)},
         temperature=None,
-        extra={"max_tokens": 16384},
+        extra={"max_tokens": DEFAULT_OUTPUT_TOKENS, "stream": True,
+               "thinking": {"type": "adaptive"}, "output_config": {"effort": "high"}},
         max_retries=3,
-        reasoning_mode="provider-default",
+        reasoning_mode="thinking-high",
     ),
     "thinkingmachines": ProviderConfig(
         "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1", "TINKER_API_KEY",
         {"thinkingmachines/Inkling": Price(1.87, 0.374, 4.68),
          "thinkingmachines/Inkling-Small": Price(0.58, 0.116, 1.44),
          "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00)},
-        extra={"max_tokens": 16384},
+        extra={"max_tokens": DEFAULT_OUTPUT_TOKENS},
         timeout_seconds=600,
         max_retries=3,
         reasoning_mode="provider-default",
@@ -174,7 +198,7 @@ PROVIDERS = {
         {"gpt-6.2-sol": Price(2, 2, 10),
          "gpt-6.2-astra": Price(8, 8, 40)},
         temperature=None,
-        extra={"max_completion_tokens": 16384},
+        extra={"max_completion_tokens": DEFAULT_OUTPUT_TOKENS},
         max_retries=3,
         reasoning_mode="provider-default",
     ),
@@ -207,39 +231,42 @@ class OpenAICompatible:
         with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
             if body.get("stream") is not True:
                 return json.load(response)
-            text, reasoning = [], []
-            finish_reason = usage = None
-            for raw_line in response:
-                line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
-                line = line.strip()
-                if not line or not line.startswith("data:"):
-                    continue
-                payload = line[5:].strip()
-                if payload == "[DONE]":
-                    break
-                try:
-                    chunk = json.loads(payload)
-                except json.JSONDecodeError as error:
-                    raise StreamInterrupted(f"Malformed stream event: {error}") from error
-                if "error" in chunk:
-                    error = chunk["error"]
-                    message = error.get("message", error) if isinstance(error, dict) else error
-                    raise ProviderUnavailable(f"Stream error: {message}")
-                if "usage" in chunk:
-                    usage = chunk["usage"]
-                for choice in chunk.get("choices") or []:
-                    delta = choice.get("delta") or {}
-                    if delta.get("content") is not None:
-                        text.append(delta["content"])
-                    if delta.get("reasoning_content") is not None:
-                        reasoning.append(delta["reasoning_content"])
-                    if choice.get("finish_reason") is not None:
-                        finish_reason = choice["finish_reason"]
-            if usage is None:
-                raise StreamInterrupted("Streamed response ended without usage")
-            return {"choices": [{"message": {
-                "content": "".join(text), "reasoning_content": "".join(reasoning)},
-                "finish_reason": finish_reason}], "usage": usage}
+            return self._stream_response(response)
+
+    def _stream_response(self, response):
+        text, reasoning = [], []
+        finish_reason = usage = None
+        for raw_line in response:
+            line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
+            line = line.strip()
+            if not line or not line.startswith("data:"):
+                continue
+            payload = line[5:].strip()
+            if payload == "[DONE]":
+                break
+            try:
+                chunk = json.loads(payload)
+            except json.JSONDecodeError as error:
+                raise StreamInterrupted(f"Malformed stream event: {error}") from error
+            if "error" in chunk:
+                error = chunk["error"]
+                message = error.get("message", error) if isinstance(error, dict) else error
+                raise ProviderUnavailable(f"Stream error: {message}")
+            if "usage" in chunk:
+                usage = chunk["usage"]
+            for choice in chunk.get("choices") or []:
+                delta = choice.get("delta") or {}
+                if delta.get("content") is not None:
+                    text.append(delta["content"])
+                if delta.get("reasoning_content") is not None:
+                    reasoning.append(delta["reasoning_content"])
+                if choice.get("finish_reason") is not None:
+                    finish_reason = choice["finish_reason"]
+        if usage is None:
+            raise StreamInterrupted("Streamed response ended without usage")
+        return {"choices": [{"message": {
+            "content": "".join(text), "reasoning_content": "".join(reasoning)},
+            "finish_reason": finish_reason}], "usage": usage}
 
     def _request(self, path: str, body: dict | None = None) -> dict:
         key = os.environ.get(self.config.key_env)
@@ -305,7 +332,7 @@ class OpenAICompatible:
         return [item["id"] for item in self._request("/models")["data"]]
 
     def send(self, model: str, messages: list[dict[str, str]]) -> Response:
-        body = {"model": model, "messages": messages, **self.config.extra}
+        body = {"model": model, "messages": messages, **self.config.request_extra(model)}
         if self.config.temperature is not None:
             body["temperature"] = self.config.temperature
         start = time.perf_counter()
@@ -352,7 +379,7 @@ class Muse(OpenAICompatible):
         return data
 
     def send(self, model, messages):
-        body = {"model": model, "messages": messages, **self.config.extra}
+        body = {"model": model, "messages": messages, **self.config.request_extra(model)}
         if self.config.temperature is not None:
             body["temperature"] = self.config.temperature
         if model == "muse-ember-1.0" and (
@@ -425,7 +452,7 @@ class Gemini(OpenAICompatible):
             path = "/models?" + urllib.parse.urlencode({"pageToken": data["nextPageToken"]})
 
     def send(self, model, messages):
-        config = dict(self.config.extra)
+        config = self.config.request_extra(model)
         if self.config.temperature is not None:
             config["temperature"] = self.config.temperature
         body = {"contents": [{"role": "model" if m["role"] == "assistant" else "user",
@@ -449,6 +476,44 @@ class Gemini(OpenAICompatible):
 
 
 class Anthropic(OpenAICompatible):
+    def _stream_response(self, response):
+        blocks, usage = {}, {}
+        stopped = final_usage = False
+        finish_reason = None
+        for raw_line in response:
+            try:
+                line = raw_line.decode("utf-8").strip()
+                if not line.startswith("data:"):
+                    continue
+                event = json.loads(line[5:].strip())
+                kind = event.get("type")
+                if kind == "error":
+                    raise StreamInterrupted(f"Anthropic stream error: {event.get('error')}")
+                if kind == "message_start":
+                    usage.update(event["message"].get("usage", {}))
+                elif kind == "content_block_start":
+                    block = event["content_block"]
+                    if block["type"] == "text":
+                        blocks[event["index"]] = block.get("text", "")
+                elif kind == "content_block_delta" and event["delta"]["type"] == "text_delta":
+                    index = event["index"]
+                    blocks[index] = blocks.get(index, "") + event["delta"]["text"]
+                elif kind == "message_delta":
+                    usage.update(event.get("usage", {}))
+                    final_usage = "output_tokens" in event.get("usage", {})
+                    finish_reason = event.get("delta", {}).get("stop_reason")
+                elif kind == "message_stop":
+                    stopped = True
+                    break
+            except (ValueError, UnicodeError, TypeError, KeyError, AttributeError) as error:
+                raise StreamInterrupted(f"Malformed Anthropic stream event: {error}") from error
+        if (not stopped or not final_usage
+                or any(type(usage.get(key)) is not int or usage[key] < 0
+                       for key in ("input_tokens", "output_tokens"))):
+            raise StreamInterrupted("Anthropic stream ended without final usage or message_stop")
+        return {"content": [{"type": "text", "text": blocks[key]} for key in sorted(blocks)],
+                "usage": usage, "stop_reason": finish_reason}
+
     def _headers(self, key: str) -> dict[str, str]:
         return {"x-api-key": key, "anthropic-version": "2023-06-01",
                 "Content-Type": "application/json"}
@@ -466,7 +531,7 @@ class Anthropic(OpenAICompatible):
     def send(self, model: str, messages: list[dict[str, str]]) -> Response:
         body = {"model": model,
                 "messages": [message for message in messages if message["role"] != "system"],
-                **self.config.extra}
+                **self.config.request_extra(model)}
         system = [message["content"] for message in messages if message["role"] == "system"]
         if system:
             body["system"] = "\n\n".join(system)
@@ -477,8 +542,8 @@ class Anthropic(OpenAICompatible):
         elapsed = time.perf_counter() - start
         text = "".join(block["text"] for block in data["content"] if block["type"] == "text")
         usage = data["usage"]
-        return Response(text, usage["input_tokens"], usage["output_tokens"],
-                        latency_seconds=elapsed)
+        return AnthropicResponse(text, usage["input_tokens"], usage["output_tokens"],
+                                 latency_seconds=elapsed, finish_reason=data.get("stop_reason", ""))
 
 
 def get_provider(name: str) -> Provider:

@@ -41,7 +41,7 @@ def test_transport_and_estimated_prices(monkeypatch, model, rates, content):
     monkeypatch.delenv('QWEN_BASE_URL', raising=False)
     provider = get_provider('qwen')
     assert type(provider) is OpenAICompatible
-    assert _output_cap(PROVIDERS['qwen']) == 65536
+    assert _output_cap(PROVIDERS['qwen']) == 64000
 
     def request(req, timeout):
         assert req.full_url == 'https://api-inference.modelscope.ai/v1/chat/completions'
@@ -50,7 +50,7 @@ def test_transport_and_estimated_prices(monkeypatch, model, rates, content):
         assert json.loads(req.data) == {
             'model': model, 'messages': [], 'enable_thinking': True,
             'reasoning_effort': 'high',
-            'max_completion_tokens': 65536, 'stream': True,
+            'max_completion_tokens': 64000, 'stream': True,
             'stream_options': {'include_usage': True},
         }
         return sse_response(
