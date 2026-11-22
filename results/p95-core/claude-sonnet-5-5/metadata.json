@@ -1,21 +1,24 @@
 {
-  "run_date": "2026-11-21T04:59:07.895063+00:00",
+  "run_date": "2026-11-22T20:26:14.605280+00:00",
   "pack_id": "p95-core",
-  "pack_digest": "5a5d08825662410062545ffd7e7d35b6bfe3dddcf956f2d0e08693fea9da5a8a",
+  "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
   "visibility": "public",
-  "provider": "deepseek",
-  "model": "deepseek-flash",
-  "base_url": "https://api.deepseek.com",
-  "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 104 Core first tries and 33 repair responses; Core usage cost $5.870177. Not an invoice.",
+  "provider": "anthropic",
+  "model": "claude-sonnet-5-5",
+  "base_url": "https://api.anthropic.com/v1",
+  "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 104 Core first tries and 24 repair responses; Core usage cost $19.925888. Not an invoice. Actions run https://github.com/QAInsights/p95-bench/actions/runs/45066297860.",
   "pricing_source": "Frozen provider list-price snapshot in saved attempts",
   "temperature": null,
   "reasoning_mode": "thinking-high",
   "repair_rounds": 1,
+  "max_tokens": 64000,
+  "stream": true,
   "thinking": {
-    "type": "enabled"
+    "type": "adaptive"
   },
-  "reasoning_effort": "high",
-  "max_tokens": 65536,
+  "output_config": {
+    "effort": "high"
+  },
   "task_scenarios": {
     "mx-a01-jtl-endpoints-gatling": "mx-a01-jtl-endpoints",
     "mx-a01-jtl-endpoints-jmeter": "mx-a01-jtl-endpoints",
@@ -122,32 +125,37 @@
     "mx-w07-burst-control-k6": "mx-w07-burst-control",
     "mx-w07-burst-control-locust": "mx-w07-burst-control"
   },
-  "spend_cap_usd": 100.0,
-  "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807",
+  "output_cap": 64000,
+  "harness_commit": "9bc4ed5853a8913e325b40741920c021a936d725",
   "harness_dirty": false,
   "derived_from": [
     {
-      "pack_id": "p95-matrix",
-      "pack_digest": "e1172becde2abd9fdcbef9ea343ed25e95728a55d0a023cd8d554016a2f50ed7",
-      "run": "20261121T045907Z-9561e40d",
-      "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807"
+      "pack_id": "p95-core",
+      "pack_digest": "924ec8d9236f6502841960046c493ebe2e8dfd015b1214ffb1156589d528e491",
+      "run": "20261122T202614Z-6dae70f0",
+      "harness_commit": "9bc4ed5853a8913e325b40741920c021a936d725",
+      "spend_cap_usd": 15.0
     },
     {
-      "pack_id": "p95-matrix",
-      "pack_digest": "57ff97490a9becb17e39e1870f0a51cd91a29a274e1b8f6be4edeee87d372a12",
-      "run": "20261121T152048Z-eae159b0",
-      "harness_commit": "8d0fa7df0e07f156f8e9c45a192671775e26c807"
+      "pack_id": "p95-core",
+      "pack_digest": "c1bdc7627e4769d5d1256f0accad2686390996d4c5f2d6b17436491ab41657bf",
+      "run": "20261122T202622Z-d341a88c",
+      "harness_commit": "9bc4ed5853a8913e325b40741920c021a936d725",
+      "spend_cap_usd": 15.0
+    },
+    {
+      "pack_id": "p95-core",
+      "pack_digest": "99ea76a056c6939bc55f05f23cb553a3f7eecb35339a2f2b1eb1dab808214313",
+      "run": "20261122T202612Z-08689552",
+      "harness_commit": "9bc4ed5853a8913e325b40741920c021a936d725",
+      "spend_cap_usd": 15.0
+    },
+    {
+      "pack_id": "p95-core",
+      "pack_digest": "4855c7ba95ae6fc4a35db70a2d7d6c802153b0deb867dbd5fb5dab9d5594b666",
+      "run": "20261122T202615Z-586c0d4d",
+      "harness_commit": "9bc4ed5853a8913e325b40741920c021a936d725",
+      "spend_cap_usd": 15.0
     }
-  ],
-  "regraded": [{
-    "harness_commit": "19aeecb6b6edffaf3d6d30b8f32fe3ff35eae657",
-    "grader": "v2_analysis",
-    "reason": "Answer-list length is no longer part of the analysis answer schema.",
-    "tasks": [
-      "mx-a01-jtl-endpoints-gatling",
-      "mx-a01-jtl-endpoints-k6",
-      "mx-a01-jtl-endpoints-locust"
-    ],
-    "superseded_repair_cost_usd": 0.016511484
-  }]
+  ]
 }
