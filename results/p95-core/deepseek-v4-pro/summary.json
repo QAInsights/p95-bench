@@ -1,0 +1,38 @@
+{
+  "pack_id": "p95-core",
+  "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+  "overall_score": 44.15576676321813,
+  "quality_score": 45.156828703749994,
+  "efficiency_score": 25.135589893112755,
+  "category_scores": {
+    "repair": 80.14814814833332,
+    "migration": 20.0,
+    "correlation": 17.812500000000004,
+    "workload": 13.333333333333334,
+    "analysis": 100.0
+  },
+  "attempts": 104,
+  "expected_attempts": 104,
+  "repeats": 1,
+  "complete": true,
+  "passed": 48,
+  "after_repair": {
+    "overall_score": 48.24482914686975,
+    "quality_score": 49.406828703749994,
+    "efficiency_score": 26.166837566145112,
+    "category_scores": {
+      "repair": 82.23148148166666,
+      "migration": 33.75,
+      "correlation": 24.479166666666668,
+      "workload": 13.333333333333334,
+      "analysis": 100.0
+    }
+  },
+  "repairs_triggered": 30,
+  "repairs_succeeded": 2,
+  "estimated_cost_usd": 14.505640776,
+  "input_tokens": 629368,
+  "output_tokens": 3551743,
+  "latency_seconds": 28948.017945313,
+  "not_run": 0
+}

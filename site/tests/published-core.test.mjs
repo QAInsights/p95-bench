@@ -11,15 +11,15 @@ const budget = await readFile(new URL('../../packs/p95-core/efficiency-budgets.j
 const budgetHash = createHash('sha256').update(budget).digest('hex');
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 
-test('Core publishes only the complete public Sonnet run with current provenance', async () => {
+test('Core publishes the complete public Sonnet run alongside V4 Pro with current provenance', async () => {
   assert.equal(data.pack_id, 'p95-core');
   assert.equal(data.pack_digest, 'f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de');
   assert.equal(data.budget_file_sha256, budgetHash);
   assert.match(data.publication_note, /45066297860/);
   assert.match(data.publication_note, /final answer after the one allowed repair/);
-  assert.doesNotMatch(JSON.stringify(data), /deepseek|5a5d088256624100/);
-  assert.deepEqual(await readdir(runs), ['claude-sonnet-5-5']);
-  assert.deepEqual(data.models.map(model => model.model), ['claude-sonnet-5-5']);
+  assert.doesNotMatch(JSON.stringify(data), /deepseek-flash|5a5d088256624100/);
+  assert.deepEqual((await readdir(runs)).sort(), ['claude-sonnet-5-5', 'deepseek-v4-pro']);
+  assert.deepEqual(data.models.map(model => model.model), ['claude-sonnet-5-5', 'deepseek-v4-pro']);
   const [model] = data.models;
   assert.equal(model.provider, 'anthropic');
   assert.equal(model.output_cap, 64000);
@@ -44,8 +44,36 @@ test('Core publishes only the complete public Sonnet run with current provenance
   assert.equal(displayed.score, model.after_repair.overall_score);
 });
 
+test('Core V4 Pro preserves matching manifest, public coverage, usage costs and after-repair display', async () => {
+  const model = data.models.find(model => model.model === 'deepseek-v4-pro');
+  assert.equal(model.provider, 'deepseek');
+  assert.equal(model.pack_digest, data.pack_digest);
+  assert.equal(model.output_cap, 64000);
+  assert.equal(model.reasoning_mode, 'thinking-high');
+  assert.equal(model.budget_file_sha256, budgetHash);
+  assert.match(data.publication_note, /45082823742/);
+  assert.match(model.cost_note, /45082823742/);
+  assert.match(model.cost_note, /29 repair responses/);
+  assert.equal(model.derived_from.length, 4);
+  assert.ok(model.derived_from.every(source => source.harness_commit === model.harness_commit));
+  assert.deepEqual(model.coverage, { run: 104, total: 104, partial: false, label: '104/104 tasks run' });
+  const { tasks } = await loadTaskData({ packId: 'p95-core' });
+  assert.equal(model.per_task_results.length, 104);
+  assert.deepEqual(new Set(model.per_task_results.map(task => task.task_id)), new Set(tasks.map(task => task.id)));
+  near(model.overall_score, 44.15576676321813);
+  near(model.after_repair.overall_score, 48.24482914686975);
+  near(model.cost, 14.505640776);
+  near(model.cost_attempts.reduce((sum, attempt) => sum + attempt.cost_usd, 0), model.cost);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.status === 'repair').length, 29);
+  const displayed = boardModels(data).find(model => model.key === 'deepseek/deepseek-v4-pro');
+  assert.equal(displayed.score.toFixed(1), '48.2');
+  assert.equal(displayed.score, model.after_repair.overall_score);
+  assert.deepEqual(displayed.categories, model.after_repair.category_scores);
+  near(Object.values(displayed.toolCosts).reduce((sum, cost) => sum + cost, 0), model.cost);
+});
+
 test('published Core data reproduces from stored runs apart from documented annotations', async () => {
-  const rebuilt = await buildData([new URL('claude-sonnet-5-5/', runs).pathname], { packId: 'p95-core' });
+  const rebuilt = await buildData((await readdir(runs)).map(model => new URL(`${model}/`, runs).pathname), { packId: 'p95-core' });
   const { budget_file_sha256, publication_note, models, ...rest } = data;
   const unannotated = { ...rest, models: models.map(({ budget_file_sha256, ...model }) => model) };
   assert.deepEqual(unannotated, rebuilt);
