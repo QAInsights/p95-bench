@@ -70,6 +70,8 @@ def _models(value):
 
 
 def _shard_cap(value):
+    if not value.strip():
+        return ""
     try:
         cap = Decimal(value)
     except (InvalidOperation, TypeError, ValueError) as error:

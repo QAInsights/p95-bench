@@ -281,6 +281,8 @@ def test_core_run_derivation_merges_committed_core_tool_shards(tmp_path):
     assert summary["attempts"] == 104
     assert summary["complete"] is True
     assert summary["overall_score"] == pytest.approx(100.0)
+    assert summary["cost_by_tool"] == pytest.approx({tool: .026 for tool in TOOLS})
+    assert sum(summary["cost_by_tool"].values()) == pytest.approx(summary["estimated_cost_usd"])
     metadata = json.loads((tmp_path / "merged/metadata.json").read_text())
     assert "spend_cap_usd" not in metadata
     assert [source["pack_id"] for source in metadata["derived_from"]] == ["p95-core"] * 4

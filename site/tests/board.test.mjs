@@ -93,6 +93,24 @@ test('cost formatter handles basic and non-finite values', () => {
   assert.equal(formatCost(Infinity), '—');
 });
 
+test('tool costs include first tries, repairs and charged not-run responses', () => {
+  const data = fakeV2();
+  const source = data.models[0];
+  const jmeter = source.per_task_results.find(task => task.tool === 'jmeter').task_id;
+  const k6 = source.per_task_results.find(task => task.tool === 'k6').task_id;
+  source.cost_attempts = [
+    { task_id: jmeter, cost_usd: 1 },
+    { task_id: jmeter, cost_usd: .5, status: 'repair' },
+    { task_id: jmeter, cost_usd: .25, status: 'not_run' },
+    { task_id: k6, cost_usd: 0 },
+  ];
+  const model = boardModels(data).find(item => item.key === `${source.provider}/${source.model}`);
+  assert.deepEqual(model.toolCosts, { jmeter: 1.75, k6: 0 });
+  assert.equal(formatCost(model.toolCosts.locust), '—');
+  source.cost_attempts = [];
+  assert.deepEqual(boardModels(data).find(item => item.key === model.key).toolCosts, {});
+});
+
 test('pages use the Core leaderboard and task pack without Matrix-only copy', async () => {
   const page = await readFile(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
   const jsonImports = [...page.matchAll(/import\s+[^;]*from\s+["']([^"']+\.json)["'];?/g)]

@@ -231,6 +231,7 @@ def test_grading_infrastructure_preserves_response_without_scoring_or_more_calls
     assert summary == score_run(directory)
     if v2:
         assert not summary["complete"]
+        assert sum(summary["cost_by_tool"].values()) == summary["estimated_cost_usd"]
         assert list(json.loads(ledger.path.read_text())["charges"]) == [entries[0]["budget_reservation"]]
 
 
@@ -302,6 +303,7 @@ def test_repair_round_is_bounded_private_and_scored_separately(tmp_path, monkeyp
     assert "reasoning_content" not in json.dumps(repair["messages_appended"])
     assert len(json.loads(ledger.path.read_text())["charges"]) == 6
     assert summary["repairs_triggered"] == summary["repairs_succeeded"] == 1
+    assert sum(summary["cost_by_tool"].values()) == pytest.approx(summary["estimated_cost_usd"])
     assert summary["after_repair"]["quality_score"] == 62.5
     assert summary["after_repair"]["efficiency_score"] == 56.25
 
@@ -505,6 +507,7 @@ def test_no_ready_grader_means_no_spend(tmp_path):
 
 
 def test_shared_cap_stops_requests_but_writes_summary(tmp_path, monkeypatch):
+    monkeypatch.setenv("P95_BUDGET_LIMIT_USD", "100")
     provider, directory, summary = run_v2(tmp_path, monkeypatch, price=Price(10000, 10000, 10000))
     assert provider.calls == 0
     assert summary["attempts"] == 0 and not summary["complete"]
@@ -513,7 +516,7 @@ def test_shared_cap_stops_requests_but_writes_summary(tmp_path, monkeypatch):
 
 def test_budget_shared_models_processes_and_fail_closed(tmp_path):
     path = tmp_path / "ledger.json"
-    first, second = BudgetLedger(path), BudgetLedger(path)
+    first, second = BudgetLedger(path, limit=100), BudgetLedger(path, limit=100)
     reservation = first.reserve(70)
     with pytest.raises(SpendLimitExceeded):
         second.reserve(31)
@@ -539,6 +542,70 @@ def test_budget_ledger_environment_overrides(tmp_path, monkeypatch):
 
     assert ledger.path == path
     assert ledger.limit == 17_250_001
+
+
+@pytest.mark.parametrize("limit", [None, "", "   "])
+def test_uncapped_ledger_keeps_charges_without_a_spend_ceiling(tmp_path, monkeypatch, limit):
+    if limit is None:
+        monkeypatch.delenv("P95_BUDGET_LIMIT_USD", raising=False)
+    else:
+        monkeypatch.setenv("P95_BUDGET_LIMIT_USD", limit)
+    ledger = BudgetLedger(tmp_path / "ledger.json")
+    key = ledger.reserve(1000)
+    ledger.settle(key, 200)
+    ledger.reserve(2500)
+    empty = ledger.reserve(0)
+    ledger.settle(empty, 0)
+    saved = json.loads(ledger.path.read_text())
+    assert saved["limit"] is ledger.limit is None
+    assert sum(saved["charges"].values()) == 2_700_000_000
+
+
+def test_removing_cap_preserves_existing_ledger_charges(tmp_path):
+    capped = BudgetLedger(tmp_path / "ledger.json", limit=10)
+    key = capped.reserve(2)
+    capped.settle(key, 1)
+    uncapped = BudgetLedger(capped.path, limit="")
+    uncapped.reserve(1000)
+    saved = json.loads(capped.path.read_text())
+    assert saved["limit"] is None
+    assert saved["charges"][key] == 1_000_000
+    with pytest.raises(ValueError, match="mismatched"):
+        capped.reserve(1)
+
+
+@pytest.mark.parametrize("limit", [None, ""])
+def test_cli_uncapped_run_records_all_costs_and_tokens(tmp_path, monkeypatch, limit):
+    if limit is None:
+        monkeypatch.delenv("P95_BUDGET_LIMIT_USD", raising=False)
+    else:
+        monkeypatch.setenv("P95_BUDGET_LIMIT_USD", limit)
+    ledger_path = tmp_path / "ledger.json"
+    monkeypatch.setenv("P95_BUDGET_LEDGER", str(ledger_path))
+    tasks = [replace(task(category), tool=tool) for category, tool in zip(
+        pack_config(V2)["weights"], ("jmeter", "k6", "locust", "gatling", "jmeter"), strict=True)]
+    provider = FakeProvider()
+    monkeypatch.setattr("p95bench.cli.get_provider", lambda _: provider)
+    monkeypatch.setattr("p95bench.cli.load_tasks", lambda *args: tasks)
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint", lambda *args: result(100))
+    config = replace(PROVIDERS["deepseek"], prices={"deepseek-flash": Price(1e6, 1e6, 1e6)})
+    monkeypatch.setitem(PROVIDERS, "deepseek", config)
+    budgets = tmp_path / "efficiency.json"
+    budgets.write_text(json.dumps({item.id: {"tokens": 100, "latency_seconds": 10} for item in tasks}))
+    assert main(["run", "--provider", "deepseek", "--model", "deepseek-flash", "--pack", V2,
+                 "--efficiency-budgets", str(budgets), "--out", str(tmp_path)]) == 0
+    directory = next((tmp_path / V2).iterdir())
+    summary = json.loads((directory / "summary.json").read_text())
+    attempts = [json.loads(line) for line in (directory / "attempts.jsonl").read_text().splitlines()]
+    assert provider.calls == summary["attempts"] == 5
+    assert summary["complete"] and summary["not_run"] == 0
+    assert not (directory / "not-run.jsonl").exists()
+    assert json.loads((directory / "metadata.json").read_text())["spend_cap_usd"] is None
+    assert summary["estimated_cost_usd"] == sum(item["cost_usd"] for item in attempts) == 600
+    assert summary["input_tokens"] == 500 and summary["output_tokens"] == 100
+    assert summary["cost_by_tool"] == {"jmeter": 240, "k6": 120, "locust": 120, "gatling": 120}
+    assert sum(json.loads(ledger_path.read_text())["charges"].values()) == 600_000_000
+    assert summary == score_run(directory)
 
 
 @pytest.mark.parametrize("limit", ["invalid", "NaN", "0"])
@@ -575,7 +642,7 @@ def test_budget_ledger_rejects_negative_settlement_without_corruption(tmp_path):
 
 
 def test_concurrent_budget_reservations(tmp_path):
-    ledger = BudgetLedger(tmp_path / "ledger.json")
+    ledger = BudgetLedger(tmp_path / "ledger.json", limit=100)
 
     def reserve(_):
         try:
@@ -715,13 +782,13 @@ def test_harness_revision_ignores_enclosing_repository(tmp_path):
 
 
 def test_budget_overrun_is_persisted_and_blocks_future_spend(tmp_path):
-    ledger = BudgetLedger(tmp_path / "ledger.json")
+    ledger = BudgetLedger(tmp_path / "ledger.json", limit=100)
     key = ledger.reserve(1)
     with pytest.raises(ValueError, match="reservation"):
         ledger.settle(key, 101)
     assert json.loads(ledger.path.read_text())["charges"][key] == 101_000_000
     with pytest.raises(SpendLimitExceeded):
-        BudgetLedger(ledger.path).reserve(.000001)
+        BudgetLedger(ledger.path, limit=100).reserve(.000001)
 
 
 def test_legacy_published_scores_bit_identical():

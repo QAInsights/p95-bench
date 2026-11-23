@@ -54,18 +54,27 @@ v2 builder uses `npm run data -- --pack p95-v2.0.0 --tasks PUBLIC_TASK_ROOT RUN_
 and writes `leaderboard-p95-v2.0.0.json`, never overwriting v1. The site lands on v2
 by default; `?pack=v1` selects the legacy board.
 
-By default, local V2 runs share a **$100 maximum budget across all models**, backed
-by `~/.local/state/p95-bench/p95-v2.0.0-budget.json`. `P95_BUDGET_LEDGER` and
-`P95_BUDGET_LIMIT_USD` can override the path and limit. Do not delete/reset the
-shared local ledger between models. File-locked, persistent maximum-cost
+By default, local V2/Core runs have **no spend limit**: an unset or blank
+`P95_BUDGET_LIMIT_USD` is unlimited, and no tasks are skipped for budget exhaustion.
+Set it to a positive USD amount (at most $100) to opt into a shared spend cap.
+The ledger at `~/.local/state/p95-bench/p95-v2.0.0-budget.json` still records charges;
+`P95_BUDGET_LEDGER` overrides its path. Removing the limit also removes a previous
+cap from that ledger without deleting recorded charges. Use a separate ledger
+when opting back into a cap, or when changing an existing cap. Do not delete/reset
+the shared local ledger between models. File-locked, persistent maximum-cost
 reservations happen before generation and include every possible transport retry. Returned usage releases
 unused reserve; requests without usage retain their conservative bounds, including
 interrupted processes. Bounds use uncached input at serialized-message bytes plus
 4,096 framing tokens, the configured output cap and recorded prices. This is a
 conservative list-price guard, not a provider invoice guarantee; unexpected usage
 above a reservation stops the run for audit. Ledger corruption/cap mismatch fails
-closed. Budget exhaustion skips remaining slots and still writes a provisional
-summary. API keys are not needed for the synthetic tests; no paid runs ship here.
+closed. With an explicit cap, budget exhaustion skips remaining slots and still
+writes a provisional summary. Uncapped runs retain the same per-attempt costs,
+token totals and `estimated_cost_usd`; `metadata.json` records `spend_cap_usd: null`.
+New V2/Core summaries include `cost_by_tool`, including repair and charged not-run
+responses. Core rankings show each tool's usage-priced cost alongside its score;
+the total model cost includes repairs too. API keys are not needed for the
+synthetic tests; no paid runs ship here.
 
 v2 is public-only: all 40 tasks are checked in and there are no held-out tasks.
 Runs are always marked public, and the site builder rejects any private run.
@@ -82,7 +91,8 @@ matching repository secret for every selected provider: `DEEPSEEK_API_KEY`,
 `TINKER_API_KEY`, or `OPENAI_API_KEY`. Only secrets for selected providers are
 needed.
 
-Set **cap_usd_per_model** for the total spend limit of each model, and choose
+Leave **cap_usd_per_model** blank for unlimited spend, or set it for an optional
+total spend limit of each model, and choose
 **repair_rounds** (`1` by default, or `0`). The cap is per model and is split
 evenly across its four tool shards; each shard checks a conservative reservation
 against its ledger before every provider call. **scenarios** optionally selects

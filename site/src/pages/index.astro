@@ -60,7 +60,7 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
       </section>
 
       <section id="rankings" aria-labelledby="rankings-title">
-        <h2 id="rankings-title" class="label">Rankings <span>score / 100 · per-tool average task score</span></h2>
+        <h2 id="rankings-title" class="label">Rankings <span>score / 100 · per-tool average task score and cost</span></h2>
         <div class="table-wrap">
           <table class="rankings">
             <thead><tr><th>#</th><th>Model</th><th class="n">Score</th>{tools.map(t => <th class="n">{toolLabel(t)}</th>)}<th class="n">Cost</th></tr></thead>
@@ -70,7 +70,7 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
                   <td class="rank">{i + 1}</td>
                   <td><span class="swatch" style={`background:${m.color}`}></span>{m.name} <span class="provider">{m.providerLabel}</span></td>
                   <td class="n strong">{m.score.toFixed(1)}</td>
-                  {tools.map(t => { const v = toolScore(m, t); return <td class="n">{v === null ? "—" : v.toFixed(1)}</td>; })}
+                  {tools.map(t => { const v = toolScore(m, t); return <td class="n">{v === null ? "—" : v.toFixed(1)} <span class="provider">{formatCost(m.toolCosts[t])}</span></td>; })}
                   <td class="n">{formatCost(m.cost)}</td>
                 </tr>
               ))}

@@ -80,6 +80,16 @@ def test_plan_benchmark_rejects_unknown_scenario(monkeypatch, capsys):
     assert "Unknown Core scenario code" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize("cap", [None, "", "   "])
+def test_plan_benchmark_defaults_to_uncapped_shards(cap):
+    environment = {"MODELS": "anthropic claude-sonnet-5-5"}
+    if cap is not None:
+        environment["CAP_USD_PER_MODEL"] = cap
+    _, shards = plan_benchmark.build_plan(environment)
+    assert len(shards) == 4
+    assert all(shard["cap_usd"] == "" for shard in shards)
+
+
 def test_plan_benchmark_summary_matches_published_tool_scores(capsys):
     run_dir = plan_benchmark.ROOT / "results/p95-core/claude-sonnet-5-5"
     board = json.loads(
