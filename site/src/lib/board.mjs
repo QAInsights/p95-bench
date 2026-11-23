@@ -12,12 +12,18 @@ export function boardModels(data) {
   return data.models.filter(m => Number.isFinite(m.overall_score))
     .map(m => {
       const final = Number.isFinite(m.after_repair?.overall_score) ? m.after_repair : m;
+      const taskTools = new Map(m.per_task_results.map(task => [task.task_id, task.tool]));
+      const toolCosts = {};
+      for (const attempt of m.cost_attempts ?? []) {
+        const tool = taskTools.get(attempt.task_id);
+        if (tool) toolCosts[tool] = (toolCosts[tool] ?? 0) + attempt.cost_usd;
+      }
       return {
         key: `${m.provider}/${m.model}`, name: name(m.model), provider: m.provider,
         providerLabel: providerName(m.provider),
         score: final.overall_score, categories: final.category_scores,
         reasoningMode: m.reasoning_mode ?? null, derivedFrom: m.derived_from ?? null,
-        cost: m.cost, tasks: m.per_task_results,
+        cost: m.cost, toolCosts, tasks: m.per_task_results,
       };
     })
     .sort((a, b) => b.score - a.score || a.cost - b.cost || a.name.localeCompare(b.name))

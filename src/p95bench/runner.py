@@ -103,6 +103,13 @@ def score_run(directory: Path):
             fallback = entry["grading_error"].get("fallback_error")
             if fallback:
                 summary["stop_reason"] += f"; fallback error ({fallback['type']}): {fallback['message']}"
+    if manifest and manifest["grade_schema_version"] == 2:
+        entries = attempts + not_run
+        if all(entry.get("tool") for entry in entries):
+            costs = defaultdict(float)
+            for entry in entries:
+                costs[entry["tool"]] += entry.get("cost_usd", 0) + (entry.get("repair") or {}).get("cost_usd", 0)
+            summary["cost_by_tool"] = dict(sorted(costs.items()))
     (directory / "summary.json").write_text(
         json.dumps(summary, indent=2) + "\n")
     return summary
@@ -284,7 +291,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         price_per_million=asdict(price))
     if v2:
         metadata["output_cap"] = _output_cap(config, model)
-        metadata["spend_cap_usd"] = ledger.limit / 1_000_000
+        metadata["spend_cap_usd"] = ledger.limit / 1_000_000 if ledger.limit is not None else None
         metadata.update(harness_revision())
     (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     budget_error = None
@@ -329,7 +336,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         if task.scenario is not None:
                             entry["scenario"] = task.scenario
                         if v2:
-                            entry.update(pack_id=pack_id, budget_reservation=reservation)
+                            entry.update(pack_id=pack_id, tool=task.tool, budget_reservation=reservation)
                         skipped.write(json.dumps(entry) + "\n")
                     continue
                 workdir = directory / f"task-{index}-{repeat}"
@@ -344,7 +351,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                 if grading_error is not None:
                     attempt["grading_error"] = grading_error
                 if v2:
-                    attempt.update(pack_id=pack_id, pack_digest=manifest["digest"],
+                    attempt.update(pack_id=pack_id, pack_digest=manifest["digest"], tool=task.tool,
                                    budget_reservation=reservation)
                     latency = getattr(provider, "response_latency_seconds", None)
                     attempt["response"].update(

@@ -67,6 +67,7 @@ def derive_core_run(model_runs, out_dir, core_pack_root=None):
 
     core_tasks, core_manifest = _core_snapshot(core_pack_root)
     core_inventory = {item["id"]: item for item in core_manifest["tasks"]}
+    core_tools = {task.id: task.tool for task in core_tasks}
     core_budgets = core_manifest["efficiency_budgets"]
     metadata_by_run = []
     attempts_by_task = {}
@@ -150,6 +151,7 @@ def derive_core_run(model_runs, out_dir, core_pack_root=None):
             derived_attempt = dict(attempt)
             derived_attempt.update(
                 pack_id=CORE_PACK,
+                tool=core_tools[task_id],
                 pack_digest=core_manifest["digest"],
                 derived_from=source_record,
             )

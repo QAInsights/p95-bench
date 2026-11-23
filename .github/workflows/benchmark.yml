@@ -8,9 +8,9 @@ on:
         required: true
         type: string
       cap_usd_per_model:
-        description: Spend cap per model in USD, split evenly across its 4 tool shards
-        required: true
-        default: '40'
+        description: Optional spend cap per model in USD (blank = unlimited), split evenly across 4 tool shards
+        required: false
+        default: ''
         type: string
       repair_rounds:
         description: Repair rounds

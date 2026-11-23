@@ -28,10 +28,10 @@ class BudgetLedger:
         if path is None:
             path = os.environ.get("P95_BUDGET_LEDGER", DEFAULT_LEDGER)
         if limit is None:
-            limit = os.environ.get("P95_BUDGET_LIMIT_USD", "100")
+            limit = os.environ.get("P95_BUDGET_LIMIT_USD", "")
         self.path = Path(path)
-        self.limit = micros(limit)
-        if not 0 < self.limit <= 100_000_000:
+        self.limit = None if isinstance(limit, str) and not limit.strip() else micros(limit)
+        if self.limit is not None and not 0 < self.limit <= 100_000_000:
             raise ValueError("V2 shared spend cap must be positive and at most $100")
 
     @contextmanager
@@ -41,6 +41,9 @@ class BudgetLedger:
             fcntl.flock(lock, fcntl.LOCK_EX)
             data = (json.loads(self.path.read_text()) if self.path.exists()
                     else {"limit": self.limit, "charges": {}})
+            if (self.limit is None and type(data.get("limit")) is int
+                    and 0 < data["limit"] <= 100_000_000):
+                data["limit"] = None
             if (data.get("limit") != self.limit or not isinstance(data.get("charges"), dict)
                     or any(not isinstance(v, int) or v < 0 for v in data["charges"].values())):
                 raise ValueError("Invalid or mismatched shared budget ledger")
@@ -55,7 +58,7 @@ class BudgetLedger:
             raise ValueError("Negative budget amount")
         key = uuid4().hex
         with self.transaction() as data:
-            if sum(data["charges"].values()) + amount > self.limit:
+            if self.limit is not None and sum(data["charges"].values()) + amount > self.limit:
                 raise SpendLimitExceeded("V2 shared spend cap: insufficient reserved budget")
             data["charges"][key] = amount
         return key
