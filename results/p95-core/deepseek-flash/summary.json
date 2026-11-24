@@ -17,14 +17,14 @@
   "complete": true,
   "passed": 51,
   "after_repair": {
-    "overall_score": 64.44586406147408,
-    "quality_score": 66.07725694445486,
-    "efficiency_score": 33.44939928483932,
+    "overall_score": 62.993472060174604,
+    "quality_score": 64.57725694445486,
+    "efficiency_score": 32.901559258849744,
     "category_scores": {
       "repair": 80.69444444444444,
       "migration": 51.649305555625006,
       "correlation": 47.291666666666664,
-      "workload": 56.666666666666664,
+      "workload": 49.166666666666664,
       "analysis": 100.0
     }
   },

@@ -9,12 +9,106 @@ from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import digest, pack_config, snapshot
 from p95bench.runner import score_run
 from p95bench.tasks import load_tasks
+from scripts import regrade_core
 from scripts.regrade_core_analysis import regrade
 
 ROOT = Path(__file__).resolve().parents[1]
 CORE_PACK = ROOT / "packs/p95-core"
 A01_TASK = "mx-a01-jtl-endpoints-jmeter"
 _UNSET = object()
+
+
+def test_full_regrade_preserves_recorded_repairs_usage_and_skips(tmp_path, monkeypatch):
+    run_dir = _copy_run(tmp_path)
+    attempts = _read_attempts(run_dir)
+    zero = CheckpointGrade((Checkpoint("correct", 0, 100),)).to_dict()
+    perfect = CheckpointGrade((Checkpoint("correct", 100, 100),)).to_dict()
+    attempts[0]["grade"] = zero
+    attempts[0]["response"]["text"] = ""
+    attempts[0]["repair"] = {
+        "triggered": True, "reason": "invalid_model_artifact", "feedback": "recorded feedback",
+        "response": {**attempts[0]["response"], "text": "recorded repair"},
+        "grade": zero, "cost_usd": 0.002,
+    }
+    attempts[1]["repair"] = {"triggered": True, "skipped": "truncated_at_cap"}
+    attempts[2]["repair"] = {
+        "triggered": True, "error": "insufficient reserved budget", "response": None,
+        "grade": None, "cost_usd": 0,
+    }
+    _write_attempts(run_dir, attempts)
+    before = score_run(run_dir)
+    metadata = json.loads((run_dir / "metadata.json").read_text())
+    calls = []
+
+    def grade_saved(task, text, workdir, v2):
+        calls.append((task.tool, text))
+        return perfect, None
+
+    monkeypatch.setattr(regrade_core, "_grade_response", grade_saved)
+    note, summary = regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
+    after = _read_attempts(run_dir)
+    assert len(calls) == 105
+    assert {tool for tool, _ in calls} == {"jmeter", "k6", "locust", "gatling"}
+    assert sum(text == "" for _, text in calls) == 1
+    assert sum(text == "recorded repair" for _, text in calls) == 1
+    assert note["initial_attempts_regraded"] == 104
+    assert note["recorded_repairs_regraded"] == 1
+    assert note["repairs_not_attempted"] == 103
+    assert note["score_changes"] == [{"task_id": attempts[0]["task_id"], "repeat": 0,
+                                      "changes": [{"phase": "initial", "before": 0, "after": 1},
+                                                  {"phase": "repair", "before": 0, "after": 1}]}]
+    for old, new in zip(attempts, after, strict=True):
+        assert old["response"] == new["response"]
+        assert old["cost_usd"] == new["cost_usd"]
+        assert {key: value for key, value in old["repair"].items() if key != "grade"} == {
+            key: value for key, value in new["repair"].items() if key != "grade"}
+    assert all(summary.get(field) == before.get(field) for field in regrade_core.USAGE_FIELDS)
+    new_metadata = json.loads((run_dir / "metadata.json").read_text())
+    assert new_metadata.pop("regraded") == [note]
+    assert new_metadata == metadata
+    monkeypatch.setattr(regrade_core, "_grade_response", lambda *args: pytest.fail("cache missed"))
+    regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
+
+
+def test_full_regrade_empty_run_makes_no_grader_calls(tmp_path, monkeypatch):
+    run_dir = _copy_run(tmp_path)
+    _write_attempts(run_dir, [])
+    monkeypatch.setattr(regrade_core, "_grade_response", lambda *args: pytest.fail("empty run"))
+    note, summary = regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
+    assert note["initial_attempts_regraded"] == 0
+    assert note["recorded_repairs_regraded"] == 0
+    assert summary["attempts"] == 0
+
+
+@pytest.mark.parametrize("failure", ["task_digest", "worker_error"])
+def test_full_regrade_failure_does_not_rewrite_run(tmp_path, monkeypatch, failure):
+    run_dir = _copy_run(tmp_path)
+    if failure == "task_digest":
+        manifest_path = run_dir / "pack.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["tasks"][0]["task_digest"] = "0" * 64
+        manifest["digest"] = digest({key: value for key, value in manifest.items()
+                                     if key != "digest"})
+        manifest_path.write_text(json.dumps(manifest))
+        attempts = _read_attempts(run_dir)
+        for attempt in attempts:
+            attempt["pack_digest"] = manifest["digest"]
+        _write_attempts(run_dir, attempts)
+    monkeypatch.setattr(regrade_core, "_grade_response", lambda *args: (
+        {"status": "not_run"}, {"type": "WorkerUnavailable", "message": "worker down"}))
+    before = _files(run_dir)
+    with pytest.raises(RuntimeError):
+        regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
+    assert _files(run_dir) == before
+
+
+@pytest.mark.parametrize("response,expected", [
+    (None, False), ({"text": "", "input_tokens": 0, "output_tokens": 0}, False),
+    ({"text": "", "input_tokens": 10, "output_tokens": 0}, True),
+    ({"text": "saved answer"}, True),
+])
+def test_full_regrade_distinguishes_unsent_repairs_from_empty_responses(response, expected):
+    assert regrade_core.recorded_repair({"repair": {"response": response}}) is expected
 
 
 def _copy_run(tmp_path):

@@ -157,5 +157,132 @@
       "harness_commit": "9bc4ed5853a8913e325b40741920c021a936d725",
       "spend_cap_usd": 15.0
     }
+  ],
+  "regraded": [
+    {
+      "harness_commit": "beda2d574631a6c0f3becfa02481fb59c3ff6d95",
+      "grader": "all_core_saved_outputs",
+      "reason": "Accept JMeter native numeric properties; replay all four tools offline.",
+      "repair_policy": "Regrade recorded responses only; preserve historical repair selection, feedback, skipped rounds, cost, tokens and latency.",
+      "initial_attempts_regraded": 104,
+      "recorded_repairs_regraded": 24,
+      "repairs_not_attempted": 80,
+      "score_changes": [
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "repair",
+              "before": 1.0,
+              "after": 0.875
+            }
+          ]
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 0.0,
+              "after": 0.5
+            },
+            {
+              "phase": "repair",
+              "before": 0.0,
+              "after": 0.5
+            }
+          ]
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 1.0,
+              "after": 0.875
+            }
+          ]
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 1.0,
+              "after": 0.75
+            }
+          ]
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 1.0,
+              "after": 0.875
+            }
+          ]
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 0.0,
+              "after": 1.0
+            },
+            {
+              "phase": "repair",
+              "before": 0.0,
+              "after": 1.0
+            }
+          ]
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 0.0,
+              "after": 1.0
+            },
+            {
+              "phase": "repair",
+              "before": 0.0,
+              "after": 0.8
+            }
+          ]
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 0.4,
+              "after": 0.0
+            }
+          ]
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 0.0,
+              "after": 1.0
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

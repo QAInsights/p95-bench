@@ -154,5 +154,40 @@
       "harness_commit": "9bc4ed5853a8913e325b40741920c021a936d725",
       "spend_cap_usd": 5.0
     }
+  ],
+  "regraded": [
+    {
+      "harness_commit": "beda2d574631a6c0f3becfa02481fb59c3ff6d95",
+      "grader": "all_core_saved_outputs",
+      "reason": "Accept JMeter native numeric properties; replay all four tools offline.",
+      "repair_policy": "Regrade recorded responses only; preserve historical repair selection, feedback, skipped rounds, cost, tokens and latency.",
+      "initial_attempts_regraded": 104,
+      "recorded_repairs_regraded": 29,
+      "repairs_not_attempted": 75,
+      "score_changes": [
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 0.9783333334,
+              "after": 0.9927777778
+            }
+          ]
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "repeat": 0,
+          "changes": [
+            {
+              "phase": "initial",
+              "before": 1.0,
+              "after": 0.875
+            }
+          ]
+        }
+      ]
+    }
   ]
 }
