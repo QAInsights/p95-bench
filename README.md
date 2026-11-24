@@ -298,7 +298,7 @@ verified cache discount. Both models reject `max_tokens` and temperature 0:
 requests use `max_completion_tokens: 64000` and omit temperature. Chat
 Completions requests set `reasoning_effort: high`, following OpenAI's
 [GPT-6.2 guidance](https://developers.openai.com/api/docs/guides/latest-model);
-published metadata records `reasoning_mode: thinking-high`. Reasoning tokens
+new run metadata records `reasoning_mode: thinking-high`. Reasoning tokens
 count toward the completion cap and reported output usage.
 
 DeepSeek `/models` was queried during implementation and returned
