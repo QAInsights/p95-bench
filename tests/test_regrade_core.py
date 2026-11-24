@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -122,6 +123,55 @@ def test_selective_regrade_can_change_only_the_recorded_repair(tmp_path, monkeyp
     assert updated["offline_regrades"][-1]["initial_regraded"] is False
 
 
+@pytest.mark.parametrize("mismatch", [
+    "model", "provider", "run_id", "run_date", "derived_from", "attempt_model",
+    "task_id", "response", "repair_response", "missing_attempt", "duplicate_attempt",
+])
+def test_regrade_refuses_mismatched_run_identity_without_writing(tmp_path, monkeypatch, mismatch):
+    run_dir = _copy_run(tmp_path)
+    original = tmp_path / "original"
+    shutil.copytree(run_dir, original)
+    if mismatch in {"model", "provider", "run_id", "run_date", "derived_from"}:
+        path = run_dir / "metadata.json"
+        metadata = json.loads(path.read_text())
+        metadata[mismatch] = "different"
+        path.write_text(json.dumps(metadata))
+    else:
+        attempts = _read_attempts(run_dir)
+        if mismatch == "attempt_model":
+            attempts[-1]["model"] = "different"
+        elif mismatch == "task_id":
+            attempts[-1]["task_id"] = "different"
+        elif mismatch == "response":
+            attempts[-1]["response"]["text"] = "different"
+        elif mismatch == "repair_response":
+            attempts[-1]["repair"] = {"response": {"text": "different"}}
+        elif mismatch == "missing_attempt":
+            attempts.pop()
+        else:
+            attempts.append(attempts[-1])
+        _write_attempts(run_dir, attempts)
+    before, original_before = _files(run_dir), _files(original)
+    monkeypatch.setattr(regrade_core, "_grade_response", lambda *args: pytest.fail("mismatched run"))
+    with pytest.raises(RuntimeError):
+        regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts",
+                              original_run_dir=original)
+    assert _files(run_dir) == before
+    assert _files(original) == original_before
+
+
+def test_regrade_refuses_missing_run_identity(tmp_path):
+    run_dir = _copy_run(tmp_path)
+    path = run_dir / "metadata.json"
+    metadata = json.loads(path.read_text())
+    metadata.pop("run_id")
+    path.write_text(json.dumps(metadata))
+    before = _files(run_dir)
+    with pytest.raises(RuntimeError, match="identity is missing"):
+        regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
+    assert _files(run_dir) == before
+
+
 def test_full_regrade_empty_run_makes_no_grader_calls(tmp_path, monkeypatch):
     run_dir = _copy_run(tmp_path)
     _write_attempts(run_dir, [])
@@ -176,6 +226,7 @@ def _copy_run(tmp_path):
     budgets = json.loads((CORE_PACK / "efficiency-budgets.json").read_text())
     manifest = snapshot("p95-core", tasks, repeats=1, budgets=budgets)
     metadata = {
+        "run_id": "synthetic-core-run",
         "pack_id": "p95-core",
         "pack_digest": manifest["digest"],
         "visibility": "public",

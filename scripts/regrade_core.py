@@ -39,6 +39,33 @@ def affected_phase(task, record):
     return True
 
 
+def _validate_run_identity(metadata, attempts, destination_metadata, destination_attempts):
+    if (not all(isinstance(metadata.get(key), str) and metadata[key]
+                for key in ("model", "provider"))
+            or not any(metadata.get(key) for key in ("run_id", "run_date", "derived_from"))):
+        raise RuntimeError("Original run identity is missing")
+    for key in ("provider", "model", "run_id", "run_date", "derived_from"):
+        if metadata.get(key) != destination_metadata.get(key):
+            raise RuntimeError(f"Original and destination run identity differs: {key}")
+
+    def fingerprints(records):
+        result = {}
+        for attempt in records:
+            if any(attempt.get(key) != metadata[key] for key in ("model", "provider")):
+                raise RuntimeError("Attempt model/provider differs from run identity")
+            key = (attempt["task_id"], attempt["repeat"])
+            if key in result:
+                raise RuntimeError("Duplicate attempt identity")
+            responses = {"initial": attempt["response"],
+                         "repair": (attempt.get("repair") or {}).get("response")}
+            result[key] = hashlib.sha256(json.dumps(
+                responses, sort_keys=True).encode()).hexdigest()
+        return result
+
+    if fingerprints(attempts) != fingerprints(destination_attempts):
+        raise RuntimeError("Original and destination attempt IDs or response hashes differ")
+
+
 def _grade_saved(job):
     task, attempt, directory, commit = job
     results = {}
@@ -87,6 +114,11 @@ def regrade(run_dir, commit, artifacts_dir, jobs=1, original_run_dir=None):
     if any(attempt.get("offline_regrades") for attempt in attempts):
         raise RuntimeError("Supply original, pre-regrade attempts as original_run_dir")
     metadata = json.loads((source / "metadata.json").read_text())
+    destination_metadata = json.loads((run_dir / "metadata.json").read_text())
+    destination_attempts = [json.loads(line)
+                            for line in (run_dir / "attempts.jsonl").read_text().splitlines()
+                            if line.strip()]
+    _validate_run_identity(metadata, attempts, destination_metadata, destination_attempts)
     before = _summary_for_attempts(source, attempts)
     work = []
     for attempt in attempts:
