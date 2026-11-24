@@ -196,9 +196,11 @@ def main(argv=None):
     parser.add_argument("--original-results-dir", type=Path)
     parser.add_argument("--grader-commit")
     args = parser.parse_args(argv)
-    commit = args.grader_commit or subprocess.run(
+    commit = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True,
         capture_output=True, text=True).stdout.strip()
+    if args.grader_commit is not None and args.grader_commit != commit:
+        parser.error("--grader-commit must match the checked-out grader HEAD: " + commit)
     for run_dir in args.run_dir:
         original = args.original_results_dir / run_dir.name if args.original_results_dir else None
         note, summary = regrade(run_dir, commit, args.artifacts_dir / run_dir.name,

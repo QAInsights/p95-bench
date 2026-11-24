@@ -172,6 +172,36 @@ def test_regrade_refuses_missing_run_identity(tmp_path):
     assert _files(run_dir) == before
 
 
+@pytest.mark.parametrize("override", [None, "checked-out-head", "different-revision"])
+def test_regrade_cli_uses_checked_out_grader_revision(tmp_path, monkeypatch, capsys, override):
+    calls = []
+
+    def revision(command, **kwargs):
+        assert command == ["git", "rev-parse", "HEAD"]
+        assert kwargs["cwd"] == ROOT
+        return SimpleNamespace(stdout="checked-out-head\n")
+
+    def regrade_saved(*args):
+        calls.append(args)
+        return {}, {"overall_score": 0, "after_repair": {"overall_score": 0}}
+
+    monkeypatch.setattr(regrade_core.subprocess, "run", revision)
+    monkeypatch.setattr(regrade_core, "regrade", regrade_saved)
+    argv = [str(tmp_path / "run"), "--artifacts-dir", str(tmp_path / "artifacts")]
+    if override is not None:
+        argv.extend(["--grader-commit", override])
+    if override == "different-revision":
+        with pytest.raises(SystemExit) as error:
+            regrade_core.main(argv)
+        assert error.value.code == 2
+        assert "must match the checked-out grader HEAD" in capsys.readouterr().err
+        assert not calls
+    else:
+        regrade_core.main(argv)
+        assert len(calls) == 1
+        assert calls[0][1] == "checked-out-head"
+
+
 def test_full_regrade_empty_run_makes_no_grader_calls(tmp_path, monkeypatch):
     run_dir = _copy_run(tmp_path)
     _write_attempts(run_dir, [])
