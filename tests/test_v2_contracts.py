@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import subprocess
@@ -41,6 +42,63 @@ def test_jmx_executable_components_forbidden(component):
 def test_jmx_unsafe_serialization_and_evaluation_rejected(body):
     with pytest.raises(ValueError):
         artifact_source("jmeter", body)
+
+
+@pytest.mark.parametrize("kind", ["doubleProp", "FloatProperty"])
+@pytest.mark.parametrize("value", ["300.0", "60.0", "-1.25", "0.0"])
+def test_jmx_native_floating_properties_preserved(kind, value):
+    source = (f'<jmeterTestPlan><{kind}><name>throughput</name><value>{value}</value>'
+              f'<savedValue>0.0</savedValue></{kind}></jmeterTestPlan>')
+    assert artifact_source("jmeter", source) == source
+
+
+@pytest.mark.parametrize("kind,value", [("intProp", "7"), ("longProp", "2147483648")])
+def test_jmx_native_integer_properties_preserved(kind, value):
+    source = f'<jmeterTestPlan><{kind} name="n">{value}</{kind}></jmeterTestPlan>'
+    assert artifact_source("jmeter", source) == source
+
+
+@pytest.mark.parametrize("body", [
+    '<doubleProp><name>x</name><value>1</value><savedValue>0</savedValue><unknown/></doubleProp>',
+    '<doubleProp><name>x</name><value>1</value><value>2</value></doubleProp>',
+    '<doubleProp><name>x</name><value>1</value></doubleProp>',
+    '<doubleProp name="other"><name>x</name><value>1</value><savedValue>0</savedValue></doubleProp>',
+    '<doubleProp><name>x</name><value class="evil">1</value><savedValue>0</savedValue></doubleProp>',
+    '<doubleProp><name>x</name><value><stringProp>1</stringProp></value><savedValue>0</savedValue></doubleProp>',
+    '<doubleProp><name>x</name><value>${__groovy(1)}</value><savedValue>0</savedValue></doubleProp>',
+    '<doubleProp><name>x</name><value>NaN</value><savedValue>0</savedValue></doubleProp>',
+    '<doubleProp><name>x</name><value>1</value><savedValue>inf</savedValue></doubleProp>',
+    '<doubleProp><name/><value>1</value><savedValue>0</savedValue></doubleProp>',
+    '<intProp><name>x</name><value>1</value><savedValue>0</savedValue></intProp>',
+    '<longProp><name>x</name><value>1</value><savedValue>0</savedValue></longProp>',
+    '<intProp name="n"><stringProp name="x">1</stringProp></intProp>',
+    '<longProp name="n"><ResponseAssertion/></longProp>',
+    '<FloatProperty><name>x</name><value>1</value><savedValue>0</savedValue><unknown/></FloatProperty>',
+    '<FloatProperty name="x">1</FloatProperty>',
+    '<floatProp><name>x</name><value>1</value><savedValue>0</savedValue></floatProp>',
+    '<stringProp name="x"><name>x</name><value>1</value><savedValue>0</savedValue></stringProp>',
+    '<name>x</name>', '<value>1</value>', '<savedValue>0</savedValue>',
+    '<doubleProp><name>HTTPSampler.implementation</name><value>1</value><savedValue>0</savedValue></doubleProp>',
+])
+def test_jmx_numeric_children_are_contextual_and_strict(body):
+    with pytest.raises(ValueError):
+        artifact_source("jmeter", f'<jmeterTestPlan>{body}</jmeterTestPlan>')
+
+
+@pytest.mark.skipif(not os.environ.get("JMETER_HOME"), reason="Set JMETER_HOME for native SaveService test")
+def test_jmx_native_saveservice_numeric_roundtrip():
+    home = Path(os.environ["JMETER_HOME"])
+    result = subprocess.run(
+        ["java", "--class-path", f"{home}/lib/*{os.pathsep}{home}/lib/ext/*",
+         str(Path(__file__).with_name("NativeNumericProperties.java")), str(home)],
+        capture_output=True, text=True, check=True, timeout=60,
+    )
+    serialized = [line.split("\t") for line in result.stdout.splitlines() if line.startswith("NATIVE\t")]
+    assert len(serialized) == 4
+    for _, encoded in serialized:
+        element = base64.b64decode(encoded).decode().partition("?>")[2].lstrip()
+        source = '<jmeterTestPlan>' + element + '</jmeterTestPlan>'
+        assert artifact_source("jmeter", source) == source
 
 
 def test_k6_scenario_artifact_preserves_source_verbatim():

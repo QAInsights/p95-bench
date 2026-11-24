@@ -22,7 +22,7 @@ COMPONENTS = {"jmeterTestPlan", "hashTree", "TestPlan", "ThreadGroup", "LoopCont
               "JSONPostProcessor", "RegexExtractor", "ResponseAssertion", "DurationAssertion",
               "ConstantTimer", "ConstantThroughputTimer", "SyncTimer", "CSVDataSet",
               "Arguments", "Argument", "HTTPArgument", "Header", "stringProp", "boolProp",
-              "intProp", "longProp", "doubleProp", "collectionProp", "elementProp"}
+              "intProp", "longProp", "doubleProp", "FloatProperty", "collectionProp", "elementProp"}
 FUNCTIONS = {"P", "property", "threadNum", "counter", "time", "Random", "RandomString"}
 
 
@@ -44,7 +44,28 @@ def artifact_source(tool, text):
     if not match:
         raise ValueError("No complete jmeterTestPlan")
     root = ET.fromstring(match[0])
+    numeric_fields = set()
+    numeric_values = {}
     for element in root.iter():
+        if element.tag not in {"intProp", "longProp", "doubleProp", "FloatProperty"}:
+            continue
+        if not len(element) and element.tag != "FloatProperty":
+            continue
+        if element.tag not in {"doubleProp", "FloatProperty"}:
+            raise ValueError("JMX numeric property outside the allowed subset")
+        if (element.attrib or [child.tag for child in element] != ["name", "value", "savedValue"]
+                or (element.text or "").strip()
+                or any(child.attrib or len(child) or (child.tail or "").strip()
+                       for child in element)):
+            raise ValueError("JMX numeric property outside the allowed subset")
+        name, value, saved = (child.text or "" for child in element)
+        if not name or not all(math.isfinite(float(number)) for number in (value, saved)):
+            raise ValueError("Invalid JMX numeric property")
+        numeric_fields.update(element)
+        numeric_values[element] = (name, value)
+    for element in root.iter():
+        if element in numeric_fields:
+            continue
         if element.tag not in COMPONENTS or any(key not in {
                 "name", "testname", "testclass", "guiclass", "enabled", "version", "properties",
                 "jmeter", "elementType"} for key in element.attrib):
@@ -57,10 +78,9 @@ def artifact_source(tool, text):
         if element.tag == "IfController" and element.findtext(
                 "boolProp[@name='IfController.useExpression']") != "true":
             raise ValueError("IfController must use boolean expression mode")
-        value = element.text or ""
+        name, value = numeric_values.get(element, (element.get("name", ""), element.text or ""))
         if any(function not in FUNCTIONS for function in re.findall(r"\$\{__([\w]+)\(", value)):
             raise ValueError("JMX executable expression outside the allowed subset")
-        name = element.get("name", "")
         if name == "TestPlan.user_define_classpath" and value.strip():
             raise ValueError("Custom JVM classpaths are forbidden")
         if name == "HTTPSampler.implementation" and value not in ("", "Java", "HttpClient4"):
