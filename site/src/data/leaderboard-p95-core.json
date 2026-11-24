@@ -80,7 +80,6 @@
         }
       ],
       "output_cap": 64000,
-      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d",
       "cost_attempts": [
         {
           "task_id": "mx-a01-jtl-endpoints-gatling",
@@ -2898,26 +2897,27 @@
           "passed": true,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ]
+      ],
+      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
     },
     {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
-      "overall_score": 62.6305997442996,
+      "overall_score": 68.05146140886016,
       "pack_id": "p95-core",
       "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
-      "quality_score": 62.982638888888886,
-      "efficiency_score": 55.941855997103346,
+      "quality_score": 68.45138888888889,
+      "efficiency_score": 60.45283928831442,
       "repeats": 1,
       "after_repair": {
-        "overall_score": 81.1549331100917,
-        "quality_score": 81.78472222222223,
-        "efficiency_score": 69.18893997961192,
+        "overall_score": 84.54197789514849,
+        "quality_score": 85.25347222222223,
+        "efficiency_score": 71.02358568074754,
         "category_scores": {
           "repair": 93.47222222222223,
-          "migration": 80,
+          "migration": 83.125,
           "correlation": 75,
-          "workload": 63.333333333333336,
+          "workload": 78.33333333333333,
           "analysis": 100
         }
       },
@@ -2925,9 +2925,9 @@
       "reasoning_mode": "thinking-high",
       "category_scores": {
         "repair": 85.13888888888889,
-        "migration": 53.125,
+        "migration": 56.25,
         "correlation": 62.5,
-        "workload": 48.333333333333336,
+        "workload": 73.33333333333334,
         "analysis": 56.25
       },
       "cost": 19.925888,
@@ -2971,7 +2971,6 @@
         }
       ],
       "output_cap": 64000,
-      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d",
       "cost_attempts": [
         {
           "task_id": "mx-a01-jtl-endpoints-gatling",
@@ -5183,13 +5182,13 @@
           "category": "migration",
           "tool": "jmeter",
           "scenario": "mx-m05-pacing-semantics",
-          "score": 0,
+          "score": 0.5,
           "repeat": 0,
           "output_tokens": 61122,
           "latency_seconds": 379.31494142300016,
-          "after_repair_score": 0,
+          "after_repair_score": 0.5,
           "passed": false,
-          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "mx-m05-pacing-semantics-k6",
@@ -5755,13 +5754,13 @@
           "category": "workload",
           "tool": "jmeter",
           "scenario": "mx-w01-steady-starts",
-          "score": 0,
+          "score": 1,
           "repeat": 0,
           "output_tokens": 28996,
           "latency_seconds": 177.3003758599998,
-          "after_repair_score": 0,
-          "passed": false,
-          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "mx-w01-steady-starts-k6",
@@ -5807,13 +5806,13 @@
           "category": "workload",
           "tool": "jmeter",
           "scenario": "mx-w02-open-arrivals",
-          "score": 0,
+          "score": 1,
           "repeat": 0,
           "output_tokens": 43552,
           "latency_seconds": 291.67812758999935,
-          "after_repair_score": 0,
-          "passed": false,
-          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+          "after_repair_score": 0.8,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "mx-w02-open-arrivals-k6",
@@ -5859,13 +5858,13 @@
           "category": "workload",
           "tool": "jmeter",
           "scenario": "mx-w07-burst-control",
-          "score": 0,
+          "score": 1,
           "repeat": 0,
           "output_tokens": 37780,
           "latency_seconds": 240.59596240700012,
           "after_repair_score": 0,
-          "passed": false,
-          "detail": "Invalid model artifact (ValueError): JMX component or serialization attribute outside the allowed subset"
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         },
         {
           "task_id": "mx-w07-burst-control-k6",
@@ -5893,7 +5892,8 @@
           "passed": true,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ]
+      ],
+      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
     },
     {
       "provider": "deepseek",
@@ -5966,7 +5966,6 @@
         }
       ],
       "output_cap": 64000,
-      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d",
       "cost_attempts": [
         {
           "task_id": "mx-a01-jtl-endpoints-gatling",
@@ -8927,7 +8926,8 @@
           "passed": true,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ]
+      ],
+      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
     },
     {
       "provider": "deepseek",
@@ -9000,7 +9000,6 @@
         }
       ],
       "output_cap": 64000,
-      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d",
       "cost_attempts": [
         {
           "task_id": "mx-a01-jtl-endpoints-gatling",
@@ -11987,9 +11986,10 @@
           "passed": false,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ]
+      ],
+      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
     }
   ],
   "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d",
-  "publication_note": "Core: 26 public scenarios across JMeter, k6, Locust and Gatling (104 tasks). Anthropic claude-sonnet-5-5 uses adaptive thinking at high effort; DeepSeek deepseek-flash, deepseek-v4-pro and Qwen-Ambassador/Qwen4-Max use thinking-high. All use a 64,000-token output cap and one conditional repair round. Scores are the final answer after the one allowed repair. Costs include all 104 first tries per model and the recorded repair responses (24 for Sonnet, 27 for Flash, 29 for V4 Pro, 16 for Qwen4-Max), estimated from reported token usage at frozen registry prices, not provider invoices. Sonnet was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45066297860; both DeepSeek models from https://github.com/QAInsights/p95-bench/actions/runs/45082823742; Qwen4-Max from https://github.com/QAInsights/p95-bench/actions/runs/45113245263 at head 2d6e43f309d0ef51698fee94e503439cdb4b09a6. Qwen ran uncapped via the ModelScope free tier; board costs retain public list prices. Five Qwen first tries ended at the output cap and remain scored as recorded. Flash's Gatling shard uses attempt 2 after an IncompleteRead transport failure in attempt 1; costs cover the merged saved responses. All use merged manifest f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de."
+  "publication_note": "Core: 26 public scenarios across JMeter, k6, Locust and Gatling (104 tasks). Anthropic claude-sonnet-5-5 uses adaptive thinking at high effort; DeepSeek deepseek-flash, deepseek-v4-pro and Qwen-Ambassador/Qwen4-Max use thinking-high. All use a 64,000-token output cap and one conditional repair round. Scores are the final answer after the one allowed repair. Costs include all 104 first tries per model and the recorded repair responses (24 for Sonnet, 27 for Flash, 29 for V4 Pro, 16 for Qwen4-Max), estimated from reported token usage at frozen registry prices, not provider invoices. Sonnet was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45066297860; both DeepSeek models from https://github.com/QAInsights/p95-bench/actions/runs/45082823742; Qwen4-Max from https://github.com/QAInsights/p95-bench/actions/runs/45113245263 at head 2d6e43f309d0ef51698fee94e503439cdb4b09a6. Qwen ran uncapped via the ModelScope free tier; board costs retain public list prices. Five Qwen first tries ended at the output cap and remain scored as recorded. Flash's Gatling shard uses attempt 2 after an IncompleteRead transport failure in attempt 1; costs cover the merged saved responses. All use merged manifest f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de. Offline regrade with native-numeric grader commit beda2d574631a6c0f3becfa02481fb59c3ff6d95: only fix-affected attempts were re-graded. Scanned all four models; replaced only eight Sonnet JMeter phase grades (initial and recorded repair for m05, w01, w02 and w07) originally rejected with JMX component or serialization attribute outside the allowed subset and now accepted by patched validation. All other phase grades remain exactly as originally recorded. Historical repair selection, cost, tokens and latency are unchanged; no provider calls or new repairs."
 }

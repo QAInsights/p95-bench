@@ -156,5 +156,17 @@
       "harness_commit": "2d6e43f309d0ef51698fee94e503439cdb4b09a6",
       "spend_cap_usd": null
     }
+  ],
+  "regraded": [
+    {
+      "harness_commit": "beda2d574631a6c0f3becfa02481fb59c3ff6d95",
+      "grader": "native_numeric_affected_phases",
+      "reason": "Regrade only original JMX allowed-subset rejections that now pass patched validation; preserve all other original phase grades.",
+      "repair_policy": "Regrade recorded responses only; preserve historical repair selection, feedback, skipped rounds, cost, tokens and latency.",
+      "initial_attempts_scanned": 104,
+      "initial_attempts_regraded": 0,
+      "recorded_repairs_regraded": 0,
+      "score_changes": []
+    }
   ]
 }

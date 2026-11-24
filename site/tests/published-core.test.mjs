@@ -11,6 +11,30 @@ const budget = await readFile(new URL('../../packs/p95-core/efficiency-budgets.j
 const budgetHash = createHash('sha256').update(budget).digest('hex');
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 
+test('Core regrades only fix-affected JMeter phases without inventing repairs', async () => {
+  assert.match(data.publication_note, /beda2d5/);
+  assert.match(data.publication_note, /only fix-affected/);
+  for (const [directory, phases] of Object.entries({
+    'claude-sonnet-5-5': 4, 'Qwen-Ambassador-Qwen4-Max': 0,
+    'deepseek-v4-pro': 0, 'deepseek-flash': 0,
+  })) {
+    const metadata = JSON.parse(await readFile(new URL(`${directory}/metadata.json`, runs)));
+    const note = metadata.regraded.at(-1);
+    assert.match(note.harness_commit, /^beda2d5/);
+    assert.equal(note.grader, 'native_numeric_affected_phases');
+    assert.equal(note.initial_attempts_scanned, 104);
+    assert.equal(note.initial_attempts_regraded, phases);
+    assert.equal(note.recorded_repairs_regraded, phases);
+    const attempts = (await readFile(new URL(`${directory}/attempts.jsonl`, runs), 'utf8'))
+      .trim().split('\n').map(JSON.parse);
+    const affected = attempts.filter(attempt => attempt.offline_regrades?.length);
+    assert.equal(affected.length, phases);
+    assert.ok(affected.every(attempt => attempt.task_id.endsWith('-jmeter')
+      && attempt.offline_regrades.at(-1).initial_regraded
+      && attempt.offline_regrades.at(-1).recorded_repair_regraded));
+  }
+});
+
 test('Core publishes complete public Sonnet, DeepSeek and Qwen runs with current provenance', async () => {
   assert.equal(data.pack_id, 'p95-core');
   assert.equal(data.pack_digest, 'f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de');
@@ -36,10 +60,11 @@ test('Core publishes complete public Sonnet, DeepSeek and Qwen runs with current
   near(model.cost, 19.925888);
   near(model.cost_attempts.reduce((sum, attempt) => sum + attempt.cost_usd, 0), model.cost);
   assert.equal(model.cost_attempts.filter(attempt => attempt.status === 'repair').length, 24);
-  near(model.overall_score, 62.6305997442996);
+  near(model.overall_score, 68.05146140886016);
+  near(model.after_repair.overall_score, 84.54197789514849);
   near(model.overall_score, .95 * model.quality_score + .05 * model.efficiency_score);
   const displayed = boardModels(data).find(model => model.key === 'anthropic/claude-sonnet-5-5');
-  assert.equal(displayed.score.toFixed(1), '81.2');
+  assert.equal(displayed.score.toFixed(1), '84.5');
   assert.deepEqual(displayed.categories, model.after_repair.category_scores);
   assert.equal(displayed.score, model.after_repair.overall_score);
 });
