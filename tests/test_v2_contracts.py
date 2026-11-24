@@ -52,6 +52,41 @@ def test_jmx_native_floating_properties_preserved(kind, value):
     assert artifact_source("jmeter", source) == source
 
 
+@pytest.mark.parametrize("kind", ["doubleProp", "FloatProperty"])
+@pytest.mark.parametrize("field", ["value", "savedValue"])
+@pytest.mark.parametrize("number", ["1_000", "1.0_0", "١.٢", "\u00a01.0"])
+def test_jmx_native_numeric_fields_reject_non_java_literals(kind, field, number):
+    values = {"value": "1", "savedValue": "0", field: number}
+    source = (f'<jmeterTestPlan><{kind}><name>n</name><value>{values["value"]}</value>'
+              f'<savedValue>{values["savedValue"]}</savedValue></{kind}></jmeterTestPlan>')
+    with pytest.raises(ValueError, match="Invalid JMX numeric property"):
+        artifact_source("jmeter", source)
+
+
+@pytest.mark.parametrize("field", ["value", "savedValue"])
+@pytest.mark.parametrize("number", ["1e39", "-1e39", "3.4028236e38", "0x1p128"])
+def test_jmx_float32_properties_reject_overflow(field, number):
+    values = {"value": "1", "savedValue": "0", field: number}
+    source = (f'<jmeterTestPlan><FloatProperty><name>n</name><value>{values["value"]}</value>'
+              f'<savedValue>{values["savedValue"]}</savedValue></FloatProperty></jmeterTestPlan>')
+    with pytest.raises(ValueError, match="Invalid JMX numeric property"):
+        artifact_source("jmeter", source)
+
+
+@pytest.mark.parametrize("number", ["3.4028235e38", "-3.4028235e38", "0x1.fffffep127",
+                                    "1e-50", "+1.25f", "1e2D", " \t1.25\n"])
+def test_jmx_finite_float32_properties_preserved(number):
+    source = (f'<jmeterTestPlan><FloatProperty><name>n</name><value>{number}</value>'
+              '<savedValue>0</savedValue></FloatProperty></jmeterTestPlan>')
+    assert artifact_source("jmeter", source) == source
+
+
+def test_jmx_double_property_allows_values_beyond_float32_range():
+    source = ('<jmeterTestPlan><doubleProp><name>n</name><value>1e39</value>'
+              '<savedValue>0</savedValue></doubleProp></jmeterTestPlan>')
+    assert artifact_source("jmeter", source) == source
+
+
 @pytest.mark.parametrize("kind,value", [("intProp", "7"), ("longProp", "2147483648")])
 def test_jmx_native_integer_properties_preserved(kind, value):
     source = f'<jmeterTestPlan><{kind} name="n">{value}</{kind}></jmeterTestPlan>'

@@ -3,6 +3,7 @@
 import json
 import math
 import re
+import struct
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -24,6 +25,27 @@ COMPONENTS = {"jmeterTestPlan", "hashTree", "TestPlan", "ThreadGroup", "LoopCont
               "Arguments", "Argument", "HTTPArgument", "Header", "stringProp", "boolProp",
               "intProp", "longProp", "doubleProp", "FloatProperty", "collectionProp", "elementProp"}
 FUNCTIONS = {"P", "property", "threadNum", "counter", "time", "Random", "RandomString"}
+JAVA_FLOAT = re.compile(
+    r"[+-]?(?:(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
+    r"|0[xX](?:[0-9a-fA-F]+(?:\.[0-9a-fA-F]*)?|\.[0-9a-fA-F]+)[pP][+-]?[0-9]+)[fFdD]?")
+
+
+def _numeric_property_value(kind, text):
+    literal = text.strip(" \t\r\n")
+    if not JAVA_FLOAT.fullmatch(literal):
+        raise ValueError("Invalid JMX numeric property")
+    if literal[-1] in "fFdD":
+        literal = literal[:-1]
+    try:
+        value = (float.fromhex(literal) if literal.lstrip("+-").startswith(("0x", "0X"))
+                 else float(literal))
+        if kind == "FloatProperty":
+            value = struct.unpack("!f", struct.pack("!f", value))[0]
+    except OverflowError as error:
+        raise ValueError("Invalid JMX numeric property") from error
+    if not math.isfinite(value):
+        raise ValueError("Invalid JMX numeric property")
+    return value
 
 
 def artifact_source(tool, text):
@@ -59,8 +81,10 @@ def artifact_source(tool, text):
                        for child in element)):
             raise ValueError("JMX numeric property outside the allowed subset")
         name, value, saved = (child.text or "" for child in element)
-        if not name or not all(math.isfinite(float(number)) for number in (value, saved)):
+        if not name:
             raise ValueError("Invalid JMX numeric property")
+        for number in (value, saved):
+            _numeric_property_value(element.tag, number)
         numeric_fields.update(element)
         numeric_values[element] = (name, value)
     for element in root.iter():
