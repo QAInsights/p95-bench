@@ -161,14 +161,16 @@ result files. Execution subprocesses do not need provider credentials.
 
 ## Providers and prices
 
-All providers use `DEFAULT_OUTPUT_TOKENS = 64_000` in `providers.py` for their
-native output-limit field. `ProviderConfig.output_cap(model)` and
-`request_extra(model)` share the effective cap with initial/repair reservations,
-truncation checks and run metadata. Only documented lower output maxima belong
-in `model_output_limits`; no such lower maximum was found for the registry below.
-Unknown maxima retain the requested shared default, not a claim of API support.
+Most providers use `DEFAULT_OUTPUT_TOKENS = 64_000` in `providers.py` for their
+native output-limit field; OpenAI uses its documented 128,000-token maximum.
+`ProviderConfig.output_cap(model)` and `request_extra(model)` share the effective
+cap with initial/repair reservations, truncation checks and run metadata. Only
+documented lower output maxima belong in `model_output_limits`; no such lower
+maximum was found for the registry below. Unknown maxima retain the requested
+shared default, not a claim of API support.
 
-Output-limit documentation audit (2026-11-22; all effective caps are **64,000**):
+Output-limit documentation audit (2026-11-22; effective caps are **64,000**
+except OpenAI at **128,000**):
 
 | Provider/models | Documented maximum output | Source |
 | --- | --- | --- |
@@ -295,7 +297,7 @@ Set `OPENAI_API_KEY` and select `--provider openai` with `gpt-6.2-sol` or
 are $2/$10 for Sol and $8/$40 for Astra, from <https://openai.com/api/pricing/>.
 Cached input is conservatively priced at the ordinary input rate pending a
 verified cache discount. Both models reject `max_tokens` and temperature 0:
-requests use `max_completion_tokens: 64000` and omit temperature. Chat
+requests use `max_completion_tokens: 128000` and omit temperature. Chat
 Completions requests set `reasoning_effort: high`, following OpenAI's
 [GPT-6.2 guidance](https://developers.openai.com/api/docs/guides/latest-model);
 new run metadata records `reasoning_mode: thinking-high`. Reasoning tokens

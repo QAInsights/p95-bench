@@ -17,7 +17,9 @@ def test_request_and_reservation_use_same_cap(monkeypatch, provider_name, model,
     if model_limit is not None:
         provider.config = replace(provider.config, model_output_limits={model: model_limit})
     config = provider.config
-    expected = min(DEFAULT_OUTPUT_TOKENS, model_limit or DEFAULT_OUTPUT_TOKENS)
+    base_cap = next((config.extra[key] for key in OUTPUT_LIMIT_FIELDS
+                     if config.extra.get(key) is not None), DEFAULT_OUTPUT_TOKENS)
+    expected = min(base_cap, model_limit or base_cap)
     monkeypatch.setenv(config.key_env, 'test-key')
 
     def request(req, timeout):
@@ -58,8 +60,8 @@ def test_request_and_reservation_use_same_cap(monkeypatch, provider_name, model,
 def test_shared_fallback_and_provider_defaults():
     assert DEFAULT_OUTPUT_TOKENS == 64000
     assert _output_cap(None) == 64000
-    for config in PROVIDERS.values():
-        assert config.output_cap() == 64000
+    for name, config in PROVIDERS.items():
+        assert config.output_cap() == (128000 if name == 'openai' else 64000)
         assert replace(config, extra={}).output_cap() == 64000
 
 
