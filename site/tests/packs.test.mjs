@@ -58,9 +58,10 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     assert.equal(data.models[0].per_task_results[0].repeat, 0);
     assert.equal(data.models[0].per_task_results[0].output_tokens, 20);
     assert.equal(data.models[0].per_task_results[0].latency_seconds, 2);
+    assert.deepEqual(data.models[0].tokens, { input: 200, output: 40 });
     const repairedAttempt = { ...attempt, repair: { triggered: true, reason: 'invalid_model_artifact',
       feedback: 'invalid input', messages_appended: [], response: { input_tokens: 30,
-        output_tokens: 15, cached_tokens: 0, latency_seconds: 1 },
+        output_tokens: 15, cached_tokens: 12, cache_write_tokens: 8, latency_seconds: 1 },
       grade: { schema_version: 2, status: 'graded', score: 1, passed: true, detail: 'Fixed' },
       cost_usd: .01 } };
     const repairedSummary = { ...summary, estimated_cost_usd: .03, input_tokens: 230,
@@ -80,6 +81,11 @@ test('v2 data preserves points/repeats and rejects mixed, incomplete or private 
     assert.equal(repairedModel.per_task_results[1].after_repair_score, .8);
     assert.equal(repairedModel.cost_attempts.length, 3);
     assert.equal(repairedModel.cost_attempts.find(item => item.status === 'repair').cost_usd, .01);
+    const repairCost = repairedModel.cost_attempts.find(item => item.status === 'repair');
+    assert.equal(repairedModel.tokens.cache_read, repairCost.cached_tokens);
+    assert.equal(repairedModel.tokens.cache_write, repairCost.cache_write_tokens);
+    assert.equal(repairCost.cached_tokens, 12);
+    assert.equal(repairCost.cache_write_tokens, 8);
     const notRun = { ...attempt, repeat: 1, status: 'not_run', cost_usd: .02,
       grade: { status: 'not_run' } };
     const partial = { ...summary, attempts: 1, not_run: 1, complete: false, estimated_cost_usd: .03 };

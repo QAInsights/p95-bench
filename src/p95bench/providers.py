@@ -22,6 +22,7 @@ class Response:
     output_tokens: int
     cached_tokens: int = 0
     latency_seconds: float = 0
+    cache_write_tokens: int = field(default=0, kw_only=True)
 
 
 class Provider(Protocol):
@@ -90,6 +91,16 @@ class Price:
         return ((response.input_tokens - cached) * self.input
                 + cached * self.cached
                 + response.output_tokens * self.output) / 1_000_000
+
+
+@dataclass(frozen=True)
+class AnthropicPrice(Price):
+    cache_write: float
+
+    def cost(self, response: Response) -> float:
+        # Price already charges cache writes at the base rate as part of total input.
+        return (super().cost(response)
+                + response.cache_write_tokens * (self.cache_write - self.input) / 1_000_000)
 
 
 @dataclass(frozen=True)
@@ -180,12 +191,14 @@ PROVIDERS = {
     ),
     "anthropic": ProviderConfig(
         "https://api.anthropic.com/v1", "ANTHROPIC_API_KEY",
-        {"claude-sonnet-5-5": Price(2, 2, 10),
-         "claude-opus-5-5": Price(4, 4, 20)},
+        {"claude-sonnet-5-5": AnthropicPrice(2, 2 * .05, 10, cache_write=2 * 1.25),
+         "claude-opus-5-5": AnthropicPrice(4, 4 * .05, 20, cache_write=4 * 1.25)},
         temperature=None,
         extra={"max_tokens": DEFAULT_OUTPUT_TOKENS, "stream": True,
                "thinking": {"type": "adaptive"}, "output_config": {"effort": "high"}},
         max_retries=3,
+        cost_note="USD · list-price estimate (includes 5-minute prompt cache pricing).",
+        pricing_source="https://platform.claude.com/docs/en/about-claude/pricing",
         reasoning_mode="thinking-high",
     ),
     "thinkingmachines": ProviderConfig(
@@ -555,7 +568,11 @@ class Anthropic(OpenAICompatible):
         elapsed = time.perf_counter() - start
         text = "".join(block["text"] for block in data["content"] if block["type"] == "text")
         usage = data["usage"]
-        return AnthropicResponse(text, usage["input_tokens"], usage["output_tokens"],
+        cache_read = usage.get("cache_read_input_tokens") or 0
+        cache_write = usage.get("cache_creation_input_tokens") or 0
+        total_input = usage["input_tokens"] + cache_read + cache_write
+        return AnthropicResponse(text, total_input, usage["output_tokens"], cached_tokens=cache_read,
+                                 cache_write_tokens=cache_write,
                                  latency_seconds=elapsed, finish_reason=data.get("stop_reason", ""))
 
 

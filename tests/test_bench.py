@@ -90,6 +90,8 @@ def test_run_and_rescore(tmp_path):
     assert summary["overall_score"] == 100
     assert summary["input_tokens"] == 200
     assert summary["output_tokens"] == 40
+    assert summary["cached_tokens"] == 20
+    assert summary["cache_write_tokens"] == 0
     assert summary["latency_seconds"] == 1
     assert summary["estimated_cost_usd"] == pytest.approx(.00027)
     assert summary == score_run(directory)

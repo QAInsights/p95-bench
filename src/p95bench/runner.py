@@ -92,6 +92,12 @@ def score_run(directory: Path):
     skipped = directory / "not-run.jsonl"
     not_run = [json.loads(line) for line in skipped.read_text().splitlines()
                if line.strip()] if skipped.exists() else []
+    responses = [a.get("response") or {} for a in attempts + not_run]
+    if manifest and manifest["grade_schema_version"] == 2:
+        responses.extend((a.get("repair") or {}).get("response") or {} for a in attempts)
+    if any("cache_write_tokens" in response for response in responses):
+        for key in ("cached_tokens", "cache_write_tokens"):
+            summary[key] = sum(response.get(key, 0) for response in responses)
     if not_run or manifest and manifest["grade_schema_version"] == 2:
         summary["not_run"] = len(not_run)
     for entry in not_run:

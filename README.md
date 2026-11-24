@@ -240,7 +240,7 @@ Authentication and other non-retryable errors abort the run. Published coverage
 counts only actual responses; an empty response is still a real, graded attempt.
 
 `src/p95bench/providers.py` defines a minimal `Provider.send(model, messages)`
-protocol returning text, prompt/completion/cache-hit tokens and elapsed seconds.
+protocol returning text, token usage, and elapsed seconds.
 `OpenAICompatible` accepts a base URL, key environment-variable name, prices,
 temperature (use `None` when unsupported), and optional request fields.
 Add another OpenAI-compatible provider by adding a `ProviderConfig` entry to
@@ -259,11 +259,12 @@ the parameter as deprecated; published run metadata records this exception.
 It uses `x-api-key` authentication and API version
 `2023-06-01`, without an SDK. Discover IDs in Python with
 `get_provider('anthropic').models()` from `p95bench.providers` (there is no
-discovery CLI). Verified list input/output prices per million tokens are
-$2/$10 for Sonnet and $4/$20 for Opus, from <https://claude.com/pricing>.
-Prices live in `PROVIDERS['anthropic'].prices` in `src/p95bench/providers.py`,
-using the same `Price(input, cached, output)` entries as DeepSeek. Prompt caching
-is not enabled, so the cached rate is set to the ordinary input rate.
+discovery CLI). Prices live in `PROVIDERS['anthropic'].prices` in
+`src/p95bench/providers.py` and follow the [Anthropic API pricing table](https://platform.claude.com/docs/en/about-claude/pricing).
+Sonnet 5.5 costs $2/$10 per million fresh input/output tokens, and Opus 5.5
+costs $4/$20. Both charge 0.05× the input rate for cache reads and 1.25× for
+five-minute cache writes. The direct adapter does not request prompt caching;
+it accounts for cache usage when the API reports it.
 
 Thinking Machines (Tinker) uses the existing OpenAI-compatible adapter. Set
 `TINKER_API_KEY` and use `--provider thinkingmachines`. The beta endpoint is
@@ -408,6 +409,9 @@ not a statistically comprehensive leaderboard or a contamination-resistant test.
 Each unique run directory contains `attempts.jsonl` with raw model text, exact
 messages, model/provider, grader parameters, token usage, latency, estimated
 cost and grade. `summary.json` aggregates category/overall scores and totals.
+Reported `input_tokens` include cache reads (`cached_tokens`) and writes
+(`cache_write_tokens`); those two fields are subsets of input, not extra tokens.
+Old results without cache counts still score the same.
 Execution subdirectories retain JMX, JTL, JMeter log and stdout, or k6
 `script.js`, `points.json` and `stdout.log`, for inspection.
 `score` recomputes aggregates from saved grades without calling APIs or rerunning
