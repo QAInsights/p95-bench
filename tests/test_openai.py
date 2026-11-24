@@ -258,7 +258,7 @@ def test_transport(monkeypatch, model, rates, content):
             'reasoning_effort': 'high',
         }
         return io.BytesIO(json.dumps({
-            'choices': [{'message': {'content': content}}],
+            'choices': [{'message': {'content': content}, 'finish_reason': 'stop'}],
             'usage': {'prompt_tokens': 100, 'completion_tokens': 20,
                       'completion_tokens_details': {'reasoning_tokens': 10},
                       'prompt_tokens_details': {'cached_tokens': 40}},
@@ -275,9 +275,27 @@ def test_transport(monkeypatch, model, rates, content):
     assert response.cached_tokens == 40
     assert response.latency_seconds == .5
     assert response.reasoning_tokens == 10
+    assert response.finish_reason == 'stop'
     price = PROVIDERS['openai'].prices[model]
     assert (price.input, price.cached, price.output) == (rates[0], rates[0], rates[1])
     assert price.cost(response) == pytest.approx((100 * rates[0] + 20 * rates[1]) / 1_000_000)
+
+
+def test_openai_length_finish_reason_is_preserved(monkeypatch):
+    monkeypatch.setenv('OPENAI_API_KEY', 'test-key')
+    payload = {
+        'choices': [{'message': {'content': None}, 'finish_reason': 'length'}],
+        'usage': {'prompt_tokens': 100, 'completion_tokens': 128000,
+                  'completion_tokens_details': {'reasoning_tokens': 127000}},
+    }
+    monkeypatch.setattr('urllib.request.urlopen',
+                        lambda *args, **kwargs: io.BytesIO(json.dumps(payload).encode()))
+
+    response = get_provider('openai').send('gpt-6.2-sol', [])
+
+    assert response.finish_reason == 'length'
+    assert response.reasoning_tokens == 127000
+    assert response.thinking_exhausted
 
 
 def test_unknown_price_and_missing_key(monkeypatch, tmp_path, capsys):
