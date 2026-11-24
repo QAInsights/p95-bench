@@ -7,6 +7,12 @@ import "../styles/board.css";
 import data from "../data/leaderboard-p95-core.json";
 import { boardModels, boardTasks, scatter, toolLabel, TOOLS, formatCost } from "../lib/board.mjs";
 import { attemptFraction } from "../lib/scores.mjs";
+import AgentSystems from "../components/AgentSystems.astro";
+import { parseAgentSystem, agentComparison } from "../lib/agent-systems.mjs";
+
+const agentSources = import.meta.glob("../../../results/agent-systems/p95-core/feather-wand-rc1-sonnet-5-5/*.{json,jsonl}", { eager: true, query: "?raw", import: "default" });
+const agentSystem = parseAgentSystem(agentSources, data);
+const agentRows = agentComparison(agentSystem, data);
 
 const models = boardModels(data);
 const tasks = boardTasks(data);
@@ -89,6 +95,8 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
           </svg></div>
         </section>
       )}
+
+      <AgentSystems rows={agentRows} note={agentSystem.metadata.cost_note} />
 
       <section id="method" aria-labelledby="method-title" class="method">
         <h2 id="method-title" class="label">Method</h2>
