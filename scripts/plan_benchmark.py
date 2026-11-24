@@ -137,12 +137,16 @@ def _summary_markdown(run_dir):
     after_text = f"{after:.1f}" if isinstance(after, (int, float)) else "—"
     cost = summary.get("estimated_cost_usd")
     cost_text = f"${cost:.6f}" if isinstance(cost, (int, float)) else "—"
-    tokens = summary.get("output_tokens")
-    token_text = f"{tokens:,}" if isinstance(tokens, int) else "—"
+    token_text = " | ".join(
+        f"{count:,}" if isinstance(count, int) else "—"
+        for count in (summary.get(key) for key in (
+            "input_tokens", "cached_tokens", "cache_write_tokens", "output_tokens"))
+    )
     per_tool = _tool_scores(run_dir)
     return "\n".join([
-        "| Model | Overall first try | Overall after repair | Per-tool score (first → after) | Cost | Output tokens |",
-        "| --- | ---: | ---: | --- | ---: | ---: |",
+        ("| Model | Overall first try | Overall after repair | Per-tool score (first → after) |"
+         " Cost | Input tokens | Cache reads | Cache writes | Output tokens |"),
+        "| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: |",
         f"| {model} | {first_text} | {after_text} | {per_tool or '—'} | {cost_text} | {token_text} |",
     ])
 

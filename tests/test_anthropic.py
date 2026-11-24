@@ -13,12 +13,13 @@ from p95bench.providers import (
     ProviderUnavailable,
     get_provider,
 )
-from p95bench.runner import SYSTEM_PROMPT
+from p95bench.runner import SYSTEM_PROMPT, run
+from p95bench.tasks import Task
 
 
-def sse_response(content, output_tokens=3, finish_reason='end_turn'):
+def sse_response(content, output_tokens=3, finish_reason='end_turn', usage=None):
     events = [{'type': 'message_start', 'message': {
-        'usage': {'input_tokens': 20, 'output_tokens': 1}}}]
+        'usage': {'input_tokens': 20, 'output_tokens': 1, **(usage or {})}}}]
     for index, block in enumerate(content):
         events.append({'type': 'content_block_start', 'index': index,
                        'content_block': block})
@@ -66,12 +67,49 @@ def test_messages_transport(monkeypatch, content, expected):
     response = get_provider('anthropic').send('claude-sonnet-5-5', messages)
     assert response.text == expected
     assert (response.input_tokens, response.output_tokens, response.cached_tokens) == (20, 3, 0)
+    assert response.cache_write_tokens == 0
     assert response.latency_seconds == .5
     assert response.finish_reason == 'end_turn'
     assert not response.thinking_exhausted
     assert PROVIDERS['anthropic'].reasoning_mode == 'thinking-high'
     assert messages[0]['role'] == 'system'
     assert PROVIDERS['anthropic'].prices['claude-sonnet-5-5'].cost(response) == .00007
+
+
+@pytest.mark.parametrize('model, expected', [
+    ('claude-sonnet-5-5', (20 * 2 + 40 * .10 + 60 * 2.50 + 3 * 10) / 1_000_000),
+    ('claude-opus-5-5', (20 * 4 + 40 * .20 + 60 * 5 + 3 * 20) / 1_000_000),
+])
+def test_stream_extracts_and_prices_cache_tokens(monkeypatch, model, expected):
+    monkeypatch.setenv('ANTHROPIC_API_KEY', 'test-key')
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: sse_response(
+        [], usage={'cache_read_input_tokens': 40, 'cache_creation_input_tokens': 60}))
+
+    response = get_provider('anthropic').send(model, [])
+
+    assert response.input_tokens == 120
+    assert response.cached_tokens == 40
+    assert response.cache_write_tokens == 60
+    assert response.output_tokens == 3
+    assert PROVIDERS['anthropic'].prices[model].cost(response) == pytest.approx(expected)
+
+
+def test_run_saves_cache_usage_and_cost(monkeypatch, tmp_path):
+    data = sse_response([], usage={'cache_read_input_tokens': 40, 'cache_creation_input_tokens': 60})
+    monkeypatch.setenv('ANTHROPIC_API_KEY', 'test-key')
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: data)
+    model = 'claude-sonnet-5-5'
+    price = PROVIDERS['anthropic'].prices[model]
+    task = Task('test', 'concepts', 'none', 'Compute', 'numeric', {'answer': 10}, {})
+
+    directory, summary = run(get_provider('anthropic'), 'anthropic', model, price, [task], tmp_path)
+
+    attempt = json.loads((directory / 'attempts.jsonl').read_text())
+    assert attempt['response']['input_tokens'] == summary['input_tokens'] == 120
+    assert attempt['response']['cached_tokens'] == summary['cached_tokens'] == 40
+    assert attempt['response']['cache_write_tokens'] == summary['cache_write_tokens'] == 60
+    assert attempt['price_per_million']['cache_write'] == 2.50
+    assert attempt['cost_usd'] == summary['estimated_cost_usd'] == pytest.approx(.000224)
 
 
 def test_thinking_only_stream_is_billed_and_marks_exhaustion(monkeypatch):

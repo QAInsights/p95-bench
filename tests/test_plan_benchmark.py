@@ -118,3 +118,16 @@ def test_plan_benchmark_summary_rejects_unknown_core_task(tmp_path):
 
     with pytest.raises(ValueError, match="not-a-core-task"):
         plan_benchmark._tool_scores(tmp_path)
+
+
+def test_plan_benchmark_summary_shows_cache_usage(tmp_path):
+    (tmp_path / "summary.json").write_text(json.dumps(
+        {"input_tokens": 1000, "cached_tokens": 400, "cache_write_tokens": 200, "output_tokens": 50}
+    ))
+    (tmp_path / "metadata.json").write_text('{"model":"claude-sonnet-5-5"}')
+    (tmp_path / "attempts.jsonl").write_text("")
+
+    table = plan_benchmark._summary_markdown(tmp_path)
+
+    assert "| Input tokens | Cache reads | Cache writes | Output tokens |" in table
+    assert "| 1,000 | 400 | 200 | 50 |" in table

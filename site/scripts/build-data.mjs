@@ -48,6 +48,8 @@ export function costBreakdown(attempts, skipped, { packId, taskMap, total }) {
     .map(attempt => ({ task_id: attempt.task_id,
     input_tokens: attempt.response.input_tokens,
     cached_tokens: attempt.response.cached_tokens ?? 0,
+    ...(attempt.response.cache_write_tokens != null
+      ? { cache_write_tokens: attempt.response.cache_write_tokens } : {}),
     output_tokens: attempt.response.output_tokens,
     price_per_million: attempt.price_per_million, cost_usd: attempt.cost_usd,
     ...(attempt.status === 'not_run' ? { status: 'not_run' } : {}),
@@ -156,6 +158,8 @@ export async function buildData(directories, options = {}) {
     const stamp = path.basename(directory).match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/);
     const runDate = metadata.run_date ?? (stamp
       ? `${stamp[1]}-${stamp[2]}-${stamp[3]}T${stamp[4]}:${stamp[5]}:${stamp[6]}Z` : null);
+    const hasCacheUsage = Object.hasOwn(summary, 'cache_write_tokens')
+      || costAttempts.some(attempt => Object.hasOwn(attempt, 'cache_write_tokens'));
     models.push({
       provider: first.provider, model: first.model, overall_score: summary.overall_score,
       ...(v2 ? { pack_id: packId, pack_digest: summary.pack_digest,
@@ -165,7 +169,11 @@ export async function buildData(directories, options = {}) {
         ...(metadata.repair_rounds !== undefined ? { repair_rounds: metadata.repair_rounds } : {}),
         ...(metadata.reasoning_mode !== undefined ? { reasoning_mode: metadata.reasoning_mode } : {}) } : {}),
       category_scores: summary.category_scores, cost: summary.estimated_cost_usd,
-      tokens: { input: summary.input_tokens, output: summary.output_tokens },
+      tokens: { input: summary.input_tokens, output: summary.output_tokens,
+        ...(hasCacheUsage ? {
+          cache_read: costAttempts.reduce((sum, attempt) => sum + attempt.cached_tokens, 0),
+          cache_write: costAttempts.reduce((sum, attempt) => sum + (attempt.cache_write_tokens ?? 0), 0),
+        } : {}) },
       latency: summary.latency_seconds, run_date: runDate,
       harness_commit: metadata.harness_commit ?? first.harness_commit ?? null,
       ...(metadata.cost_note ? { cost_note: metadata.cost_note,
