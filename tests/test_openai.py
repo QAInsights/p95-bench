@@ -47,8 +47,10 @@ def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
     assert provider.config.reasoning_mode == 'thinking-high'
     assert provider.config.temperature is None
     assert PROVIDERS['qwen'].reasoning_mode == 'thinking-high'
+    assert PROVIDERS['openai'].reasoning_mode == 'thinking-high'
     assert all(config.reasoning_mode == 'provider-default'
-               for name, config in PROVIDERS.items() if name not in {'deepseek', 'qwen', 'anthropic'})
+               for name, config in PROVIDERS.items()
+               if name not in {'deepseek', 'qwen', 'anthropic', 'openai'})
     captured = {}
 
     def request(path, body):
@@ -253,6 +255,7 @@ def test_transport(monkeypatch, model, rates, content):
         assert timeout == 600
         assert json.loads(req.data) == {
             'model': model, 'messages': messages, 'max_completion_tokens': 64000,
+            'reasoning_effort': 'high',
         }
         return io.BytesIO(json.dumps({
             'choices': [{'message': {'content': content}}],
@@ -265,7 +268,13 @@ def test_transport(monkeypatch, model, rates, content):
     clock = iter([1., 1.5])
     monkeypatch.setattr('p95bench.providers.time.perf_counter', lambda: next(clock))
     response = provider.send(model, messages)
-    assert response == Response(content or '', 100, 20, 40, .5)
+    assert isinstance(response, DeepSeekResponse)
+    assert response.text == (content or '')
+    assert response.input_tokens == 100
+    assert response.output_tokens == 20
+    assert response.cached_tokens == 40
+    assert response.latency_seconds == .5
+    assert response.reasoning_tokens == 10
     price = PROVIDERS['openai'].prices[model]
     assert (price.input, price.cached, price.output) == (rates[0], rates[0], rates[1])
     assert price.cost(response) == pytest.approx((100 * rates[0] + 20 * rates[1]) / 1_000_000)

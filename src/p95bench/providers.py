@@ -216,10 +216,10 @@ PROVIDERS = {
         {"gpt-6.2-sol": Price(2, 2, 10),
          "gpt-6.2-astra": Price(8, 8, 40)},
         temperature=None,
-        extra={"max_completion_tokens": DEFAULT_OUTPUT_TOKENS},
+        extra={"max_completion_tokens": DEFAULT_OUTPUT_TOKENS, "reasoning_effort": "high"},
         output_limit_field="max_completion_tokens",
         max_retries=3,
-        reasoning_mode="provider-default",
+        reasoning_mode="thinking-high",
     ),
 }
 

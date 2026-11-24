@@ -295,8 +295,10 @@ Set `OPENAI_API_KEY` and select `--provider openai` with `gpt-6.2-sol` or
 are $2/$10 for Sol and $8/$40 for Astra, from <https://openai.com/api/pricing/>.
 Cached input is conservatively priced at the ordinary input rate pending a
 verified cache discount. Both models reject `max_tokens` and temperature 0:
-requests use `max_completion_tokens: 64000` and omit temperature, leaving the
-API default. Published metadata records these exceptions. Reasoning tokens
+requests use `max_completion_tokens: 64000` and omit temperature. Chat
+Completions requests set `reasoning_effort: high`, following OpenAI's
+[GPT-6.2 guidance](https://developers.openai.com/api/docs/guides/latest-model);
+published metadata records `reasoning_mode: thinking-high`. Reasoning tokens
 count toward the completion cap and reported output usage.
 
 DeepSeek `/models` was queried during implementation and returned
