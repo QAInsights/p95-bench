@@ -1,12 +1,12 @@
 {
   "pack_id": "p95-core",
   "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
-  "overall_score": 69.11477483048039,
-  "quality_score": 70.44748263885764,
-  "efficiency_score": 43.79332647131253,
+  "overall_score": 69.41250924142483,
+  "quality_score": 70.74826388882639,
+  "efficiency_score": 44.033170940795294,
   "category_scores": {
     "repair": 78.68055555555556,
-    "migration": 53.411458333125,
+    "migration": 55.41666666625,
     "correlation": 49.895833333333336,
     "workload": 78.33333333333333,
     "analysis": 97.5
@@ -17,12 +17,12 @@
   "complete": true,
   "passed": 63,
   "after_repair": {
-    "overall_score": 77.01952211965103,
-    "quality_score": 78.64105902774652,
-    "efficiency_score": 46.21032086583674,
+    "overall_score": 77.31725653059549,
+    "quality_score": 78.94184027771527,
+    "efficiency_score": 46.450165335319504,
     "category_scores": {
       "repair": 86.94444444444444,
-      "migration": 68.567708333125,
+      "migration": 70.57291666625,
       "correlation": 58.645833333333336,
       "workload": 86.66666666666667,
       "analysis": 97.5

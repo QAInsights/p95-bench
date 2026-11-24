@@ -158,25 +158,13 @@
   "regraded": [
     {
       "harness_commit": "beda2d574631a6c0f3becfa02481fb59c3ff6d95",
-      "grader": "all_core_saved_outputs",
-      "reason": "Accept JMeter native numeric properties; replay all four tools offline.",
+      "grader": "native_numeric_affected_phases",
+      "reason": "Regrade only original JMX allowed-subset rejections that now pass patched validation; preserve all other original phase grades.",
       "repair_policy": "Regrade recorded responses only; preserve historical repair selection, feedback, skipped rounds, cost, tokens and latency.",
-      "initial_attempts_regraded": 104,
-      "recorded_repairs_regraded": 27,
-      "repairs_not_attempted": 77,
-      "score_changes": [
-        {
-          "task_id": "mx-w02-open-arrivals-locust",
-          "repeat": 0,
-          "changes": [
-            {
-              "phase": "repair",
-              "before": 0.9,
-              "after": 0.0
-            }
-          ]
-        }
-      ]
+      "initial_attempts_scanned": 104,
+      "initial_attempts_regraded": 0,
+      "recorded_repairs_regraded": 0,
+      "score_changes": []
     }
   ]
 }

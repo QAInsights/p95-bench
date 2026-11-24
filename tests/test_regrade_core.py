@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -18,16 +19,21 @@ A01_TASK = "mx-a01-jtl-endpoints-jmeter"
 _UNSET = object()
 
 
-def test_full_regrade_preserves_recorded_repairs_usage_and_skips(tmp_path, monkeypatch):
+def test_selective_regrade_preserves_unaffected_grades_repairs_usage_and_skips(tmp_path, monkeypatch):
     run_dir = _copy_run(tmp_path)
     attempts = _read_attempts(run_dir)
-    zero = CheckpointGrade((Checkpoint("correct", 0, 100),)).to_dict()
+    zero = CheckpointGrade((Checkpoint("correct", 0, 100),),
+                           regrade_core.SUBSET_REJECTION).to_dict()
     perfect = CheckpointGrade((Checkpoint("correct", 100, 100),)).to_dict()
-    attempts[0]["grade"] = zero
-    attempts[0]["response"]["text"] = ""
-    attempts[0]["repair"] = {
+    target = next(attempt for attempt in attempts
+                  if attempt["task_id"] == "mx-m05-pacing-semantics-jmeter")
+    target["grade"] = zero
+    target["response"]["text"] = (
+        '<jmeterTestPlan><doubleProp><name>x</name><value>1</value>'
+        '<savedValue>0</savedValue></doubleProp></jmeterTestPlan>')
+    target["repair"] = {
         "triggered": True, "reason": "invalid_model_artifact", "feedback": "recorded feedback",
-        "response": {**attempts[0]["response"], "text": "recorded repair"},
+        "response": {**target["response"]},
         "grade": zero, "cost_usd": 0.002,
     }
     attempts[1]["repair"] = {"triggered": True, "skipped": "truncated_at_cap"}
@@ -37,6 +43,11 @@ def test_full_regrade_preserves_recorded_repairs_usage_and_skips(tmp_path, monke
     }
     _write_attempts(run_dir, attempts)
     before = score_run(run_dir)
+    original = tmp_path / "original"
+    original.mkdir()
+    for name in ("attempts.jsonl", "metadata.json", "pack.json"):
+        (original / name).write_bytes((run_dir / name).read_bytes())
+    before_lines = (run_dir / "attempts.jsonl").read_text().splitlines()
     metadata = json.loads((run_dir / "metadata.json").read_text())
     calls = []
 
@@ -47,16 +58,18 @@ def test_full_regrade_preserves_recorded_repairs_usage_and_skips(tmp_path, monke
     monkeypatch.setattr(regrade_core, "_grade_response", grade_saved)
     note, summary = regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
     after = _read_attempts(run_dir)
-    assert len(calls) == 105
-    assert {tool for tool, _ in calls} == {"jmeter", "k6", "locust", "gatling"}
-    assert sum(text == "" for _, text in calls) == 1
-    assert sum(text == "recorded repair" for _, text in calls) == 1
-    assert note["initial_attempts_regraded"] == 104
+    assert len(calls) == 2
+    assert {tool for tool, _ in calls} == {"jmeter"}
+    assert note["initial_attempts_scanned"] == 104
+    assert note["initial_attempts_regraded"] == 1
     assert note["recorded_repairs_regraded"] == 1
-    assert note["repairs_not_attempted"] == 103
-    assert note["score_changes"] == [{"task_id": attempts[0]["task_id"], "repeat": 0,
+    assert note["score_changes"] == [{"task_id": target["task_id"], "repeat": 0,
                                       "changes": [{"phase": "initial", "before": 0, "after": 1},
                                                   {"phase": "repair", "before": 0, "after": 1}]}]
+    after_lines = (run_dir / "attempts.jsonl").read_text().splitlines()
+    for old_line, new_line in zip(before_lines, after_lines, strict=True):
+        if json.loads(old_line)["task_id"] != target["task_id"]:
+            assert old_line == new_line
     for old, new in zip(attempts, after, strict=True):
         assert old["response"] == new["response"]
         assert old["cost_usd"] == new["cost_usd"]
@@ -67,7 +80,46 @@ def test_full_regrade_preserves_recorded_repairs_usage_and_skips(tmp_path, monke
     assert new_metadata.pop("regraded") == [note]
     assert new_metadata == metadata
     monkeypatch.setattr(regrade_core, "_grade_response", lambda *args: pytest.fail("cache missed"))
-    regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
+    with pytest.raises(RuntimeError, match="pre-regrade"):
+        regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
+    regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts",
+                          original_run_dir=original)
+
+
+@pytest.mark.parametrize("tool,detail,text,expected", [
+    ("jmeter", regrade_core.SUBSET_REJECTION, "<jmeterTestPlan></jmeterTestPlan>", True),
+    ("jmeter", "Other rejection", "<jmeterTestPlan></jmeterTestPlan>", False),
+    ("jmeter", regrade_core.SUBSET_REJECTION, "<jmeterTestPlan><unknown/></jmeterTestPlan>", False),
+    ("jmeter", regrade_core.SUBSET_REJECTION, "", False),
+    ("k6", regrade_core.SUBSET_REJECTION, "<jmeterTestPlan></jmeterTestPlan>", False),
+    ("locust", regrade_core.SUBSET_REJECTION, "<jmeterTestPlan></jmeterTestPlan>", False),
+    ("gatling", regrade_core.SUBSET_REJECTION, "<jmeterTestPlan></jmeterTestPlan>", False),
+])
+def test_selective_regrade_requires_original_subset_rejection_and_patched_acceptance(
+        tool, detail, text, expected):
+    record = {"grade": {"detail": detail}, "response": {"text": text}}
+    assert regrade_core.affected_phase(SimpleNamespace(tool=tool), record) is expected
+
+
+def test_selective_regrade_can_change_only_the_recorded_repair(tmp_path, monkeypatch):
+    run_dir = _copy_run(tmp_path)
+    attempts = _read_attempts(run_dir)
+    target = next(attempt for attempt in attempts if attempt["task_id"].endswith("jmeter"))
+    original_grade = target["grade"]
+    target["repair"] = {
+        "triggered": True, "grade": {**original_grade, "detail": regrade_core.SUBSET_REJECTION},
+        "response": {**target["response"], "text": "<jmeterTestPlan></jmeterTestPlan>"},
+        "cost_usd": 0,
+    }
+    _write_attempts(run_dir, attempts)
+    monkeypatch.setattr(regrade_core, "_grade_response", lambda *args: (original_grade, None))
+    note, _ = regrade_core.regrade(run_dir, "grader-commit", tmp_path / "artifacts")
+    updated = next(attempt for attempt in _read_attempts(run_dir)
+                   if attempt["task_id"] == target["task_id"])
+    assert updated["grade"] == original_grade
+    assert note["initial_attempts_regraded"] == 0
+    assert note["recorded_repairs_regraded"] == 1
+    assert updated["offline_regrades"][-1]["initial_regraded"] is False
 
 
 def test_full_regrade_empty_run_makes_no_grader_calls(tmp_path, monkeypatch):
@@ -93,6 +145,12 @@ def test_full_regrade_failure_does_not_rewrite_run(tmp_path, monkeypatch, failur
         attempts = _read_attempts(run_dir)
         for attempt in attempts:
             attempt["pack_digest"] = manifest["digest"]
+        _write_attempts(run_dir, attempts)
+    else:
+        attempts = _read_attempts(run_dir)
+        target = next(attempt for attempt in attempts if attempt["task_id"].endswith("jmeter"))
+        target["grade"]["detail"] = regrade_core.SUBSET_REJECTION
+        target["response"]["text"] = "<jmeterTestPlan></jmeterTestPlan>"
         _write_attempts(run_dir, attempts)
     monkeypatch.setattr(regrade_core, "_grade_response", lambda *args: (
         {"status": "not_run"}, {"type": "WorkerUnavailable", "message": "worker down"}))
