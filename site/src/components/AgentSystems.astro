@@ -1,0 +1,26 @@
+---
+const { rows, note } = Astro.props;
+const integer = new Intl.NumberFormat('en-US');
+---
+
+<section id="agent-systems" aria-labelledby="agent-systems-title" class="agent-systems">
+  <h2 id="agent-systems-title" class="label">Agent systems (JMeter only) <span>Not ranked</span></h2>
+  <p class="agent-note">Tool plus model, measured on 26 JMeter tasks. Separate from model scores, rankings, value frontier and heatmap.</p>
+  <div class="table-wrap">
+    <table class="agent-comparison">
+      <caption class="agent-note">Scores / 100 and total usage, including recorded GUI or API repairs.</caption>
+      <thead><tr><th scope="col">System / model</th><th scope="col" class="n">First attempt</th><th scope="col" class="n">After repair</th><th scope="col" class="n">Cost</th><th scope="col" class="n">Output tokens</th><th scope="col" class="n">Turns</th></tr></thead>
+      <tbody>
+        {rows.map(row => (
+          <tr>
+            <th scope="row"><span class:list={{ 'strong': row.system }}>{row.name}</span><span class="agent-detail">{row.detail}</span></th>
+            <td class="n">{row.first.toFixed(1)}</td><td class="n">{row.after.toFixed(1)}</td>
+            <td class="n">${row.cost.toFixed(2)}</td><td class="n">{integer.format(row.output)}</td><td class="n">{integer.format(row.turns)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="agent-note">Turns count native agent turns for Feather Wand and recorded API responses for direct. Repairs retain the historical Core trigger; offline grading creates no new repairs.</p>
+  <p class="agent-note">{note} <a href="https://github.com/QAInsights/p95-bench/tree/main/results/agent-systems/p95-core/feather-wand-rc1-sonnet-5-5">Run data and provenance ↗</a></p>
+</section>

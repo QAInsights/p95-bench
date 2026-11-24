@@ -1,0 +1,42 @@
+{
+  "entry_type": "agent_system",
+  "system": "Feather Wand v4.0.1-RC1 (JMeter GUI Agent mode)",
+  "model": "claude-sonnet-5-5",
+  "provider": "anthropic",
+  "reasoning_mode": "thinking-high",
+  "tools": [
+    "jmeter"
+  ],
+  "pack_id": "p95-core",
+  "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+  "visibility": "public",
+  "harness_commit": "e4105e1dd7d1b25f59ab43de69f1e05d4629efc3",
+  "grader_commit": "e4105e1dd7d1b25f59ab43de69f1e05d4629efc3",
+  "rank_eligible": false,
+  "original_grader_commit": "e685b9e5fd0a810b4ab7036a09b329710f4fc67d",
+  "initial_attempts_regraded": 26,
+  "recorded_repairs_regraded": 8,
+  "execution": "JMeter 5.6.3 GUI only; fresh plan and conversation per task.",
+  "repair_policy": "One GUI repair only when the historical Core trigger fired; exact feedback, saved responses only, no new repairs during regrade. Retain recorded repairs even if the merged grader accepts the initial.",
+  "analysis_extraction": "Verbatim final assistant text from the native conversation.",
+  "pricing_basis": {
+    "currency": "USD",
+    "unit": "million tokens",
+    "cache_write_ttl": "5 minutes",
+    "input": 2,
+    "cached": 0.1,
+    "cache_write": 2.5,
+    "output": 10
+  },
+  "usage": {
+    "input_tokens": 19246443,
+    "fresh_input_tokens": 1230,
+    "cached_tokens": 18261093,
+    "cache_write_tokens": 984120,
+    "output_tokens": 570217,
+    "reasoning_tokens": 193896,
+    "turns": 581
+  },
+  "excluded_spend_usd": 3.6677725,
+  "cost_note": "List-price estimate from native per-turn usage. Excludes $3.67 extra spend on discarded starts and credit-failed partial attempts. Unreported failed-turn usage is unpriced. Not an invoice."
+}
