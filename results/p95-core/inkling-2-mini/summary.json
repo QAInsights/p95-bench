@@ -1,0 +1,46 @@
+{
+  "pack_id": "p95-core",
+  "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+  "overall_score": 15.778785789240843,
+  "quality_score": 16.145833333333332,
+  "efficiency_score": 8.804882451483563,
+  "category_scores": {
+    "repair": 8.333333333333334,
+    "migration": 0.0,
+    "correlation": 0.0,
+    "workload": 0.0,
+    "analysis": 93.75
+  },
+  "attempts": 104,
+  "expected_attempts": 104,
+  "repeats": 1,
+  "complete": true,
+  "passed": 18,
+  "after_repair": {
+    "overall_score": 15.778785789240843,
+    "quality_score": 16.145833333333332,
+    "efficiency_score": 8.804882451483563,
+    "category_scores": {
+      "repair": 8.333333333333334,
+      "migration": 0.0,
+      "correlation": 0.0,
+      "workload": 0.0,
+      "analysis": 93.75
+    }
+  },
+  "repairs_triggered": 0,
+  "repairs_succeeded": 0,
+  "estimated_cost_usd": 5.61112928,
+  "input_tokens": 508826,
+  "output_tokens": 11093941,
+  "latency_seconds": 38243.93701208001,
+  "cached_tokens": 90112,
+  "cache_write_tokens": 0,
+  "not_run": 0,
+  "cost_by_tool": {
+    "gatling": 1.4385391399999996,
+    "jmeter": 1.4320297200000003,
+    "k6": 1.42604715,
+    "locust": 1.31451327
+  }
+}

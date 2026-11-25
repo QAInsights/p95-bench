@@ -42,8 +42,8 @@ test('Core publishes complete public Sonnet, DeepSeek, Qwen and OpenAI runs with
   assert.match(data.publication_note, /45066297860/);
   assert.match(data.publication_note, /final answer after the one allowed repair/);
   assert.doesNotMatch(JSON.stringify(data), /5a5d088256624100/);
-  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol']);
-  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol']);
+  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'inkling-2-mini']);
+  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'thinkingmachines/Inkling-2-Mini']);
   const model = data.models.find(model => model.provider === 'anthropic');
   assert.equal(model.provider, 'anthropic');
   assert.equal(model.output_cap, 64000);
@@ -154,7 +154,7 @@ test('OpenAI Core keeps high reasoning, complete coverage, output headroom and a
   assert.match(model.cost_note, /High reasoning with a 128,000-token output cap/);
   assert.match(model.cost_note, /no first try or repair ended at the output cap/);
   assert.match(model.cost_note, /45511510673/);
-  assert.match(data.publication_note, /OpenAI uses the documented 128,000-token maximum/);
+  assert.match(data.publication_note, /OpenAI and Tinker use a 128,000-token output cap/);
   assert.match(data.publication_note, /3 for GPT-6\.2 Sol/);
   assert.match(data.publication_note, /17 for GPT-6\.1 Terra/);
   assert.match(data.publication_note, /28 for GPT-6 Luna/);
@@ -270,6 +270,59 @@ test('Luna Core keeps high reasoning, complete coverage, cache-aware cost and ou
   near(displayed.toolCosts.k6, .161833235);
   near(displayed.toolCosts.locust, .249177315);
   near(displayed.toolCosts.gatling, .248196775);
+});
+
+test('Inkling 2 Mini Core discloses supplemented mixed-harness provenance and cap-dominated result', async () => {
+  const model = data.models.find(model => model.model === 'thinkingmachines/Inkling-2-Mini');
+  assert.equal(model.provider, 'thinkingmachines');
+  assert.equal(model.pack_digest, data.pack_digest);
+  assert.equal(model.budget_file_sha256, budgetHash);
+  assert.equal(model.output_cap, 128000);
+  assert.equal(model.reasoning_mode, 'thinking-high');
+  assert.equal(model.harness_commit, '2383300f46e2929e43ee0740b349a675eb1bfcae');
+  assert.equal(model.derived_from.length, 5);
+  assert.deepEqual(model.derived_from.map(source => source.spend_cap_usd), [2.5, 2.5, 2.5, 2.5, 1]);
+  assert.deepEqual(model.derived_from.map(source => source.harness_commit), [
+    '2383300f46e2929e43ee0740b349a675eb1bfcae',
+    '2383300f46e2929e43ee0740b349a675eb1bfcae',
+    '2383300f46e2929e43ee0740b349a675eb1bfcae',
+    '2383300f46e2929e43ee0740b349a675eb1bfcae',
+    '8d9fe2996ec19d8a34ff19b3133f65e46b8cbb87',
+  ]);
+  assert.match(model.cost_note, /supplemental local execution/);
+  assert.match(model.cost_note, /86 first tries ended at the output cap/);
+  assert.match(model.cost_note, /45673110614/);
+  assert.match(data.publication_note, /supplemental local execution/);
+  assert.match(data.publication_note, /0 for Inkling 2 Mini/);
+  const rawAttempts = await readFile(new URL('inkling-2-mini/attempts.jsonl', runs), 'utf8');
+  assert.doesNotMatch(rawAttempts, /sk-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|TINKER_API_KEY/);
+  const responses = rawAttempts.trim().split('\n').map(JSON.parse)
+    .flatMap(attempt => [attempt.response, attempt.repair?.response].filter(Boolean));
+  assert.equal(responses.length, 104);
+  assert.equal(responses.filter(response => response.finish_reason === 'length').length, 86);
+  assert.equal(responses.filter(response => response.finish_reason === 'stop').length, 18);
+  assert.ok(responses.filter(response => response.finish_reason === 'length')
+    .every(response => response.text === ''));
+  assert.deepEqual(model.coverage, { run: 104, total: 104, partial: false, label: '104/104 tasks run' });
+  const { tasks } = await loadTaskData({ packId: 'p95-core' });
+  assert.equal(model.per_task_results.length, 104);
+  assert.deepEqual(new Set(model.per_task_results.map(task => task.task_id)), new Set(tasks.map(task => task.id)));
+  near(model.overall_score, 15.778785789240843);
+  near(model.after_repair.overall_score, 15.778785789240843);
+  near(model.cost, 5.61112928);
+  near(model.cost_attempts.reduce((sum, attempt) => sum + attempt.cost_usd, 0), model.cost);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.status === 'repair').length, 0);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.output_tokens === 128000).length, 86);
+  assert.equal(model.tokens.cache_read, 90112);
+  assert.equal(model.tokens.cache_write, 0);
+  const displayed = boardModels(data).find(model => model.key === 'thinkingmachines/thinkingmachines/Inkling-2-Mini');
+  assert.equal(displayed.score.toFixed(1), '15.8');
+  assert.deepEqual(displayed.categories, model.after_repair.category_scores);
+  near(Object.values(displayed.toolCosts).reduce((sum, cost) => sum + cost, 0), model.cost);
+  near(displayed.toolCosts.jmeter, 1.43202972);
+  near(displayed.toolCosts.k6, 1.42604715);
+  near(displayed.toolCosts.locust, 1.31451327);
+  near(displayed.toolCosts.gatling, 1.43853914);
 });
 
 test('published Core data reproduces from stored runs apart from documented annotations', async () => {

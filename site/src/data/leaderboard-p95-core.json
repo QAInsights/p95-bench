@@ -24973,8 +24973,2804 @@
         }
       ],
       "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
+    },
+    {
+      "provider": "thinkingmachines",
+      "model": "thinkingmachines/Inkling-2-Mini",
+      "overall_score": 15.778785789240843,
+      "pack_id": "p95-core",
+      "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+      "quality_score": 16.145833333333332,
+      "efficiency_score": 8.804882451483563,
+      "repeats": 1,
+      "after_repair": {
+        "overall_score": 15.778785789240843,
+        "quality_score": 16.145833333333332,
+        "efficiency_score": 8.804882451483563,
+        "category_scores": {
+          "repair": 8.333333333333334,
+          "migration": 0,
+          "correlation": 0,
+          "workload": 0,
+          "analysis": 93.75
+        }
+      },
+      "repair_rounds": 1,
+      "reasoning_mode": "thinking-high",
+      "category_scores": {
+        "repair": 8.333333333333334,
+        "migration": 0,
+        "correlation": 0,
+        "workload": 0,
+        "analysis": 93.75
+      },
+      "cost": 5.61112928,
+      "tokens": {
+        "input": 508826,
+        "output": 11093941,
+        "cache_read": 90112,
+        "cache_write": 0
+      },
+      "latency": 38243.93701208001,
+      "run_date": "2026-11-25T18:16:03.872080+00:00",
+      "harness_commit": "2383300f46e2929e43ee0740b349a675eb1bfcae",
+      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 104 Core first tries; Core usage cost $5.61112928. Not an invoice. Actions run https://github.com/QAInsights/p95-bench/actions/runs/45673110614 at head 2383300f46e2929e43ee0740b349a675eb1bfcae, plus a supplemental local execution at harness commit 8d9fe2996ec19d8a34ff19b3133f65e46b8cbb87 for three JMeter correlation tasks that timed out in the original non-streaming shard. High reasoning with a 128,000-token output cap; 86 first tries ended at the output cap and remain scored as recorded. Every capped response was empty, so no repair was triggered; truncated-at-cap responses are not repaired by policy. The original workflow spend cap was $10 per model ($2.50 per tool shard), above measured usage; the supplemental spend cap was $1.",
+      "pricing_source": "https://tinker-docs.thinkingmachines.ai/tinker/models/models_and_pricing/",
+      "derived_from": [
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "924ec8d9236f6502841960046c493ebe2e8dfd015b1214ffb1156589d528e491",
+          "run": "20261125T181603Z-c41bc743",
+          "harness_commit": "2383300f46e2929e43ee0740b349a675eb1bfcae",
+          "spend_cap_usd": 2.5
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "4855c7ba95ae6fc4a35db70a2d7d6c802153b0deb867dbd5fb5dab9d5594b666",
+          "run": "20261125T181553Z-0a99d431",
+          "harness_commit": "2383300f46e2929e43ee0740b349a675eb1bfcae",
+          "spend_cap_usd": 2.5
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "99ea76a056c6939bc55f05f23cb553a3f7eecb35339a2f2b1eb1dab808214313",
+          "run": "20261125T181600Z-83c48a96",
+          "harness_commit": "2383300f46e2929e43ee0740b349a675eb1bfcae",
+          "spend_cap_usd": 2.5
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "c1bdc7627e4769d5d1256f0accad2686390996d4c5f2d6b17436491ab41657bf",
+          "run": "20261125T181555Z-0b0774fd",
+          "harness_commit": "2383300f46e2929e43ee0740b349a675eb1bfcae",
+          "spend_cap_usd": 2.5
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "4524e2688f299103825996c59bb8c7b90166a6dc70be78bbd2bd39d33aa06b41",
+          "run": "20261125T221843Z-647ecdd3",
+          "harness_commit": "8d9fe2996ec19d8a34ff19b3133f65e46b8cbb87",
+          "spend_cap_usd": 1
+        }
+      ],
+      "output_cap": 128000,
+      "cost_attempts": [
+        {
+          "task_id": "mx-a01-jtl-endpoints-gatling",
+          "input_tokens": 586,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 3101,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0016384000000000001
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-jmeter",
+          "input_tokens": 649,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 947,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.00057085
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-k6",
+          "input_tokens": 1066,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1239,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0007794
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-locust",
+          "input_tokens": 649,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1360,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.00077735
+        },
+        {
+          "task_id": "mx-a04-k6-errors-gatling",
+          "input_tokens": 698,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 2906,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0015577
+        },
+        {
+          "task_id": "mx-a04-k6-errors-jmeter",
+          "input_tokens": 660,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1293,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0007455
+        },
+        {
+          "task_id": "mx-a04-k6-errors-k6",
+          "input_tokens": 845,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 2666,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.00145975
+        },
+        {
+          "task_id": "mx-a04-k6-errors-locust",
+          "input_tokens": 683,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 2086,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0011454500000000001
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-gatling",
+          "input_tokens": 646,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 3627,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0019104
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-jmeter",
+          "input_tokens": 720,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 5346,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.002781
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-k6",
+          "input_tokens": 1136,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 6587,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0034639000000000002
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-locust",
+          "input_tokens": 688,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 3540,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0018732
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-gatling",
+          "input_tokens": 808,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06410392
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-jmeter",
+          "input_tokens": 800,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 2267,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0012535
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-k6",
+          "input_tokens": 800,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1374,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.000807
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-locust",
+          "input_tokens": 698,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 3303,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0017562
+        },
+        {
+          "task_id": "mx-c01-html-csrf-gatling",
+          "input_tokens": 1224,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06414904
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "input_tokens": 1276,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0641914
+        },
+        {
+          "task_id": "mx-c01-html-csrf-k6",
+          "input_tokens": 1137,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06415327
+        },
+        {
+          "task_id": "mx-c01-html-csrf-locust",
+          "input_tokens": 1221,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06414858999999999
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "input_tokens": 1210,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06414694
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-jmeter",
+          "input_tokens": 1262,
+          "cached_tokens": 1152,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06403378
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-k6",
+          "input_tokens": 1123,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06413389
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "input_tokens": 1207,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06418105
+        },
+        {
+          "task_id": "mx-c04-json-pagination-gatling",
+          "input_tokens": 1214,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06414754
+        },
+        {
+          "task_id": "mx-c04-json-pagination-jmeter",
+          "input_tokens": 1266,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06418990000000001
+        },
+        {
+          "task_id": "mx-c04-json-pagination-k6",
+          "input_tokens": 1127,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06416905
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "input_tokens": 1211,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06414708999999999
+        },
+        {
+          "task_id": "mx-c06-etag-update-gatling",
+          "input_tokens": 1276,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06415683999999999
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "input_tokens": 1328,
+          "cached_tokens": 1280,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0640264
+        },
+        {
+          "task_id": "mx-c06-etag-update-k6",
+          "input_tokens": 1189,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06414379
+        },
+        {
+          "task_id": "mx-c06-etag-update-locust",
+          "input_tokens": 1273,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06417367
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "input_tokens": 1229,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06414979
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-jmeter",
+          "input_tokens": 1281,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06417487000000001
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-k6",
+          "input_tokens": 1142,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06413674
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "input_tokens": 1226,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0641839
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "input_tokens": 1280,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06415744
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "input_tokens": 1332,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06416524
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "input_tokens": 1193,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06414439
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "input_tokens": 1277,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06419155
+        },
+        {
+          "task_id": "mx-m01-basic-flow-gatling",
+          "input_tokens": 11268,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06569019999999999
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "input_tokens": 3692,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06455380000000001
+        },
+        {
+          "task_id": "mx-m01-basic-flow-k6",
+          "input_tokens": 11181,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06567714999999999
+        },
+        {
+          "task_id": "mx-m01-basic-flow-locust",
+          "input_tokens": 11265,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06568975
+        },
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "input_tokens": 21154,
+          "cached_tokens": 21120,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0643219
+        },
+        {
+          "task_id": "mx-m04-data-driven-jmeter",
+          "input_tokens": 3494,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06450682
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "input_tokens": 21066,
+          "cached_tokens": 20992,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06432598
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "input_tokens": 21150,
+          "cached_tokens": 21120,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0643213
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "input_tokens": 11621,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06572586999999999
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "input_tokens": 4053,
+          "cached_tokens": 3968,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06407227
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "input_tokens": 11534,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06571282
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-locust",
+          "input_tokens": 11618,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0657427
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "input_tokens": 11261,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06568914999999999
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "input_tokens": 3685,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06455275
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-k6",
+          "input_tokens": 11172,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0656758
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-locust",
+          "input_tokens": 11262,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0656893
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-gatling",
+          "input_tokens": 7750,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0651625
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "input_tokens": 11305,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06569575
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "input_tokens": 3567,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06451777
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-locust",
+          "input_tokens": 5544,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0648316
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "input_tokens": 7774,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0651661
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "input_tokens": 11073,
+          "cached_tokens": 11008,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06417487000000001
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-k6",
+          "input_tokens": 3471,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06452065
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-locust",
+          "input_tokens": 5503,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 6962,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.00430645
+        },
+        {
+          "task_id": "mx-r04-status-recovery-gatling",
+          "input_tokens": 7793,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06516895
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "input_tokens": 11536,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0657304
+        },
+        {
+          "task_id": "mx-r04-status-recovery-k6",
+          "input_tokens": 3506,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0645259
+        },
+        {
+          "task_id": "mx-r04-status-recovery-locust",
+          "input_tokens": 5416,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0648124
+        },
+        {
+          "task_id": "mx-r05-business-assertion-gatling",
+          "input_tokens": 7765,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06516475
+        },
+        {
+          "task_id": "mx-r05-business-assertion-jmeter",
+          "input_tokens": 11302,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0656953
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "input_tokens": 3534,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06449554
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "input_tokens": 5470,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0648205
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-gatling",
+          "input_tokens": 7898,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 15598,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0089837
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-jmeter",
+          "input_tokens": 12563,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06586717
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-k6",
+          "input_tokens": 3602,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06454030000000001
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-locust",
+          "input_tokens": 5651,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 21739,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.011717149999999999
+        },
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "input_tokens": 8046,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0652069
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "input_tokens": 17027,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06655405
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "input_tokens": 3871,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06456337000000001
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "input_tokens": 5763,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06486444999999999
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "input_tokens": 7970,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0651955
+        },
+        {
+          "task_id": "mx-r10-user-partition-jmeter",
+          "input_tokens": 11697,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06573727
+        },
+        {
+          "task_id": "mx-r10-user-partition-k6",
+          "input_tokens": 3259,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06447157
+        },
+        {
+          "task_id": "mx-r10-user-partition-locust",
+          "input_tokens": 5330,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0647995
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "input_tokens": 8946,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06532462
+        },
+        {
+          "task_id": "mx-r11-timer-scope-jmeter",
+          "input_tokens": 11667,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06575005
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "input_tokens": 3905,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06458575
+        },
+        {
+          "task_id": "mx-r11-timer-scope-locust",
+          "input_tokens": 5840,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.064876
+        },
+        {
+          "task_id": "mx-r12-error-metric-gatling",
+          "input_tokens": 7782,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0651673
+        },
+        {
+          "task_id": "mx-r12-error-metric-jmeter",
+          "input_tokens": 17095,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06652969
+        },
+        {
+          "task_id": "mx-r12-error-metric-k6",
+          "input_tokens": 3501,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06452515
+        },
+        {
+          "task_id": "mx-r12-error-metric-locust",
+          "input_tokens": 5478,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.0648217
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "input_tokens": 1462,
+          "cached_tokens": 512,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06415018
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "input_tokens": 1514,
+          "cached_tokens": 512,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06415798
+        },
+        {
+          "task_id": "mx-w01-steady-starts-k6",
+          "input_tokens": 1375,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06417169
+        },
+        {
+          "task_id": "mx-w01-steady-starts-locust",
+          "input_tokens": 1459,
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06420157
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-gatling",
+          "input_tokens": 1481,
+          "cached_tokens": 512,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06415303
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "input_tokens": 1533,
+          "cached_tokens": 512,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06416083
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-k6",
+          "input_tokens": 1394,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06417454
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "input_tokens": 1478,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06422169999999999
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "input_tokens": 1464,
+          "cached_tokens": 512,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06415048000000001
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "input_tokens": 1516,
+          "cached_tokens": 512,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06415828
+        },
+        {
+          "task_id": "mx-w07-burst-control-k6",
+          "input_tokens": 1377,
+          "cached_tokens": 256,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06417199
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "input_tokens": 1461,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 128000,
+          "price_per_million": {
+            "input": 0.15,
+            "cached": 0.015,
+            "output": 0.5
+          },
+          "cost_usd": 0.06421915
+        }
+      ],
+      "coverage": {
+        "run": 104,
+        "total": 104,
+        "partial": false,
+        "label": "104/104 tasks run"
+      },
+      "per_task_results": [
+        {
+          "task_id": "mx-a01-jtl-endpoints-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3101,
+          "latency_seconds": 21.850180466999973,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 947,
+          "latency_seconds": 7.484530763999999,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1239,
+          "latency_seconds": 9.13666086699999,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1360,
+          "latency_seconds": 11.483360071999982,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a04-k6-errors",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2906,
+          "latency_seconds": 22.378810864000002,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a04-k6-errors",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1293,
+          "latency_seconds": 7.727197388999997,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a04-k6-errors",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2666,
+          "latency_seconds": 26.96917077399999,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a04-k6-errors",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2086,
+          "latency_seconds": 14.392345159000001,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3627,
+          "latency_seconds": 55.62791409700003,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 5346,
+          "latency_seconds": 53.136142286999984,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 6587,
+          "latency_seconds": 65.95560097999999,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3540,
+          "latency_seconds": 26.406382860999997,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 417.38533158,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model answer (JSONDecodeError): Expecting value: line 1 column 1 (char 0)"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2267,
+          "latency_seconds": 12.713695965,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1374,
+          "latency_seconds": 8.968087949999983,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 3303,
+          "latency_seconds": 27.141317144999988,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 407.226295938,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 253.29182290300378,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 546.446715261,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 536.630706439,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 388.230300339,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 2154.260523185003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 398.52067888,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 417.81443318899994,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 388.4322580400001,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 496.908550690001,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 523.4998586459999,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 414.5164331650001,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c06-etag-update-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 350.3719262049999,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 901.5890675809997,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c06-etag-update-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 442.6674100760001,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c06-etag-update-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 424.5620940160002,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 364.42841307200024,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 267.96063167400007,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 416.2055832359997,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 419.0593797710003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 482.5370138000003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 219.76071509099984,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 443.5163969580003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 454.946778604,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 374.1245587599997,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 268.3335037300003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 545.580097943,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 581.4488799619999,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 1667.2623593600001,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m04-data-driven-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 349.68356279100044,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 1666.614952204,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 1709.144153355,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 432.5995909659996,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 1458.7673531580003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 361.8126969370005,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 339.12308953200045,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 268.8531858159995,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 283.71399419000045,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 383.570639734,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 280.2973202209996,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 386.0101612750004,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 239.05550852099987,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 368.99614579900026,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 300.1610432439993,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 346.98049113900015,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 913.9252624029996,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 275.0448043159995,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 6962,
+          "latency_seconds": 27.24323021500004,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 274.5313672700004,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 246.10728927899981,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 240.6786891669999,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 261.89716138699987,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 227.36669276199973,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 253.39587821900022,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 296.0761503529993,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 288.69187644700014,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 15598,
+          "latency_seconds": 35.74435506500049,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 243.74865984399912,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 258.77843899800064,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 21739,
+          "latency_seconds": 67.1126142209996,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 305.6980557350007,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 239.70823889599887,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 404.67546842699994,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 208.7801366069998,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r10-user-partition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 396.09571599899937,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r10-user-partition-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r10-user-partition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 209.82599042900074,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r10-user-partition-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r10-user-partition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 579.0958081380004,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r10-user-partition-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r10-user-partition",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 312.0927419589998,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 487.99549404699974,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 222.29786521300048,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 499.13742649400047,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 388.7975102620003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r12-error-metric-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 513.8641732619999,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r12-error-metric-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 243.82443521799905,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r12-error-metric-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 211.75416821100043,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r12-error-metric-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 529.8575386640005,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 212.24499330199978,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 243.60023166300016,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 236.4450132059992,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 516.1029461300004,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 235.0481846469993,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 222.25080823699864,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 232.18980849000036,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 260.1429685290004,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 193.10322860400083,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 245.0228686419996,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w07-burst-control-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 228.8266877089991,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 128000,
+          "latency_seconds": 240.84203079700092,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        }
+      ],
+      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
     }
   ],
   "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d",
-  "publication_note": "Core: 26 public scenarios across JMeter, k6, Locust and Gatling (104 tasks). Anthropic claude-sonnet-5-5 uses adaptive thinking at high effort; DeepSeek deepseek-flash, deepseek-v4-pro and Qwen-Ambassador/Qwen4-Max use thinking-high; OpenAI gpt-6.2-sol, gpt-6.1-terra and gpt-6-luna use reasoning_effort high; Anthropic claude-haiku-5-5 uses adaptive thinking at high effort. Sonnet, DeepSeek and Qwen use a 64,000-token output cap; OpenAI uses the documented 128,000-token maximum. All use one conditional repair round. Scores are the final answer after the one allowed repair. Costs include all 104 first tries per model and the recorded repair responses (24 for Sonnet, 27 for Flash, 29 for V4 Pro, 16 for Qwen4-Max, 3 for GPT-6.2 Sol, 17 for GPT-6.1 Terra, 28 for GPT-6 Luna, 14 for Claude Haiku 5.5), estimated from reported token usage at frozen registry prices, not provider invoices. GPT-6.2 Sol was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45511510673 at head 9a664f881e7c78dfea26e54b71b0e0d8fc6fa514. Its workflow spend cap was $50 per model, and no first try or repair ended at the output cap. GPT-6.1 Terra was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45529880940 at head de0702215439bb0b7bf3f9dbe5ef383c57f18b82. Its workflow spend cap was $50 per model, and no first try or repair ended at the output cap. GPT-6 Luna was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45530991214 at head eb48304999a6052305cb32ce6688523143afb4b5. Its workflow spend cap was $10 per model, and no first try or repair ended at the output cap. Claude Haiku 5.5 was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45545062689 at head 3a2c67f3d393dad99dd32751c2846383b29058f1. Its workflow spend cap was $10 per model. Twenty-four Haiku first tries ended at the 64,000-token output cap and remain scored as recorded; no Haiku repair ended at the cap. Sonnet was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45066297860; both DeepSeek models from https://github.com/QAInsights/p95-bench/actions/runs/45082823742; Qwen4-Max from https://github.com/QAInsights/p95-bench/actions/runs/45113245263 at head 2d6e43f309d0ef51698fee94e503439cdb4b09a6. Qwen ran uncapped via the ModelScope free tier; board costs retain public list prices. Five Qwen first tries ended at the output cap and remain scored as recorded. Flash's Gatling shard uses attempt 2 after an IncompleteRead transport failure in attempt 1; costs cover the merged saved responses. All use merged manifest f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de. Offline regrade with native-numeric grader commit beda2d574631a6c0f3becfa02481fb59c3ff6d95: only fix-affected attempts were re-graded. Scanned the four pre-OpenAI models; replaced only eight Sonnet JMeter phase grades (initial and recorded repair for m05, w01, w02 and w07) originally rejected with JMX component or serialization attribute outside the allowed subset and now accepted by patched validation. All other phase grades remain exactly as originally recorded. Historical repair selection, cost, tokens and latency are unchanged; no provider calls or new repairs."
+  "publication_note": "Core: 26 public scenarios across JMeter, k6, Locust and Gatling (104 tasks). Anthropic claude-sonnet-5-5 uses adaptive thinking at high effort; DeepSeek deepseek-flash, deepseek-v4-pro and Qwen-Ambassador/Qwen4-Max use thinking-high; OpenAI gpt-6.2-sol, gpt-6.1-terra and gpt-6-luna use reasoning_effort high; Anthropic claude-haiku-5-5 uses adaptive thinking at high effort; Tinker thinkingmachines/Inkling-2-Mini uses reasoning_effort high. Sonnet, DeepSeek and Qwen use a 64,000-token output cap; OpenAI and Tinker use a 128,000-token output cap. All use one conditional repair round. Scores are the final answer after the one allowed repair. Costs include all 104 first tries per model and the recorded repair responses (24 for Sonnet, 27 for Flash, 29 for V4 Pro, 16 for Qwen4-Max, 3 for GPT-6.2 Sol, 17 for GPT-6.1 Terra, 28 for GPT-6 Luna, 14 for Claude Haiku 5.5, 0 for Inkling 2 Mini), estimated from reported token usage at frozen registry prices, not provider invoices. GPT-6.2 Sol was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45511510673 at head 9a664f881e7c78dfea26e54b71b0e0d8fc6fa514. Its workflow spend cap was $50 per model, and no first try or repair ended at the output cap. GPT-6.1 Terra was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45529880940 at head de0702215439bb0b7bf3f9dbe5ef383c57f18b82. Its workflow spend cap was $50 per model, and no first try or repair ended at the output cap. GPT-6 Luna was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45530991214 at head eb48304999a6052305cb32ce6688523143afb4b5. Its workflow spend cap was $10 per model, and no first try or repair ended at the output cap. Claude Haiku 5.5 was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45545062689 at head 3a2c67f3d393dad99dd32751c2846383b29058f1. Its workflow spend cap was $10 per model. Twenty-four Haiku first tries ended at the 64,000-token output cap and remain scored as recorded; no Haiku repair ended at the cap. Inkling 2 Mini was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45673110614 at head 2383300f46e2929e43ee0740b349a675eb1bfcae, plus a supplemental local execution at harness commit 8d9fe2996ec19d8a34ff19b3133f65e46b8cbb87 for three JMeter correlation tasks that timed out in the original non-streaming shard. Its workflow spend cap was $10 per model, and the supplemental spend cap was $1. Eighty-six Inkling 2 Mini first tries ended at the 128,000-token output cap and remain scored as recorded; every capped response was empty, so no repair was triggered. Sonnet was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45066297860; both DeepSeek models from https://github.com/QAInsights/p95-bench/actions/runs/45082823742; Qwen4-Max from https://github.com/QAInsights/p95-bench/actions/runs/45113245263 at head 2d6e43f309d0ef51698fee94e503439cdb4b09a6. Qwen ran uncapped via the ModelScope free tier; board costs retain public list prices. Five Qwen first tries ended at the output cap and remain scored as recorded. Flash's Gatling shard uses attempt 2 after an IncompleteRead transport failure in attempt 1; costs cover the merged saved responses. All use merged manifest f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de. Offline regrade with native-numeric grader commit beda2d574631a6c0f3becfa02481fb59c3ff6d95: only fix-affected attempts were re-graded. Scanned the four pre-OpenAI models; replaced only eight Sonnet JMeter phase grades (initial and recorded repair for m05, w01, w02 and w07) originally rejected with JMX component or serialization attribute outside the allowed subset and now accepted by patched validation. All other phase grades remain exactly as originally recorded. Historical repair selection, cost, tokens and latency are unchanged; no provider calls or new repairs."
 }
