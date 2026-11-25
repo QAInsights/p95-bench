@@ -142,6 +142,15 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
               "after_repair": 100 * sum(a["after_repair_score"] for a in per_task) / len(per_task)}
     run_summary = Path(run_dir) / "summary.json"
     original_grader = read(run_summary)["main_grader"] if run_summary.exists() else None
+    if COST_NOTE:
+        cost_note = COST_NOTE
+    elif EXCLUDED_SPEND is None:
+        cost_note = ("List-price estimate from native per-turn usage. Excludes unpriced and "
+                     "unknown spend outside the valid published attempts. Not an invoice.")
+    else:
+        cost_note = (f"List-price estimate from native per-turn usage. Excludes ${EXCLUDED_SPEND:.2f} "
+                     "extra spend on discarded starts and credit-failed partial attempts. "
+                     "Unreported failed-turn usage is unpriced. Not an invoice.")
     metadata = {"entry_type": "agent_system", "system": SYSTEM, "model": MODEL,
                 "provider": config["provider"], "reasoning_mode": "thinking-high", "tools": ["jmeter"],
                 "pack_id": "p95-core", "pack_digest": manifest["digest"], "visibility": "public",
@@ -156,9 +165,7 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
                 "pricing_basis": {"currency": "USD", "unit": "million tokens",
                                   "cache_write_ttl": CACHE_WRITE_TTL, **PRICES},
                 "usage": totals, "excluded_spend_usd": EXCLUDED_SPEND,
-                "cost_note": COST_NOTE or ("List-price estimate from native per-turn usage. Excludes $3.67 "
-                             "extra spend on discarded starts and credit-failed partial attempts. "
-                             "Unreported failed-turn usage is unpriced. Not an invoice.")}
+                "cost_note": cost_note}
     if original_grader:
         metadata["original_grader_commit"] = original_grader
     summary = {"pack_id": "p95-core", "pack_digest": manifest["digest"], "attempts": len(attempts),
