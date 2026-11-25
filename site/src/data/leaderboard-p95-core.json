@@ -21911,7 +21911,8 @@
           "passed": true,
           "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
         }
-      ]
+      ],
+      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
     },
     {
       "provider": "deepseek",
