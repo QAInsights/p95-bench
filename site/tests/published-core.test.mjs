@@ -42,8 +42,8 @@ test('Core publishes complete public Sonnet, DeepSeek, Qwen and OpenAI runs with
   assert.match(data.publication_note, /45066297860/);
   assert.match(data.publication_note, /final answer after the one allowed repair/);
   assert.doesNotMatch(JSON.stringify(data), /5a5d088256624100/);
-  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6.2-sol']);
-  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6.2-sol']);
+  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6.1-terra', 'gpt-6.2-sol']);
+  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6.1-terra', 'gpt-6.2-sol']);
   const model = data.models.find(model => model.provider === 'anthropic');
   assert.equal(model.provider, 'anthropic');
   assert.equal(model.output_cap, 64000);
@@ -156,6 +156,7 @@ test('OpenAI Core keeps high reasoning, complete coverage, output headroom and a
   assert.match(model.cost_note, /45511510673/);
   assert.match(data.publication_note, /OpenAI uses the documented 128,000-token maximum/);
   assert.match(data.publication_note, /3 for GPT-6\.2 Sol/);
+  assert.match(data.publication_note, /17 for GPT-6\.1 Terra/);
   const rawAttempts = await readFile(new URL('gpt-6.2-sol/attempts.jsonl', runs), 'utf8');
   assert.doesNotMatch(rawAttempts, /sk-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|OPENAI_API_KEY/);
   const responses = rawAttempts.trim().split('\n').map(JSON.parse)
@@ -180,6 +181,49 @@ test('OpenAI Core keeps high reasoning, complete coverage, output headroom and a
   near(displayed.toolCosts.k6, 1.428906);
   near(displayed.toolCosts.locust, 1.717984);
   near(displayed.toolCosts.gatling, 2.131186);
+});
+
+test('Terra Core keeps high reasoning, complete coverage, cache-aware cost and output headroom', async () => {
+  const model = data.models.find(model => model.model === 'gpt-6.1-terra');
+  assert.equal(model.provider, 'openai');
+  assert.equal(model.pack_digest, data.pack_digest);
+  assert.equal(model.budget_file_sha256, budgetHash);
+  assert.equal(model.output_cap, 128000);
+  assert.equal(model.reasoning_mode, 'thinking-high');
+  assert.equal(model.harness_commit, 'de0702215439bb0b7bf3f9dbe5ef383c57f18b82');
+  assert.equal(model.derived_from.length, 4);
+  assert.ok(model.derived_from.every(source => source.spend_cap_usd === 12.5 && source.harness_commit === model.harness_commit));
+  assert.match(model.cost_note, /17 repair responses/);
+  assert.match(model.cost_note, /cache reads use documented discounted rates/);
+  assert.match(model.cost_note, /cache writes use documented 1\.25x total rates/);
+  assert.match(model.cost_note, /45529880940/);
+  assert.match(data.publication_note, /GPT-6\.1 Terra was published from Actions run/);
+  const rawAttempts = await readFile(new URL('gpt-6.1-terra/attempts.jsonl', runs), 'utf8');
+  assert.doesNotMatch(rawAttempts, /sk-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|OPENAI_API_KEY/);
+  const responses = rawAttempts.trim().split('\n').map(JSON.parse)
+    .flatMap(attempt => [attempt.response, attempt.repair?.response].filter(Boolean));
+  assert.equal(responses.length, 121);
+  assert.ok(responses.every(response => response.finish_reason === 'stop'));
+  assert.deepEqual(model.coverage, { run: 104, total: 104, partial: false, label: '104/104 tasks run' });
+  const { tasks } = await loadTaskData({ packId: 'p95-core' });
+  assert.equal(model.per_task_results.length, 104);
+  assert.deepEqual(new Set(model.per_task_results.map(task => task.task_id)), new Set(tasks.map(task => task.id)));
+  near(model.overall_score, 74.92892098595574);
+  near(model.after_repair.overall_score, 84.92248315531599);
+  near(model.cost, 4.20945735);
+  near(model.cost_attempts.reduce((sum, attempt) => sum + attempt.cost_usd, 0), model.cost);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.status === 'repair').length, 17);
+  assert.ok(model.cost_attempts.every(attempt => !attempt.output_tokens || attempt.output_tokens < 128000));
+  assert.equal(model.tokens.cache_read, 53962);
+  assert.equal(model.tokens.cache_write, 394841);
+  const displayed = boardModels(data).find(model => model.key === 'openai/gpt-6.1-terra');
+  assert.equal(displayed.score.toFixed(1), '84.9');
+  assert.deepEqual(displayed.categories, model.after_repair.category_scores);
+  near(Object.values(displayed.toolCosts).reduce((sum, cost) => sum + cost, 0), model.cost);
+  near(displayed.toolCosts.jmeter, 1.5476762);
+  near(displayed.toolCosts.k6, .70154525);
+  near(displayed.toolCosts.locust, .7782115);
+  near(displayed.toolCosts.gatling, 1.1820244);
 });
 
 test('published Core data reproduces from stored runs apart from documented annotations', async () => {
