@@ -15,6 +15,7 @@ from p95bench.grades import Checkpoint, CheckpointGrade
 from p95bench.packs import efficiency, pack_config, snapshot, summarize_v2
 from p95bench.providers import (
     PROVIDERS,
+    CacheWritePrice,
     DeepSeekResponse,
     OpenAICompatible,
     Price,
@@ -371,7 +372,8 @@ def test_repair_is_skipped_for_truncated_responses(
 
 
 @pytest.mark.parametrize('cap', [64000, 32000])
-def test_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch, cap):
+@pytest.mark.parametrize('price', [Price(1, .5, 2), CacheWritePrice(1, .5, 2, 1.25)])
+def test_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch, cap, price):
     task_item = task()
     monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint",
                         Mock(side_effect=[
@@ -393,7 +395,6 @@ def test_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch, cap):
             return None
 
     ledger = RecordingLedger()
-    price = Price(1, .5, 2)
     directory, _ = run(
         provider, "deepseek", "deepseek-flash", price, [task_item], tmp_path,
         pack_id=V2, efficiency_budgets={
@@ -406,7 +407,7 @@ def test_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch, cap):
     retries = provider.config.transport_retries
 
     def expected_reservation(messages):
-        maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
+        maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input_upper_bound
                    + cap * price.output) / 1_000_000
         return maximum * (1 + retries)
 
