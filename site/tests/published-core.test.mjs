@@ -42,8 +42,8 @@ test('Core publishes complete public Sonnet, DeepSeek, Qwen and OpenAI runs with
   assert.match(data.publication_note, /45066297860/);
   assert.match(data.publication_note, /final answer after the one allowed repair/);
   assert.doesNotMatch(JSON.stringify(data), /5a5d088256624100/);
-  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol']);
-  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol']);
+  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol']);
+  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol']);
   const model = data.models.find(model => model.provider === 'anthropic');
   assert.equal(model.provider, 'anthropic');
   assert.equal(model.output_cap, 64000);
@@ -158,6 +158,8 @@ test('OpenAI Core keeps high reasoning, complete coverage, output headroom and a
   assert.match(data.publication_note, /3 for GPT-6\.2 Sol/);
   assert.match(data.publication_note, /17 for GPT-6\.1 Terra/);
   assert.match(data.publication_note, /28 for GPT-6 Luna/);
+  assert.match(data.publication_note, /14 for Claude Haiku 5\.5/);
+  assert.match(data.publication_note, /Twenty-four Haiku first tries ended at the 64,000-token output cap/);
   const rawAttempts = await readFile(new URL('gpt-6.2-sol/attempts.jsonl', runs), 'utf8');
   assert.doesNotMatch(rawAttempts, /sk-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|OPENAI_API_KEY/);
   const responses = rawAttempts.trim().split('\n').map(JSON.parse)
