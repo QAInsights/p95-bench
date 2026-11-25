@@ -19,7 +19,8 @@ export const name = (model) => model === 'deepseek-v4-pro' ? 'DeepSeek V4 Pro'
   : model === 'muse-ember-1.0' ? 'Muse Ember 1.0'
   : model === 'gpt-6.2-sol' ? 'GPT-6.2 Sol'
   : model === 'gpt-6.2-astra' ? 'GPT-6.2 Astra'
-  : model === 'gpt-6.1-terra' ? 'GPT-6.1 Terra' : model;
+  : model === 'gpt-6.1-terra' ? 'GPT-6.1 Terra'
+  : model === 'gpt-6-luna' ? 'GPT-6 Luna' : model;
 
 export const modelSlug = (model) => model.replace(/^thinkingmachines\//, '').toLowerCase()
   .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

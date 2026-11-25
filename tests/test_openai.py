@@ -247,7 +247,7 @@ def test_deepseek_non_stream_response_remains_plain_json(monkeypatch):
 
 @pytest.mark.parametrize('model,rates', [
     ('gpt-6.2-sol', (2, .1, 2.5, 10)), ('gpt-6.2-astra', (8, .4, 10, 40)),
-    ('gpt-6.1-terra', (1, .05, 1.25, 5)),
+    ('gpt-6.1-terra', (1, .05, 1.25, 5)), ('gpt-6-luna', (.1, .01, .125, .5)),
 ])
 @pytest.mark.parametrize('content', ['42', None])
 def test_transport(monkeypatch, model, rates, content):
