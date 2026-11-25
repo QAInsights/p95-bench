@@ -37,7 +37,7 @@ def public_text(text):
     return text
 
 
-def response_usage(rows):
+def response_usage(rows, prices):
     if not rows or any(row.get("status") != "ok" for row in rows):
         raise ValueError("Only successful, recorded model turns may be published")
     rows = [{**row, "input_total": row.get("input_total", row.get("fresh_input", 0)
@@ -49,23 +49,24 @@ def response_usage(rows):
             "fresh_input_tokens", "cached_tokens", "cache_write_tokens")):
         raise ValueError("Input token accounting does not reconcile")
     result["turns"] = len(rows)
-    cost = sum(result[key] * PRICES[price] for key, price in (
+    cost = sum(result[key] * prices[price] for key, price in (
         ("fresh_input_tokens", "input"), ("cached_tokens", "cached"),
         ("cache_write_tokens", "cache_write"), ("output_tokens", "output"))) / 1_000_000
     return result, cost
 
 
 def grade_saved(job):
-    task, folder, evidence, digest, commit = job
+    task, folder, evidence, digest, commit, config = job
     result = read(folder / "result.json")
     if result["status"] not in {"completed", "reused"} or result["task"] != task.id:
         raise ValueError("Expected a valid completed task")
     reused = result["status"] == "reused"
     source = folder / "reused-c03" if reused else folder
     attempt = {"task_id": task.id, "scenario": task.scenario, "category": task.category,
-               "repeat": 0, "tool": "jmeter", "provider": PROVIDER,
-               "model": MODEL, "pack_id": "p95-core", "pack_digest": digest,
+               "repeat": 0, "tool": "jmeter", "provider": config["provider"],
+               "model": config["model"], "pack_id": "p95-core", "pack_digest": digest,
                "repair": {"triggered": False}}
+    prices = config["prices"]
     for phase in ("initial", "repair") if result.get("repair") else ("initial",):
         if reused:
             raw = [json.loads(line) for line in (source / "usage.jsonl").read_text().splitlines()]
@@ -75,7 +76,7 @@ def grade_saved(job):
                     for row in raw]
         else:
             rows = read(source / f"{phase}-usage.json")
-        usage, cost = response_usage(rows)
+        usage, cost = response_usage(rows, prices)
         filename = f"{phase}-answer.txt" if task.grader == "v2_analysis" else f"{phase}-model.jmx"
         text = public_text((source / filename).read_text())
         key = hashlib.sha256(json.dumps([commit, task_digest(task), text]).encode()).hexdigest()
@@ -91,7 +92,7 @@ def grade_saved(job):
             cache.write_text(json.dumps(grade) + "\n")
         record = {"response": {"text": text, **usage,
                                "source_sha256": hashlib.sha256(text.encode()).hexdigest()},
-                  "grade": grade, "cost_usd": cost, "price_per_million": PRICES}
+                  "grade": grade, "cost_usd": cost, "price_per_million": prices}
         if phase == "initial":
             attempt.update(record)
         else:
@@ -124,7 +125,8 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
     inventory = {item["id"]: item["task_digest"] for item in manifest["tasks"]}
     if len(tasks) != 26 or any(task_digest(task) != inventory.get(task.id) for task in tasks):
         raise ValueError("Core task inventory differs from the recorded manifest")
-    work = [(task, Path(run_dir) / task.id, Path(evidence_dir), manifest["digest"], commit)
+    config = {"provider": PROVIDER, "model": MODEL, "prices": PRICES}
+    work = [(task, Path(run_dir) / task.id, Path(evidence_dir), manifest["digest"], commit, config)
             for task in tasks]
     with ProcessPoolExecutor(max_workers=jobs) as pool:
         attempts = list(pool.map(grade_saved, work))
@@ -139,7 +141,7 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
     scores = {"first_attempt": 100 * sum(a["score"] for a in per_task) / len(per_task),
               "after_repair": 100 * sum(a["after_repair_score"] for a in per_task) / len(per_task)}
     metadata = {"entry_type": "agent_system", "system": SYSTEM, "model": MODEL,
-                "provider": PROVIDER, "reasoning_mode": "thinking-high", "tools": ["jmeter"],
+                "provider": config["provider"], "reasoning_mode": "thinking-high", "tools": ["jmeter"],
                 "pack_id": "p95-core", "pack_digest": manifest["digest"], "visibility": "public",
                 "harness_commit": commit, "grader_commit": commit, "rank_eligible": False,
                 "original_grader_commit": (read(Path(run_dir) / "summary.json")["main_grader"]
