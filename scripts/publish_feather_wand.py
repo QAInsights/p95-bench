@@ -38,6 +38,8 @@ def public_text(text):
 def response_usage(rows):
     if not rows or any(row.get("status") != "ok" for row in rows):
         raise ValueError("Only successful, recorded model turns may be published")
+    rows = [{**row, "input_total": row.get("input_total", row.get("fresh_input", 0)
+             + row.get("cache_read", 0) + row.get("cache_write", 0))} for row in rows]
     result = {key: sum(row[field] for row in rows) for key, field in USAGE.items()}
     if any(not isinstance(value, int) or value < 0 for value in result.values()):
         raise ValueError("Invalid token usage")
