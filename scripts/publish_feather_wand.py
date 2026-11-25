@@ -18,6 +18,8 @@ SYSTEM = "Feather Wand v4.0.1-RC1 (JMeter GUI Agent mode)"
 MODEL = "claude-sonnet-5-5"
 PROVIDER = "anthropic"
 EXCLUDED_SPEND = 3.6677725
+CACHE_WRITE_TTL = "5 minutes"
+EXECUTION_NOTE = "JMeter 5.6.3 GUI only; fresh plan and conversation per task."
 COST_NOTE = None
 PRICES = {"input": 2, "cached": 0.10, "cache_write": 2.50, "output": 10}
 USAGE = {"input_tokens": "input_total", "fresh_input_tokens": "fresh_input",
@@ -144,13 +146,13 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
                                  if (Path(run_dir) / "summary.json").exists() else commit),
                 "initial_attempts_regraded": len(attempts),
                 "recorded_repairs_regraded": sum(a["repair"]["triggered"] for a in attempts),
-                "execution": "JMeter 5.6.3 GUI only; fresh plan and conversation per task.",
+                "execution": EXECUTION_NOTE,
                 "repair_policy": "One GUI repair only when the historical Core trigger fired; "
                                  "exact feedback, saved responses only, no new repairs during regrade. "
                                  "Retain recorded repairs even if the merged grader accepts the initial.",
                 "analysis_extraction": "Verbatim final assistant text from the native conversation.",
                 "pricing_basis": {"currency": "USD", "unit": "million tokens",
-                                  "cache_write_ttl": "5 minutes", **PRICES},
+                                  "cache_write_ttl": CACHE_WRITE_TTL, **PRICES},
                 "usage": totals, "excluded_spend_usd": EXCLUDED_SPEND,
                 "cost_note": COST_NOTE or ("List-price estimate from native per-turn usage. Excludes $3.67 "
                              "extra spend on discarded starts and credit-failed partial attempts. "
@@ -186,9 +188,12 @@ def main():
     parser.add_argument("--output-price", type=float, default=PRICES["output"])
     parser.add_argument("--excluded-spend", type=float, default=EXCLUDED_SPEND)
     parser.add_argument("--cost-note", default=COST_NOTE)
+    parser.add_argument("--cache-write-ttl", default=CACHE_WRITE_TTL)
+    parser.add_argument("--execution-note", default=EXECUTION_NOTE)
     args = parser.parse_args()
     globals().update(SYSTEM=args.system, MODEL=args.model, PROVIDER=args.provider,
                      EXCLUDED_SPEND=args.excluded_spend, COST_NOTE=args.cost_note,
+                     CACHE_WRITE_TTL=args.cache_write_ttl, EXECUTION_NOTE=args.execution_note,
                      PRICES={"input": args.input_price, "cached": args.cached_price,
                              "cache_write": args.cache_write_price, "output": args.output_price})
     export(args.run_dir, args.output_dir, args.evidence_dir, args.jobs)
