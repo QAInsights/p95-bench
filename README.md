@@ -175,7 +175,7 @@ except OpenAI at **128,000**):
 | Provider/models | Documented maximum output | Source |
 | --- | --- | --- |
 | Anthropic Sonnet 5.5 / Opus 5.5 | 128K each | [Models](https://platform.claude.com/docs/en/about-claude/models/overview) |
-| OpenAI GPT-6.2 Sol / Astra | 128,000 each | [Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol), [Astra](https://developers.openai.com/api/docs/models/gpt-6.2-astra) |
+| OpenAI GPT-6.2 Sol / Astra / GPT-6.1 Terra | 128,000 each | [Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol), [Astra](https://developers.openai.com/api/docs/models/gpt-6.2-astra), [Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra) |
 | Gemini 4 Carbon / Argon / Hydrogen | 65,536 synchronous each | [Carbon](https://ai.google.dev/gemini-api/docs/models/gemini-4-carbon), [Argon](https://ai.google.dev/gemini-api/docs/models/gemini-4-argon), [Hydrogen](https://ai.google.dev/gemini-api/docs/models/gemini-4-hydrogen) |
 | Gemini 3.8 Flash | 65,536 | [Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) |
 | DeepSeek Flash / V4 Pro | 384K each | [Models](https://api-docs.deepseek.com/quick_start/pricing) |
@@ -292,14 +292,18 @@ timestamp IDs, independent of model names; published copies use the flat slugs
 above under `results/published/`. Site artifact links use those same slugs.
 
 OpenAI also uses the OpenAI-compatible adapter at `https://api.openai.com/v1`.
-Set `OPENAI_API_KEY` and select `--provider openai` with `gpt-6.2-sol` or
-`gpt-6.2-astra`. Verified Standard input/output list prices per million tokens
-are $2/$10 for Sol and $8/$40 for Astra, from <https://openai.com/api/pricing/>.
-Cached input is conservatively priced at the ordinary input rate pending a
-verified cache discount. Both models reject `max_tokens` and temperature 0:
-requests use `max_completion_tokens: 128000` and omit temperature. Chat
-Completions requests set `reasoning_effort: high`, following OpenAI's
-[GPT-6.2 guidance](https://developers.openai.com/api/docs/guides/latest-model);
+Set `OPENAI_API_KEY` and select `--provider openai` with `gpt-6.2-sol`,
+`gpt-6.2-astra`, or `gpt-6.1-terra`. Verified Standard input/output list
+prices per million tokens are $2/$10 for Sol, $8/$40 for Astra, and $1/$5 for
+Terra, from <https://openai.com/api/pricing/> and the linked model pages.
+Cached-input/30-minute cache-write rates are $0.10/$2.50 for Sol, $0.40/$10
+for Astra, and $0.05/$1.25 for Terra. Cache-write rates are total rates, not
+surcharges; `prompt_tokens_details.cache_write_tokens` is preserved in saved
+responses. Budget reservations use the higher ordinary-input or cache-write
+rate as their input upper bound. These models reject `max_tokens` and
+temperature 0: requests use `max_completion_tokens: 128000`
+and omit temperature. Chat Completions requests set `reasoning_effort: high`,
+following OpenAI's [GPT-6 guidance](https://developers.openai.com/api/docs/guides/latest-model);
 new run metadata records `reasoning_mode: thinking-high`. Reasoning tokens
 count toward the completion cap and reported output usage.
 

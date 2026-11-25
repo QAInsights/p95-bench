@@ -317,7 +317,8 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                         raise SpendLimitExceeded(budget_error)
                     if ledger:
                         output_cap = _output_cap(config, model)
-                        maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input
+                        maximum = ((len(json.dumps(messages).encode()) + 4096)
+                                   * price.input_upper_bound
                                    + output_cap * price.output) / 1_000_000
                         retries = getattr(config, "transport_retries", 0) if config else 0
                         reservation = ledger.reserve(maximum * (1 + retries))
@@ -392,7 +393,8 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                             if ledger:
                                 output_cap = _output_cap(config, model)
                                 repair_maximum = ((len(json.dumps(repair_messages).encode()) + 4096)
-                                                  * price.input + output_cap * price.output) / 1_000_000
+                                                  * price.input_upper_bound
+                                                  + output_cap * price.output) / 1_000_000
                                 retries = getattr(config, "transport_retries", 0) if config else 0
                                 repair_reservation = ledger.reserve(repair_maximum * (1 + retries))
                                 provider.transport_attempts = 0
