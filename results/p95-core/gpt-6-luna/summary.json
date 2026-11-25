@@ -1,0 +1,46 @@
+{
+  "pack_id": "p95-core",
+  "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+  "overall_score": 54.871302019528684,
+  "quality_score": 55.29774305558681,
+  "efficiency_score": 46.76892233442445,
+  "category_scores": {
+    "repair": 77.01388888888889,
+    "migration": 43.072916666875,
+    "correlation": 27.916666666666668,
+    "workload": 48.333333333333336,
+    "analysis": 86.25
+  },
+  "attempts": 104,
+  "expected_attempts": 104,
+  "repeats": 1,
+  "complete": true,
+  "passed": 51,
+  "after_repair": {
+    "overall_score": 68.82272260190327,
+    "quality_score": 69.55164930559202,
+    "efficiency_score": 54.97311523181718,
+    "category_scores": {
+      "repair": 84.09722222222223,
+      "migration": 50.460069444687505,
+      "correlation": 48.75,
+      "workload": 71.66666666666667,
+      "analysis": 96.25
+    }
+  },
+  "repairs_triggered": 28,
+  "repairs_succeeded": 6,
+  "estimated_cost_usd": 1.04221925,
+  "input_tokens": 618563,
+  "output_tokens": 1949325,
+  "latency_seconds": 12452.456197650998,
+  "cached_tokens": 78610,
+  "cache_write_tokens": 511014,
+  "not_run": 0,
+  "cost_by_tool": {
+    "gatling": 0.24819677499999995,
+    "jmeter": 0.383011925,
+    "k6": 0.16183323500000002,
+    "locust": 0.24917731499999998
+  }
+}
