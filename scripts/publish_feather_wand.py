@@ -186,13 +186,14 @@ def main():
     parser.add_argument("--cached-price", type=float, default=PRICES["cached"])
     parser.add_argument("--cache-write-price", type=float, default=PRICES["cache_write"])
     parser.add_argument("--output-price", type=float, default=PRICES["output"])
-    parser.add_argument("--excluded-spend", type=float, default=EXCLUDED_SPEND)
+    parser.add_argument("--excluded-spend", default=str(EXCLUDED_SPEND))
     parser.add_argument("--cost-note", default=COST_NOTE)
     parser.add_argument("--cache-write-ttl", default=CACHE_WRITE_TTL)
     parser.add_argument("--execution-note", default=EXECUTION_NOTE)
     args = parser.parse_args()
     globals().update(SYSTEM=args.system, MODEL=args.model, PROVIDER=args.provider,
-                     EXCLUDED_SPEND=args.excluded_spend, COST_NOTE=args.cost_note,
+                     EXCLUDED_SPEND=None if str(args.excluded_spend).lower() in {"unknown", "none", "null"} else float(args.excluded_spend),
+                     COST_NOTE=args.cost_note,
                      CACHE_WRITE_TTL=args.cache_write_ttl, EXECUTION_NOTE=args.execution_note,
                      PRICES={"input": args.input_price, "cached": args.cached_price,
                              "cache_write": args.cache_write_price, "output": args.output_price})
