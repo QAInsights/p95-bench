@@ -22,6 +22,7 @@ from p95bench.providers import (
     ProviderConfig,
     Response,
     SpendLimitExceeded,
+    TieredCacheWritePrice,
 )
 from p95bench.runner import (
     _grade_response,
@@ -372,7 +373,11 @@ def test_repair_is_skipped_for_truncated_responses(
 
 
 @pytest.mark.parametrize('cap', [64000, 32000])
-@pytest.mark.parametrize('price', [Price(1, .5, 2), CacheWritePrice(1, .5, 2, 1.25)])
+@pytest.mark.parametrize('price', [
+    Price(1, .5, 2), CacheWritePrice(1, .5, 2, 1.25),
+    TieredCacheWritePrice(1, .5, 2, 1.25, long_input=5, long_cached=2.5,
+                          long_output=10, long_cache_write=6.25, long_context_threshold=100),
+])
 def test_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch, cap, price):
     task_item = task()
     monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint",
@@ -408,7 +413,7 @@ def test_output_cap_is_reserved_for_both_calls(tmp_path, monkeypatch, cap, price
 
     def expected_reservation(messages):
         maximum = ((len(json.dumps(messages).encode()) + 4096) * price.input_upper_bound
-                   + cap * price.output) / 1_000_000
+                   + cap * price.output_upper_bound) / 1_000_000
         return maximum * (1 + retries)
 
     assert attempt["repair"]["triggered"]

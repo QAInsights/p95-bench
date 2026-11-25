@@ -174,7 +174,7 @@ except OpenAI at **128,000**):
 
 | Provider/models | Documented maximum output | Source |
 | --- | --- | --- |
-| Anthropic Sonnet 5.5 / Opus 5.5 | 128K each | [Models](https://platform.claude.com/docs/en/about-claude/models/overview) |
+| Anthropic Sonnet 5.5 / Opus 5.5 / Haiku 5.5 | 128K each | [Models](https://platform.claude.com/docs/en/about-claude/models/overview) |
 | OpenAI GPT-6.2 Sol / Astra / GPT-6.1 Terra / GPT-6 Luna | 128,000 each | [Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol), [Astra](https://developers.openai.com/api/docs/models/gpt-6.2-astra), [Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra), [Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) |
 | Gemini 4 Carbon / Argon / Hydrogen | 65,536 synchronous each | [Carbon](https://ai.google.dev/gemini-api/docs/models/gemini-4-carbon), [Argon](https://ai.google.dev/gemini-api/docs/models/gemini-4-argon), [Hydrogen](https://ai.google.dev/gemini-api/docs/models/gemini-4-hydrogen) |
 | Gemini 3.8 Flash | 65,536 | [Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) |
@@ -250,7 +250,8 @@ Add another OpenAI-compatible provider by adding a `ProviderConfig` entry to
 The runner supports dependency injection for testing and custom adapters.
 
 For Anthropic, set `ANTHROPIC_API_KEY` and use `--provider anthropic` with
-`--model claude-sonnet-5-5` or `--model claude-opus-5-5`. The adapter sends the
+`--model claude-sonnet-5-5`, `--model claude-opus-5-5`, or
+`--model claude-haiku-5-5`. The adapter sends the
 fixed prompt through the top-level `system` field with the shared 64,000-token output
 cap, `stream: true`, `thinking: {type: adaptive}` and
 `output_config: {effort: high}`. Metadata records `reasoning_mode: thinking-high`.
@@ -263,10 +264,13 @@ It uses `x-api-key` authentication and API version
 `get_provider('anthropic').models()` from `p95bench.providers` (there is no
 discovery CLI). Prices live in `PROVIDERS['anthropic'].prices` in
 `src/p95bench/providers.py` and follow the [Anthropic API pricing table](https://platform.claude.com/docs/en/about-claude/pricing).
-Sonnet 5.5 costs $2/$10 per million fresh input/output tokens, and Opus 5.5
-costs $4/$20. Both charge 0.05× the input rate for cache reads and 1.25× for
-five-minute cache writes. The direct adapter does not request prompt caching;
-it accounts for cache usage when the API reports it.
+Sonnet 5.5 costs $2/$10 per million fresh input/output tokens, Opus 5.5
+costs $4/$20, and Haiku 5.5 costs $0.10/$0.50 for prompts up to 100,000 input
+tokens. Haiku prompts over 100,000 input tokens cost $0.50/$2.50, with matching
+tiered cache rates. Sonnet and Opus charge 0.05× the input rate for cache reads
+and 1.25× for five-minute cache writes; Haiku charges 0.1× and 1.25× in each
+context tier. The direct adapter does not request prompt caching; it accounts
+for cache usage when the API reports it.
 
 Thinking Machines (Tinker) uses the existing OpenAI-compatible adapter. Set
 `TINKER_API_KEY` and use `--provider thinkingmachines`. The beta endpoint is
