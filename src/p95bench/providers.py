@@ -467,7 +467,8 @@ class Muse(OpenAICompatible):
         if model == "muse-ember-1.0" and (
             len(json.dumps(body).encode()) + 1024 + body["max_completion_tokens"] >= 200_000
         ):
-            raise ValueError("Muse Ember pricing is verified only for contexts below 200k tokens")
+            raise ProviderUnavailable(
+                "Muse Ember pricing is verified only for contexts below 200k tokens")
         start = time.perf_counter()
         data = self._request("/chat/completions", body)
         elapsed = time.perf_counter() - start

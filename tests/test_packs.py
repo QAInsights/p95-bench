@@ -20,6 +20,7 @@ from p95bench.providers import (
     OpenAICompatible,
     Price,
     ProviderConfig,
+    ProviderUnavailable,
     Response,
     SpendLimitExceeded,
     TieredCacheWritePrice,
@@ -336,6 +337,37 @@ def test_loaded_low_score_does_not_trigger_repair(tmp_path, monkeypatch):
     assert summary["repairs_triggered"] == summary["repairs_succeeded"] == 0
     assert summary["after_repair"]["overall_score"] == summary["overall_score"]
     assert summary["after_repair"]["quality_score"] == summary["quality_score"]
+
+
+def test_repair_provider_error_saves_paid_initial_attempt(tmp_path, monkeypatch):
+    task_item = task()
+    monkeypatch.setitem(CHECKPOINT_GRADERS, "test_checkpoint",
+                        lambda *args: result(0, "Invalid model artifact: broken response"))
+
+    class RepairUnavailableProvider:
+        config = PROVIDERS["meta"]
+
+        def __init__(self):
+            self.calls = 0
+
+        def send(self, model, messages):
+            self.calls += 1
+            if self.calls == 1:
+                return Response("broken response", 100, 20, 0, 1)
+            raise ProviderUnavailable("Muse Ember pricing is verified only below 200k tokens")
+
+    provider = RepairUnavailableProvider()
+    directory, summary = run(
+        provider, "meta", "muse-ember-1.0", Price(.1, .004, .5), [task_item], tmp_path,
+        pack_id=V2, efficiency_budgets={task_item.id: {"tokens": 100, "latency_seconds": 10}},
+        budget_ledger=BudgetLedger(tmp_path / "ledger.json"))
+    attempt = json.loads((directory / "attempts.jsonl").read_text())
+
+    assert provider.calls == 2
+    assert attempt["response"]["text"] == "broken response"
+    assert attempt["repair"]["triggered"]
+    assert "below 200k" in attempt["repair"]["error"]
+    assert summary["attempts"] == summary["expected_attempts"] == 1
 
 
 @pytest.mark.parametrize(("finish_reason", "output_tokens"), [

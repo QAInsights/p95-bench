@@ -191,8 +191,8 @@ Qwen limits above are the vendor's model specifications; ModelScope's hosted
 alias limits have not been independently verified. Tinker lists 64K contexts for
 base Inkling/Inkling-Small (1M sampling for Inkling 2). A large output request
 may not fit alongside a long prompt. No output limit was inferred from those
-context lengths, but Tinker accepted `max_tokens: 128000` for Inkling 2 Mini and
-Inkling 2 Small in live smoke requests. Verify unknown/host-specific limits before paid runs.
+context lengths, but Tinker accepted `max_tokens: 128000` for all four registered
+Inkling models in live smoke requests. Verify unknown/host-specific limits before paid runs.
 
 Requests allow 600 seconds of socket inactivity. Anthropic and Meta stream long
 generations (Qwen already streams), avoiding the non-streaming timeout path;
