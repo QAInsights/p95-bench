@@ -185,7 +185,7 @@ def test_missing_key_auth_budget_and_ember_context_guards(monkeypatch):
     monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: pytest.fail('must stop before request'))
     with pytest.raises(SpendLimitExceeded):
         Muse(PROVIDERS['meta'], spend_limit=.001).send('muse-wonder-1.0', [])
-    with pytest.raises(ProviderUnavailable, match='below 200k'):
+    with pytest.raises(ValueError, match='below 200k'):
         get_provider('meta').send('muse-ember-1.0', [{'role': 'user', 'content': 'x' * 200000}])
     with pytest.raises(ValueError, match='positive'):
         Muse(PROVIDERS['meta'], spend_limit=0)

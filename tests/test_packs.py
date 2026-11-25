@@ -20,7 +20,7 @@ from p95bench.providers import (
     OpenAICompatible,
     Price,
     ProviderConfig,
-    ProviderUnavailable,
+    ProviderInputError,
     Response,
     SpendLimitExceeded,
     TieredCacheWritePrice,
@@ -354,7 +354,7 @@ def test_repair_provider_error_saves_paid_initial_attempt(tmp_path, monkeypatch)
             self.calls += 1
             if self.calls == 1:
                 return Response("broken response", 100, 20, 0, 1)
-            raise ProviderUnavailable("Muse Ember pricing is verified only below 200k tokens")
+            raise ProviderInputError("Muse Ember pricing is verified only below 200k tokens")
 
     provider = RepairUnavailableProvider()
     directory, summary = run(
