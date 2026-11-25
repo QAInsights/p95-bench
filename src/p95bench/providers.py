@@ -11,7 +11,7 @@ from http.client import HTTPException
 from typing import Protocol
 from urllib.error import HTTPError, URLError
 
-DEFAULT_OUTPUT_TOKENS = 64_000
+DEFAULT_OUTPUT_TOKENS = 128_000
 OUTPUT_LIMIT_FIELDS = ("max_tokens", "max_completion_tokens", "maxOutputTokens")
 
 
@@ -201,6 +201,8 @@ PROVIDERS = {
         temperature=None,
         extra={"maxOutputTokens": DEFAULT_OUTPUT_TOKENS},
         output_limit_field="maxOutputTokens",
+        model_output_limits={"gemini-4-carbon": 65_536, "gemini-4-argon": 65_536,
+                             "gemini-4-hydrogen": 65_536, "gemini-3.8-flash": 65_536},
         timeout_seconds=600,
         max_retries=5,
         cost_note="USD · list-price estimate (includes thinking tokens).",
@@ -254,11 +256,12 @@ PROVIDERS = {
         "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1", "TINKER_API_KEY",
         {"thinkingmachines/Inkling": Price(1.87, 0.374, 4.68),
          "thinkingmachines/Inkling-Small": Price(0.58, 0.116, 1.44),
-         "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00)},
-        extra={"max_tokens": DEFAULT_OUTPUT_TOKENS},
+         "thinkingmachines/Inkling-2-Small": Price(0.30, 0.03, 1.00),
+         "thinkingmachines/Inkling-2-Mini": Price(0.15, 0.015, 0.50)},
+        extra={"max_tokens": DEFAULT_OUTPUT_TOKENS, "reasoning_effort": "high"},
         timeout_seconds=600,
         max_retries=3,
-        reasoning_mode="provider-default",
+        reasoning_mode="thinking-high",
     ),
     "openai": ProviderConfig(
         "https://api.openai.com/v1", "OPENAI_API_KEY",

@@ -14,6 +14,7 @@ from p95bench.tasks import Task
     ('thinkingmachines/Inkling', (1.87, .374, 4.68)),
     ('thinkingmachines/Inkling-Small', (.58, .116, 1.44)),
     ('thinkingmachines/Inkling-2-Small', (.30, .03, 1.00)),
+    ('thinkingmachines/Inkling-2-Mini', (.15, .015, .50)),
 ])
 @pytest.mark.parametrize('content', ['10', '', None])
 def test_transport(monkeypatch, model, rates, content):
@@ -31,7 +32,8 @@ def test_transport(monkeypatch, model, rates, content):
         assert req.get_header('User-agent') == 'p95bench/0.1.0'
         assert timeout == 600
         assert json.loads(req.data) == {
-            'model': model, 'messages': messages, 'temperature': 0, 'max_tokens': 64000,
+            'model': model, 'messages': messages, 'temperature': 0,
+            'max_tokens': 128000, 'reasoning_effort': 'high',
         }
         return io.BytesIO(json.dumps({
             'choices': [{'message': {'content': content, 'reasoning_content': 'Private reasoning'}}],
@@ -43,7 +45,8 @@ def test_transport(monkeypatch, model, rates, content):
     clock = iter([10., 10.25])
     monkeypatch.setattr('p95bench.providers.time.perf_counter', lambda: next(clock))
     response = provider.send(model, messages)
-    assert response == Response(content or '', 100, 20, 40, .25)
+    assert (response.text, response.input_tokens, response.output_tokens,
+            response.cached_tokens, response.latency_seconds) == (content or '', 100, 20, 40, .25)
     price = PROVIDERS['thinkingmachines'].prices[model]
     assert (price.input, price.cached, price.output) == rates
     assert price.cost(response) == pytest.approx((60 * rates[0] + 40 * rates[1]

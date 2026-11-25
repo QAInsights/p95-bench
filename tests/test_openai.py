@@ -51,14 +51,14 @@ def test_optional_prompt_token_details(monkeypatch, details, expected):
 def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
     provider = get_provider('deepseek')
     assert provider.config.extra == {
-        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'high', 'max_tokens': 64000}
+        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'high', 'max_tokens': 128000}
     assert provider.config.reasoning_mode == 'thinking-high'
     assert provider.config.temperature is None
     assert PROVIDERS['qwen'].reasoning_mode == 'thinking-high'
     assert PROVIDERS['openai'].reasoning_mode == 'thinking-high'
     assert all(config.reasoning_mode == 'provider-default'
                for name, config in PROVIDERS.items()
-               if name not in {'deepseek', 'qwen', 'anthropic', 'openai'})
+               if name not in {'deepseek', 'qwen', 'anthropic', 'openai', 'thinkingmachines'})
     captured = {}
 
     def request(path, body):
@@ -76,7 +76,7 @@ def test_deepseek_thinking_payload_and_reasoning_tokens(monkeypatch):
 
     assert captured['thinking'] == {'type': 'enabled'}
     assert captured['reasoning_effort'] == 'high'
-    assert captured['max_tokens'] == 64000
+    assert captured['max_tokens'] == 128000
     assert 'temperature' not in captured
     assert isinstance(response, DeepSeekResponse)
     assert response.text == 'answer only'

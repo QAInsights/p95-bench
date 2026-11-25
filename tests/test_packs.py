@@ -339,7 +339,7 @@ def test_loaded_low_score_does_not_trigger_repair(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize(("finish_reason", "output_tokens"), [
-    ("length", 100), ("stop", 64000),
+    ("length", 100), ("stop", 128000),
 ])
 def test_repair_is_skipped_for_truncated_responses(
         finish_reason, output_tokens, tmp_path, monkeypatch):
@@ -669,7 +669,7 @@ def test_v2_metadata_records_harness_revision(tmp_path, monkeypatch):
     metadata = json.loads((directory / "metadata.json").read_text())
     assert metadata["repair_rounds"] == 1
     assert metadata["reasoning_mode"] is None
-    assert metadata["output_cap"] == 64000
+    assert metadata["output_cap"] == 128000
     head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True,
                           text=True, check=False).stdout.strip()
     assert metadata["harness_commit"] == (head or None)
