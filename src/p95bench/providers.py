@@ -86,6 +86,10 @@ class Price:
     cached: float
     output: float
 
+    @property
+    def input_upper_bound(self):
+        return self.input
+
     def cost(self, response: Response) -> float:
         cached = max(0, min(response.cached_tokens, response.input_tokens))
         return ((response.input_tokens - cached) * self.input
@@ -94,13 +98,23 @@ class Price:
 
 
 @dataclass(frozen=True)
-class AnthropicPrice(Price):
+class CacheWritePrice(Price):
     cache_write: float
 
+    @property
+    def input_upper_bound(self):
+        return max(self.input, self.cache_write)
+
     def cost(self, response: Response) -> float:
-        # Price already charges cache writes at the base rate as part of total input.
+        # Total input already charges cache writes at the base rate; replace that portion
+        # with the provider's total cache-write rate rather than adding a second charge.
+        cached = max(0, min(response.cached_tokens, response.input_tokens))
+        cache_write = max(0, min(response.cache_write_tokens, response.input_tokens - cached))
         return (super().cost(response)
-                + response.cache_write_tokens * (self.cache_write - self.input) / 1_000_000)
+                + cache_write * (self.cache_write - self.input) / 1_000_000)
+
+
+AnthropicPrice = CacheWritePrice
 
 
 @dataclass(frozen=True)
@@ -213,8 +227,10 @@ PROVIDERS = {
     ),
     "openai": ProviderConfig(
         "https://api.openai.com/v1", "OPENAI_API_KEY",
-        {"gpt-6.2-sol": Price(2, 2, 10),
-         "gpt-6.2-astra": Price(8, 8, 40)},
+        {"gpt-6.2-sol": CacheWritePrice(2, .1, 10, 2.5),
+         "gpt-6.2-astra": CacheWritePrice(8, .4, 40, 10),
+         "gpt-6.1-terra": CacheWritePrice(1, .05, 5, 1.25),
+         "gpt-6-luna": CacheWritePrice(.1, .01, .5, .125)},
         temperature=None,
         extra={"max_completion_tokens": 128_000, "reasoning_effort": "high"},
         output_limit_field="max_completion_tokens",
@@ -365,8 +381,9 @@ class OpenAICompatible:
         data = self._request("/chat/completions", body)
         elapsed = time.perf_counter() - start
         usage = data["usage"]
-        cached = usage.get("prompt_cache_hit_tokens",
-                           (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0))
+        prompt_details = usage.get("prompt_tokens_details") or {}
+        cached = usage.get("prompt_cache_hit_tokens", prompt_details.get("cached_tokens", 0))
+        cache_write = prompt_details.get("cache_write_tokens", 0) or 0
         choice = data["choices"][0]
         if self.config.reasoning_mode.startswith("thinking"):
             reasoning = ((usage.get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
@@ -374,9 +391,10 @@ class OpenAICompatible:
             return DeepSeekResponse(
                 choice["message"].get("content") or "", usage["prompt_tokens"],
                 usage["completion_tokens"], cached, elapsed, reasoning,
-                choice.get("finish_reason", ""))
+                choice.get("finish_reason", ""), cache_write_tokens=cache_write)
         return Response(choice["message"]["content"] or "",
-                        usage["prompt_tokens"], usage["completion_tokens"], cached, elapsed)
+                        usage["prompt_tokens"], usage["completion_tokens"], cached, elapsed,
+                        cache_write_tokens=cache_write)
 
 
 class Muse(OpenAICompatible):

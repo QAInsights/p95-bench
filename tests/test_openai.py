@@ -28,6 +28,14 @@ def test_cached_tokens_without_input():
     assert Price(2, .5, 10).cost(Response('', 0, 0, 50)) == 0
 
 
+@pytest.mark.parametrize('write,expected_write', [(-5, 0), (0, 0), (10, 10), (200, 60)])
+def test_cache_write_billing_bounds(write, expected_write):
+    price = PROVIDERS['openai'].prices['gpt-6.1-terra']
+    response = Response('', 100, 20, 40, cache_write_tokens=write)
+    expected = ((100 - 40) * 1 + 40 * .05 + expected_write * (1.25 - 1) + 20 * 5) / 1_000_000
+    assert price.cost(response) == pytest.approx(expected)
+
+
 @pytest.mark.parametrize('details,expected', [({}, 0), ({'prompt_tokens_details': None}, 0),
     ({'prompt_tokens_details': {}}, 0),
     ({'prompt_tokens_details': None, 'prompt_cache_hit_tokens': 40}, 40),
@@ -238,7 +246,8 @@ def test_deepseek_non_stream_response_remains_plain_json(monkeypatch):
 
 
 @pytest.mark.parametrize('model,rates', [
-    ('gpt-6.2-sol', (2, 10)), ('gpt-6.2-astra', (8, 40)),
+    ('gpt-6.2-sol', (2, .1, 2.5, 10)), ('gpt-6.2-astra', (8, .4, 10, 40)),
+    ('gpt-6.1-terra', (1, .05, 1.25, 5)), ('gpt-6-luna', (.1, .01, .125, .5)),
 ])
 @pytest.mark.parametrize('content', ['42', None])
 def test_transport(monkeypatch, model, rates, content):
@@ -261,7 +270,7 @@ def test_transport(monkeypatch, model, rates, content):
             'choices': [{'message': {'content': content}, 'finish_reason': 'stop'}],
             'usage': {'prompt_tokens': 100, 'completion_tokens': 20,
                       'completion_tokens_details': {'reasoning_tokens': 10},
-                      'prompt_tokens_details': {'cached_tokens': 40}},
+                      'prompt_tokens_details': {'cached_tokens': 40, 'cache_write_tokens': 10}},
         }).encode())
 
     monkeypatch.setattr('urllib.request.urlopen', request)
@@ -273,12 +282,15 @@ def test_transport(monkeypatch, model, rates, content):
     assert response.input_tokens == 100
     assert response.output_tokens == 20
     assert response.cached_tokens == 40
+    assert response.cache_write_tokens == 10
     assert response.latency_seconds == .5
     assert response.reasoning_tokens == 10
     assert response.finish_reason == 'stop'
     price = PROVIDERS['openai'].prices[model]
-    assert (price.input, price.cached, price.output) == (rates[0], rates[0], rates[1])
-    assert price.cost(response) == pytest.approx((100 * rates[0] + 20 * rates[1]) / 1_000_000)
+    assert (price.input, price.cached, price.cache_write, price.output) == rates
+    expected = (50 * rates[0] + 40 * rates[1] + 10 * rates[2] + 20 * rates[3]) / 1_000_000
+    assert price.cost(response) == pytest.approx(expected)
+    assert price.input_upper_bound == max(rates[0], rates[2])
 
 
 def test_openai_length_finish_reason_is_preserved(monkeypatch):
