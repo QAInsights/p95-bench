@@ -15,6 +15,10 @@ from p95bench.tasks import load_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 SYSTEM = "Feather Wand v4.0.1-RC1 (JMeter GUI Agent mode)"
+MODEL = "claude-sonnet-5-5"
+PROVIDER = "anthropic"
+EXCLUDED_SPEND = 3.6677725
+COST_NOTE = None
 PRICES = {"input": 2, "cached": 0.10, "cache_write": 2.50, "output": 10}
 USAGE = {"input_tokens": "input_total", "fresh_input_tokens": "fresh_input",
          "cached_tokens": "cache_read", "cache_write_tokens": "cache_write",
@@ -55,8 +59,8 @@ def grade_saved(job):
     reused = result["status"] == "reused"
     source = folder / "reused-c03" if reused else folder
     attempt = {"task_id": task.id, "scenario": task.scenario, "category": task.category,
-               "repeat": 0, "tool": "jmeter", "provider": "anthropic",
-               "model": "claude-sonnet-5-5", "pack_id": "p95-core", "pack_digest": digest,
+               "repeat": 0, "tool": "jmeter", "provider": PROVIDER,
+               "model": MODEL, "pack_id": "p95-core", "pack_digest": digest,
                "repair": {"triggered": False}}
     for phase in ("initial", "repair") if result.get("repair") else ("initial",):
         if reused:
@@ -130,11 +134,12 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
                 for a in attempts]
     scores = {"first_attempt": 100 * sum(a["score"] for a in per_task) / len(per_task),
               "after_repair": 100 * sum(a["after_repair_score"] for a in per_task) / len(per_task)}
-    metadata = {"entry_type": "agent_system", "system": SYSTEM, "model": "claude-sonnet-5-5",
-                "provider": "anthropic", "reasoning_mode": "thinking-high", "tools": ["jmeter"],
+    metadata = {"entry_type": "agent_system", "system": SYSTEM, "model": MODEL,
+                "provider": PROVIDER, "reasoning_mode": "thinking-high", "tools": ["jmeter"],
                 "pack_id": "p95-core", "pack_digest": manifest["digest"], "visibility": "public",
                 "harness_commit": commit, "grader_commit": commit, "rank_eligible": False,
-                "original_grader_commit": read(Path(run_dir) / "summary.json")["main_grader"],
+                "original_grader_commit": (read(Path(run_dir) / "summary.json")["main_grader"]
+                                 if (Path(run_dir) / "summary.json").exists() else commit),
                 "initial_attempts_regraded": len(attempts),
                 "recorded_repairs_regraded": sum(a["repair"]["triggered"] for a in attempts),
                 "execution": "JMeter 5.6.3 GUI only; fresh plan and conversation per task.",
@@ -144,10 +149,10 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
                 "analysis_extraction": "Verbatim final assistant text from the native conversation.",
                 "pricing_basis": {"currency": "USD", "unit": "million tokens",
                                   "cache_write_ttl": "5 minutes", **PRICES},
-                "usage": totals, "excluded_spend_usd": 3.6677725,
-                "cost_note": "List-price estimate from native per-turn usage. Excludes $3.67 "
+                "usage": totals, "excluded_spend_usd": EXCLUDED_SPEND,
+                "cost_note": COST_NOTE or ("List-price estimate from native per-turn usage. Excludes $3.67 "
                              "extra spend on discarded starts and credit-failed partial attempts. "
-                             "Unreported failed-turn usage is unpriced. Not an invoice."}
+                             "Unreported failed-turn usage is unpriced. Not an invoice.")}
     summary = {"pack_id": "p95-core", "pack_digest": manifest["digest"], "attempts": len(attempts),
                "expected_attempts": len(tasks), "complete": False, "complete_tool_coverage": True,
                "tools": ["jmeter"], "rank_eligible": False, "per_task_results": per_task,
@@ -170,7 +175,20 @@ def main():
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--evidence-dir", type=Path, required=True)
     parser.add_argument("--jobs", type=int, default=1)
+    parser.add_argument("--system", default=SYSTEM)
+    parser.add_argument("--model", default=MODEL)
+    parser.add_argument("--provider", default=PROVIDER)
+    parser.add_argument("--input-price", type=float, default=PRICES["input"])
+    parser.add_argument("--cached-price", type=float, default=PRICES["cached"])
+    parser.add_argument("--cache-write-price", type=float, default=PRICES["cache_write"])
+    parser.add_argument("--output-price", type=float, default=PRICES["output"])
+    parser.add_argument("--excluded-spend", type=float, default=EXCLUDED_SPEND)
+    parser.add_argument("--cost-note", default=COST_NOTE)
     args = parser.parse_args()
+    globals().update(SYSTEM=args.system, MODEL=args.model, PROVIDER=args.provider,
+                     EXCLUDED_SPEND=args.excluded_spend, COST_NOTE=args.cost_note,
+                     PRICES={"input": args.input_price, "cached": args.cached_price,
+                             "cache_write": args.cache_write_price, "output": args.output_price})
     export(args.run_dir, args.output_dir, args.evidence_dir, args.jobs)
 
 
