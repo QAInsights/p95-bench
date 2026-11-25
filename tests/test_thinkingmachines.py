@@ -66,6 +66,29 @@ def test_transport(monkeypatch, model, rates, content):
                                                 + 20 * rates[2]) / 1_000_000)
 
 
+def test_streaming_split_answer_and_missing_usage_retry(monkeypatch):
+    monkeypatch.setenv('TINKER_API_KEY', 'test-key')
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+    calls = []
+
+    def request(req, timeout):
+        calls.append(req)
+        if len(calls) == 1:
+            return sse_response({'choices': [{'delta': {'content': 'hel'}}]})
+        return sse_response(
+            {'choices': [{'delta': {'content': 'hel'}}]},
+            {'choices': [{'delta': {'content': 'lo'}, 'finish_reason': 'stop'}]},
+            {'choices': [], 'usage': {'prompt_tokens': 10, 'completion_tokens': 2}},
+        )
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    response = get_provider('thinkingmachines').send('thinkingmachines/Inkling-2-Mini', [])
+
+    assert len(calls) == 2
+    assert response.text == 'hello'
+    assert (response.input_tokens, response.output_tokens) == (10, 2)
+
+
 def test_missing_key_and_http_error(monkeypatch):
     provider = get_provider('thinkingmachines')
     monkeypatch.delenv('TINKER_API_KEY', raising=False)
