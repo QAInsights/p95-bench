@@ -158,6 +158,10 @@ test('OpenAI Core keeps high reasoning, complete coverage, output headroom and a
   assert.match(data.publication_note, /3 for GPT-6\.2 Sol/);
   const rawAttempts = await readFile(new URL('gpt-6.2-sol/attempts.jsonl', runs), 'utf8');
   assert.doesNotMatch(rawAttempts, /sk-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|OPENAI_API_KEY/);
+  const responses = rawAttempts.trim().split('\n').map(JSON.parse)
+    .flatMap(attempt => [attempt.response, attempt.repair?.response].filter(Boolean));
+  assert.equal(responses.length, 107);
+  assert.ok(responses.every(response => response.finish_reason === 'stop'));
   assert.deepEqual(model.coverage, { run: 104, total: 104, partial: false, label: '104/104 tasks run' });
   const { tasks } = await loadTaskData({ packId: 'p95-core' });
   assert.equal(model.per_task_results.length, 104);
