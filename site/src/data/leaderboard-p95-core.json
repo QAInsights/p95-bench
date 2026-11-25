@@ -2880,7 +2880,7 @@
       "latency": 9806.647216267,
       "run_date": "2026-11-25T02:02:14.482124+00:00",
       "harness_commit": "de0702215439bb0b7bf3f9dbe5ef383c57f18b82",
-      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 104 Core first tries and 17 repair responses; Core usage cost $4.20945735. Not an invoice. Actions run https://github.com/QAInsights/p95-bench/actions/runs/45529880940 at head de0702215439bb0b7bf3f9dbe5ef383c57f18b82. High reasoning with a 128,000-token output cap; no first try or repair ended at the output cap. The workflow spend cap was $50 per model ($12.50 per tool shard), above measured usage. OpenAI cache reads and 30-minute cache writes use documented discounted rates.",
+      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 104 Core first tries and 17 repair responses; Core usage cost $4.20945735. Not an invoice. Actions run https://github.com/QAInsights/p95-bench/actions/runs/45529880940 at head de0702215439bb0b7bf3f9dbe5ef383c57f18b82. High reasoning with a 128,000-token output cap; no first try or repair ended at the output cap. The workflow spend cap was $50 per model ($12.50 per tool shard), above measured usage. OpenAI cache reads use documented discounted rates; 30-minute cache writes use documented 1.25x total rates.",
       "pricing_source": "Frozen provider list-price snapshot in saved attempts",
       "derived_from": [
         {

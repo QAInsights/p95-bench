@@ -194,7 +194,8 @@ test('Terra Core keeps high reasoning, complete coverage, cache-aware cost and o
   assert.equal(model.derived_from.length, 4);
   assert.ok(model.derived_from.every(source => source.spend_cap_usd === 12.5 && source.harness_commit === model.harness_commit));
   assert.match(model.cost_note, /17 repair responses/);
-  assert.match(model.cost_note, /cache reads and 30-minute cache writes/);
+  assert.match(model.cost_note, /cache reads use documented discounted rates/);
+  assert.match(model.cost_note, /cache writes use documented 1\.25x total rates/);
   assert.match(model.cost_note, /45529880940/);
   assert.match(data.publication_note, /GPT-6\.1 Terra was published from Actions run/);
   const rawAttempts = await readFile(new URL('gpt-6.1-terra/attempts.jsonl', runs), 'utf8');
