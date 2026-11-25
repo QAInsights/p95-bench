@@ -35,15 +35,15 @@ test('Core regrades only fix-affected JMeter phases without inventing repairs', 
   }
 });
 
-test('Core publishes complete public Sonnet, DeepSeek and Qwen runs with current provenance', async () => {
+test('Core publishes complete public Sonnet, DeepSeek, Qwen and OpenAI runs with current provenance', async () => {
   assert.equal(data.pack_id, 'p95-core');
   assert.equal(data.pack_digest, 'f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de');
   assert.equal(data.budget_file_sha256, budgetHash);
   assert.match(data.publication_note, /45066297860/);
   assert.match(data.publication_note, /final answer after the one allowed repair/);
   assert.doesNotMatch(JSON.stringify(data), /5a5d088256624100/);
-  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro']);
-  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro']);
+  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6.2-sol']);
+  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6.2-sol']);
   const model = data.models.find(model => model.provider === 'anthropic');
   assert.equal(model.provider, 'anthropic');
   assert.equal(model.output_cap, 64000);
@@ -139,6 +139,43 @@ test('Qwen Core keeps public list pricing, complete coverage and after-repair sc
   near(displayed.toolCosts.k6, 1.7839137);
   near(displayed.toolCosts.locust, 1.7608776);
   near(displayed.toolCosts.gatling, 3.6288177);
+});
+
+test('OpenAI Core keeps high reasoning, complete coverage, output headroom and after-repair scoring', async () => {
+  const model = data.models.find(model => model.model === 'gpt-6.2-sol');
+  assert.equal(model.provider, 'openai');
+  assert.equal(model.pack_digest, data.pack_digest);
+  assert.equal(model.budget_file_sha256, budgetHash);
+  assert.equal(model.output_cap, 128000);
+  assert.equal(model.reasoning_mode, 'thinking-high');
+  assert.equal(model.harness_commit, '9a664f881e7c78dfea26e54b71b0e0d8fc6fa514');
+  assert.equal(model.derived_from.length, 4);
+  assert.ok(model.derived_from.every(source => source.spend_cap_usd === 12.5 && source.harness_commit === model.harness_commit));
+  assert.match(model.cost_note, /High reasoning with a 128,000-token output cap/);
+  assert.match(model.cost_note, /no first try or repair ended at the output cap/);
+  assert.match(model.cost_note, /45511510673/);
+  assert.match(data.publication_note, /OpenAI uses the documented 128,000-token maximum/);
+  assert.match(data.publication_note, /3 for GPT-6\.2 Sol/);
+  const rawAttempts = await readFile(new URL('gpt-6.2-sol/attempts.jsonl', runs), 'utf8');
+  assert.doesNotMatch(rawAttempts, /sk-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|OPENAI_API_KEY/);
+  assert.deepEqual(model.coverage, { run: 104, total: 104, partial: false, label: '104/104 tasks run' });
+  const { tasks } = await loadTaskData({ packId: 'p95-core' });
+  assert.equal(model.per_task_results.length, 104);
+  assert.deepEqual(new Set(model.per_task_results.map(task => task.task_id)), new Set(tasks.map(task => task.id)));
+  near(model.overall_score, 76.50256330828586);
+  near(model.after_repair.overall_score, 78.23680860887244);
+  near(model.cost, 9.463684);
+  near(model.cost_attempts.reduce((sum, attempt) => sum + attempt.cost_usd, 0), model.cost);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.status === 'repair').length, 3);
+  assert.ok(model.cost_attempts.every(attempt => !attempt.output_tokens || attempt.output_tokens < 128000));
+  const displayed = boardModels(data).find(model => model.key === 'openai/gpt-6.2-sol');
+  assert.equal(displayed.score.toFixed(1), '78.2');
+  assert.deepEqual(displayed.categories, model.after_repair.category_scores);
+  near(Object.values(displayed.toolCosts).reduce((sum, cost) => sum + cost, 0), model.cost);
+  near(displayed.toolCosts.jmeter, 4.185608);
+  near(displayed.toolCosts.k6, 1.428906);
+  near(displayed.toolCosts.locust, 1.717984);
+  near(displayed.toolCosts.gatling, 2.131186);
 });
 
 test('published Core data reproduces from stored runs apart from documented annotations', async () => {

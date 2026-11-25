@@ -52,9 +52,9 @@ test('agent comparison uses the current direct JMeter board data without mutatin
   assert.equal(rows[0].turns, 581);
   assert.deepEqual(snapshot(), before);
   assert.deepEqual(boardModels(board).map(m => m.name),
-    ['Claude Sonnet 5.5', 'Qwen4 Max', 'DeepSeek Flash', 'DeepSeek V4 Pro']);
+    ['Claude Sonnet 5.5', 'GPT-6.2 Sol', 'Qwen4 Max', 'DeepSeek Flash', 'DeepSeek V4 Pro']);
   assert.deepEqual(boardModels(board).map(m => m.score),
-    [84.54197789514849, 77.31725653059549, 64.44586406147408, 48.24482914686975]);
+    [84.54197789514849, 78.23680860887244, 77.31725653059549, 64.44586406147408, 48.24482914686975]);
 });
 
 test('agent system rejects empty, private, mixed-manifest, mismatched-score and invalid usage data', () => {
