@@ -1,5 +1,5 @@
 ---
-const { rows, note } = Astro.props;
+const { rows, notes = [] } = Astro.props;
 const integer = new Intl.NumberFormat('en-US');
 ---
 
@@ -22,5 +22,5 @@ const integer = new Intl.NumberFormat('en-US');
     </table>
   </div>
   <p class="agent-note">Turns count native agent turns for Feather Wand and recorded API responses for direct. Repairs retain the historical Core trigger; offline grading creates no new repairs.</p>
-  <p class="agent-note">{note} <a href="https://github.com/QAInsights/p95-bench/tree/main/results/agent-systems/p95-core/feather-wand-rc1-sonnet-5-5">Run data and provenance ↗</a></p>
+  {notes.map(item => <p class="agent-note"><span class="strong">{item.label}:</span> {item.note} <a href={item.url} aria-label={`Run data and provenance for ${item.label}`}>Run data and provenance ↗</a></p>)}
 </section>
