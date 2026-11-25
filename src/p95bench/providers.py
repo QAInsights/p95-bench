@@ -90,6 +90,10 @@ class Price:
     def input_upper_bound(self):
         return self.input
 
+    @property
+    def output_upper_bound(self):
+        return self.output
+
     def cost(self, response: Response) -> float:
         cached = max(0, min(response.cached_tokens, response.input_tokens))
         return ((response.input_tokens - cached) * self.input
@@ -115,6 +119,33 @@ class CacheWritePrice(Price):
 
 
 AnthropicPrice = CacheWritePrice
+
+
+@dataclass(frozen=True)
+class TieredCacheWritePrice(CacheWritePrice):
+    long_input: float
+    long_cached: float
+    long_output: float
+    long_cache_write: float
+    long_context_threshold: int
+
+    @property
+    def input_upper_bound(self):
+        return max(self.input, self.cache_write, self.long_input, self.long_cache_write)
+
+    @property
+    def output_upper_bound(self):
+        return max(self.output, self.long_output)
+
+    def cost(self, response: Response) -> float:
+        if response.input_tokens <= self.long_context_threshold:
+            return super().cost(response)
+        cached = max(0, min(response.cached_tokens, response.input_tokens))
+        cache_write = max(0, min(response.cache_write_tokens, response.input_tokens - cached))
+        ordinary = response.input_tokens - cached - cache_write
+        return (ordinary * self.long_input + cached * self.long_cached
+                + cache_write * self.long_cache_write
+                + response.output_tokens * self.long_output) / 1_000_000
 
 
 @dataclass(frozen=True)
@@ -206,7 +237,11 @@ PROVIDERS = {
     "anthropic": ProviderConfig(
         "https://api.anthropic.com/v1", "ANTHROPIC_API_KEY",
         {"claude-sonnet-5-5": AnthropicPrice(2, 2 * .05, 10, cache_write=2 * 1.25),
-         "claude-opus-5-5": AnthropicPrice(4, 4 * .05, 20, cache_write=4 * 1.25)},
+         "claude-opus-5-5": AnthropicPrice(4, 4 * .05, 20, cache_write=4 * 1.25),
+         "claude-haiku-5-5": TieredCacheWritePrice(
+             .1, .01, .5, cache_write=.125,
+             long_input=.5, long_cached=.05, long_output=2.5,
+             long_cache_write=.625, long_context_threshold=100_000)},
         temperature=None,
         extra={"max_tokens": DEFAULT_OUTPUT_TOKENS, "stream": True,
                "thinking": {"type": "adaptive"}, "output_config": {"effort": "high"}},

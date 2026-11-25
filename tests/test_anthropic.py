@@ -11,6 +11,7 @@ from p95bench.providers import (
     Anthropic,
     OpenAICompatible,
     ProviderUnavailable,
+    Response,
     get_provider,
 )
 from p95bench.runner import SYSTEM_PROMPT, run
@@ -79,6 +80,7 @@ def test_messages_transport(monkeypatch, content, expected):
 @pytest.mark.parametrize('model, expected', [
     ('claude-sonnet-5-5', (20 * 2 + 40 * .10 + 60 * 2.50 + 3 * 10) / 1_000_000),
     ('claude-opus-5-5', (20 * 4 + 40 * .20 + 60 * 5 + 3 * 20) / 1_000_000),
+    ('claude-haiku-5-5', (20 * .1 + 40 * .01 + 60 * .125 + 3 * .5) / 1_000_000),
 ])
 def test_stream_extracts_and_prices_cache_tokens(monkeypatch, model, expected):
     monkeypatch.setenv('ANTHROPIC_API_KEY', 'test-key')
@@ -92,6 +94,15 @@ def test_stream_extracts_and_prices_cache_tokens(monkeypatch, model, expected):
     assert response.cache_write_tokens == 60
     assert response.output_tokens == 3
     assert PROVIDERS['anthropic'].prices[model].cost(response) == pytest.approx(expected)
+
+
+def test_haiku_long_context_price_tier():
+    price = PROVIDERS['anthropic'].prices['claude-haiku-5-5']
+    response = Response('', 100_001, 3, 40, cache_write_tokens=60)
+    expected = ((100_001 - 40 - 60) * .5 + 40 * .05 + 60 * .625 + 3 * 2.5) / 1_000_000
+    assert price.cost(response) == pytest.approx(expected)
+    assert price.input_upper_bound == .625
+    assert price.output_upper_bound == 2.5
 
 
 def test_run_saves_cache_usage_and_cost(monkeypatch, tmp_path):
