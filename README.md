@@ -194,8 +194,8 @@ may not fit alongside a long prompt. No output limit was inferred from those
 context lengths, but Tinker accepted `max_tokens: 128000` for all four registered
 Inkling models in live smoke requests. Verify unknown/host-specific limits before paid runs.
 
-Requests allow 600 seconds of socket inactivity. Anthropic and Meta stream long
-generations (Qwen already streams), avoiding the non-streaming timeout path;
+Requests allow 600 seconds of socket inactivity. Anthropic, Meta, Qwen and
+Tinker stream long generations, avoiding the non-streaming timeout path;
 this is not a 600-second total generation deadline. Anthropic's native SSE
 accumulator requires final usage and `message_stop`, excludes thinking text,
 and retries incomplete streams as uncertain, potentially billable attempts.
@@ -280,7 +280,10 @@ authentication and `/chat/completions`. Temperature is 0 and the output cap is
 128,000 tokens, including reasoning. If reasoning exhausts that cap, null answer
 content is graded as empty text; reasoning is not substituted for the answer.
 `reasoning_effort: high` is sent as a top-level request field, not nested under
-`extra_body`, whose fields the server silently ignores. See the [API overview](https://tinker-docs.thinkingmachines.ai/inference/openai/overview/).
+`extra_body`, whose fields the server silently ignores. Requests stream with
+`stream_options.include_usage` so long high-reasoning generations do not look
+like inactive sockets; final usage is still required before a response is
+scored. See the [API overview](https://tinker-docs.thinkingmachines.ai/inference/openai/overview/).
 
 Verified [Tinker prices](https://tinker-docs.thinkingmachines.ai/tinker/models/models_and_pricing/)
 are USD per million tokens: Prefill is input and Sample is output.

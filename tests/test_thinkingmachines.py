@@ -10,6 +10,12 @@ from p95bench.runner import SYSTEM_PROMPT, run
 from p95bench.tasks import Task
 
 
+def sse_response(*chunks):
+    lines = [f"data: {json.dumps(chunk)}\n\n" for chunk in chunks]
+    lines.append("data: [DONE]\n\n")
+    return io.BytesIO("".join(lines).encode())
+
+
 @pytest.mark.parametrize('model,rates', [
     ('thinkingmachines/Inkling', (1.87, .374, 4.68)),
     ('thinkingmachines/Inkling-Small', (.58, .116, 1.44)),
@@ -33,13 +39,19 @@ def test_transport(monkeypatch, model, rates, content):
         assert timeout == 600
         assert json.loads(req.data) == {
             'model': model, 'messages': messages, 'temperature': 0,
-            'max_tokens': 128000, 'reasoning_effort': 'high',
+            'max_tokens': 128000, 'reasoning_effort': 'high', 'stream': True,
+            'stream_options': {'include_usage': True},
         }
-        return io.BytesIO(json.dumps({
-            'choices': [{'message': {'content': content, 'reasoning_content': 'Private reasoning'}}],
-            'usage': {'prompt_tokens': 100, 'completion_tokens': 20,
-                      'prompt_tokens_details': {'cached_tokens': 40}},
-        }).encode())
+        return sse_response(
+            {'choices': [{'delta': {'content': content,
+                                    'reasoning_content': 'Private reasoning'},
+                          'finish_reason': 'stop'}]},
+            {'choices': [], 'usage': {
+                'prompt_tokens': 100, 'completion_tokens': 20,
+                'completion_tokens_details': {'reasoning_tokens': 8},
+                'prompt_tokens_details': {'cached_tokens': 40},
+            }},
+        )
 
     monkeypatch.setattr('urllib.request.urlopen', request)
     clock = iter([10., 10.25])
@@ -47,10 +59,34 @@ def test_transport(monkeypatch, model, rates, content):
     response = provider.send(model, messages)
     assert (response.text, response.input_tokens, response.output_tokens,
             response.cached_tokens, response.latency_seconds) == (content or '', 100, 20, 40, .25)
+    assert response.reasoning_tokens == 8
     price = PROVIDERS['thinkingmachines'].prices[model]
     assert (price.input, price.cached, price.output) == rates
     assert price.cost(response) == pytest.approx((60 * rates[0] + 40 * rates[1]
                                                 + 20 * rates[2]) / 1_000_000)
+
+
+def test_streaming_split_answer_and_missing_usage_retry(monkeypatch):
+    monkeypatch.setenv('TINKER_API_KEY', 'test-key')
+    monkeypatch.setattr('p95bench.providers.time.sleep', lambda _: None)
+    calls = []
+
+    def request(req, timeout):
+        calls.append(req)
+        if len(calls) == 1:
+            return sse_response({'choices': [{'delta': {'content': 'hel'}}]})
+        return sse_response(
+            {'choices': [{'delta': {'content': 'hel'}}]},
+            {'choices': [{'delta': {'content': 'lo'}, 'finish_reason': 'stop'}]},
+            {'choices': [], 'usage': {'prompt_tokens': 10, 'completion_tokens': 2}},
+        )
+
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    response = get_provider('thinkingmachines').send('thinkingmachines/Inkling-2-Mini', [])
+
+    assert len(calls) == 2
+    assert response.text == 'hello'
+    assert (response.input_tokens, response.output_tokens) == (10, 2)
 
 
 def test_missing_key_and_http_error(monkeypatch):
