@@ -140,12 +140,12 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
                 for a in attempts]
     scores = {"first_attempt": 100 * sum(a["score"] for a in per_task) / len(per_task),
               "after_repair": 100 * sum(a["after_repair_score"] for a in per_task) / len(per_task)}
+    run_summary = Path(run_dir) / "summary.json"
+    original_grader = read(run_summary)["main_grader"] if run_summary.exists() else None
     metadata = {"entry_type": "agent_system", "system": SYSTEM, "model": MODEL,
                 "provider": config["provider"], "reasoning_mode": "thinking-high", "tools": ["jmeter"],
                 "pack_id": "p95-core", "pack_digest": manifest["digest"], "visibility": "public",
                 "harness_commit": commit, "grader_commit": commit, "rank_eligible": False,
-                "original_grader_commit": (read(Path(run_dir) / "summary.json")["main_grader"]
-                                 if (Path(run_dir) / "summary.json").exists() else commit),
                 "initial_attempts_regraded": len(attempts),
                 "recorded_repairs_regraded": sum(a["repair"]["triggered"] for a in attempts),
                 "execution": EXECUTION_NOTE,
@@ -159,6 +159,8 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
                 "cost_note": COST_NOTE or ("List-price estimate from native per-turn usage. Excludes $3.67 "
                              "extra spend on discarded starts and credit-failed partial attempts. "
                              "Unreported failed-turn usage is unpriced. Not an invoice.")}
+    if original_grader:
+        metadata["original_grader_commit"] = original_grader
     summary = {"pack_id": "p95-core", "pack_digest": manifest["digest"], "attempts": len(attempts),
                "expected_attempts": len(tasks), "complete": False, "complete_tool_coverage": True,
                "tools": ["jmeter"], "rank_eligible": False, "per_task_results": per_task,
