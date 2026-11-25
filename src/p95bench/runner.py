@@ -27,6 +27,7 @@ from p95bench.packs import snapshot, summarize_v2, validate_snapshot
 from p95bench.providers import (
     DEFAULT_OUTPUT_TOKENS,
     Gemini,
+    ProviderInputError,
     ProviderUnavailable,
     SpendLimitExceeded,
     gemini_prices,
@@ -428,7 +429,7 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                                 if (repair_grade.get("status") == "not_run"
                                         or repair_grading_error.get("stop_run")):
                                     grading_stop = "Grading stopped: " + repair_grade["detail"]
-                        except (ProviderUnavailable, SpendLimitExceeded) as error:
+                        except (ProviderUnavailable, ProviderInputError, SpendLimitExceeded) as error:
                             repair["error"] = str(error)
                             if isinstance(error, SpendLimitExceeded):
                                 budget_error = str(error)

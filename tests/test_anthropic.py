@@ -57,7 +57,7 @@ def test_messages_transport(monkeypatch, content, expected):
         assert timeout == 600
         assert json.loads(req.data) == {
             'model': 'claude-sonnet-5-5', 'system': SYSTEM_PROMPT,
-            'messages': messages[1:], 'max_tokens': 64000, 'stream': True,
+            'messages': messages[1:], 'max_tokens': 128000, 'stream': True,
             'thinking': {'type': 'adaptive'}, 'output_config': {'effort': 'high'},
         }
         return sse_response(content)
@@ -126,12 +126,12 @@ def test_run_saves_cache_usage_and_cost(monkeypatch, tmp_path):
 def test_thinking_only_stream_is_billed_and_marks_exhaustion(monkeypatch):
     monkeypatch.setenv('ANTHROPIC_API_KEY', 'test-key')
     monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: sse_response(
-        [{'type': 'thinking', 'thinking': 'not an answer'}], 64000, 'max_tokens'))
+        [{'type': 'thinking', 'thinking': 'not an answer'}], 128000, 'max_tokens'))
     response = get_provider('anthropic').send('claude-sonnet-5-5', [])
     assert response.text == ''
-    assert response.output_tokens == 64000
+    assert response.output_tokens == 128000
     assert response.thinking_exhausted
-    assert PROVIDERS['anthropic'].prices['claude-sonnet-5-5'].cost(response) == .64004
+    assert PROVIDERS['anthropic'].prices['claude-sonnet-5-5'].cost(response) == 1.28004
 
 
 @pytest.mark.parametrize('stream', [

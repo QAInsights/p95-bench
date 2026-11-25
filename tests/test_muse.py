@@ -44,7 +44,7 @@ def test_muse_payload_and_reasoning_inclusive_price(monkeypatch, model, rates):
         assert req.full_url == 'https://api.meta.ai/v1/chat/completions'
         assert req.get_header('Authorization') == 'Bearer test-key'
         assert json.loads(req.data) == {'model': model, 'messages': messages,
-            'max_completion_tokens': 64000, 'stream': True, 'stream_options': {'include_usage': True}}
+            'max_completion_tokens': 128000, 'stream': True, 'stream_options': {'include_usage': True}}
         assert timeout == 600
         return stream_reply(reply())
 
@@ -99,7 +99,7 @@ def test_transient_retry_and_exhaustion(monkeypatch, error, recover):
         return stream_reply(reply())
 
     monkeypatch.setattr('urllib.request.urlopen', request)
-    provider = Muse(replace(PROVIDERS['meta'], max_retries=1), spend_limit=5)
+    provider = Muse(replace(PROVIDERS['meta'], max_retries=1), spend_limit=10)
     if recover:
         assert provider.send('muse-wonder-1.0', []).text == '10'
     else:
@@ -108,7 +108,7 @@ def test_transient_retry_and_exhaustion(monkeypatch, error, recover):
     expected_calls = 2 if error == 503 or recover else 3
     assert len(calls) == expected_calls
     assert sleeps == ([1] if expected_calls == 2 else [1, 2])
-    assert 0 < provider.spent_upper_bound < 5
+    assert 0 < provider.spent_upper_bound < 10
 
 
 @pytest.mark.parametrize('error', [
@@ -131,7 +131,7 @@ def test_transient_stream_error_retries_with_uncertain_accounting(monkeypatch, e
         return io.BytesIO(''.join(f'data: {json.dumps(e)}\n\n' for e in events).encode())
 
     monkeypatch.setattr('urllib.request.urlopen', request)
-    provider = Muse(PROVIDERS['meta'], spend_limit=5)
+    provider = Muse(PROVIDERS['meta'], spend_limit=10)
     provider.measure_transport = True
     if recover:
         response = provider.send('muse-wonder-1.0', [])
@@ -145,7 +145,7 @@ def test_transient_stream_error_retries_with_uncertain_accounting(monkeypatch, e
     assert sleeps == ([1] if recover else [1, 2])
     assert provider.backoff_seconds == sum(sleeps)
     maximum = provider.config.prices['muse-wonder-1.0'].cost(
-        Response('', len(calls[0].data) + 1024, 64000))
+        Response('', len(calls[0].data) + 1024, 128000))
     expected = maximum * provider.uncertain_attempts
     if recover:
         expected += provider.config.prices['muse-wonder-1.0'].cost(response)
