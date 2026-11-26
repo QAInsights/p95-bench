@@ -53,7 +53,6 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 72px; padding:
 .scatter text { fill: var(--dim); font-family: var(--mono); font-size: 11px; }
 .scatter .point-label { fill: var(--ink); font-family: var(--display); font-size: 13px; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
 .scatter .label-leader { stroke: var(--dim); stroke-width: 1px; opacity: 0.65; }
-.scatter .value-frontier { fill: none; stroke: var(--lime); stroke-width: 1.6; opacity: 0.62; }
 .scatter .best-value-star { fill: var(--lime); stroke: var(--bg); stroke-width: 1.2; paint-order: stroke; opacity: 0; transition: opacity 120ms ease; pointer-events: none; }
 .scatter .point:hover .best-value-star { opacity: 1; }
 .chart-note { margin: 4px 0 0; color: var(--dim); font-family: var(--mono); font-size: 11px; }
