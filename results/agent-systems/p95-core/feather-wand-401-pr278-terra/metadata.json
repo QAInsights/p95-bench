@@ -1,0 +1,41 @@
+{
+  "entry_type": "agent_system",
+  "system": "Feather Wand v4.0.1 + jmeter-ai PR #278 (JMeter GUI Agent mode)",
+  "model": "gpt-6.1-terra",
+  "provider": "openai",
+  "reasoning_mode": "thinking-high",
+  "tools": [
+    "jmeter"
+  ],
+  "pack_id": "p95-core",
+  "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+  "visibility": "public",
+  "harness_commit": "3beda6bea4e8dcff5eac05ae751f6570819fff5c",
+  "grader_commit": "3beda6bea4e8dcff5eac05ae751f6570819fff5c",
+  "rank_eligible": false,
+  "initial_attempts_regraded": 26,
+  "recorded_repairs_regraded": 0,
+  "execution": "JMeter 5.6.3 GUI only; fresh plan and conversation per task. Destructive action confirmations were disabled for unattended execution.",
+  "repair_policy": "One GUI repair only when the historical Core trigger fired; exact feedback, saved responses only, no new repairs during regrade. Retain recorded repairs even if the merged grader accepts the initial.",
+  "analysis_extraction": "Verbatim final assistant text from the native conversation.",
+  "pricing_basis": {
+    "currency": "USD",
+    "unit": "million tokens",
+    "cache_write_ttl": "30 minutes",
+    "input": 1.0,
+    "cached": 0.05,
+    "cache_write": 1.25,
+    "output": 5.0
+  },
+  "usage": {
+    "input_tokens": 76801711,
+    "fresh_input_tokens": 56759,
+    "cached_tokens": 75962653,
+    "cache_write_tokens": 782299,
+    "output_tokens": 312473,
+    "reasoning_tokens": 126346,
+    "turns": 3263
+  },
+  "excluded_spend_usd": null,
+  "cost_note": "List-price estimate from native per-turn usage for the 26 valid completed GUI runs. Excludes unpriced and unknown spend from discarded harness-development starts and VM-sleep-interrupted attempts. Not an invoice."
+}

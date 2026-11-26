@@ -46,3 +46,38 @@ The export can be reproduced from the private GUI artifacts, without provider
 access, using `python -m scripts.publish_feather_wand`. Native execution evidence
 is kept separately; only attempts, scores, usage, the manifest and provenance are
 published. Local paths, session logs and provider credentials are not published.
+
+## Feather Wand 4.0.1 + PR #278 + Terra
+
+`p95-core/feather-wand-401-pr278-terra` contains all 26 valid JMeter tasks from the
+Feather Wand v4.0.1 GUI Agent-mode run with OpenAI GPT-6.1 Terra at high reasoning,
+using the locally built jar from jmeter-ai PR #278. Each task started from a fresh
+plan and conversation. Saved JMX plans were saved through the JMeter 5.6.3 GUI.
+Analysis submissions are the verbatim final assistant text from the native
+conversation, without JSON extraction or corrections. Destructive action
+confirmations were disabled for unattended GUI execution.
+
+Every saved initial submission was regraded offline using the revision recorded in
+`metadata.json`. No provider calls or new repairs were made. No recorded repair met
+the historical Core trigger, so first-attempt and after-repair scores are identical:
+**69.0385 / 69.0385**. Scored-run cost is $6.3951304 for 312,473 output tokens and
+3,263 native model turns. Low-scoring two-turn execution tasks are valid model
+outcomes, usually immediate refusals or responses that made no meaningful plan
+change, not harness omissions.
+
+The full, unchanged Core snapshot is stored in `pack.json`. The run has complete
+JMeter coverage, not complete four-tool coverage. Scores are arithmetic averages
+of the 26 task scores, matching the board's JMeter `toolScore` calculation, without
+the full-board efficiency adjustment. Site builds reject manifest mismatches.
+
+Cost includes every successful native model turn for these valid submissions. Terra
+list prices per million tokens are $1 fresh input, $0.05 cache reads, $1.25 cache
+writes with a 30-minute TTL and $5 output. Reasoning tokens are included in output
+and are not charged twice. Spend from discarded harness-development starts and
+VM-sleep-interrupted attempts is excluded; some of that spend is unknown because
+interrupted native usage was not retained. Failed turns with no returned usage are
+unpriced. Excluded attempts are not published.
+
+The export can be reproduced from the private GUI artifacts, without provider access,
+using `python -m scripts.publish_feather_wand` with the model, pricing, execution and
+cost-note arguments matching `metadata.json`.

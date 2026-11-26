@@ -8,11 +8,14 @@ import data from "../data/leaderboard-p95-core.json";
 import { boardModels, boardTasks, scatter, toolLabel, TOOLS, formatCost } from "../lib/board.mjs";
 import { attemptFraction } from "../lib/scores.mjs";
 import AgentSystems from "../components/AgentSystems.astro";
-import { parseAgentSystem, agentComparison } from "../lib/agent-systems.mjs";
+import { parseAgentSystems, agentComparisons, agentDisplay } from "../lib/agent-systems.mjs";
 
-const agentSources = import.meta.glob("../../../results/agent-systems/p95-core/feather-wand-rc1-sonnet-5-5/*.{json,jsonl}", { eager: true, query: "?raw", import: "default" });
-const agentSystem = parseAgentSystem(agentSources, data);
-const agentRows = agentComparison(agentSystem, data);
+const agentSources = import.meta.glob("../../../results/agent-systems/p95-core/*/*.{json,jsonl}", { eager: true, query: "?raw", import: "default" });
+const agentSystems = parseAgentSystems(agentSources, data);
+const agentRows = agentComparisons(agentSystems, data);
+const agentNotes = agentSystems.map(entry => ({ label: agentDisplay(entry).systemName,
+  note: entry.metadata.cost_note,
+  url: `https://github.com/QAInsights/p95-bench/tree/main/results/agent-systems/p95-core/${entry.directory}` }));
 
 const models = boardModels(data);
 const tasks = boardTasks(data);
@@ -96,7 +99,7 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
         </section>
       )}
 
-      <AgentSystems rows={agentRows} note={agentSystem.metadata.cost_note} />
+      <AgentSystems rows={agentRows} notes={agentNotes} />
 
       <section id="method" aria-labelledby="method-title" class="method">
         <h2 id="method-title" class="label">Method</h2>

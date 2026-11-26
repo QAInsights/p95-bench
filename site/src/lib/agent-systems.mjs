@@ -64,16 +64,47 @@ export async function loadAgentSystem(board, source = directory) {
 }
 
 export function parseAgentSystem(sources, board) {
-  const raw = name => {
-    const matches = Object.entries(sources).filter(([key]) => key.split('/').at(-1) === name);
-    if (matches.length !== 1 || typeof matches[0][1] !== 'string') {
-      throw new Error('Missing or duplicate agent system file: ' + name);
-    }
-    return matches[0][1];
-  };
-  return validateAgentSystem({ metadata: JSON.parse(raw('metadata.json')),
-    summary: JSON.parse(raw('summary.json')), manifest: JSON.parse(raw('pack.json')),
-    attempts: raw('attempts.jsonl').trim().split('\n').filter(Boolean).map(JSON.parse) }, board);
+  const entries = parseAgentSystems(sources, board);
+  if (entries.length !== 1) throw new Error('Missing or duplicate agent system files');
+  return entries[0];
+}
+
+export function parseAgentSystems(sources, board) {
+  const groups = new Map();
+  for (const [key, value] of Object.entries(sources)) {
+    const directory = key.split('/').slice(0, -1).join('/') || '.';
+    if (!groups.has(directory)) groups.set(directory, {});
+    groups.get(directory)[key] = value;
+  }
+  return [...groups.entries()].map(([directory, group]) => {
+    const raw = name => {
+      const matches = Object.entries(group).filter(([key]) => key.split('/').at(-1) === name);
+      if (matches.length !== 1 || typeof matches[0][1] !== 'string') {
+        throw new Error('Missing or duplicate agent system file: ' + name);
+      }
+      return matches[0][1];
+    };
+    const entry = validateAgentSystem({ metadata: JSON.parse(raw('metadata.json')),
+      summary: JSON.parse(raw('summary.json')), manifest: JSON.parse(raw('pack.json')),
+      attempts: raw('attempts.jsonl').trim().split('\n').filter(Boolean).map(JSON.parse) }, board);
+    entry.directory = directory.split('/').at(-1);
+    return entry;
+  });
+}
+
+export function agentDisplay(entry) {
+  if (entry.metadata.provider === 'anthropic' && entry.metadata.model === 'claude-sonnet-5-5') {
+    return { systemName: 'Feather Wand RC1 + Sonnet 5.5',
+      systemDetail: 'v4.0.1-RC1 GUI Agent mode · high thinking',
+      directName: 'Sonnet 5.5 direct', directDetail: 'Provider API · high thinking' };
+  }
+  if (entry.metadata.provider === 'openai' && entry.metadata.model === 'gpt-6.1-terra') {
+    return { systemName: 'Feather Wand 4.0.1+patch + Terra',
+      systemDetail: 'v4.0.1 + PR #278 GUI Agent mode · high reasoning',
+      directName: 'Terra direct', directDetail: 'Provider API · high reasoning' };
+  }
+  return { systemName: entry.metadata.system, systemDetail: entry.metadata.reasoning_mode,
+    directName: `${entry.metadata.model} direct`, directDetail: 'Provider API' };
 }
 
 export function agentComparison(entry, board) {
@@ -83,14 +114,19 @@ export function agentComparison(entry, board) {
   if (!direct) throw new Error('Agent system direct-model comparison missing');
   const ids = new Set(direct.per_task_results.filter(a => a.tool === 'jmeter').map(a => a.task_id));
   const costs = direct.cost_attempts.filter(a => ids.has(a.task_id));
+  const display = agentDisplay(entry);
   return [
-    { name: 'Feather Wand RC1 + Sonnet 5.5', detail: 'v4.0.1-RC1 GUI Agent mode · high thinking',
+    { name: display.systemName, detail: display.systemDetail,
       first: toolScore(entry.summary, 'jmeter'), after: toolScore(entry.summary, 'jmeter', 'repair'),
       cost: entry.summary.estimated_cost_usd, output: entry.summary.output_tokens,
       turns: entry.summary.turns, system: true },
-    { name: 'Sonnet 5.5 direct', detail: 'Provider API · high thinking',
+    { name: display.directName, detail: display.directDetail,
       first: toolScore(direct, 'jmeter'), after: toolScore(direct, 'jmeter', 'repair'),
       cost: costs.reduce((sum, a) => sum + a.cost_usd, 0),
       output: costs.reduce((sum, a) => sum + a.output_tokens, 0), turns: costs.length, system: false },
   ];
+}
+
+export function agentComparisons(entries, board) {
+  return entries.flatMap(entry => agentComparison(entry, board));
 }

@@ -15,6 +15,12 @@ from p95bench.tasks import load_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 SYSTEM = "Feather Wand v4.0.1-RC1 (JMeter GUI Agent mode)"
+MODEL = "claude-sonnet-5-5"
+PROVIDER = "anthropic"
+EXCLUDED_SPEND = 3.6677725
+CACHE_WRITE_TTL = "5 minutes"
+EXECUTION_NOTE = "JMeter 5.6.3 GUI only; fresh plan and conversation per task."
+COST_NOTE = None
 PRICES = {"input": 2, "cached": 0.10, "cache_write": 2.50, "output": 10}
 USAGE = {"input_tokens": "input_total", "fresh_input_tokens": "fresh_input",
          "cached_tokens": "cache_read", "cache_write_tokens": "cache_write",
@@ -31,9 +37,11 @@ def public_text(text):
     return text
 
 
-def response_usage(rows):
+def response_usage(rows, prices):
     if not rows or any(row.get("status") != "ok" for row in rows):
         raise ValueError("Only successful, recorded model turns may be published")
+    rows = [{**row, "input_total": row.get("input_total", row.get("fresh_input", 0)
+             + row.get("cache_read", 0) + row.get("cache_write", 0))} for row in rows]
     result = {key: sum(row[field] for row in rows) for key, field in USAGE.items()}
     if any(not isinstance(value, int) or value < 0 for value in result.values()):
         raise ValueError("Invalid token usage")
@@ -41,23 +49,24 @@ def response_usage(rows):
             "fresh_input_tokens", "cached_tokens", "cache_write_tokens")):
         raise ValueError("Input token accounting does not reconcile")
     result["turns"] = len(rows)
-    cost = sum(result[key] * PRICES[price] for key, price in (
+    cost = sum(result[key] * prices[price] for key, price in (
         ("fresh_input_tokens", "input"), ("cached_tokens", "cached"),
         ("cache_write_tokens", "cache_write"), ("output_tokens", "output"))) / 1_000_000
     return result, cost
 
 
 def grade_saved(job):
-    task, folder, evidence, digest, commit = job
+    task, folder, evidence, digest, commit, config = job
     result = read(folder / "result.json")
     if result["status"] not in {"completed", "reused"} or result["task"] != task.id:
         raise ValueError("Expected a valid completed task")
     reused = result["status"] == "reused"
     source = folder / "reused-c03" if reused else folder
     attempt = {"task_id": task.id, "scenario": task.scenario, "category": task.category,
-               "repeat": 0, "tool": "jmeter", "provider": "anthropic",
-               "model": "claude-sonnet-5-5", "pack_id": "p95-core", "pack_digest": digest,
+               "repeat": 0, "tool": "jmeter", "provider": config["provider"],
+               "model": config["model"], "pack_id": "p95-core", "pack_digest": digest,
                "repair": {"triggered": False}}
+    prices = config["prices"]
     for phase in ("initial", "repair") if result.get("repair") else ("initial",):
         if reused:
             raw = [json.loads(line) for line in (source / "usage.jsonl").read_text().splitlines()]
@@ -67,7 +76,7 @@ def grade_saved(job):
                     for row in raw]
         else:
             rows = read(source / f"{phase}-usage.json")
-        usage, cost = response_usage(rows)
+        usage, cost = response_usage(rows, prices)
         filename = f"{phase}-answer.txt" if task.grader == "v2_analysis" else f"{phase}-model.jmx"
         text = public_text((source / filename).read_text())
         key = hashlib.sha256(json.dumps([commit, task_digest(task), text]).encode()).hexdigest()
@@ -83,7 +92,7 @@ def grade_saved(job):
             cache.write_text(json.dumps(grade) + "\n")
         record = {"response": {"text": text, **usage,
                                "source_sha256": hashlib.sha256(text.encode()).hexdigest()},
-                  "grade": grade, "cost_usd": cost, "price_per_million": PRICES}
+                  "grade": grade, "cost_usd": cost, "price_per_million": prices}
         if phase == "initial":
             attempt.update(record)
         else:
@@ -116,7 +125,8 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
     inventory = {item["id"]: item["task_digest"] for item in manifest["tasks"]}
     if len(tasks) != 26 or any(task_digest(task) != inventory.get(task.id) for task in tasks):
         raise ValueError("Core task inventory differs from the recorded manifest")
-    work = [(task, Path(run_dir) / task.id, Path(evidence_dir), manifest["digest"], commit)
+    config = {"provider": PROVIDER, "model": MODEL, "prices": PRICES}
+    work = [(task, Path(run_dir) / task.id, Path(evidence_dir), manifest["digest"], commit, config)
             for task in tasks]
     with ProcessPoolExecutor(max_workers=jobs) as pool:
         attempts = list(pool.map(grade_saved, work))
@@ -130,24 +140,34 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
                 for a in attempts]
     scores = {"first_attempt": 100 * sum(a["score"] for a in per_task) / len(per_task),
               "after_repair": 100 * sum(a["after_repair_score"] for a in per_task) / len(per_task)}
-    metadata = {"entry_type": "agent_system", "system": SYSTEM, "model": "claude-sonnet-5-5",
-                "provider": "anthropic", "reasoning_mode": "thinking-high", "tools": ["jmeter"],
+    run_summary = Path(run_dir) / "summary.json"
+    original_grader = read(run_summary)["main_grader"] if run_summary.exists() else None
+    if COST_NOTE:
+        cost_note = COST_NOTE
+    elif EXCLUDED_SPEND is None:
+        cost_note = ("List-price estimate from native per-turn usage. Excludes unpriced and "
+                     "unknown spend outside the valid published attempts. Not an invoice.")
+    else:
+        cost_note = (f"List-price estimate from native per-turn usage. Excludes ${EXCLUDED_SPEND:.2f} "
+                     "extra spend on discarded starts and credit-failed partial attempts. "
+                     "Unreported failed-turn usage is unpriced. Not an invoice.")
+    metadata = {"entry_type": "agent_system", "system": SYSTEM, "model": MODEL,
+                "provider": config["provider"], "reasoning_mode": "thinking-high", "tools": ["jmeter"],
                 "pack_id": "p95-core", "pack_digest": manifest["digest"], "visibility": "public",
                 "harness_commit": commit, "grader_commit": commit, "rank_eligible": False,
-                "original_grader_commit": read(Path(run_dir) / "summary.json")["main_grader"],
                 "initial_attempts_regraded": len(attempts),
                 "recorded_repairs_regraded": sum(a["repair"]["triggered"] for a in attempts),
-                "execution": "JMeter 5.6.3 GUI only; fresh plan and conversation per task.",
+                "execution": EXECUTION_NOTE,
                 "repair_policy": "One GUI repair only when the historical Core trigger fired; "
                                  "exact feedback, saved responses only, no new repairs during regrade. "
                                  "Retain recorded repairs even if the merged grader accepts the initial.",
                 "analysis_extraction": "Verbatim final assistant text from the native conversation.",
                 "pricing_basis": {"currency": "USD", "unit": "million tokens",
-                                  "cache_write_ttl": "5 minutes", **PRICES},
-                "usage": totals, "excluded_spend_usd": 3.6677725,
-                "cost_note": "List-price estimate from native per-turn usage. Excludes $3.67 "
-                             "extra spend on discarded starts and credit-failed partial attempts. "
-                             "Unreported failed-turn usage is unpriced. Not an invoice."}
+                                  "cache_write_ttl": CACHE_WRITE_TTL, **PRICES},
+                "usage": totals, "excluded_spend_usd": EXCLUDED_SPEND,
+                "cost_note": cost_note}
+    if original_grader:
+        metadata["original_grader_commit"] = original_grader
     summary = {"pack_id": "p95-core", "pack_digest": manifest["digest"], "attempts": len(attempts),
                "expected_attempts": len(tasks), "complete": False, "complete_tool_coverage": True,
                "tools": ["jmeter"], "rank_eligible": False, "per_task_results": per_task,
@@ -170,7 +190,24 @@ def main():
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--evidence-dir", type=Path, required=True)
     parser.add_argument("--jobs", type=int, default=1)
+    parser.add_argument("--system", default=SYSTEM)
+    parser.add_argument("--model", default=MODEL)
+    parser.add_argument("--provider", default=PROVIDER)
+    parser.add_argument("--input-price", type=float, default=PRICES["input"])
+    parser.add_argument("--cached-price", type=float, default=PRICES["cached"])
+    parser.add_argument("--cache-write-price", type=float, default=PRICES["cache_write"])
+    parser.add_argument("--output-price", type=float, default=PRICES["output"])
+    parser.add_argument("--excluded-spend", default=str(EXCLUDED_SPEND))
+    parser.add_argument("--cost-note", default=COST_NOTE)
+    parser.add_argument("--cache-write-ttl", default=CACHE_WRITE_TTL)
+    parser.add_argument("--execution-note", default=EXECUTION_NOTE)
     args = parser.parse_args()
+    globals().update(SYSTEM=args.system, MODEL=args.model, PROVIDER=args.provider,
+                     EXCLUDED_SPEND=None if str(args.excluded_spend).lower() in {"unknown", "none", "null"} else float(args.excluded_spend),
+                     COST_NOTE=args.cost_note,
+                     CACHE_WRITE_TTL=args.cache_write_ttl, EXECUTION_NOTE=args.execution_note,
+                     PRICES={"input": args.input_price, "cached": args.cached_price,
+                             "cache_write": args.cache_write_price, "output": args.output_price})
     export(args.run_dir, args.output_dir, args.evidence_dir, args.jobs)
 
 

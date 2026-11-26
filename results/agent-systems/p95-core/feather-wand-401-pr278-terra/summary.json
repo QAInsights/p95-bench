@@ -1,0 +1,262 @@
+{
+  "pack_id": "p95-core",
+  "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+  "attempts": 26,
+  "expected_attempts": 26,
+  "complete": false,
+  "complete_tool_coverage": true,
+  "tools": [
+    "jmeter"
+  ],
+  "rank_eligible": false,
+  "per_task_results": [
+    {
+      "task_id": "mx-a01-jtl-endpoints-jmeter",
+      "category": "analysis",
+      "scenario": "mx-a01-jtl-endpoints",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-a04-k6-errors-jmeter",
+      "category": "analysis",
+      "scenario": "mx-a04-k6-errors",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-a05-jtl-omission-jmeter",
+      "category": "analysis",
+      "scenario": "mx-a05-jtl-omission",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-a06-k6-decomposition-jmeter",
+      "category": "analysis",
+      "scenario": "mx-a06-k6-decomposition",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-c01-html-csrf-jmeter",
+      "category": "correlation",
+      "scenario": "mx-c01-html-csrf",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.75,
+      "after_repair_score": 0.75
+    },
+    {
+      "task_id": "mx-c03-json-parent-child-jmeter",
+      "category": "correlation",
+      "scenario": "mx-c03-json-parent-child",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.75,
+      "after_repair_score": 0.75
+    },
+    {
+      "task_id": "mx-c04-json-pagination-jmeter",
+      "category": "correlation",
+      "scenario": "mx-c04-json-pagination",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.75,
+      "after_repair_score": 0.75
+    },
+    {
+      "task_id": "mx-c06-etag-update-jmeter",
+      "category": "correlation",
+      "scenario": "mx-c06-etag-update",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.425,
+      "after_repair_score": 0.425
+    },
+    {
+      "task_id": "mx-c08-expiry-resume-jmeter",
+      "category": "correlation",
+      "scenario": "mx-c08-expiry-resume",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.1,
+      "after_repair_score": 0.1
+    },
+    {
+      "task_id": "mx-c09-async-reservation-jmeter",
+      "category": "correlation",
+      "scenario": "mx-c09-async-reservation",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.1,
+      "after_repair_score": 0.1
+    },
+    {
+      "task_id": "mx-m01-basic-flow-jmeter",
+      "category": "migration",
+      "scenario": "mx-m01-basic-flow",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-m04-data-driven-jmeter",
+      "category": "migration",
+      "scenario": "mx-m04-data-driven",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.75,
+      "after_repair_score": 0.75
+    },
+    {
+      "task_id": "mx-m05-pacing-semantics-jmeter",
+      "category": "migration",
+      "scenario": "mx-m05-pacing-semantics",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-m06-assertions-metrics-jmeter",
+      "category": "migration",
+      "scenario": "mx-m06-assertions-metrics",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.1,
+      "after_repair_score": 0.1
+    },
+    {
+      "task_id": "mx-r01-extractor-scope-jmeter",
+      "category": "repair",
+      "scenario": "mx-r01-extractor-scope",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.75,
+      "after_repair_score": 0.75
+    },
+    {
+      "task_id": "mx-r02-cookie-lifetime-jmeter",
+      "category": "repair",
+      "scenario": "mx-r02-cookie-lifetime",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.75,
+      "after_repair_score": 0.75
+    },
+    {
+      "task_id": "mx-r04-status-recovery-jmeter",
+      "category": "repair",
+      "scenario": "mx-r04-status-recovery",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-r05-business-assertion-jmeter",
+      "category": "repair",
+      "scenario": "mx-r05-business-assertion",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.75,
+      "after_repair_score": 0.75
+    },
+    {
+      "task_id": "mx-r06-threshold-tags-jmeter",
+      "category": "repair",
+      "scenario": "mx-r06-threshold-tags",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.875,
+      "after_repair_score": 0.875
+    },
+    {
+      "task_id": "mx-r08-arrival-options-jmeter",
+      "category": "repair",
+      "scenario": "mx-r08-arrival-options",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-r10-user-partition-jmeter",
+      "category": "repair",
+      "scenario": "mx-r10-user-partition",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.1,
+      "after_repair_score": 0.1
+    },
+    {
+      "task_id": "mx-r11-timer-scope-jmeter",
+      "category": "repair",
+      "scenario": "mx-r11-timer-scope",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-r12-error-metric-jmeter",
+      "category": "repair",
+      "scenario": "mx-r12-error-metric",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-w01-steady-starts-jmeter",
+      "category": "workload",
+      "scenario": "mx-w01-steady-starts",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.0,
+      "after_repair_score": 0.0
+    },
+    {
+      "task_id": "mx-w02-open-arrivals-jmeter",
+      "category": "workload",
+      "scenario": "mx-w02-open-arrivals",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 1.0,
+      "after_repair_score": 1.0
+    },
+    {
+      "task_id": "mx-w07-burst-control-jmeter",
+      "category": "workload",
+      "scenario": "mx-w07-burst-control",
+      "tool": "jmeter",
+      "repeat": 0,
+      "score": 0.0,
+      "after_repair_score": 0.0
+    }
+  ],
+  "tool_scores": {
+    "jmeter": {
+      "first_attempt": 69.03846153846153,
+      "after_repair": 69.03846153846153
+    }
+  },
+  "estimated_cost_usd": 6.3951304,
+  "input_tokens": 76801711,
+  "fresh_input_tokens": 56759,
+  "cached_tokens": 75962653,
+  "cache_write_tokens": 782299,
+  "output_tokens": 312473,
+  "reasoning_tokens": 126346,
+  "turns": 3263
+}
