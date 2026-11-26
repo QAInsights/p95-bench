@@ -47,23 +47,23 @@ access, using `python -m scripts.publish_feather_wand`. Native execution evidenc
 is kept separately; only attempts, scores, usage, the manifest and provenance are
 published. Local paths, session logs and provider credentials are not published.
 
-## Feather Wand 4.0.1 + PR #278 + Terra
+## Feather Wand latest + Responses transport + Terra
 
-`p95-core/feather-wand-401-pr278-terra` contains all 26 valid JMeter tasks from the
-Feather Wand v4.0.1 GUI Agent-mode run with OpenAI GPT-6.1 Terra at high reasoning,
-using the locally built jar from jmeter-ai PR #278. Each task started from a fresh
-plan and conversation. Saved JMX plans were saved through the JMeter 5.6.3 GUI.
-Analysis submissions are the verbatim final assistant text from the native
-conversation, without JSON extraction or corrections. Destructive action
-confirmations were disabled for unattended GUI execution.
+`p95-core/feather-wand-main-responses-terra` contains all 26 valid JMeter tasks from a
+Feather Wand GUI Agent-mode run with OpenAI GPT-6.1 Terra at high reasoning. The jar
+was built locally from jmeter-ai `main` commit `0745c8a067cb2d4d6cccfaaf0bde27154a804417`
+plus local Responses transport merge `59e36f83dc16a5a41e29739f3fb213323f6ba261`,
+because the current Chat Completions agent path cannot use Terra high reasoning with
+function tools. Each task started from a fresh plan and conversation. Saved JMX plans
+were saved through the JMeter 5.6.3 GUI. Analysis submissions are the verbatim final
+assistant text from the native conversation, without JSON extraction or corrections.
+Destructive action confirmations were disabled for unattended GUI execution.
 
 Every saved initial submission was regraded offline using the revision recorded in
 `metadata.json`. No provider calls or new repairs were made. No recorded repair met
 the historical Core trigger, so first-attempt and after-repair scores are identical:
-**69.0385 / 69.0385**. Scored-run cost is $6.3951304 for 312,473 output tokens and
-3,263 native model turns. Low-scoring two-turn execution tasks are valid model
-outcomes, usually immediate refusals or responses that made no meaningful plan
-change, not harness omissions.
+**87.5962 / 87.5962**. Scored-run cost is $3.3108458 for 324,688 output tokens and
+672 native model turns.
 
 The full, unchanged Core snapshot is stored in `pack.json`. The run has complete
 JMeter coverage, not complete four-tool coverage. Scores are arithmetic averages
@@ -73,10 +73,10 @@ the full-board efficiency adjustment. Site builds reject manifest mismatches.
 Cost includes every successful native model turn for these valid submissions. Terra
 list prices per million tokens are $1 fresh input, $0.05 cache reads, $1.25 cache
 writes with a 30-minute TTL and $5 output. Reasoning tokens are included in output
-and are not charged twice. Spend from discarded harness-development starts and
-VM-sleep-interrupted attempts is excluded; some of that spend is unknown because
-interrupted native usage was not retained. Failed turns with no returned usage are
-unpriced. Excluded attempts are not published.
+and are not charged twice. One c01 first attempt was interrupted by a VM sleep before
+native usage was written and was retried as a harness failure; that unknown partial
+spend and other discarded-start spend are excluded. Failed turns with no returned
+usage are unpriced. Excluded attempts are not published.
 
 The export can be reproduced from the private GUI artifacts, without provider access,
 using `python -m scripts.publish_feather_wand` with the model, pricing, execution and

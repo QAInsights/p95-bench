@@ -99,8 +99,8 @@ export function agentDisplay(entry) {
       directName: 'Sonnet 5.5 direct', directDetail: 'Provider API · high thinking' };
   }
   if (entry.metadata.provider === 'openai' && entry.metadata.model === 'gpt-6.1-terra') {
-    return { systemName: 'Feather Wand 4.0.1+patch + Terra',
-      systemDetail: 'v4.0.1 + PR #278 GUI Agent mode · high reasoning',
+    return { systemName: 'Feather Wand latest + Terra',
+      systemDetail: 'main 0745c8a + Responses transport GUI Agent mode · high reasoning',
       directName: 'Terra direct', directDetail: 'Provider API · high reasoning' };
   }
   return { systemName: entry.metadata.system, systemDetail: entry.metadata.reasoning_mode,
