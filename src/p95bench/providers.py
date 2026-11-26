@@ -529,9 +529,9 @@ class Gemini(OpenAICompatible):
         candidates = usage.get("candidatesTokenCount", 0) or 0
         prompt = usage.get("promptTokenCount")
         if prompt is None and usage.get("totalTokenCount") is not None:
-            prompt = max(0, usage["totalTokenCount"] - candidates - thinking)
-        if prompt is None:
-            raise ProviderUnavailable("Gemini response omitted prompt token usage")
+            prompt = usage["totalTokenCount"] - candidates - thinking
+        if prompt is None or prompt <= 0:
+            raise ProviderUnavailable("Gemini response omitted valid prompt token usage")
         return (prompt, candidates + thinking,
                 usage.get("cachedContentTokenCount", 0) or 0, thinking)
 

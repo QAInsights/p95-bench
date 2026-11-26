@@ -108,7 +108,18 @@ def test_missing_prompt_usage_is_a_provider_error(monkeypatch):
     monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
     data = {'candidates': [], 'usageMetadata': {}}
     monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
-    with pytest.raises(ProviderUnavailable, match='omitted prompt token usage'):
+    with pytest.raises(ProviderUnavailable, match='omitted valid prompt token usage'):
+        get_provider('gemini').send('gemini-4-neon', [])
+
+
+def test_contradictory_total_usage_is_a_provider_error(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
+    data = reply()
+    usage = data['usageMetadata']
+    usage.pop('promptTokenCount')
+    usage['totalTokenCount'] = usage['candidatesTokenCount'] + usage['thoughtsTokenCount']
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
+    with pytest.raises(ProviderUnavailable, match='omitted valid prompt token usage'):
         get_provider('gemini').send('gemini-4-neon', [])
 
 
