@@ -524,10 +524,15 @@ class Gemini(OpenAICompatible):
 
     @staticmethod
     def _usage(data):
-        usage = data["usageMetadata"]
+        usage = data.get("usageMetadata") or {}
         thinking = usage.get("thoughtsTokenCount", 0) or 0
-        return (usage["promptTokenCount"],
-                (usage.get("candidatesTokenCount", 0) or 0) + thinking,
+        candidates = usage.get("candidatesTokenCount", 0) or 0
+        prompt = usage.get("promptTokenCount")
+        if prompt is None and usage.get("totalTokenCount") is not None:
+            prompt = max(0, usage["totalTokenCount"] - candidates - thinking)
+        if prompt is None:
+            raise ProviderUnavailable("Gemini response omitted prompt token usage")
+        return (prompt, candidates + thinking,
                 usage.get("cachedContentTokenCount", 0) or 0, thinking)
 
     def _request_once(self, request):
