@@ -170,6 +170,13 @@ class ProviderConfig:
     model_reasoning_modes: dict[str, str] = field(default_factory=dict)
     model_extra: dict[str, dict] = field(default_factory=dict)
 
+    def __post_init__(self):
+        for model, overrides in self.model_extra.items():
+            reserved = set(OUTPUT_LIMIT_FIELDS).intersection(overrides)
+            if reserved:
+                names = ", ".join(sorted(reserved))
+                raise ValueError(f"model_extra for {model} must not set output cap field(s): {names}")
+
     def reasoning_mode_for(self, model=None):
         return self.model_reasoning_modes.get(model, self.reasoning_mode)
 

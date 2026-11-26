@@ -231,6 +231,11 @@ def test_run_date_selects_prices_and_records_snapshot(monkeypatch, tmp_path, mod
     assert provider.config.prices[model] == gemini_prices(when)[model]
 
 
+def test_model_extra_rejects_output_cap_overrides():
+    with pytest.raises(ValueError, match='must not set output cap field'):
+        replace(PROVIDERS['gemini'], model_extra={'gemini-custom': {'maxOutputTokens': 1000}})
+
+
 def test_neon_uses_explicit_high_reasoning_metadata(monkeypatch, tmp_path):
     monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
     monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(reply()).encode()))
