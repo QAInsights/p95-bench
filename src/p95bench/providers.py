@@ -165,8 +165,13 @@ class ProviderConfig:
     pricing_source: str | None = None
     transport_retries: int = 2
     reasoning_mode: str = "provider-default"
+    model_reasoning_modes: dict[str, str] = field(default_factory=dict)
+    model_extra: dict[str, dict] = field(default_factory=dict)
     model_output_limits: dict[str, int] = field(default_factory=dict)
     output_limit_field: str = "max_tokens"
+
+    def reasoning_mode_for(self, model=None):
+        return self.model_reasoning_modes.get(model, self.reasoning_mode)
 
     def output_cap(self, model=None):
         cap = next((self.extra[key] for key in OUTPUT_LIMIT_FIELDS
@@ -175,8 +180,9 @@ class ProviderConfig:
 
     def request_extra(self, model):
         fields = [key for key in OUTPUT_LIMIT_FIELDS if key in self.extra]
-        return {**self.extra, **{key: self.output_cap(model)
-                                for key in fields or [self.output_limit_field]}}
+        return {**self.extra, **self.model_extra.get(model, {}),
+                **{key: self.output_cap(model)
+                   for key in fields or [self.output_limit_field]}}
 
 
 PROVIDERS = {
@@ -201,12 +207,16 @@ PROVIDERS = {
         {"gemini-4-carbon": Price(2, .1, 10),
          "gemini-4-argon": Price(2, .1, 10),
          "gemini-4-hydrogen": Price(1.5, .075, 7.5),
+         "gemini-4-neon": Price(3, .15, 15),
          "gemini-3.8-flash": Price(.75, .075, 3.75)},
         temperature=None,
         extra={"maxOutputTokens": DEFAULT_OUTPUT_TOKENS},
         output_limit_field="maxOutputTokens",
+        model_reasoning_modes={"gemini-4-neon": "thinking-high"},
+        model_extra={"gemini-4-neon": {"thinkingConfig": {"thinkingLevel": "HIGH"}}},
         model_output_limits={"gemini-4-carbon": 65_536, "gemini-4-argon": 65_536,
-                             "gemini-4-hydrogen": 65_536, "gemini-3.8-flash": 65_536},
+                             "gemini-4-hydrogen": 65_536, "gemini-4-neon": 65_536,
+                             "gemini-3.8-flash": 65_536},
         timeout_seconds=600,
         max_retries=5,
         cost_note="USD · list-price estimate (includes thinking tokens).",

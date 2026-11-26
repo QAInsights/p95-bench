@@ -287,7 +287,9 @@ def run(provider, provider_name, model, price, tasks, out: Path, repeats=1, *,
                 "cost_note": getattr(config, "cost_note", None),
                 "pricing_source": getattr(config, "pricing_source", None),
                 "temperature": getattr(config, "temperature", None),
-                "reasoning_mode": getattr(config, "reasoning_mode", None),
+                "reasoning_mode": (config.reasoning_mode_for(model)
+                        if config and hasattr(config, "reasoning_mode_for")
+                        else getattr(config, "reasoning_mode", None)),
                 "repair_rounds": repair_rounds,
                 **(config.request_extra(model) if config else {})}
     task_scenarios = {task.id: task.scenario for task in tasks if task.scenario is not None}
