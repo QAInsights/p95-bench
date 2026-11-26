@@ -125,7 +125,7 @@ function spreadLabelGroups(labels, minY, maxY) {
 
 export function scatter(models, { width = 960, height = 340, left = 44, right = 150, top = 22, bottom = 42 } = {}) {
   const priced = models.filter(m => Number.isFinite(m.cost) && m.cost > 0);
-  if (!priced.length) return { points: [], xTicks: [], yTicks: [], width, height };
+  if (!priced.length) return { points: [], xTicks: [], yTicks: [], frontier: [], bestValueKey: null, width, height };
   const costs = priced.map(m => m.cost), scores = priced.map(m => m.score);
   const lo = Math.log10(Math.min(...costs) / 1.8), hi = Math.log10(Math.max(...costs) * 1.8);
   let yMin = Math.floor(Math.min(...scores) / 10) * 10, yMax = Math.ceil(Math.max(...scores) / 10) * 10;
