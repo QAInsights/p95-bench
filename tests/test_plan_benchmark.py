@@ -71,6 +71,25 @@ def test_plan_benchmark_rejects_slug_collisions(monkeypatch, capsys):
     assert "Model slug collision: x-y" in capsys.readouterr().err
 
 
+def test_plan_benchmark_targeted_tasks_limit_tools():
+    _, shards = plan_benchmark.build_plan({
+        "MODELS": "gemini gemini-4-neon",
+        "TASKS": "mx-c01-html-csrf-jmeter,mx-m01-basic-flow-k6",
+    })
+    assert [shard["tool"] for shard in shards] == ["jmeter", "k6"]
+    assert [shard["tasks"] for shard in shards] == [
+        "mx-c01-html-csrf-jmeter", "mx-m01-basic-flow-k6",
+    ]
+
+
+def test_plan_benchmark_rejects_unknown_task_id(monkeypatch, capsys):
+    monkeypatch.setenv("MODELS", "gemini gemini-4-neon")
+    monkeypatch.setenv("TASKS", "not-a-task")
+
+    assert plan_benchmark.main([]) == 1
+    assert "Unknown Core task id" in capsys.readouterr().err
+
+
 def test_plan_benchmark_rejects_unknown_scenario(monkeypatch, capsys):
     monkeypatch.setenv("MODELS", "deepseek deepseek-flash")
     monkeypatch.setenv("CAP_USD_PER_MODEL", "40")
@@ -78,6 +97,30 @@ def test_plan_benchmark_rejects_unknown_scenario(monkeypatch, capsys):
 
     assert plan_benchmark.main([]) == 1
     assert "Unknown Core scenario code" in capsys.readouterr().err
+
+
+def test_plan_benchmark_rejects_comma_only_tasks(monkeypatch, capsys):
+    monkeypatch.setenv("MODELS", "gemini gemini-4-neon")
+    monkeypatch.setenv("TASKS", ",,,")
+
+    assert plan_benchmark.main([]) == 1
+    assert "at least one Core task id" in capsys.readouterr().err
+
+
+def test_plan_benchmark_rejects_conflicting_task_and_scenario_filters():
+    with pytest.raises(ValueError, match="do not match the scenario filter"):
+        plan_benchmark.build_plan({
+            "MODELS": "gemini gemini-4-neon",
+            "SCENARIOS": "a01",
+            "TASKS": "mx-c01-html-csrf-jmeter",
+        })
+
+
+def test_workflow_template_matches_benchmark_workflow():
+    workflow = (plan_benchmark.ROOT / ".github/workflows/benchmark.yml").read_text()
+    template = (plan_benchmark.ROOT / "ci/benchmark.yml").read_text()
+    assert template == workflow
+    assert "TASKS: ${{ inputs.tasks }}" in workflow
 
 
 @pytest.mark.parametrize("cap", [None, "", "   "])
