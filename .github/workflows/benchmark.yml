@@ -57,6 +57,7 @@ jobs:
           MODELS: ${{ inputs.models }}
           CAP_USD_PER_MODEL: ${{ inputs.cap_usd_per_model }}
           SCENARIOS: ${{ inputs.scenarios }}
+          TASKS: ${{ inputs.tasks }}
         run: python scripts/plan_benchmark.py >> "$GITHUB_OUTPUT"
 
   run:

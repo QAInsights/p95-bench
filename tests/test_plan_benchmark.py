@@ -99,6 +99,13 @@ def test_plan_benchmark_rejects_unknown_scenario(monkeypatch, capsys):
     assert "Unknown Core scenario code" in capsys.readouterr().err
 
 
+def test_workflow_template_matches_benchmark_workflow():
+    workflow = (plan_benchmark.ROOT / ".github/workflows/benchmark.yml").read_text()
+    template = (plan_benchmark.ROOT / "ci/benchmark.yml").read_text()
+    assert template == workflow
+    assert "TASKS: ${{ inputs.tasks }}" in workflow
+
+
 @pytest.mark.parametrize("cap", [None, "", "   "])
 def test_plan_benchmark_defaults_to_uncapped_shards(cap):
     environment = {"MODELS": "anthropic claude-sonnet-5-5"}
