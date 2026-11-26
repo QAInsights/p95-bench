@@ -99,6 +99,23 @@ def test_plan_benchmark_rejects_unknown_scenario(monkeypatch, capsys):
     assert "Unknown Core scenario code" in capsys.readouterr().err
 
 
+def test_plan_benchmark_rejects_comma_only_tasks(monkeypatch, capsys):
+    monkeypatch.setenv("MODELS", "gemini gemini-4-neon")
+    monkeypatch.setenv("TASKS", ",,,")
+
+    assert plan_benchmark.main([]) == 1
+    assert "at least one Core task id" in capsys.readouterr().err
+
+
+def test_plan_benchmark_rejects_conflicting_task_and_scenario_filters():
+    with pytest.raises(ValueError, match="do not match the scenario filter"):
+        plan_benchmark.build_plan({
+            "MODELS": "gemini gemini-4-neon",
+            "SCENARIOS": "a01",
+            "TASKS": "mx-c01-html-csrf-jmeter",
+        })
+
+
 def test_workflow_template_matches_benchmark_workflow():
     workflow = (plan_benchmark.ROOT / ".github/workflows/benchmark.yml").read_text()
     template = (plan_benchmark.ROOT / "ci/benchmark.yml").read_text()
