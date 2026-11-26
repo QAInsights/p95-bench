@@ -114,6 +114,26 @@ test('scatter labels every model without rectangular label collisions', () => {
   }
 });
 
+test('scatter separates same-height labels clamped at the top edge', () => {
+  const crowded = Array.from({ length: 9 }, (_, index) => ({
+    key: `top${index}`, name: `Long Model Name ${index}`, cost: 5 + index * .001,
+    score: 99, color: '#fff',
+  }));
+  const points = scatter(crowded).points;
+
+  for (let a = 0; a < points.length; a++) {
+    for (let b = a + 1; b < points.length; b++) {
+      const first = points[a], second = points[b];
+      const horizontal = Math.min(first.labelX + first.labelWidth, second.labelX + second.labelWidth)
+        - Math.max(first.labelX, second.labelX);
+      const vertical = Math.min(first.labelY + 4, second.labelY + 4)
+        - Math.max(first.labelY - 11, second.labelY - 11);
+      assert.ok(horizontal <= 0 || vertical <= 0,
+        `${first.name} overlaps ${second.name}`);
+    }
+  }
+});
+
 test('cost formatter handles basic and non-finite values', () => {
   assert.equal(formatCost(1.234), '$1.23');
   assert.equal(formatCost(Infinity), '—');

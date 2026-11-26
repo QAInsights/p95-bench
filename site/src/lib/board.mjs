@@ -80,7 +80,47 @@ function layoutScatterLabels(points, { width, height, top, bottom }) {
     for (const label of labels) label.y = Math.max(minY, Math.min(maxY, label.y));
     if (!moved) break;
   }
+
+  const overlapping = () => labels.some((first, i) => labels.slice(i + 1).some(second => {
+    const a = rects(first), b = rects(second);
+    return Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0
+      && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0;
+  }));
+  if (overlapping()) spreadLabelGroups(labels, minY, maxY);
   return new Map(labels.map(label => [label.key, label]));
+}
+
+function spreadLabelGroups(labels, minY, maxY) {
+  const horizontalOverlap = (first, second) => Math.min(first.x + first.width, second.x + second.width)
+    - Math.max(first.x, second.x);
+  const unseen = new Set(labels);
+  const groups = [];
+  for (const label of labels) {
+    if (!unseen.has(label)) continue;
+    const group = [];
+    const queue = [label];
+    unseen.delete(label);
+    while (queue.length) {
+      const current = queue.pop();
+      group.push(current);
+      for (const candidate of [...unseen]) {
+        if (horizontalOverlap(current, candidate) > 0) {
+          unseen.delete(candidate);
+          queue.push(candidate);
+        }
+      }
+    }
+    groups.push(group);
+  }
+
+  for (const group of groups) {
+    group.sort((a, b) => a.y - b.y);
+    const spacing = 15.5;
+    const needed = (group.length - 1) * spacing;
+    const center = group.reduce((sum, label) => sum + label.y, 0) / group.length;
+    const start = Math.max(minY, Math.min(maxY - needed, center - needed / 2));
+    group.forEach((label, index) => { label.y = start + index * spacing; });
+  }
 }
 
 export function scatter(models, { width = 960, height = 340, left = 44, right = 150, top = 22, bottom = 42 } = {}) {
