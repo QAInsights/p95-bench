@@ -165,10 +165,10 @@ class ProviderConfig:
     pricing_source: str | None = None
     transport_retries: int = 2
     reasoning_mode: str = "provider-default"
-    model_reasoning_modes: dict[str, str] = field(default_factory=dict)
-    model_extra: dict[str, dict] = field(default_factory=dict)
     model_output_limits: dict[str, int] = field(default_factory=dict)
     output_limit_field: str = "max_tokens"
+    model_reasoning_modes: dict[str, str] = field(default_factory=dict)
+    model_extra: dict[str, dict] = field(default_factory=dict)
 
     def reasoning_mode_for(self, model=None):
         return self.model_reasoning_modes.get(model, self.reasoning_mode)
