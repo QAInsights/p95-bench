@@ -31,7 +31,8 @@ def reply(parts=None, thinking=40, finish='STOP'):
 
 @pytest.mark.parametrize('model,rates', [
     ('gemini-4-carbon', (2, .1, 10)), ('gemini-4-argon', (2, .1, 10)),
-    ('gemini-4-hydrogen', (1.5, .075, 7.5)), ('gemini-3.8-flash', (.75, .075, 3.75)),
+    ('gemini-4-hydrogen', (1.5, .075, 7.5)), ('gemini-4-neon', (3, .15, 15)),
+    ('gemini-3.8-flash', (.75, .075, 3.75)),
 ])
 def test_native_payload_usage_and_prices(monkeypatch, model, rates):
     monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
@@ -43,10 +44,13 @@ def test_native_payload_usage_and_prices(monkeypatch, model, rates):
         assert req.get_header('X-goog-api-key') == 'test-key'
         assert req.get_header('Authorization') is None
         assert timeout == 600
+        generation = {'maxOutputTokens': 65536}
+        if model == 'gemini-4-neon':
+            generation['thinkingConfig'] = {'thinkingLevel': 'HIGH'}
         assert json.loads(req.data) == {'systemInstruction': {'parts': [{'text': 'system'}]},
             'contents': [{'role': 'user', 'parts': [{'text': 'prompt'}]},
                          {'role': 'model', 'parts': [{'text': 'previous'}]}],
-            'generationConfig': {'maxOutputTokens': 65536}}
+            'generationConfig': generation}
         return io.BytesIO(json.dumps(reply()).encode())
 
     monkeypatch.setattr('urllib.request.urlopen', request)
@@ -225,6 +229,22 @@ def test_run_date_selects_prices_and_records_snapshot(monkeypatch, tmp_path, mod
     assert summary['estimated_cost_usd'] == pytest.approx((40 * rates[0] + 60 * rates[1]
                                                          + 42 * rates[2]) / 1_000_000)
     assert provider.config.prices[model] == gemini_prices(when)[model]
+
+
+def test_model_extra_rejects_output_cap_overrides():
+    with pytest.raises(ValueError, match='must not set output cap field'):
+        replace(PROVIDERS['gemini'], model_extra={'gemini-custom': {'maxOutputTokens': 1000}})
+
+
+def test_neon_uses_explicit_high_reasoning_metadata(monkeypatch, tmp_path):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(reply()).encode()))
+    task = Task('test', 'workload', 'none', 'prompt', 'numeric', {'answer': 10}, {})
+    directory, _ = run(get_provider('gemini'), 'gemini', 'gemini-4-neon', None, [task], tmp_path)
+    metadata = json.loads((directory / 'metadata.json').read_text())
+    assert metadata['reasoning_mode'] == 'thinking-high'
+    assert metadata['thinkingConfig'] == {'thinkingLevel': 'HIGH'}
+    assert metadata['maxOutputTokens'] == 65536
 
 
 def test_schedule_uses_utc_not_local_calendar_day():

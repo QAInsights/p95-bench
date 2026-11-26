@@ -176,7 +176,7 @@ except Gemini at **65,536**):
 | --- | --- | --- |
 | Anthropic Sonnet 5.5 / Opus 5.5 / Haiku 5.5 | 128K each | [Models](https://platform.claude.com/docs/en/about-claude/models/overview) |
 | OpenAI GPT-6.2 Sol / Astra / GPT-6.1 Terra / GPT-6 Luna | 128,000 each | [Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol), [Astra](https://developers.openai.com/api/docs/models/gpt-6.2-astra), [Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra), [Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) |
-| Gemini 4 Carbon / Argon / Hydrogen | 65,536 synchronous each | [Carbon](https://ai.google.dev/gemini-api/docs/models/gemini-4-carbon), [Argon](https://ai.google.dev/gemini-api/docs/models/gemini-4-argon), [Hydrogen](https://ai.google.dev/gemini-api/docs/models/gemini-4-hydrogen) |
+| Gemini 4 Carbon / Argon / Hydrogen / Neon | 65,536 synchronous each | [Carbon](https://ai.google.dev/gemini-api/docs/models/gemini-4-carbon), [Argon](https://ai.google.dev/gemini-api/docs/models/gemini-4-argon), [Hydrogen](https://ai.google.dev/gemini-api/docs/models/gemini-4-hydrogen), [Neon](https://ai.google.dev/gemini-api/docs/models/gemini-4-neon) |
 | Gemini 3.8 Flash | 65,536 | [Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) |
 | DeepSeek Flash / V4 Pro | 384K each | [Models](https://api-docs.deepseek.com/quick_start/pricing) |
 | Qwen4-Max | 262,144 thinking + answer; 131,072 non-thinking | [Model](https://www.alibabacloud.com/help/en/model-studio/qwen4-max) |
@@ -503,14 +503,16 @@ model IDs get their own latest family automatically.
 The `gemini` provider calls the native Gemini API `generateContent` endpoint at
 `https://generativelanguage.googleapis.com/v1beta` using `GEMINI_API_KEY` in the
 `x-goog-api-key` header. Models are `gemini-4-carbon`, `gemini-4-argon`,
-`gemini-4-hydrogen`, and `gemini-3.8-flash`. Example:
+`gemini-4-hydrogen`, `gemini-4-neon`, and `gemini-3.8-flash`. Example:
 
 ```sh
 p95bench run --provider gemini --model gemini-4-carbon --out results
 ```
 
-Temperature is omitted, retaining the API's default of 1. Default thinking is
-unchanged. `maxOutputTokens` is 65,536, the documented lower Gemini maximum, shared by thinking and answer tokens.
+Temperature is omitted, retaining the API's default of 1. Neon explicitly uses
+`thinkingConfig.thinkingLevel` `HIGH`; other models retain their default thinking.
+`maxOutputTokens` is 65,536, the documented lower Gemini synchronous maximum,
+shared by thinking and answer tokens.
 Published response output tokens include both `candidatesTokenCount` and
 `thoughtsTokenCount`; `thinking_tokens` and `finish_reason` are also recorded.
 Thinking text is never substituted for an answer. A thinking-only `MAX_TOKENS`
@@ -525,6 +527,7 @@ million tokens, verified November 18, 2026:
 | Carbon | 2.00 | 0.10 | 10.00 | November 30, 2026 |
 | Argon | 2.00 | 0.10 | 10.00 | November 30, 2026 |
 | Hydrogen | 1.50 | 0.075 | 7.50 | No expiry listed |
+| Neon | 3.00 | 0.15 | 15.00 | No expiry listed |
 | 3.8 Flash | 0.75 | 0.075 | 3.75 | December 31, 2026 |
 
 Runs choose the date-effective schedule using their UTC start time, recording
