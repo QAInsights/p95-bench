@@ -141,7 +141,7 @@ def export(run_dir, output_dir, evidence_dir, jobs=1):
     scores = {"first_attempt": 100 * sum(a["score"] for a in per_task) / len(per_task),
               "after_repair": 100 * sum(a["after_repair_score"] for a in per_task) / len(per_task)}
     run_summary = Path(run_dir) / "summary.json"
-    original_grader = read(run_summary)["main_grader"] if run_summary.exists() else None
+    original_grader = read(run_summary).get("main_grader") if run_summary.exists() else None
     if COST_NOTE:
         cost_note = COST_NOTE
     elif EXCLUDED_SPEND is None:

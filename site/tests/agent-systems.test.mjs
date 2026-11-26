@@ -10,7 +10,7 @@ import { buildData } from '../scripts/build-data.mjs';
 
 const board = JSON.parse(await readFile(new URL('../src/data/leaderboard-p95-core.json', import.meta.url)));
 const entry = await loadAgentSystem(board);
-const terraEntry = await loadAgentSystem(board, new URL('../../results/agent-systems/p95-core/feather-wand-401-pr278-terra/', import.meta.url));
+const terraEntry = await loadAgentSystem(board, new URL('../../results/agent-systems/p95-core/feather-wand-main-responses-terra/', import.meta.url));
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-8, `${a} != ${b}`);
 
 test('agent system has complete JMeter-only coverage, reconciled usage and public provenance', () => {
@@ -59,7 +59,7 @@ test('agent comparison uses the current direct JMeter board data without mutatin
 });
 
 test('Terra agent system has complete JMeter-only coverage and honest cost provenance', () => {
-  assert.equal(terraEntry.metadata.system, 'Feather Wand v4.0.1 + jmeter-ai PR #278 (JMeter GUI Agent mode)');
+  assert.equal(terraEntry.metadata.system, 'Feather Wand main 0745c8a + Responses transport (JMeter GUI Agent mode)');
   assert.equal(terraEntry.metadata.model, 'gpt-6.1-terra');
   assert.equal(terraEntry.metadata.reasoning_mode, 'thinking-high');
   assert.match(terraEntry.metadata.grader_commit, /^[a-f0-9]{40}$/);
@@ -69,26 +69,26 @@ test('Terra agent system has complete JMeter-only coverage and honest cost prove
   assert.equal(terraEntry.metadata.excluded_spend_usd, null);
   assert.equal(terraEntry.attempts.length, 26);
   assert.equal(terraEntry.attempts.filter(a => a.repair.triggered).length, 0);
-  assert.equal(terraEntry.summary.turns, 3263);
-  assert.equal(terraEntry.summary.output_tokens, 312473);
-  assert.equal(terraEntry.summary.input_tokens, 76801711);
-  assert.equal(terraEntry.summary.cached_tokens, 75962653);
-  assert.equal(terraEntry.summary.cache_write_tokens, 782299);
-  assert.equal(terraEntry.summary.fresh_input_tokens, 56759);
-  near(terraEntry.summary.estimated_cost_usd, 6.3951304);
-  near(terraEntry.summary.tool_scores.jmeter.first_attempt, 69.03846153846153);
-  near(terraEntry.summary.tool_scores.jmeter.after_repair, 69.03846153846153);
-  assert.match(terraEntry.metadata.cost_note, /unknown spend/);
+  assert.equal(terraEntry.summary.turns, 672);
+  assert.equal(terraEntry.summary.output_tokens, 324688);
+  assert.equal(terraEntry.summary.input_tokens, 17812428);
+  assert.equal(terraEntry.summary.cached_tokens, 17148021);
+  assert.equal(terraEntry.summary.cache_write_tokens, 662391);
+  assert.equal(terraEntry.summary.fresh_input_tokens, 2016);
+  near(terraEntry.summary.estimated_cost_usd, 3.3108458);
+  near(terraEntry.summary.tool_scores.jmeter.first_attempt, 87.59615384615384);
+  near(terraEntry.summary.tool_scores.jmeter.after_repair, 87.59615384615384);
+  assert.match(terraEntry.metadata.cost_note, /unknown partial spend/);
   assert.doesNotMatch(JSON.stringify(terraEntry), /\/home\/|\/Users\/|sk-[\w-]{20,}/);
   assert.ok(terraEntry.attempts.every(a => a.grade.status === 'graded' && a.response.source_sha256));
 });
 
 test('Terra comparison uses the direct Terra JMeter board data', () => {
   const rows = agentComparison(terraEntry, board);
-  assert.equal(rows[0].name, 'Feather Wand 4.0.1+patch + Terra');
+  assert.equal(rows[0].name, 'Feather Wand latest + Terra');
   assert.equal(rows[1].name, 'Terra direct');
-  near(rows[0].first, 69.03846153846153);
-  near(rows[0].after, 69.03846153846153);
+  near(rows[0].first, 87.59615384615384);
+  near(rows[0].after, 87.59615384615384);
   near(rows[1].first, 75.38461538461537);
   near(rows[1].after, 80.38461538461539);
   near(rows[1].cost, 1.5476762);
@@ -140,19 +140,19 @@ test('Core renders the real agent component separately, with both rows and escap
   const html = await container.renderToString(Component, { props: {
     rows: agentComparisons([terraEntry, entry], board),
     notes: [
-      { label: 'Feather Wand 4.0.1+patch + Terra', note: terraEntry.metadata.cost_note + '<script>unsafe()</script>', url: 'https://example.com/terra' },
+      { label: 'Feather Wand latest + Terra', note: terraEntry.metadata.cost_note + '<script>unsafe()</script>', url: 'https://example.com/terra' },
       { label: 'Feather Wand RC1 + Sonnet 5.5', note: entry.metadata.cost_note, url: 'https://example.com/sonnet' },
     ],
   } });
   assert.match(html, /id="agent-systems"/);
   for (const text of ['Agent systems (JMeter only)', 'Not ranked', 'Feather Wand RC1 + Sonnet 5.5',
-    'Sonnet 5.5 direct', 'Feather Wand 4.0.1+patch + Terra', 'Terra direct', 'First attempt', 'After repair', 'Output tokens', 'Turns', '$6.40', '$1.55', '$9.99', '$10.74', '312,473', '570,217']) {
+    'Sonnet 5.5 direct', 'Feather Wand latest + Terra', 'Terra direct', 'First attempt', 'After repair', 'Output tokens', 'Turns', '$3.31', '$1.55', '$9.99', '$10.74', '324,688', '570,217']) {
     assert.ok(html.includes(text), text);
   }
   assert.match(html, /&lt;script&gt;/);
   assert.doesNotMatch(html, /<script>|\u2014/);
   assert.equal((html.match(/>66\.0</g) ?? []).length, 2);
-  assert.match(html, /aria-label="Run data and provenance for Feather Wand 4\.0\.1\+patch \+ Terra"/);
+  assert.match(html, /aria-label="Run data and provenance for Feather Wand latest \+ Terra"/);
   const page = await readFile(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
   assert.match(page, /<AgentSystems rows=\{agentRows\} notes=\{agentNotes\}/);
   assert.ok(page.indexOf('<AgentSystems') > page.indexOf('plot.points.map'));
