@@ -51,7 +51,8 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 72px; padding:
 .scatter { width: 100%; min-width: 600px; height: auto; display: block; overflow: visible; }
 .scatter line { stroke: var(--line); }
 .scatter text { fill: var(--dim); font-family: var(--mono); font-size: 11px; }
-.scatter .point-label { fill: var(--ink); font-family: var(--display); font-size: 13px; }
+.scatter .point-label { fill: var(--ink); font-family: var(--display); font-size: 13px; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
+.scatter .label-leader { stroke: var(--dim); stroke-width: 1px; opacity: 0.65; }
 
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }

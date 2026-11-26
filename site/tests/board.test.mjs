@@ -88,6 +88,32 @@ test('scatter plots priced models with x increasing by cost and y tracking score
   assert.deepEqual(scatter(models.map(model => ({ ...model, cost: 0 }))).points, []);
 });
 
+test('scatter labels every model without rectangular label collisions', () => {
+  const crowded = Array.from({ length: 8 }, (_, index) => ({
+    key: `m${index}`, name: `Long Model Name ${index}`, cost: 5 + index * .01,
+    score: 80 - index, color: '#fff',
+  }));
+  const plot = scatter(crowded);
+
+  assert.equal(plot.points.length, crowded.length);
+  for (const point of plot.points) {
+    assert.ok(Number.isFinite(point.labelX) && Number.isFinite(point.labelY));
+    assert.ok(point.labelX + point.labelWidth <= plot.width);
+    assert.ok(point.labelY >= plot.top && point.labelY <= plot.height - plot.bottom);
+  }
+  for (let a = 0; a < plot.points.length; a++) {
+    for (let b = a + 1; b < plot.points.length; b++) {
+      const first = plot.points[a], second = plot.points[b];
+      const horizontal = Math.min(first.labelX + first.labelWidth, second.labelX + second.labelWidth)
+        - Math.max(first.labelX, second.labelX);
+      const vertical = Math.min(first.labelY + 4, second.labelY + 4)
+        - Math.max(first.labelY - 11, second.labelY - 11);
+      assert.ok(horizontal <= 0 || vertical <= 0,
+        `${first.name} overlaps ${second.name}`);
+    }
+  }
+});
+
 test('cost formatter handles basic and non-finite values', () => {
   assert.equal(formatCost(1.234), '$1.23');
   assert.equal(formatCost(Infinity), '—');

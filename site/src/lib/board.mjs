@@ -52,7 +52,38 @@ export function taskScore(model, taskId, tool = null) {
 
 const costTicks = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
 
-export function scatter(models, { width = 880, height = 280, left = 44, right = 24, top = 20, bottom = 36 } = {}) {
+function layoutScatterLabels(points, { width, height, top, bottom }) {
+  const labels = points.map(p => ({
+    key: p.key,
+    x: p.x + 11,
+    y: p.y + 4,
+    width: Math.max(44, p.name.length * 7.2),
+  }));
+  const rects = label => ({ left: label.x, right: label.x + label.width,
+    top: label.y - 11, bottom: label.y + 4 });
+  const minY = top + 10, maxY = height - bottom - 2;
+  for (let iteration = 0; iteration < 80; iteration++) {
+    let moved = false;
+    labels.sort((a, b) => a.y - b.y);
+    for (let i = 0; i < labels.length; i++) {
+      for (let j = i + 1; j < labels.length; j++) {
+        const a = rects(labels[i]), b = rects(labels[j]);
+        const horizontal = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const vertical = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (horizontal <= 0 || vertical <= 0) continue;
+        const push = vertical / 2 + 0.5;
+        labels[i].y -= push;
+        labels[j].y += push;
+        moved = true;
+      }
+    }
+    for (const label of labels) label.y = Math.max(minY, Math.min(maxY, label.y));
+    if (!moved) break;
+  }
+  return new Map(labels.map(label => [label.key, label]));
+}
+
+export function scatter(models, { width = 960, height = 340, left = 44, right = 150, top = 22, bottom = 42 } = {}) {
   const priced = models.filter(m => Number.isFinite(m.cost) && m.cost > 0);
   if (!priced.length) return { points: [], xTicks: [], yTicks: [], width, height };
   const costs = priced.map(m => m.cost), scores = priced.map(m => m.score);
@@ -63,9 +94,15 @@ export function scatter(models, { width = 880, height = 280, left = 44, right = 
   const y = s => top + (yMax - s) / (yMax - yMin) * (height - top - bottom);
   const yTicks = [];
   for (let s = yMin; s <= yMax; s += 10) yTicks.push({ value: s, y: y(s) });
+  const points = priced.map((m, rank) => ({ ...m, rank, x: x(m.cost), y: y(m.score) }));
+  const labels = layoutScatterLabels(points, { width, height, top, bottom });
   return {
     width, height, left, right, top, bottom,
-    points: priced.map((m, rank) => ({ ...m, rank, x: x(m.cost), y: y(m.score) })),
+    points: points.map(p => {
+      const label = labels.get(p.key);
+      return { ...p, labelX: label.x, labelY: label.y, labelWidth: label.width,
+        labelDy: label.y - (p.y + 4) };
+    }),
     xTicks: costTicks.filter(c => Math.log10(c) >= lo && Math.log10(c) <= hi)
       .map(c => ({ value: c, x: x(c), label: `$${c < 1 ? c.toFixed(c < 0.1 ? 2 : 1) : c}` })),
     yTicks,
