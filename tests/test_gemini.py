@@ -92,6 +92,37 @@ def test_blocked_response_is_not_a_thinking_cap(monkeypatch):
     assert not response.thinking_exhausted
 
 
+def test_usage_prompt_tokens_are_derived_from_total_when_omitted(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
+    data = reply()
+    usage = data['usageMetadata']
+    usage['totalTokenCount'] = (usage.pop('promptTokenCount') + usage['candidatesTokenCount']
+                                + usage['thoughtsTokenCount'])
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
+    response = get_provider('gemini').send('gemini-4-neon', [])
+    assert response.input_tokens == 100
+    assert response.output_tokens == 42
+
+
+def test_missing_prompt_usage_is_a_provider_error(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
+    data = {'candidates': [], 'usageMetadata': {}}
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
+    with pytest.raises(ProviderUnavailable, match='omitted valid prompt token usage'):
+        get_provider('gemini').send('gemini-4-neon', [])
+
+
+def test_contradictory_total_usage_is_a_provider_error(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
+    data = reply()
+    usage = data['usageMetadata']
+    usage.pop('promptTokenCount')
+    usage['totalTokenCount'] = usage['candidatesTokenCount'] + usage['thoughtsTokenCount']
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
+    with pytest.raises(ProviderUnavailable, match='omitted valid prompt token usage'):
+        get_provider('gemini').send('gemini-4-neon', [])
+
+
 def test_models_pagination_and_key(monkeypatch):
     monkeypatch.delenv('GEMINI_API_KEY', raising=False)
     with pytest.raises(ValueError, match='Set GEMINI_API_KEY'):
