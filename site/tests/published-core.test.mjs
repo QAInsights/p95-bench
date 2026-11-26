@@ -42,8 +42,8 @@ test('Core publishes complete public Sonnet, DeepSeek, Qwen and OpenAI runs with
   assert.match(data.publication_note, /45066297860/);
   assert.match(data.publication_note, /final answer after the one allowed repair/);
   assert.doesNotMatch(JSON.stringify(data), /5a5d088256624100/);
-  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'inkling-2-mini']);
-  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'thinkingmachines/Inkling-2-Mini']);
+  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'inkling-2-mini', 'inkling-2-small']);
+  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'thinkingmachines/Inkling-2-Mini', 'thinkingmachines/Inkling-2-Small']);
   const model = data.models.find(model => model.provider === 'anthropic');
   assert.equal(model.provider, 'anthropic');
   assert.equal(model.output_cap, 64000);
@@ -270,6 +270,55 @@ test('Luna Core keeps high reasoning, complete coverage, cache-aware cost and ou
   near(displayed.toolCosts.k6, .161833235);
   near(displayed.toolCosts.locust, .249177315);
   near(displayed.toolCosts.gatling, .248196775);
+});
+
+test('Inkling 2 Small Core keeps complete uniform provenance, repair scoring and output-cap accounting', async () => {
+  const model = data.models.find(model => model.model === 'thinkingmachines/Inkling-2-Small');
+  assert.equal(model.provider, 'thinkingmachines');
+  assert.equal(model.pack_digest, data.pack_digest);
+  assert.equal(model.budget_file_sha256, budgetHash);
+  assert.equal(model.output_cap, 128000);
+  assert.equal(model.reasoning_mode, 'thinking-high');
+  assert.equal(model.harness_commit, '8560bb6289ff6bf2f923f4593e9091b345de1c5d');
+  assert.equal(model.derived_from.length, 4);
+  assert.ok(model.derived_from.every(source => source.harness_commit === model.harness_commit && source.spend_cap_usd == null));
+  assert.match(model.cost_note, /21 repair responses/);
+  assert.match(model.cost_note, /21 first tries and 5 repair responses ended at the output cap/);
+  assert.match(model.cost_note, /45733052845/);
+  assert.match(data.publication_note, /21 for Inkling 2 Small/);
+  const rows = (await readFile(new URL('inkling-2-small/attempts.jsonl', runs), 'utf8'))
+    .trim().split('\n').map(JSON.parse);
+  assert.doesNotMatch(JSON.stringify(rows), /sk-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|TINKER_API_KEY/);
+  const initial = rows.map(attempt => attempt.response);
+  const repairs = rows.filter(attempt => attempt.repair?.triggered).map(attempt => attempt.repair.response);
+  assert.equal(initial.length, 104);
+  assert.equal(repairs.length, 21);
+  assert.equal(initial.filter(response => response.finish_reason === 'length').length, 21);
+  assert.equal(initial.filter(response => response.finish_reason === 'stop').length, 83);
+  assert.equal(repairs.filter(response => response.finish_reason === 'length').length, 5);
+  assert.equal(repairs.filter(response => response.finish_reason === 'stop').length, 16);
+  assert.ok(initial.concat(repairs).filter(response => response.finish_reason === 'length')
+    .every(response => response.text === ''));
+  assert.deepEqual(model.coverage, { run: 104, total: 104, partial: false, label: '104/104 tasks run' });
+  const { tasks } = await loadTaskData({ packId: 'p95-core' });
+  assert.equal(model.per_task_results.length, 104);
+  assert.deepEqual(new Set(model.per_task_results.map(task => task.task_id)), new Set(tasks.map(task => task.id)));
+  near(model.overall_score, 46.09237679534985);
+  near(model.after_repair.overall_score, 49.01639208143699);
+  near(model.cost, 5.93598756);
+  near(model.cost_attempts.reduce((sum, attempt) => sum + attempt.cost_usd, 0), model.cost);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.status === 'repair').length, 21);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.output_tokens === 128000).length, 26);
+  assert.equal(model.tokens.cache_read, 143232);
+  assert.equal(model.tokens.cache_write, 0);
+  const displayed = boardModels(data).find(model => model.key === 'thinkingmachines/thinkingmachines/Inkling-2-Small');
+  assert.equal(displayed.score.toFixed(1), '49.0');
+  assert.deepEqual(displayed.categories, model.after_repair.category_scores);
+  near(Object.values(displayed.toolCosts).reduce((sum, cost) => sum + cost, 0), model.cost);
+  near(displayed.toolCosts.jmeter, 2.17562228);
+  near(displayed.toolCosts.k6, .8248155);
+  near(displayed.toolCosts.locust, 1.25536728);
+  near(displayed.toolCosts.gatling, 1.6801825);
 });
 
 test('Inkling 2 Mini Core discloses supplemented mixed-harness provenance and cap-dominated result', async () => {
