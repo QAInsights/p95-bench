@@ -88,18 +88,6 @@ test('scatter plots priced models with x increasing by cost and y tracking score
   assert.deepEqual(scatter(models.map(model => ({ ...model, cost: 0 }))).points, []);
 });
 
-test('scatter marks the value frontier and best score-per-dollar endpoint', () => {
-  const models = [
-    { key: 'cheap', name: 'Cheap', cost: 1, score: 50, color: '#fff' },
-    { key: 'dominated', name: 'Dominated', cost: 2, score: 45, color: '#fff' },
-    { key: 'premium', name: 'Premium', cost: 4, score: 90, color: '#fff' },
-  ];
-  const plot = scatter(models);
-
-  assert.deepEqual(plot.frontier.map(point => point.key), ['cheap', 'premium']);
-  assert.equal(plot.bestValueKey, 'cheap');
-});
-
 test('scatter labels every model without rectangular label collisions', () => {
   const crowded = Array.from({ length: 8 }, (_, index) => ({
     key: `m${index}`, name: `Long Model Name ${index}`, cost: 5 + index * .01,

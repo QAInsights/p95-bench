@@ -125,7 +125,7 @@ function spreadLabelGroups(labels, minY, maxY) {
 
 export function scatter(models, { width = 960, height = 340, left = 44, right = 150, top = 22, bottom = 42 } = {}) {
   const priced = models.filter(m => Number.isFinite(m.cost) && m.cost > 0);
-  if (!priced.length) return { points: [], xTicks: [], yTicks: [], frontier: [], bestValueKey: null, width, height };
+  if (!priced.length) return { points: [], xTicks: [], yTicks: [], width, height };
   const costs = priced.map(m => m.cost), scores = priced.map(m => m.score);
   const lo = Math.log10(Math.min(...costs) / 1.8), hi = Math.log10(Math.max(...costs) * 1.8);
   let yMin = Math.floor(Math.min(...scores) / 10) * 10, yMax = Math.ceil(Math.max(...scores) / 10) * 10;
@@ -135,15 +135,9 @@ export function scatter(models, { width = 960, height = 340, left = 44, right = 
   const yTicks = [];
   for (let s = yMin; s <= yMax; s += 10) yTicks.push({ value: s, y: y(s) });
   const points = priced.map((m, rank) => ({ ...m, rank, x: x(m.cost), y: y(m.score) }));
-  const frontier = points.filter(p => !points.some(q => q !== p
-    && q.cost <= p.cost && q.score >= p.score && (q.cost < p.cost || q.score > p.score)))
-    .sort((a, b) => a.cost - b.cost || b.score - a.score);
-  const bestValue = frontier.length
-    ? frontier.reduce((best, p) => p.score / p.cost > best.score / best.cost ? p : best, frontier[0])
-    : null;
   const labels = layoutScatterLabels(points, { width, height, top, bottom });
   return {
-    width, height, left, right, top, bottom, frontier, bestValueKey: bestValue?.key ?? null,
+    width, height, left, right, top, bottom,
     points: points.map(p => {
       const label = labels.get(p.key);
       return { ...p, labelX: label.x, labelY: label.y, labelWidth: label.width,
