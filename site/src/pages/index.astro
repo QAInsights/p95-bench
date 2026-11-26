@@ -21,6 +21,8 @@ const models = boardModels(data);
 const tasks = boardTasks(data);
 const categories = Object.keys(data.weights);
 const plot = scatter(models);
+const frontierNames = plot.frontier.map(p => p.name).join(", ");
+const bestValueName = plot.points.find(p => p.key === plot.bestValueKey)?.name;
 const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
 const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";
@@ -91,11 +93,12 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
       {plot.points.length > 1 && (
         <section aria-labelledby="value-title">
           <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length * tools.length} tasks, log scale</span></h2>
-          <div class="table-wrap"><svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost">
+          <div class="table-wrap"><svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label={`Score versus cost. Value frontier: ${frontierNames}. Best score per dollar: ${bestValueName}.`}>
             {plot.yTicks.map(t => <g><line x1={plot.left} x2={plot.width - plot.right} y1={t.y} y2={t.y} /><text x={plot.left - 10} y={t.y + 4} text-anchor="end">{t.value}</text></g>)}
             {plot.xTicks.map(t => <text x={t.x} y={plot.height - 10} text-anchor="middle">{t.label}</text>)}
-            {plot.points.map(p => <g class="point"><circle cx={p.x} cy={p.y} r="6" fill={p.color} />{p.rank < 5 && <text class="point-label" x={p.x + 12} y={p.y + 4}>{p.name}</text>}<title>{`${p.name}: ${p.score.toFixed(1)} · $${p.cost.toFixed(2)}`}</title></g>)}
-          </svg></div>
+            {plot.frontier.length > 1 && <polyline class="value-frontier" points={plot.frontier.map(p => `${p.x},${p.y}`).join(' ')} />}
+            {plot.points.map(p => <g class="point"><circle cx={p.x} cy={p.y} r="6" fill={p.color} />{p.key === plot.bestValueKey && <path class="best-value-star" transform={`translate(${p.x} ${p.y})`} d="M0 -10 L2.4 -2.4 L10 0 L2.4 2.4 L0 10 L-2.4 2.4 L-10 0 L-2.4 -2.4 Z" />}{Math.abs(p.labelDy) > 1 && <line class="label-leader" x1={p.x + 7} y1={p.y} x2={p.labelX - 4} y2={p.labelY - 4} />}<text class="point-label" x={p.labelX} y={p.labelY}>{p.name}</text><title>{`${p.name}: ${p.score.toFixed(1)} · $${p.cost.toFixed(2)}`}</title></g>)}
+          </svg><p class="chart-note">{plot.frontier.length > 1 ? 'Lime line: value frontier. Star: best score per dollar.' : 'Star: best score per dollar.'}</p></div>
         </section>
       )}
 
