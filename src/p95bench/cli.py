@@ -34,6 +34,7 @@ def main(argv=None):
     execute.add_argument("--repair-rounds", type=int, choices=(0, 1))
     execute.add_argument("--tool", choices=sorted(TOOLS), action="append")
     execute.add_argument("--scenario", action="append")
+    execute.add_argument("--task-id", action="append")
     score = commands.add_parser("score")
     score.add_argument("directory", type=Path)
     args = parser.parse_args(argv)
@@ -51,7 +52,7 @@ def main(argv=None):
                                              Path("packs") / args.pack / "tasks"), categories)
             budgets = (json.loads(args.efficiency_budgets.read_text())
                        if args.efficiency_budgets else None)
-            if args.tool or args.scenario:
+            if args.tool or args.scenario or args.task_id:
                 selected = tasks
                 if args.tool:
                     selected = [task for task in selected if task.tool in args.tool]
@@ -66,6 +67,15 @@ def main(argv=None):
                             + ", ".join(sorted(missing_scenarios)))
                     selected = [task for task in selected
                                 if scenario_codes[task.id] in requested_scenarios]
+                if args.task_id:
+                    requested_tasks = set(args.task_id)
+                    available_tasks = {task.id for task in selected}
+                    missing_tasks = requested_tasks - available_tasks
+                    if missing_tasks:
+                        raise ValueError(
+                            "No tasks match task id(s): "
+                            + ", ".join(sorted(missing_tasks)))
+                    selected = [task for task in selected if task.id in requested_tasks]
                 tasks = selected
                 if not tasks:
                     raise ValueError("No tasks match the selected filters")

@@ -737,6 +737,7 @@ def test_matrix_scenario_is_recorded_in_manifest_attempts_and_metadata(tmp_path,
             "mx-a01-analysis-locust", "mx-a01-analysis-gatling",
         }),
         (["--tool", "k6", "--scenario", "a01"], {"mx-a01-analysis-k6"}),
+        (["--task-id", "mx-a01-analysis-k6"], {"mx-a01-analysis-k6"}),
     ],
 )
 def test_cli_filters_scenarios_and_subsets_budgets(tmp_path, monkeypatch, filters, expected):

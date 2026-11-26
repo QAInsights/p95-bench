@@ -32,6 +32,19 @@ def _scenario_codes(value):
         raise ValueError(f"Unknown Core scenario code(s): {', '.join(missing)}")
 
 
+def _task_ids(value):
+    requested = [task_id.strip() for task_id in value.replace("\n", ",").split(",")
+                 if task_id.strip()]
+    if not requested:
+        return None
+    tasks = load_tasks(ROOT / "packs/p95-core/tasks", pack_config("p95-core")["weights"])
+    available = {task.id for task in tasks}
+    missing = sorted(set(requested) - available)
+    if missing:
+        raise ValueError(f"Unknown Core task id(s): {', '.join(missing)}")
+    return set(requested)
+
+
 def _models(value):
     entries = []
     seen_entries = set()
@@ -89,12 +102,26 @@ def _shard_cap(value):
 def build_plan(environment=None):
     environment = os.environ if environment is None else environment
     _scenario_codes(environment.get("SCENARIOS", ""))
+    task_ids = _task_ids(environment.get("TASKS", ""))
     models = _models(environment.get("MODELS", ""))
     cap_usd = _shard_cap(environment.get("CAP_USD_PER_MODEL", ""))
+    shard_tasks = {}
+    if task_ids is None:
+        tools = TOOLS
+    else:
+        tasks = load_tasks(ROOT / "packs/p95-core/tasks", pack_config("p95-core")["weights"])
+        selected_tools = {task.tool for task in tasks if task.id in task_ids}
+        tools = tuple(tool for tool in TOOLS if tool in selected_tools)
+        shard_tasks = {
+            tool: ",".join(sorted(task.id for task in tasks
+                                  if task.id in task_ids and task.tool == tool))
+            for tool in tools
+        }
     shards = [
-        {**model, "tool": tool, "cap_usd": cap_usd}
+        {**model, "tool": tool, "cap_usd": cap_usd,
+         **({"tasks": shard_tasks[tool]} if tool in shard_tasks else {})}
         for model in models
-        for tool in TOOLS
+        for tool in tools
     ]
     return models, shards
 

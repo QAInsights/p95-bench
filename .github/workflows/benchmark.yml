@@ -23,6 +23,11 @@ on:
         required: false
         default: ''
         type: string
+      tasks:
+        description: Optional targeted run, comma-separated exact Core task IDs. Skips the Core merge.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -86,6 +91,7 @@ jobs:
           MODEL: ${{ matrix.model }}
           TOOL: ${{ matrix.tool }}
           SCENARIOS: ${{ inputs.scenarios }}
+          TASKS: ${{ matrix.tasks }}
           REPAIR_ROUNDS: ${{ inputs.repair_rounds }}
           P95_BUDGET_LEDGER: ${{ runner.temp }}/p95-budget.json
           P95_BUDGET_LIMIT_USD: ${{ matrix.cap_usd }}
@@ -105,6 +111,11 @@ jobs:
             code="${code// /}"
             [ -n "$code" ] && args+=(--scenario "$code")
           done
+          IFS=',' read -ra task_ids <<< "$TASKS"
+          for task_id in "${task_ids[@]}"; do
+            task_id="${task_id// /}"
+            [ -n "$task_id" ] && args+=(--task-id "$task_id")
+          done
           p95bench run "${args[@]}"
       - name: Upload shard
         if: ${{ !cancelled() }}
@@ -117,7 +128,7 @@ jobs:
 
   merge:
     needs: [plan, run]
-    if: ${{ !cancelled() && inputs.scenarios == '' }}
+    if: ${{ !cancelled() && inputs.scenarios == '' && inputs.tasks == '' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
