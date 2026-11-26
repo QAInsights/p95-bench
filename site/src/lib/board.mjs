@@ -135,9 +135,15 @@ export function scatter(models, { width = 960, height = 340, left = 44, right = 
   const yTicks = [];
   for (let s = yMin; s <= yMax; s += 10) yTicks.push({ value: s, y: y(s) });
   const points = priced.map((m, rank) => ({ ...m, rank, x: x(m.cost), y: y(m.score) }));
+  const frontier = points.filter(p => !points.some(q => q !== p
+    && q.cost <= p.cost && q.score >= p.score && (q.cost < p.cost || q.score > p.score)))
+    .sort((a, b) => a.cost - b.cost || b.score - a.score);
+  const bestValue = frontier.length
+    ? frontier.reduce((best, p) => p.score / p.cost > best.score / best.cost ? p : best, frontier[0])
+    : null;
   const labels = layoutScatterLabels(points, { width, height, top, bottom });
   return {
-    width, height, left, right, top, bottom,
+    width, height, left, right, top, bottom, frontier, bestValueKey: bestValue?.key ?? null,
     points: points.map(p => {
       const label = labels.get(p.key);
       return { ...p, labelX: label.x, labelY: label.y, labelWidth: label.width,
