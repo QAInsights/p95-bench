@@ -580,6 +580,14 @@ class Gemini(OpenAICompatible):
         parts = (candidate.get("content") or {}).get("parts") or []
         text = "".join(part["text"] for part in parts
                        if isinstance(part.get("text"), str) and not part.get("thought"))
+        block_reason = (data.get("promptFeedback") or {}).get("blockReason")
+        if block_reason and not text:
+            try:
+                input_tokens, output_tokens, cached_tokens, thinking = self._usage(data)
+            except ProviderUnavailable:
+                input_tokens = output_tokens = cached_tokens = thinking = 0
+            return GeminiResponse("", input_tokens, output_tokens, cached_tokens, elapsed,
+                                  thinking, "BLOCKED_" + block_reason)
         input_tokens, output_tokens, cached_tokens, thinking = self._usage(data)
         return GeminiResponse(text, input_tokens, output_tokens, cached_tokens, elapsed,
                               thinking, candidate.get("finishReason", ""))

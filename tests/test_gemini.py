@@ -88,8 +88,23 @@ def test_blocked_response_is_not_a_thinking_cap(monkeypatch):
     monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
     response = get_provider('gemini').send('gemini-4-carbon', [])
     assert response.text == ''
+    assert response.input_tokens == 100
     assert response.output_tokens == 0
+    assert response.finish_reason == 'BLOCKED_SAFETY'
     assert not response.thinking_exhausted
+
+
+def test_blocked_response_without_usage_is_zero_cost(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
+    data = {'usageMetadata': {'serviceTier': 'standard'},
+            'promptFeedback': {'blockReason': 'OTHER'}}
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
+    response = get_provider('gemini').send('gemini-4-neon', [])
+    assert response.text == ''
+    assert response.input_tokens == 0
+    assert response.output_tokens == 0
+    assert response.finish_reason == 'BLOCKED_OTHER'
+    assert PROVIDERS['gemini'].prices['gemini-4-neon'].cost(response) == 0
 
 
 def test_usage_prompt_tokens_are_derived_from_total_when_omitted(monkeypatch):
