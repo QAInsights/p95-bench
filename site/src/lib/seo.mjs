@@ -1,4 +1,4 @@
-export const SITE_URL = (import.meta.env?.PUBLIC_SITE_URL || 'https://p95-bench.pages.dev').replace(/\/$/, '');
+export const SITE_URL = (import.meta.env?.PUBLIC_SITE_URL || 'https://p95.qainsights.com').replace(/\/$/, '');
 export const REPO_URL = 'https://github.com/QAInsights/p95-bench';
 
 export function canonicalUrl(pathname = '/') {

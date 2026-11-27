@@ -14,4 +14,4 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://p95-bench.pages.dev/sitemap.xml
+Sitemap: https://p95.qainsights.com/sitemap.xml
