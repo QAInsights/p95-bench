@@ -42,8 +42,8 @@ test('Core publishes complete public Sonnet, DeepSeek, Qwen and OpenAI runs with
   assert.match(data.publication_note, /45066297860/);
   assert.match(data.publication_note, /final answer after the one allowed repair/);
   assert.doesNotMatch(JSON.stringify(data), /5a5d088256624100/);
-  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'inkling-2-mini', 'inkling-2-small']);
-  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'thinkingmachines/Inkling-2-Mini', 'thinkingmachines/Inkling-2-Small']);
+  assert.deepEqual((await readdir(runs)).sort(), ['Qwen-Ambassador-Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gemini-4-neon', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'inkling-2-mini', 'inkling-2-small']);
+  assert.deepEqual(data.models.map(model => model.model).sort(), ['Qwen-Ambassador/Qwen4-Max', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'deepseek-flash', 'deepseek-v4-pro', 'gemini-4-neon', 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.2-sol', 'thinkingmachines/Inkling-2-Mini', 'thinkingmachines/Inkling-2-Small']);
   const model = data.models.find(model => model.provider === 'anthropic');
   assert.equal(model.provider, 'anthropic');
   assert.equal(model.output_cap, 64000);
@@ -270,6 +270,73 @@ test('Luna Core keeps high reasoning, complete coverage, cache-aware cost and ou
   near(displayed.toolCosts.k6, .161833235);
   near(displayed.toolCosts.locust, .249177315);
   near(displayed.toolCosts.gatling, .248196775);
+});
+
+
+test('Gemini 4 Neon Core discloses mixed-wave provenance, blocked refusal and cost accounting', async () => {
+  const model = data.models.find(model => model.model === 'gemini-4-neon');
+  assert.equal(model.provider, 'gemini');
+  assert.equal(model.pack_digest, data.pack_digest);
+  assert.equal(model.budget_file_sha256, budgetHash);
+  assert.equal(model.output_cap, 65536);
+  assert.equal(model.reasoning_mode, 'thinking-high');
+  assert.equal(model.harness_commit, 'f41ba293ae1c70121a2a16ad7a44f2ed75938a85');
+  assert.equal(model.derived_from.length, 12);
+  assert.deepEqual(model.derived_from.reduce((counts, source) => {
+    counts[source.harness_commit] = (counts[source.harness_commit] ?? 0) + 1;
+    return counts;
+  }, {}), {
+    'f41ba293ae1c70121a2a16ad7a44f2ed75938a85': 4,
+    '41254217a577b37e067af6912361e3fa3d2c6586': 4,
+    '0f9fff71653c3d35645d10a165cea9ea0ea135fb': 3,
+    '428a7100e05383c1457959f656305c14b108980a': 1,
+  });
+  assert.match(model.cost_note, /33 returned usage-bearing responses/);
+  assert.match(model.cost_note, /zero-score provider refusal/);
+  assert.match(model.cost_note, /45920115434/);
+  assert.match(data.publication_note, /33 for Gemini 4 Neon/);
+  assert.match(data.publication_note, /Footnote: mx-c01-html-csrf-jmeter/);
+  assert.match(data.publication_note, /45935870372 is not used/);
+  const rows = (await readFile(new URL('gemini-4-neon/attempts.jsonl', runs), 'utf8'))
+    .trim().split('\n').map(JSON.parse);
+  assert.doesNotMatch(JSON.stringify(rows), /sk-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|GEMINI_API_KEY/);
+  const initial = rows.map(attempt => attempt.response);
+  const triggered = rows.filter(attempt => attempt.repair?.triggered);
+  const repairs = triggered.map(attempt => attempt.repair.response).filter(Boolean);
+  assert.equal(initial.length, 104);
+  assert.equal(triggered.length, 37);
+  assert.equal(repairs.length, 33);
+  assert.equal(triggered.filter(attempt => !attempt.repair.response).length, 4);
+  assert.ok(triggered.filter(attempt => !attempt.repair.response)
+    .every(attempt => attempt.repair.error.includes('HTTP 429')));
+  assert.equal(initial.filter(response => response.finish_reason === 'STOP').length, 70);
+  assert.equal(initial.filter(response => response.finish_reason === '').length, 32);
+  assert.equal(initial.filter(response => response.finish_reason === 'MAX_TOKENS').length, 1);
+  assert.equal(initial.filter(response => response.finish_reason === 'BLOCKED_OTHER').length, 1);
+  assert.equal(repairs.filter(response => response.finish_reason === 'STOP').length, 21);
+  assert.equal(repairs.filter(response => response.finish_reason === '').length, 11);
+  assert.equal(repairs.filter(response => response.finish_reason === 'BLOCKED_OTHER').length, 1);
+  assert.equal(rows.find(attempt => attempt.task_id === 'mx-c01-html-csrf-jmeter').grade.score, 0);
+  assert.deepEqual(model.coverage, { run: 104, total: 104, partial: false, label: '104/104 tasks run' });
+  const { tasks } = await loadTaskData({ packId: 'p95-core' });
+  assert.equal(model.per_task_results.length, 104);
+  assert.deepEqual(new Set(model.per_task_results.map(task => task.task_id)), new Set(tasks.map(task => task.id)));
+  near(model.overall_score, 58.600205328021254);
+  near(model.after_repair.overall_score, 72.2179825882825);
+  near(model.cost, 36.728001);
+  near(model.cost_attempts.reduce((sum, attempt) => sum + attempt.cost_usd, 0), model.cost);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.status === 'repair').length, 33);
+  assert.equal(model.cost_attempts.filter(attempt => attempt.output_tokens === 65536).length, 1);
+  assert.equal(model.tokens.cache_read, 0);
+  assert.equal(model.tokens.cache_write, 0);
+  const displayed = boardModels(data).find(model => model.key === 'gemini/gemini-4-neon');
+  assert.equal(displayed.score.toFixed(1), '72.2');
+  assert.deepEqual(displayed.categories, model.after_repair.category_scores);
+  near(Object.values(displayed.toolCosts).reduce((sum, cost) => sum + cost, 0), model.cost);
+  near(displayed.toolCosts.jmeter, 10.834818);
+  near(displayed.toolCosts.k6, 7.740528000000001);
+  near(displayed.toolCosts.locust, 6.858561);
+  near(displayed.toolCosts.gatling, 11.294093999999998);
 });
 
 test('Inkling 2 Small Core keeps complete uniform provenance, repair scoring and output-cap accounting', async () => {

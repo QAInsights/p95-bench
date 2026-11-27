@@ -53,9 +53,9 @@ test('agent comparison uses the current direct JMeter board data without mutatin
   assert.equal(rows[0].turns, 581);
   assert.deepEqual(snapshot(), before);
   assert.deepEqual(boardModels(board).map(m => m.name),
-    ['GPT-6.1 Terra', 'Claude Sonnet 5.5', 'GPT-6.2 Sol', 'Qwen4 Max', 'GPT-6 Luna', 'DeepSeek Flash', 'Claude Haiku 5.5', 'Inkling 2 Small', 'DeepSeek V4 Pro', 'Inkling 2 Mini']);
+    ['GPT-6.1 Terra', 'Claude Sonnet 5.5', 'GPT-6.2 Sol', 'Qwen4 Max', 'Gemini 4 Neon', 'GPT-6 Luna', 'DeepSeek Flash', 'Claude Haiku 5.5', 'Inkling 2 Small', 'DeepSeek V4 Pro', 'Inkling 2 Mini']);
   assert.deepEqual(boardModels(board).map(m => m.score),
-    [84.92248315531599, 84.54197789514849, 78.23680860887244, 77.31725653059549, 68.82272260190327, 64.44586406147408, 60.89215401307633, 49.01639208143699, 48.24482914686975, 15.778785789240843]);
+    [84.92248315531599, 84.54197789514849, 78.23680860887244, 77.31725653059549, 72.2179825882825, 68.82272260190327, 64.44586406147408, 60.89215401307633, 49.01639208143699, 48.24482914686975, 15.778785789240843]);
 });
 
 test('Terra agent system has complete JMeter-only coverage and honest cost provenance', () => {

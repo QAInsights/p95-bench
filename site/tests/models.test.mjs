@@ -16,6 +16,7 @@ test('model display names and artifact slugs preserve exact API IDs separately',
     ['claude-opus-5-5', 'Claude Opus 5.5', 'claude-opus-5-5'],
     ['claude-haiku-5-5', 'Claude Haiku 5.5', 'claude-haiku-5-5'],
     ['Qwen-Ambassador/Qwen4-Max', 'Qwen4 Max', 'qwen-ambassador-qwen4-max'],
+    ['gemini-4-neon', 'Gemini 4 Neon', 'gemini-4-neon'],
   ]) {
     assert.equal(name(model), display);
     assert.equal(modelSlug(model), slug);
