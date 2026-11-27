@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import {
   boardModels, boardTasks, formatCost, palette,
-  scatter, taskCode, taskLabel, taskScore,
+  scatter, taskCode, taskLabel, taskScore, reasoningLabel, sharedReasoningLabel,
 } from '../src/lib/board.mjs';
 import { fakeV2 } from './fake-v2.mjs';
 
@@ -134,6 +134,19 @@ test('scatter separates same-height labels clamped at the top edge', () => {
   }
 });
 
+
+test('reasoning labels normalize high mode and only summarize uniform charts', () => {
+  assert.equal(reasoningLabel('thinking-high'), 'High reasoning');
+  assert.equal(reasoningLabel('thinking-medium'), 'thinking medium');
+  assert.equal(reasoningLabel(null), null);
+  assert.equal(sharedReasoningLabel([
+    { reasoningMode: 'thinking-high' }, { reasoningMode: 'thinking-high' },
+  ]), 'High reasoning');
+  assert.equal(sharedReasoningLabel([
+    { reasoningMode: 'thinking-high' }, { reasoningMode: 'thinking-medium' },
+  ]), null);
+});
+
 test('cost formatter handles basic and non-finite values', () => {
   assert.equal(formatCost(1.234), '$1.23');
   assert.equal(formatCost(Infinity), '—');
@@ -168,6 +181,10 @@ test('pages use the Core leaderboard and task pack without Matrix-only copy', as
   assert.doesNotMatch(page, /40 scenarios/);
   assert.doesNotMatch(page, /JMeter three-phase workload reference/);
   assert.match(page, /href="\/tasks"/);
+  assert.match(page, /class="reasoning-context" id="reasoning-context"/);
+  assert.match(page, /used for every model in this chart/);
+  assert.match(page, /aria-describedby=\{sharedReasoning \? "reasoning-context chart-note" : "chart-note"\}/);
+  assert.match(page, /reasoningLabel\(p\.reasoningMode\)/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
   assert.doesNotMatch(page, /First try|After 1 repair|score-toggle|data-score/);
   assert.doesNotMatch(page, />Every task <span|class="grid"|Output tokens/);

@@ -30,6 +30,17 @@ export function boardModels(data) {
     .map((m, i) => ({ ...m, color: palette[i % palette.length] }));
 }
 
+export function reasoningLabel(mode) {
+  if (!mode) return null;
+  if (mode === 'thinking-high') return 'High reasoning';
+  return mode.replaceAll('-', ' ');
+}
+
+export function sharedReasoningLabel(models) {
+  const labels = [...new Set(models.map(model => reasoningLabel(model.reasoningMode)).filter(Boolean))];
+  return labels.length === 1 ? labels[0] : null;
+}
+
 export function boardTasks(data) {
   const order = Object.keys(data.weights);
   const seen = new Map();
