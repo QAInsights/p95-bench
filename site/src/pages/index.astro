@@ -21,7 +21,7 @@ const models = boardModels(data);
 const tasks = boardTasks(data);
 const categories = Object.keys(data.weights);
 const plot = scatter(models);
-const sharedReasoning = sharedReasoningLabel(models);
+const sharedReasoning = sharedReasoningLabel(plot.points);
 const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
 const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";

@@ -150,6 +150,19 @@ test('reasoning labels normalize high mode and only summarize uniform charts', (
   ]), null);
 });
 
+
+test('shared chart reasoning uses plotted models only', () => {
+  const models = boardModels(fakeV2()).map((model, index) => ({
+    ...model,
+    reasoningMode: index === 0 ? 'thinking-medium' : 'thinking-high',
+  }));
+  models[0].cost = 0;
+  for (const model of models.slice(1)) model.reasoningMode = 'thinking-high';
+
+  assert.equal(sharedReasoningLabel(models), null);
+  assert.equal(sharedReasoningLabel(scatter(models).points), 'High reasoning');
+});
+
 test('cost formatter handles basic and non-finite values', () => {
   assert.equal(formatCost(1.234), '$1.23');
   assert.equal(formatCost(Infinity), '—');
@@ -187,6 +200,7 @@ test('pages use the Core leaderboard and task pack without Matrix-only copy', as
   assert.match(page, /class="reasoning-context" id="reasoning-context"/);
   assert.match(page, /used for every model in this chart/);
   assert.match(page, /aria-describedby=\{sharedReasoning \? "reasoning-context chart-note" : "chart-note"\}/);
+  assert.match(page, /sharedReasoningLabel\(plot\.points\)/);
   assert.match(page, /reasoningLabel\(p\.reasoningMode\)/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
   assert.doesNotMatch(page, /First try|After 1 repair|score-toggle|data-score/);
