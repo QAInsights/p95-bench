@@ -1,0 +1,41 @@
+---
+const { models, taskTotal } = Astro.props;
+const leader = models[0];
+const runnerUp = models[1];
+const cheapest = [...models].sort((a, b) => a.cost - b.cost)[0];
+const fastest = [...models].filter(m => m.latency).sort((a, b) => (a.latency / a.taskCount) - (b.latency / b.taskCount))[0];
+---
+
+<section id="faq" aria-labelledby="faq-title" class="faq-section">
+  <h2 id="faq-title" class="label">Key takeaways &amp; FAQ <span>live insights from {models.length} published models</span></h2>
+
+  {leader && runnerUp && (
+    <p class="faq-lead">
+      <strong>{leader.name}</strong> leads P95 Bench Core at <strong class="lime">{leader.score.toFixed(1)}/100</strong> for <strong>${leader.cost.toFixed(2)}</strong>
+      {" "}({(runnerUp.cost / leader.cost).toFixed(1)}× cheaper than #2 <strong>{runnerUp.name}</strong> at {runnerUp.score.toFixed(1)}/100 for ${runnerUp.cost.toFixed(2)}).
+      {fastest && <> Fastest average API response: <strong>{fastest.name}</strong> ({Math.round(fastest.latency / fastest.taskCount)}s/task).</>}
+      {cheapest && <> Lowest total run cost: <strong>{cheapest.name}</strong> (${cheapest.cost.toFixed(2)}).</>}
+    </p>
+  )}
+
+  <div class="faq-list">
+    <details open>
+      <summary>What is P95 Bench?</summary>
+      <p>P95 Bench is an open-source benchmark evaluating how well AI language models write, fix, migrate, correlate, and analyse performance tests across JMeter, k6, Locust, and Gatling ({taskTotal} executable tasks in the Core pack).</p>
+    </details>
+    <details>
+      <summary>How are models scored on P95 Bench?</summary>
+      <p>Overall score combines 95% weighted checkpoint quality (Repair 25%, Correlation 25%, Workload 20%, Migration 15%, Analysis 15%) plus 5% efficiency (output tokens and provider API latency). Each model gets one allowed repair round if a script fails to compile or run.</p>
+    </details>
+    <details>
+      <summary>How is speed measured on the 3D Pareto Chamber?</summary>
+      <p>Speed is measured as average accepted-response provider API latency per task across all {taskTotal} Core tasks, excluding retry backoff and container execution time.</p>
+    </details>
+    {leader && (
+      <details>
+        <summary>Which model currently leads P95 Bench Core?</summary>
+        <p>{leader.name} ({leader.providerLabel}) currently ranks #1 with an overall score of {leader.score.toFixed(1)} / 100 at ${leader.cost.toFixed(2)} list-price run cost.</p>
+      </details>
+    )}
+  </div>
+</section>

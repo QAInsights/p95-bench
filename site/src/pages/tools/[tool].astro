@@ -1,0 +1,107 @@
+---
+import "@fontsource/bricolage-grotesque/latin-400.css";
+import "@fontsource/bricolage-grotesque/latin-600.css";
+import "@fontsource/jetbrains-mono/latin-400.css";
+import "../../styles/geist.css";
+import "../../styles/board.css";
+import data from "../../data/leaderboard-p95-core.json";
+import SeoHead from "../../components/SeoHead.astro";
+import { boardModels, boardTasks, formatCost, toolLabel, TOOLS } from "../../lib/board.mjs";
+import { attemptFraction, modelSlug } from "../../lib/scores.mjs";
+import { canonicalUrl, REPO_URL, SITE_URL } from "../../lib/seo.mjs";
+
+export function getStaticPaths() {
+  return TOOLS.map(tool => ({ params: { tool } }));
+}
+
+const { tool } = Astro.params;
+const label = toolLabel(tool);
+const models = boardModels(data);
+const tasks = boardTasks(data);
+const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+const ranked = models.map(m => {
+  const toolAttempts = m.tasks.filter(a => a.tool === tool);
+  const v = mean(toolAttempts.map(a => attemptFraction(a, "repair")).filter(x => x !== null));
+  return {
+    ...m,
+    slug: modelSlug(m.key.split("/").slice(1).join("/")),
+    toolScore: v === null ? 0 : 100 * v,
+    toolCost: m.toolCosts[tool] ?? null,
+    avgSec: m.latency ? Math.round(m.latency / m.taskCount) : null,
+  };
+}).sort((a, b) => b.toolScore - a.toolScore || (a.toolCost ?? Infinity) - (b.toolCost ?? Infinity));
+
+const leader = ranked[0];
+const pageTitle = `Best AI Models for ${label} · P95 Bench`;
+const pageDesc = `Compare ${ranked.length} LLMs on ${tasks.length} executable ${label} performance testing tasks. ${leader ? `${leader.name} leads at ${leader.toolScore.toFixed(1)}/100.` : ""}`;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: `P95 Bench ${label} Model Rankings`,
+  url: canonicalUrl(`/tools/${tool}`),
+  description: pageDesc,
+  isPartOf: { "@id": `${SITE_URL}/#website` },
+  numberOfItems: ranked.length,
+  itemListElement: ranked.map((m, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: `${m.name} (${m.providerLabel}) — ${m.toolScore.toFixed(1)}/100 on ${label}`,
+    url: canonicalUrl(`/models/${m.slug}`),
+  })),
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={pageDesc} />
+    <meta name="theme-color" content="#0c0b10" />
+    <SeoHead title={pageTitle} description={pageDesc} path={`/tools/${tool}`} jsonLd={jsonLd} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <header class="top">
+      <a class="wordmark" href="/" aria-label="P95 Bench, home"><img src="/favicon.svg" width="24" height="24" alt="" aria-hidden="true" /><span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a>
+      <nav aria-label="Site"><a href="/#rankings">Rankings</a><a href="/#tradeoffs">3D</a><a href="/tasks">Tasks</a><a href={REPO_URL}>GitHub ↗</a></nav>
+    </header>
+
+    <main>
+      <section class="page-intro">
+        <h1>Best AI models for <span class="lime">{label}</span></h1>
+        <p>{ranked.length} models evaluated across {tasks.length} executable {label} tasks covering repair, migration, correlation, workload shaping, and results analysis.</p>
+        <p class="meta">Other tools: {TOOLS.filter(t => t !== tool).map((t, idx) => <>{idx > 0 && " · "}<a href={`/tools/${t}`}>{toolLabel(t)}</a></>)}</p>
+      </section>
+
+      <section aria-labelledby="tool-rankings-title">
+        <h2 id="tool-rankings-title" class="label">{label} Rankings <span>score / 100 · {tasks.length} tasks</span></h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Model</th><th class="n">{label} Score</th><th class="n">Overall</th><th class="n">{label} Cost</th><th class="n">Avg Speed</th></tr></thead>
+            <tbody>
+              {ranked.map((m, i) => (
+                <tr>
+                  <td class="rank">{i + 1}</td>
+                  <td><a href={`/models/${m.slug}`}><span class="swatch" style={`background:${m.color}`}></span>{m.name}</a> <span class="provider">{m.providerLabel}</span></td>
+                  <td class="n strong">{m.toolScore.toFixed(1)}</td>
+                  <td class="n">{m.score.toFixed(1)}</td>
+                  <td class="n">{formatCost(m.toolCost)}</td>
+                  <td class="n">{m.avgSec ? `${m.avgSec}s/task` : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottom">
+      <span>Pack {data.pack_id} · {label}</span>
+      <a href="/">Back to full leaderboard</a>
+    </footer>
+  </body>
+</html>

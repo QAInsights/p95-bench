@@ -6,9 +6,10 @@ import "../styles/geist.css";
 import "../styles/board.css";
 import data from "../data/leaderboard-p95-core.json";
 import { boardModels, boardTasks, scatter, toolLabel, TOOLS, formatCost, reasoningLabel, sharedReasoningLabel } from "../lib/board.mjs";
-import { attemptFraction } from "../lib/scores.mjs";
+import { attemptFraction, modelSlug } from "../lib/scores.mjs";
 import AgentSystems from "../components/AgentSystems.astro";
 import ParetoChamber from "../components/ParetoChamber.astro";
+import FaqSection from "../components/FaqSection.astro";
 import SeoHead from "../components/SeoHead.astro";
 import { homeJsonLd } from "../lib/seo.mjs";
 import { parseAgentSystems, agentComparisons, agentDisplay } from "../lib/agent-systems.mjs";
@@ -112,7 +113,7 @@ const jsonLd = homeJsonLd({ models, taskTotal: tasks.length * tools.length, scen
               {models.map((m, i) => (
                 <tr data-search={`${m.name} ${m.providerLabel}`}>
                   <td class="rank" data-value={i + 1}>{i + 1}</td>
-                  <td data-value={m.name}><span class="swatch" style={`background:${m.color}`}></span>{m.name} <span class="provider">{m.providerLabel}</span></td>
+                  <td data-value={m.name}><a class="model-link" href={`/models/${modelSlug(m.key.split("/").slice(1).join("/"))}`}><span class="swatch" style={`background:${m.color}`}></span>{m.name}</a> <span class="provider">{m.providerLabel}</span></td>
                   <td class="n strong" data-value={m.score}>{m.score.toFixed(1)}</td>
                   {tools.map(t => { const v = toolScore(m, t); return <td class="n" data-value={v ?? -1}>{v === null ? "—" : <span class={v === toolBest[t] ? "tool-best" : undefined}>{v === toolBest[t] && <span class="visually-hidden">best </span>}{v.toFixed(1)}</span>} <span class="provider">{formatCost(m.toolCosts[t])}</span></td>; })}
                   <td class="n" data-value={m.cost}>{formatCost(m.cost)}</td>
@@ -145,6 +146,15 @@ const jsonLd = homeJsonLd({ models, taskTotal: tasks.length * tools.length, scen
       )}
 
       <AgentSystems rows={agentRows} notes={agentNotes} />
+
+      <section aria-labelledby="by-tool-title">
+        <h2 id="by-tool-title" class="label">By tool <span>dedicated leaderboards</span></h2>
+        <div class="tool-links">
+          {tools.map(t => <a class="tool-link-card" href={`/tools/${t}`}><strong>{toolLabel(t)}</strong><span>{tasks.length} tasks →</span></a>)}
+        </div>
+      </section>
+
+      <FaqSection models={models} taskTotal={tasks.length * tools.length} />
 
       <section id="method" aria-labelledby="method-title" class="method">
         <h2 id="method-title" class="label">Method</h2>

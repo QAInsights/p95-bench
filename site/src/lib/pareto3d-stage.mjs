@@ -85,13 +85,19 @@ export function mountParetoChamber(root, items) {
   const ctx = cv.getContext('2d');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  const params = new URLSearchParams(window.location.search);
+  const initCam = CHAMBER_CAMERAS.find(c => c.id === params.get('cam')) ?? CHAMBER_CAMERAS[0];
+  const initFocus = ['balanced', 'quality', 'speed', 'cost'].includes(params.get('focus')) ? params.get('focus') : 'balanced';
+  const initSel = Math.max(0, items.findIndex(m => m.slug === params.get('model')));
+
   const state = {
-    focus: 'balanced',
+    focus: initFocus,
+    camId: initCam.id,
     onlyPareto: false,
-    selected: 0,
+    selected: initSel,
     hover: null,
-    cam: { ...CHAMBER_CAMERAS[0] },
-    targetCam: { ...CHAMBER_CAMERAS[0] },
+    cam: { ...initCam },
+    targetCam: { ...initCam },
     hitPts: [],
     pulse: 0,
   };
@@ -315,21 +321,39 @@ export function mountParetoChamber(root, items) {
   }, { passive: false });
 
   root.querySelectorAll('[data-cam]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.cam === state.camId);
     btn.addEventListener('click', () => {
       const cam = CHAMBER_CAMERAS.find(c => c.id === btn.dataset.cam);
       if (!cam) return;
+      state.camId = cam.id;
       state.targetCam = { ...cam };
       root.querySelectorAll('[data-cam]').forEach(b => b.classList.toggle('active', b === btn));
     });
   });
 
   root.querySelectorAll('[data-focus]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.focus === state.focus);
     btn.addEventListener('click', () => {
       state.focus = btn.dataset.focus;
       root.querySelectorAll('[data-focus]').forEach(b => b.classList.toggle('active', b === btn));
       syncInspector();
     });
   });
+
+  const shareBtn = root.querySelector('[data-share]');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', async () => {
+      const item = geo[state.selected] ?? geo[0];
+      const url = new URL(window.location.href);
+      url.searchParams.set('model', item.slug);
+      url.searchParams.set('cam', state.camId);
+      url.searchParams.set('focus', state.focus);
+      url.hash = 'tradeoffs';
+      try { await navigator.clipboard.writeText(url.toString()); } catch {}
+      shareBtn.textContent = 'Copied';
+      setTimeout(() => { shareBtn.textContent = 'Share'; }, 1400);
+    });
+  }
 
   const paretoBtn = root.querySelector('[data-pareto-only]');
   if (paretoBtn) {

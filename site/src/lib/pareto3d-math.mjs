@@ -1,3 +1,5 @@
+import { modelSlug } from './scores.mjs';
+
 export const FOCUS_WEIGHTS = {
   balanced: [0.46, 0.27, 0.27],
   quality: [0.78, 0.11, 0.11],
@@ -22,6 +24,7 @@ export function chamberModels(models) {
       const latencyPerTask = Number.isFinite(m.latency) && m.latency > 0 ? m.latency / taskCount : null;
       return {
         key: m.key,
+        slug: modelSlug(m.key.split('/').slice(1).join('/')),
         name: m.name,
         providerLabel: m.providerLabel ?? m.provider ?? '',
         quality,

@@ -1,12 +1,21 @@
 import data from '../data/leaderboard-p95-core.json';
+import { boardModels, TOOLS } from '../lib/board.mjs';
+import { modelSlug } from '../lib/scores.mjs';
 import { SITE_URL } from '../lib/seo.mjs';
 
 export function GET() {
   const latest = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
   const lastmod = latest ? new Date(latest).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+  const models = boardModels(data);
   const urls = [
     { loc: `${SITE_URL}/`, priority: '1.0', changefreq: 'weekly' },
     { loc: `${SITE_URL}/tasks`, priority: '0.8', changefreq: 'monthly' },
+    ...TOOLS.map(t => ({ loc: `${SITE_URL}/tools/${t}`, priority: '0.8', changefreq: 'weekly' })),
+    ...models.map(m => ({
+      loc: `${SITE_URL}/models/${modelSlug(m.key.split('/').slice(1).join('/'))}`,
+      priority: '0.7',
+      changefreq: 'weekly',
+    })),
   ];
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',

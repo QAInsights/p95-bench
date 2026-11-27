@@ -1,0 +1,119 @@
+---
+import "@fontsource/bricolage-grotesque/latin-400.css";
+import "@fontsource/bricolage-grotesque/latin-600.css";
+import "@fontsource/jetbrains-mono/latin-400.css";
+import "../../styles/geist.css";
+import "../../styles/board.css";
+import data from "../../data/leaderboard-p95-core.json";
+import SeoHead from "../../components/SeoHead.astro";
+import { boardModels, categoryLabels, formatCost, reasoningLabel, toolLabel, TOOLS } from "../../lib/board.mjs";
+import { attemptFraction, modelSlug } from "../../lib/scores.mjs";
+import { chamberModels, computePareto, formatTaskCost, formatTaskLatency } from "../../lib/pareto3d-math.mjs";
+import { canonicalUrl, REPO_URL, SITE_URL } from "../../lib/seo.mjs";
+
+export function getStaticPaths() {
+  const models = boardModels(data);
+  return models.map((m, idx) => ({
+    params: { slug: modelSlug(m.key.split("/").slice(1).join("/")) },
+    props: { model: m, rank: idx + 1, total: models.length },
+  }));
+}
+
+const { model, rank, total } = Astro.props;
+const { slug } = Astro.params;
+const items = chamberModels(boardModels(data));
+const paretoFlags = computePareto(items);
+const itemIdx = items.findIndex(x => x.key === model.key);
+const isPareto = itemIdx >= 0 ? paretoFlags[itemIdx] : false;
+const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+const toolRows = TOOLS.map(t => {
+  const v = mean(model.tasks.filter(a => a.tool === t).map(a => attemptFraction(a, "repair")).filter(x => x !== null));
+  return { tool: t, label: toolLabel(t), score: v === null ? null : 100 * v, cost: model.toolCosts[t] ?? null };
+});
+const avgSec = model.latency ? model.latency / model.taskCount : null;
+const costPerTask = model.cost / model.taskCount;
+const pageTitle = `${model.name} Benchmark Results · P95 Bench`;
+const pageDesc = `${model.name} (${model.providerLabel}) ranks #${rank}/${total} on P95 Bench Core with ${model.score.toFixed(1)}/100 overall score, ${formatTaskLatency(avgSec)}/task speed, and ${formatCost(model.cost)} total cost across 104 tasks.`;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: pageTitle,
+  url: canonicalUrl(`/models/${slug}`),
+  description: pageDesc,
+  isPartOf: { "@id": `${SITE_URL}/#website` },
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={pageDesc} />
+    <meta name="theme-color" content="#0c0b10" />
+    <SeoHead title={pageTitle} description={pageDesc} path={`/models/${slug}`} jsonLd={jsonLd} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <header class="top">
+      <a class="wordmark" href="/" aria-label="P95 Bench, home"><img src="/favicon.svg" width="24" height="24" alt="" aria-hidden="true" /><span><span class="brand-p95">P95</span> <span class="brand-bench">Bench</span></span></a>
+      <nav aria-label="Site"><a href="/#rankings">Rankings</a><a href={`/?model=${slug}#tradeoffs`}>View in 3D</a><a href="/tasks">Tasks</a><a href={REPO_URL}>GitHub ↗</a></nav>
+    </header>
+
+    <main>
+      <section class="page-intro">
+        <h1><span class="lime">#{rank}</span> {model.name}</h1>
+        <p>{model.providerLabel}{model.reasoningMode ? ` · ${reasoningLabel(model.reasoningMode)}` : ""}{isPareto ? " · 3D Pareto Optimal" : ""} · Evaluated across {model.taskCount} executable Core tasks.</p>
+      </section>
+
+      <section aria-labelledby="kpi-title">
+        <h2 id="kpi-title" class="label">Key metrics <span>p95-core</span></h2>
+        <div class="stats">
+          <div class="stat"><b class="lime">{model.score.toFixed(1)}</b><span>Overall / 100</span></div>
+          <div class="stat"><b>{model.quality.toFixed(1)}</b><span>Quality / 100</span></div>
+          <div class="stat"><b>{formatTaskLatency(avgSec)}</b><span>Avg API time / task</span></div>
+          <div class="stat"><b>{formatCost(model.cost)}</b><span>Total ({formatTaskCost(costPerTask)}/task)</span></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="per-tool-title">
+        <h2 id="per-tool-title" class="label">Per-tool breakdown <span>26 tasks per tool</span></h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tool</th><th class="n">Score / 100</th><th class="n">Tool Cost</th></tr></thead>
+            <tbody>
+              {toolRows.map(r => (
+                <tr>
+                  <td><a href={`/tools/${r.tool}`}>{r.label}</a></td>
+                  <td class="n strong">{r.score === null ? "—" : r.score.toFixed(1)}</td>
+                  <td class="n">{formatCost(r.cost)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="cat-title">
+        <h2 id="cat-title" class="label">Category scores <span>weighted checkpoint quality</span></h2>
+        <ol class="bars">
+          {Object.entries(model.categories).map(([cat, val]) => (
+            <li>
+              <span class="bar-name">{categoryLabels[cat] ?? cat}</span>
+              <span class="bar-track"><span class="bar-fill" style={`width:${val}%;background:var(--lime)`}></span></span>
+              <span class="bar-value num">{val.toFixed(1)}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </main>
+
+    <footer class="bottom">
+      <span>Pack {data.pack_id} · {model.key}</span>
+      <a href={`/?model=${slug}#tradeoffs`}>Inspect {model.name} in 3D Chamber →</a>
+    </footer>
+  </body>
+</html>

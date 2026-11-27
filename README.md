@@ -1,5 +1,7 @@
 # P95 Bench
 
+**Live Leaderboard & 3D Pareto Chamber:** [https://p95.qainsights.com/](https://p95.qainsights.com/) · [Task Catalog](https://p95.qainsights.com/tasks) · [RSS Feed](https://p95.qainsights.com/rss.xml) · [`llms.txt`](https://p95.qainsights.com/llms.txt)
+
 ## V2 public pack
 
 The legacy pack is `p95-v1`; its boolean scores and published artifacts are unchanged.

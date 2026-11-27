@@ -1,5 +1,6 @@
 import data from '../data/leaderboard-p95-core.json';
-import { boardModels, boardTasks, TOOLS } from '../lib/board.mjs';
+import { boardModels, boardTasks, toolLabel, TOOLS } from '../lib/board.mjs';
+import { modelSlug } from '../lib/scores.mjs';
 import { REPO_URL, SITE_URL } from '../lib/seo.mjs';
 
 export function GET() {
@@ -7,9 +8,10 @@ export function GET() {
   const tasks = boardTasks(data);
   const taskTotal = tasks.length * TOOLS.length;
   const rows = models.map((m, i) => {
+    const slug = modelSlug(m.key.split('/').slice(1).join('/'));
     const avgSec = m.latency ? `${Math.round(m.latency / m.taskCount)}s/task` : 'n/a';
     const avgCost = `$${(m.cost / m.taskCount).toFixed(3)}/task`;
-    return `${i + 1}. **${m.name}** (${m.providerLabel}) — Score: ${m.score.toFixed(1)}/100 | Quality: ${m.quality.toFixed(1)}/100 | Speed: ${avgSec} | Cost: $${m.cost.toFixed(2)} (${avgCost})`;
+    return `${i + 1}. [**${m.name}**](${SITE_URL}/models/${slug}) (${m.providerLabel}) — Score: ${m.score.toFixed(1)}/100 | Quality: ${m.quality.toFixed(1)}/100 | Speed: ${avgSec} | Cost: $${m.cost.toFixed(2)} (${avgCost})`;
   });
 
   const body = [
@@ -20,6 +22,8 @@ export function GET() {
     '## Key Pages',
     `- [Leaderboard & 3D Pareto Chamber](${SITE_URL}/): Live model rankings, per-tool scores, and Speed/Cost/Quality tradeoffs.`,
     `- [Public Task Catalog](${SITE_URL}/tasks): All ${tasks.length} public performance engineering scenarios and grading rubrics.`,
+    ...TOOLS.map(t => `- [Best AI Models for ${toolLabel(t)}](${SITE_URL}/tools/${t}): Dedicated ${toolLabel(t)} leaderboard and costs.`),
+    `- [RSS Feed](${SITE_URL}/rss.xml): Feed of newly published model benchmark runs.`,
     `- [Source & Raw Runs on GitHub](${REPO_URL}): Complete harness, graders, and reproducible run logs.`,
     '',
     '## Scoring & Metrics',
