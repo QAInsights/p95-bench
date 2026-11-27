@@ -109,7 +109,7 @@ def test_blocked_response_without_usage_is_zero_cost(monkeypatch):
 
 def test_blocked_empty_candidate_text_is_a_blocked_response(monkeypatch):
     monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
-    data = {'candidates': [{'content': {'parts': [{'text': ''}]}}],
+    data = {'candidates': [{'content': {'parts': [{'text': ' \n\t'}]}}],
             'usageMetadata': {'serviceTier': 'standard'},
             'promptFeedback': {'blockReason': 'OTHER'}}
     monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
