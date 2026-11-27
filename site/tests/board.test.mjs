@@ -210,6 +210,8 @@ test('pages use the Core leaderboard and task pack without Matrix-only copy', as
   assert.match(page, /Slot available/);
   assert.match(page, /Reserved for a benchmark partner/);
   assert.match(page, /<tfoot>/);
+  const styles = await readFile(new URL('../src/styles/board.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.support-action:focus-visible \{ outline-offset: -3px; \}/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
   assert.doesNotMatch(page, /First try|After 1 repair|score-toggle|data-score/);
   assert.doesNotMatch(page, />Every task <span|class="grid"|Output tokens/);

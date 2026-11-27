@@ -70,6 +70,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 72px; padding:
 .support-action { text-decoration: none; border-left: 1px solid color-mix(in srgb, var(--lime) 55%, var(--line)); background: color-mix(in srgb, var(--lime) 8%, var(--panel)); }
 .support-action:hover { color: var(--ink); background: color-mix(in srgb, var(--lime) 13%, var(--panel)); }
 .support-action strong { color: var(--lime); }
+.support-action:focus-visible { outline-offset: -3px; }
 .sponsor-slot { border-left: 1px dashed var(--dim); background: repeating-linear-gradient(135deg, var(--panel) 0 10px, color-mix(in srgb, var(--panel) 88%, var(--ink)) 10px 11px); }
 .sponsor-slot strong { color: var(--mute); }
 @container support (inline-size < 42rem) {
