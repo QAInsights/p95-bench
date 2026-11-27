@@ -535,6 +535,25 @@ class Gemini(OpenAICompatible):
         return (prompt, candidates + thinking,
                 usage.get("cachedContentTokenCount", 0) or 0, thinking)
 
+    @staticmethod
+    def _blocked(data):
+        if not (data.get("promptFeedback") or {}).get("blockReason"):
+            return False
+        for candidate in data.get("candidates") or []:
+            parts = (candidate.get("content") or {}).get("parts") or []
+            if any(isinstance(part.get("text"), str) and part["text"].strip()
+                   and not part.get("thought") for part in parts):
+                return False
+        return True
+
+    def _usage_or_zero_for_block(self, data):
+        try:
+            return self._usage(data)
+        except ProviderUnavailable:
+            if self._blocked(data):
+                return 0, 0, 0, 0
+            raise
+
     def _request_once(self, request):
         if self.spend_limit is None or not request.full_url.endswith(":generateContent"):
             return super()._request_once(request)
@@ -547,7 +566,7 @@ class Gemini(OpenAICompatible):
             raise SpendLimitExceeded("Insufficient budget for another maximum-sized response")
         self.spent_upper_bound += maximum
         data = super()._request_once(request)
-        input_tokens, output_tokens, cached_tokens, _ = self._usage(data)
+        input_tokens, output_tokens, cached_tokens, _ = self._usage_or_zero_for_block(data)
         actual = price.cost(Response("", input_tokens, output_tokens, cached_tokens))
         self.spent_upper_bound += actual - maximum
         return data
@@ -580,6 +599,11 @@ class Gemini(OpenAICompatible):
         parts = (candidate.get("content") or {}).get("parts") or []
         text = "".join(part["text"] for part in parts
                        if isinstance(part.get("text"), str) and not part.get("thought"))
+        block_reason = (data.get("promptFeedback") or {}).get("blockReason")
+        if block_reason and not text.strip():
+            input_tokens, output_tokens, cached_tokens, thinking = self._usage_or_zero_for_block(data)
+            return GeminiResponse("", input_tokens, output_tokens, cached_tokens, elapsed,
+                                  thinking, "BLOCKED_" + block_reason)
         input_tokens, output_tokens, cached_tokens, thinking = self._usage(data)
         return GeminiResponse(text, input_tokens, output_tokens, cached_tokens, elapsed,
                               thinking, candidate.get("finishReason", ""))
