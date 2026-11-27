@@ -541,8 +541,8 @@ class Gemini(OpenAICompatible):
             return False
         for candidate in data.get("candidates") or []:
             parts = (candidate.get("content") or {}).get("parts") or []
-            if any(isinstance(part.get("text"), str) and not part.get("thought")
-                   for part in parts):
+            if any(isinstance(part.get("text"), str) and part["text"].strip()
+                   and not part.get("thought") for part in parts):
                 return False
         return True
 
@@ -600,7 +600,7 @@ class Gemini(OpenAICompatible):
         text = "".join(part["text"] for part in parts
                        if isinstance(part.get("text"), str) and not part.get("thought"))
         block_reason = (data.get("promptFeedback") or {}).get("blockReason")
-        if block_reason and not text:
+        if block_reason and not text.strip():
             input_tokens, output_tokens, cached_tokens, thinking = self._usage_or_zero_for_block(data)
             return GeminiResponse("", input_tokens, output_tokens, cached_tokens, elapsed,
                                   thinking, "BLOCKED_" + block_reason)

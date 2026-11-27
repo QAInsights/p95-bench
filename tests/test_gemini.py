@@ -107,6 +107,17 @@ def test_blocked_response_without_usage_is_zero_cost(monkeypatch):
     assert PROVIDERS['gemini'].prices['gemini-4-neon'].cost(response) == 0
 
 
+def test_blocked_empty_candidate_text_is_a_blocked_response(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
+    data = {'candidates': [{'content': {'parts': [{'text': ''}]}}],
+            'usageMetadata': {'serviceTier': 'standard'},
+            'promptFeedback': {'blockReason': 'OTHER'}}
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: io.BytesIO(json.dumps(data).encode()))
+    response = get_provider('gemini').send('gemini-4-neon', [])
+    assert response.finish_reason == 'BLOCKED_OTHER'
+    assert response.input_tokens == response.output_tokens == 0
+
+
 def test_spend_limited_blocked_response_without_usage_is_returned(monkeypatch):
     monkeypatch.setenv('GEMINI_API_KEY', 'test-key')
     data = {'usageMetadata': {'serviceTier': 'standard'},
