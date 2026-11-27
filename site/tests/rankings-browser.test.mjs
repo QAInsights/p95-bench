@@ -55,11 +55,9 @@ test('rankings sorting and filtering work in a browser', async t => {
 
   execFileSync('npm', ['run', 'build'], { cwd: siteDir, stdio: 'pipe' });
   const server = await serveStatic();
+  t.after(() => new Promise(resolveClose => server.close(resolveClose)));
   const browser = await chromium.launch({ executablePath, args: ['--no-sandbox'] });
-  t.after(async () => {
-    await browser.close();
-    await new Promise(resolveClose => server.close(resolveClose));
-  });
+  t.after(() => browser.close());
 
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
