@@ -1,0 +1,46 @@
+{
+  "pack_id": "p95-core",
+  "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+  "overall_score": 58.600205328021254,
+  "quality_score": 60.089409722222214,
+  "efficiency_score": 30.305321838203042,
+  "category_scores": {
+    "repair": 62.22222222222222,
+    "migration": 47.65625,
+    "correlation": 40.208333333333336,
+    "workload": 61.666666666666664,
+    "analysis": 100.0
+  },
+  "attempts": 104,
+  "expected_attempts": 104,
+  "repeats": 1,
+  "complete": true,
+  "passed": 56,
+  "after_repair": {
+    "overall_score": 72.2179825882825,
+    "quality_score": 74.20225694444444,
+    "efficiency_score": 34.51676982120534,
+    "category_scores": {
+      "repair": 84.44444444444444,
+      "migration": 65.46875,
+      "correlation": 63.75,
+      "workload": 61.666666666666664,
+      "analysis": 100.0
+    }
+  },
+  "repairs_triggered": 37,
+  "repairs_succeeded": 15,
+  "estimated_cost_usd": 36.728001,
+  "input_tokens": 568992,
+  "output_tokens": 2334735,
+  "latency_seconds": 29033.392755206,
+  "cached_tokens": 0,
+  "cache_write_tokens": 0,
+  "not_run": 0,
+  "cost_by_tool": {
+    "gatling": 11.294093999999998,
+    "jmeter": 10.834818,
+    "k6": 7.740528000000001,
+    "locust": 6.858561
+  }
+}

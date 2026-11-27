@@ -11875,6 +11875,3313 @@
       "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
     },
     {
+      "provider": "gemini",
+      "model": "gemini-4-neon",
+      "overall_score": 58.600205328021254,
+      "pack_id": "p95-core",
+      "pack_digest": "f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de",
+      "quality_score": 60.089409722222214,
+      "efficiency_score": 30.305321838203042,
+      "repeats": 1,
+      "after_repair": {
+        "overall_score": 72.2179825882825,
+        "quality_score": 74.20225694444444,
+        "efficiency_score": 34.51676982120534,
+        "category_scores": {
+          "repair": 84.44444444444444,
+          "migration": 65.46875,
+          "correlation": 63.75,
+          "workload": 61.666666666666664,
+          "analysis": 100
+        }
+      },
+      "repair_rounds": 1,
+      "reasoning_mode": "thinking-high",
+      "category_scores": {
+        "repair": 62.22222222222222,
+        "migration": 47.65625,
+        "correlation": 40.208333333333336,
+        "workload": 61.666666666666664,
+        "analysis": 100
+      },
+      "cost": 36.728001,
+      "tokens": {
+        "input": 568992,
+        "output": 2334735,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "latency": 29033.392755206,
+      "run_date": "2026-11-26T20:30:50.475465+00:00",
+      "harness_commit": "f41ba293ae1c70121a2a16ad7a44f2ed75938a85",
+      "cost_note": "USD list-price estimate from reported token usage at frozen registry prices for all 104 Core first tries ($27.135024) and 33 recorded repair responses ($9.592977); combined Core usage cost $36.728001. Not an invoice. Gemini 4 Neon used thinkingLevel HIGH with a 65,536-token output cap. Published from Actions runs https://github.com/QAInsights/p95-bench/actions/runs/45891406569 at head f41ba293ae1c70121a2a16ad7a44f2ed75938a85, https://github.com/QAInsights/p95-bench/actions/runs/45906808151 at head 41254217a577b37e067af6912361e3fa3d2c6586, and https://github.com/QAInsights/p95-bench/actions/runs/45920115434 at head 0f9fff71653c3d35645d10a165cea9ea0ea135fb. The later two runs were targeted continuations after Google monthly spending-cap 429 interruptions; no completed first attempt was rerun. 37 repairs were triggered; 32 recorded repair responses reported provider token usage, one recorded repair was the zero-usage blocked refusal, and four repair requests failed with monthly-cap 429s before a response. 33 first tries were empty; one first try ended at the output cap. mx-c01-html-csrf-jmeter was blocked before generation with promptFeedback.blockReason=OTHER in repeated API responses. It is counted once as a zero-score provider refusal at zero measured cost; the empty refusal was serialized and graded locally at harness commit 428a7100e05383c1457959f656305c14b108980a. Canceled Actions rerun https://github.com/QAInsights/p95-bench/actions/runs/45935870372 is not used.",
+      "pricing_source": "https://ai.google.dev/gemini-api/docs/pricing",
+      "derived_from": [
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "924ec8d9236f6502841960046c493ebe2e8dfd015b1214ffb1156589d528e491",
+          "run": "20261126T203050Z-d582b503",
+          "harness_commit": "f41ba293ae1c70121a2a16ad7a44f2ed75938a85",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "c1bdc7627e4769d5d1256f0accad2686390996d4c5f2d6b17436491ab41657bf",
+          "run": "20261126T203100Z-4bf2c45a",
+          "harness_commit": "f41ba293ae1c70121a2a16ad7a44f2ed75938a85",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "99ea76a056c6939bc55f05f23cb553a3f7eecb35339a2f2b1eb1dab808214313",
+          "run": "20261126T203101Z-215e1a77",
+          "harness_commit": "f41ba293ae1c70121a2a16ad7a44f2ed75938a85",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "4855c7ba95ae6fc4a35db70a2d7d6c802153b0deb867dbd5fb5dab9d5594b666",
+          "run": "20261126T203056Z-2dfb9301",
+          "harness_commit": "f41ba293ae1c70121a2a16ad7a44f2ed75938a85",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "048b019b238d030f91be41fc325d9c933c79b155c25da8816f36faa658e3a1dd",
+          "run": "20261126T224655Z-93dc7e77",
+          "harness_commit": "41254217a577b37e067af6912361e3fa3d2c6586",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "fe2c7c7ddf5d8760d9c964f8f568d1a03c20f69ed954aba944ce3d5ba0cdb604",
+          "run": "20261126T224656Z-c653dce8",
+          "harness_commit": "41254217a577b37e067af6912361e3fa3d2c6586",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "1d90877a4f0f6f1b49274b79975826859717862cb05e714ea08d54c1c521e561",
+          "run": "20261126T224701Z-f108076b",
+          "harness_commit": "41254217a577b37e067af6912361e3fa3d2c6586",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "9d3b14bc22fb75e3889e4af98b59341afbbfba95a32d5f253e0d58899951b129",
+          "run": "20261126T224704Z-caa909fe",
+          "harness_commit": "41254217a577b37e067af6912361e3fa3d2c6586",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "b8e7668987aca2289449392db452462a1b091e3c96fdadfab61f50e0dcb295a8",
+          "run": "20261127T010228Z-08d210c9",
+          "harness_commit": "0f9fff71653c3d35645d10a165cea9ea0ea135fb",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "347d55684c3ead67f896b20983b90138d53032708252935e0905e7d6779b13a4",
+          "run": "20261127T010231Z-eded0bcc",
+          "harness_commit": "0f9fff71653c3d35645d10a165cea9ea0ea135fb",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "a4e0f4291e3111c49035f7dd0194ffb62af12af45c4175ce4359e10a250aa82b",
+          "run": "20261127T010229Z-6592385b",
+          "harness_commit": "0f9fff71653c3d35645d10a165cea9ea0ea135fb",
+          "spend_cap_usd": null
+        },
+        {
+          "pack_id": "p95-core",
+          "pack_digest": "12036fdd512cb94cc659fe921e93003fe3d5ee740ad013aa5672636d9fbfcb9e",
+          "run": "20261127T035016Z-8f7342dd",
+          "harness_commit": "428a7100e05383c1457959f656305c14b108980a",
+          "spend_cap_usd": null
+        }
+      ],
+      "output_cap": 65536,
+      "cost_attempts": [
+        {
+          "task_id": "mx-a01-jtl-endpoints-gatling",
+          "input_tokens": 559,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1423,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.023022
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-jmeter",
+          "input_tokens": 639,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1115,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.018642
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-k6",
+          "input_tokens": 895,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1046,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.018375
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-locust",
+          "input_tokens": 626,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1032,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.017358
+        },
+        {
+          "task_id": "mx-a04-k6-errors-gatling",
+          "input_tokens": 666,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1351,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.022263
+        },
+        {
+          "task_id": "mx-a04-k6-errors-jmeter",
+          "input_tokens": 607,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1102,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.018351
+        },
+        {
+          "task_id": "mx-a04-k6-errors-k6",
+          "input_tokens": 745,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1036,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.017775
+        },
+        {
+          "task_id": "mx-a04-k6-errors-locust",
+          "input_tokens": 629,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1247,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.020592
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-gatling",
+          "input_tokens": 604,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 2012,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.031992
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-jmeter",
+          "input_tokens": 695,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1904,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.030645
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-k6",
+          "input_tokens": 949,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1549,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.026082
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-locust",
+          "input_tokens": 652,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1769,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.028491
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-gatling",
+          "input_tokens": 736,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1498,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.024678
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-jmeter",
+          "input_tokens": 732,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1448,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.023916
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-k6",
+          "input_tokens": 734,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1340,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.022302
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-locust",
+          "input_tokens": 657,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 1397,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.022926
+        },
+        {
+          "task_id": "mx-c01-html-csrf-gatling",
+          "input_tokens": 1178,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 31923,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.482379
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "input_tokens": 0,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0
+        },
+        {
+          "task_id": "mx-c01-html-csrf-k6",
+          "input_tokens": 1104,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 19939,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.302397
+        },
+        {
+          "task_id": "mx-c01-html-csrf-locust",
+          "input_tokens": 1181,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 28244,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.427203
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "input_tokens": 1169,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 26152,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.395787
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-jmeter",
+          "input_tokens": 1221,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 43945,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.662838
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-k6",
+          "input_tokens": 1095,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 17286,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.262575
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "input_tokens": 1172,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003516
+        },
+        {
+          "task_id": "mx-c04-json-pagination-gatling",
+          "input_tokens": 1170,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 42976,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.64815
+        },
+        {
+          "task_id": "mx-c04-json-pagination-jmeter",
+          "input_tokens": 1222,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 47129,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.710601
+        },
+        {
+          "task_id": "mx-c04-json-pagination-k6",
+          "input_tokens": 1096,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 29661,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.448203
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "input_tokens": 1173,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003519
+        },
+        {
+          "task_id": "mx-c06-etag-update-gatling",
+          "input_tokens": 1218,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003654
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "input_tokens": 1270,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.00381
+        },
+        {
+          "task_id": "mx-c06-etag-update-k6",
+          "input_tokens": 1144,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 22632,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.342912
+        },
+        {
+          "task_id": "mx-c06-etag-update-locust",
+          "input_tokens": 1221,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003663
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "input_tokens": 1177,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003531
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-jmeter",
+          "input_tokens": 1229,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 65536,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.986727
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-k6",
+          "input_tokens": 1103,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 33293,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.502704
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "input_tokens": 1180,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.00354
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "input_tokens": 1227,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 29143,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.440826
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "input_tokens": 1279,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003837
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "input_tokens": 1153,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003459
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "input_tokens": 1230,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.00369
+        },
+        {
+          "task_id": "mx-m01-basic-flow-gatling",
+          "input_tokens": 8429,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 30124,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.477147
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "input_tokens": 3181,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.009543
+        },
+        {
+          "task_id": "mx-m01-basic-flow-k6",
+          "input_tokens": 8355,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 13923,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.23391
+        },
+        {
+          "task_id": "mx-m01-basic-flow-locust",
+          "input_tokens": 8430,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 18946,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.30948
+        },
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "input_tokens": 15639,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 27456,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.458757
+        },
+        {
+          "task_id": "mx-m04-data-driven-jmeter",
+          "input_tokens": 3061,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 58910,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.892833
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "input_tokens": 15564,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.046692
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "input_tokens": 15640,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.04692
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "input_tokens": 8748,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.026244
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "input_tokens": 3511,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.010533
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "input_tokens": 8674,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.026022
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-locust",
+          "input_tokens": 8749,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 26253,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.420042
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "input_tokens": 8419,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.025257
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "input_tokens": 3172,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.009516
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-k6",
+          "input_tokens": 8343,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 28952,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.459309
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-locust",
+          "input_tokens": 8425,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 30582,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.484005
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-gatling",
+          "input_tokens": 5861,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 21169,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.335118
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "input_tokens": 8467,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.025401
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "input_tokens": 3066,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.009198
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-locust",
+          "input_tokens": 4642,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 15018,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.239196
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "input_tokens": 5877,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.017631
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "input_tokens": 8313,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.024939
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-k6",
+          "input_tokens": 2990,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 21221,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.327285
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-locust",
+          "input_tokens": 4609,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 20054,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.314637
+        },
+        {
+          "task_id": "mx-r04-status-recovery-gatling",
+          "input_tokens": 5894,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 42025,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.648057
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "input_tokens": 8635,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.025905
+        },
+        {
+          "task_id": "mx-r04-status-recovery-k6",
+          "input_tokens": 3009,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 16010,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.249177
+        },
+        {
+          "task_id": "mx-r04-status-recovery-locust",
+          "input_tokens": 4538,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 27778,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.430284
+        },
+        {
+          "task_id": "mx-r05-business-assertion-gatling",
+          "input_tokens": 5869,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 23621,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.371922
+        },
+        {
+          "task_id": "mx-r05-business-assertion-jmeter",
+          "input_tokens": 8463,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 27961,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.444804
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "input_tokens": 3036,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.009108
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "input_tokens": 4580,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.01374
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-gatling",
+          "input_tokens": 5978,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 20306,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.322524
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-jmeter",
+          "input_tokens": 9396,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 19861,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.326103
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-k6",
+          "input_tokens": 3099,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 14098,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.220767
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-locust",
+          "input_tokens": 4738,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 13867,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.222219
+        },
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "input_tokens": 6141,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 31753,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.494718
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "input_tokens": 12693,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.038079
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "input_tokens": 3354,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 33091,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.506427
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "input_tokens": 4863,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.014589
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "input_tokens": 6048,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 33453,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.519939
+        },
+        {
+          "task_id": "mx-r10-user-partition-jmeter",
+          "input_tokens": 8788,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 33415,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.527589
+        },
+        {
+          "task_id": "mx-r10-user-partition-k6",
+          "input_tokens": 2842,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 19725,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.304401
+        },
+        {
+          "task_id": "mx-r10-user-partition-locust",
+          "input_tokens": 4502,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 23188,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.361326
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "input_tokens": 6864,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.020592
+        },
+        {
+          "task_id": "mx-r11-timer-scope-jmeter",
+          "input_tokens": 8788,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 31381,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.497079
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "input_tokens": 3377,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.010131
+        },
+        {
+          "task_id": "mx-r11-timer-scope-locust",
+          "input_tokens": 4919,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 37346,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.574947
+        },
+        {
+          "task_id": "mx-r12-error-metric-gatling",
+          "input_tokens": 5882,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 31026,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.483036
+        },
+        {
+          "task_id": "mx-r12-error-metric-jmeter",
+          "input_tokens": 12677,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 34002,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.548061
+        },
+        {
+          "task_id": "mx-r12-error-metric-k6",
+          "input_tokens": 3004,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 25789,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.395847
+        },
+        {
+          "task_id": "mx-r12-error-metric-locust",
+          "input_tokens": 4594,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.013782
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "input_tokens": 1413,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 53255,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.803064
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "input_tokens": 1465,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.004395
+        },
+        {
+          "task_id": "mx-w01-steady-starts-k6",
+          "input_tokens": 1339,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 27315,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.413742
+        },
+        {
+          "task_id": "mx-w01-steady-starts-locust",
+          "input_tokens": 1416,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 37834,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.571758
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-gatling",
+          "input_tokens": 1432,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 45105,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.680871
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "input_tokens": 1484,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 57779,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.871137
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-k6",
+          "input_tokens": 1357,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 30139,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.456156
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "input_tokens": 1435,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 37484,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.566565
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "input_tokens": 1412,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 44019,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.664521
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "input_tokens": 1464,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 53142,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.801522
+        },
+        {
+          "task_id": "mx-w07-burst-control-k6",
+          "input_tokens": 1338,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 30089,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.455349
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "input_tokens": 1415,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.004245
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "input_tokens": 0,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "input_tokens": 3600,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 11115,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.177525,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "input_tokens": 1213,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003639,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "input_tokens": 1214,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 36532,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.551622,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "input_tokens": 1311,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 42919,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.647718,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "input_tokens": 1218,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 59052,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.889434,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "input_tokens": 1221,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003663,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "input_tokens": 4064,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 7089,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.118527,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "input_tokens": 1320,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 47425,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.715335,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "input_tokens": 1194,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 19636,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.298122,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "input_tokens": 1271,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.003813,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "input_tokens": 3222,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 42143,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.641811,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "input_tokens": 15605,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 22982,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.391545,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "input_tokens": 15681,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 28533,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.475038,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "input_tokens": 8789,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 40360,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.631767,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "input_tokens": 8715,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.026145,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "input_tokens": 8460,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.02538,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "input_tokens": 3213,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.009639,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "input_tokens": 8508,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.025524,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "input_tokens": 3107,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 20396,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.315261,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "input_tokens": 5918,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.017754,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "input_tokens": 8354,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.025062,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "input_tokens": 8676,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 54959,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.850413,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "input_tokens": 3077,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 9072,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.145311,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "input_tokens": 4621,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 16866,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.266853,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "input_tokens": 12734,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 23986,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.397992,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "input_tokens": 4904,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 27508,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.427332,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "input_tokens": 6905,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 32765,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.51219,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "input_tokens": 3418,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 32239,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.493839,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "input_tokens": 6599,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 17967,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.289302,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "input_tokens": 1506,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.004518,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "input_tokens": 5855,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 12598,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.206535,
+          "status": "repair"
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "input_tokens": 1456,
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "output_tokens": 0,
+          "price_per_million": {
+            "input": 3,
+            "cached": 0.15,
+            "output": 15
+          },
+          "cost_usd": 0.004368,
+          "status": "repair"
+        }
+      ],
+      "coverage": {
+        "run": 104,
+        "total": 104,
+        "partial": false,
+        "label": "104/104 tasks run"
+      },
+      "per_task_results": [
+        {
+          "task_id": "mx-a01-jtl-endpoints-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1423,
+          "latency_seconds": 10.77711086299999,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1115,
+          "latency_seconds": 8.704206804999984,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1046,
+          "latency_seconds": 9.248288271000007,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a01-jtl-endpoints-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a01-jtl-endpoints",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1032,
+          "latency_seconds": 9.138943235,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a04-k6-errors",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1351,
+          "latency_seconds": 11.477609905999998,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a04-k6-errors",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1102,
+          "latency_seconds": 9.31036451,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a04-k6-errors",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1036,
+          "latency_seconds": 9.285715917000005,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a04-k6-errors-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a04-k6-errors",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1247,
+          "latency_seconds": 9.839815420999997,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 2012,
+          "latency_seconds": 18.751523056999986,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1904,
+          "latency_seconds": 15.363221487000004,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1549,
+          "latency_seconds": 11.436358918000025,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a05-jtl-omission-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a05-jtl-omission",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1769,
+          "latency_seconds": 15.435844006999986,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-gatling",
+          "category": "analysis",
+          "tool": "gatling",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1498,
+          "latency_seconds": 12.447858408999991,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-jmeter",
+          "category": "analysis",
+          "tool": "jmeter",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1448,
+          "latency_seconds": 18.096206044000013,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-k6",
+          "category": "analysis",
+          "tool": "k6",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1340,
+          "latency_seconds": 10.904092047000006,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-a06-k6-decomposition-locust",
+          "category": "analysis",
+          "tool": "locust",
+          "scenario": "mx-a06-k6-decomposition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 1397,
+          "latency_seconds": 10.964528981,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Structured values, enums and evidence IDs; numeric absolute tolerance 1e-6"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c01-html-csrf",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 31923,
+          "latency_seconds": 265.49969014500005,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c01-html-csrf",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 0,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c01-html-csrf",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 19939,
+          "latency_seconds": 157.75705510999998,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c01-html-csrf-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c01-html-csrf",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 28244,
+          "latency_seconds": 227.024372368,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 26152,
+          "latency_seconds": 203.56665330199996,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 43945,
+          "latency_seconds": 320.22990978499996,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 17286,
+          "latency_seconds": 140.94458692799998,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c03-json-parent-child-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c03-json-parent-child",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 184.20097306000002,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c04-json-pagination",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 42976,
+          "latency_seconds": 344.01575626,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0.65,
+          "repeat": 0,
+          "output_tokens": 47129,
+          "latency_seconds": 350.05782709100004,
+          "after_repair_score": 0.65,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c04-json-pagination",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 29661,
+          "latency_seconds": 241.884678641,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c04-json-pagination-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c04-json-pagination",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 319.09389495000005,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c06-etag-update-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 288.11581638200005,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c06-etag-update-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 360.48171270399996,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c06-etag-update-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c06-etag-update",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 22632,
+          "latency_seconds": 188.14553929700003,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c06-etag-update-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c06-etag-update",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 249.3276616789999,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 328.35218925899994,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 65536,
+          "latency_seconds": 491.3571934549998,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): No complete jmeterTestPlan"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 33293,
+          "latency_seconds": 265.9841797920001,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c08-expiry-resume-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c08-expiry-resume",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 246.89142421100001,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-gatling",
+          "category": "correlation",
+          "tool": "gatling",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 29143,
+          "latency_seconds": 221.929643875,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-jmeter",
+          "category": "correlation",
+          "tool": "jmeter",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 373.23549724199984,
+          "after_repair_score": 0.55,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-k6",
+          "category": "correlation",
+          "tool": "k6",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 201.80713912500005,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-c09-async-reservation-locust",
+          "category": "correlation",
+          "tool": "locust",
+          "scenario": "mx-c09-async-reservation",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 259.12901056400005,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m01-basic-flow",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 30124,
+          "latency_seconds": 234.14483030300016,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m01-basic-flow",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 310.4382678379998,
+          "after_repair_score": 0.1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m01-basic-flow",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 13923,
+          "latency_seconds": 106.53527922699999,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m01-basic-flow-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m01-basic-flow",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 18946,
+          "latency_seconds": 144.3665041039999,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m04-data-driven",
+          "score": 0.875,
+          "repeat": 0,
+          "output_tokens": 27456,
+          "latency_seconds": 221.662549055,
+          "after_repair_score": 0.875,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m04-data-driven",
+          "score": 0.75,
+          "repeat": 0,
+          "output_tokens": 58910,
+          "latency_seconds": 421.4618292189998,
+          "after_repair_score": 0.75,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m04-data-driven-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 206.78605023799997,
+          "after_repair_score": 0.75,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m04-data-driven-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m04-data-driven",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 194.629521114,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 255.5073546189999,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 317.1713479999994,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 126.69271035300005,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m05-pacing-semantics-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m05-pacing-semantics",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 26253,
+          "latency_seconds": 231.0437385600003,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-gatling",
+          "category": "migration",
+          "tool": "gatling",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 312.77001725699984,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-jmeter",
+          "category": "migration",
+          "tool": "jmeter",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 383.97768988400003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-k6",
+          "category": "migration",
+          "tool": "k6",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 28952,
+          "latency_seconds": 215.08840018499995,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-m06-assertions-metrics-locust",
+          "category": "migration",
+          "tool": "locust",
+          "scenario": "mx-m06-assertions-metrics",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 30582,
+          "latency_seconds": 223.17844832500032,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 21169,
+          "latency_seconds": 160.73456877599983,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 159.09594641599995,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 135.32568206899987,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r01-extractor-scope-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r01-extractor-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 15018,
+          "latency_seconds": 112.63652925999986,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 153.69005302300002,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 253.349320778,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 21221,
+          "latency_seconds": 157.28260507899995,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r02-cookie-lifetime-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r02-cookie-lifetime",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 20054,
+          "latency_seconds": 137.59986432300002,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0.75,
+          "repeat": 0,
+          "output_tokens": 42025,
+          "latency_seconds": 309.2750439239999,
+          "after_repair_score": 0.75,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r04-status-recovery",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 402.1575835790002,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r04-status-recovery",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 16010,
+          "latency_seconds": 119.23403562499993,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r04-status-recovery-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r04-status-recovery",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 27778,
+          "latency_seconds": 206.62213664,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r05-business-assertion",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 23621,
+          "latency_seconds": 170.65640548800002,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r05-business-assertion",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 27961,
+          "latency_seconds": 216.52712230399993,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 99.74645166799996,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r05-business-assertion-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r05-business-assertion",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 121.12864133100038,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 0.35,
+          "repeat": 0,
+          "output_tokens": 20306,
+          "latency_seconds": 200.59382685100036,
+          "after_repair_score": 0.35,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 19861,
+          "latency_seconds": 155.16423201899988,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 14098,
+          "latency_seconds": 104.59877818599989,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r06-threshold-tags-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r06-threshold-tags",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 13867,
+          "latency_seconds": 98.927797457,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r08-arrival-options",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 31753,
+          "latency_seconds": 254.35075576600002,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 238.64938127100004,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r08-arrival-options",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 33091,
+          "latency_seconds": 255.07931382499987,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r08-arrival-options-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r08-arrival-options",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 216.73959578899985,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r10-user-partition-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r10-user-partition",
+          "score": 0.75,
+          "repeat": 0,
+          "output_tokens": 33453,
+          "latency_seconds": 265.0446046819999,
+          "after_repair_score": 0.75,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r10-user-partition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 33415,
+          "latency_seconds": 269.2987576370001,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r10-user-partition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 19725,
+          "latency_seconds": 152.3949342660003,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r10-user-partition-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r10-user-partition",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 23188,
+          "latency_seconds": 194.65431184299996,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 272.225736223,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r11-timer-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 31381,
+          "latency_seconds": 260.2796625680003,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r11-timer-scope",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 202.11664001500003,
+          "after_repair_score": 1,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-r11-timer-scope-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r11-timer-scope",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 37346,
+          "latency_seconds": 275.69180871299994,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-gatling",
+          "category": "repair",
+          "tool": "gatling",
+          "scenario": "mx-r12-error-metric",
+          "score": 0.55,
+          "repeat": 0,
+          "output_tokens": 31026,
+          "latency_seconds": 246.00517823600012,
+          "after_repair_score": 0.55,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-jmeter",
+          "category": "repair",
+          "tool": "jmeter",
+          "scenario": "mx-r12-error-metric",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 34002,
+          "latency_seconds": 264.2247827309993,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-k6",
+          "category": "repair",
+          "tool": "k6",
+          "scenario": "mx-r12-error-metric",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 25789,
+          "latency_seconds": 189.96678837299987,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-r12-error-metric-locust",
+          "category": "repair",
+          "tool": "locust",
+          "scenario": "mx-r12-error-metric",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 237.33627795200027,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 53255,
+          "latency_seconds": 447.29260277000003,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 510.70418754,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w01-steady-starts",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 27315,
+          "latency_seconds": 219.35094174799997,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w01-steady-starts-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w01-steady-starts",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 37834,
+          "latency_seconds": 304.4189544960001,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 45105,
+          "latency_seconds": 371.3021286200001,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 57779,
+          "latency_seconds": 459.996098738,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 30139,
+          "latency_seconds": 234.78147218599997,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w02-open-arrivals-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w02-open-arrivals",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 37484,
+          "latency_seconds": 303.03758986800017,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-gatling",
+          "category": "workload",
+          "tool": "gatling",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 44019,
+          "latency_seconds": 380.55297712599986,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-jmeter",
+          "category": "workload",
+          "tool": "jmeter",
+          "scenario": "mx-w07-burst-control",
+          "score": 1,
+          "repeat": 0,
+          "output_tokens": 53142,
+          "latency_seconds": 429.0220609979997,
+          "after_repair_score": 1,
+          "passed": true,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-k6",
+          "category": "workload",
+          "tool": "k6",
+          "scenario": "mx-w07-burst-control",
+          "score": 0.8,
+          "repeat": 0,
+          "output_tokens": 30089,
+          "latency_seconds": 259.269677492,
+          "after_repair_score": 0.8,
+          "passed": false,
+          "detail": "Per-case credit capped by prerequisites; see native artifacts and owner audit"
+        },
+        {
+          "task_id": "mx-w07-burst-control-locust",
+          "category": "workload",
+          "tool": "locust",
+          "scenario": "mx-w07-burst-control",
+          "score": 0,
+          "repeat": 0,
+          "output_tokens": 0,
+          "latency_seconds": 330.5249283349999,
+          "after_repair_score": 0,
+          "passed": false,
+          "detail": "Invalid model artifact (ValueError): Expected a nonempty artifact of at most 1 MiB"
+        }
+      ],
+      "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d"
+    },
+    {
       "provider": "openai",
       "model": "gpt-6-luna",
       "overall_score": 54.871302019528684,
@@ -30855,5 +34162,5 @@
     }
   ],
   "budget_file_sha256": "897a8fe49321c2bd40582f1a2abd67e40b90cc566d5801e6b94a598ab79a837d",
-  "publication_note": "Core: 26 public scenarios across JMeter, k6, Locust and Gatling (104 tasks). Anthropic claude-sonnet-5-5 uses adaptive thinking at high effort; DeepSeek deepseek-flash, deepseek-v4-pro and Qwen-Ambassador/Qwen4-Max use thinking-high; OpenAI gpt-6.2-sol, gpt-6.1-terra and gpt-6-luna use reasoning_effort high; Anthropic claude-haiku-5-5 uses adaptive thinking at high effort; Tinker thinkingmachines/Inkling-2-Small and thinkingmachines/Inkling-2-Mini use reasoning_effort high. Sonnet, DeepSeek and Qwen use a 64,000-token output cap; OpenAI and Tinker use a 128,000-token output cap. All use one conditional repair round. Scores are the final answer after the one allowed repair. Costs include all 104 first tries per model and the recorded repair responses (24 for Sonnet, 27 for Flash, 29 for V4 Pro, 16 for Qwen4-Max, 3 for GPT-6.2 Sol, 17 for GPT-6.1 Terra, 28 for GPT-6 Luna, 14 for Claude Haiku 5.5, 0 for Inkling 2 Mini, 21 for Inkling 2 Small), estimated from reported token usage at frozen registry prices, not provider invoices. GPT-6.2 Sol was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45511510673 at head 9a664f881e7c78dfea26e54b71b0e0d8fc6fa514. Its workflow spend cap was $50 per model, and no first try or repair ended at the output cap. GPT-6.1 Terra was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45529880940 at head de0702215439bb0b7bf3f9dbe5ef383c57f18b82. Its workflow spend cap was $50 per model, and no first try or repair ended at the output cap. GPT-6 Luna was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45530991214 at head eb48304999a6052305cb32ce6688523143afb4b5. Its workflow spend cap was $10 per model, and no first try or repair ended at the output cap. Claude Haiku 5.5 was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45545062689 at head 3a2c67f3d393dad99dd32751c2846383b29058f1. Its workflow spend cap was $10 per model. Twenty-four Haiku first tries ended at the 64,000-token output cap and remain scored as recorded; no Haiku repair ended at the cap. Inkling 2 Mini was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45673110614 at head 2383300f46e2929e43ee0740b349a675eb1bfcae, plus a supplemental local execution at harness commit 8d9fe2996ec19d8a34ff19b3133f65e46b8cbb87 for three JMeter correlation tasks that timed out in the original non-streaming shard. Its workflow spend cap was $10 per model, and the supplemental spend cap was $1. Eighty-six Inkling 2 Mini first tries ended at the 128,000-token output cap and remain scored as recorded; every capped response was empty, so no repair was triggered. Inkling 2 Small was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45733052845 at head 8560bb6289ff6bf2f923f4593e9091b345de1c5d. It ran uncapped by user direction. Twenty-one Inkling 2 Small first tries and five repair responses ended at the 128,000-token output cap and remain scored as recorded. Sonnet was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45066297860; both DeepSeek models from https://github.com/QAInsights/p95-bench/actions/runs/45082823742; Qwen4-Max from https://github.com/QAInsights/p95-bench/actions/runs/45113245263 at head 2d6e43f309d0ef51698fee94e503439cdb4b09a6. Qwen ran uncapped via the ModelScope free tier; board costs retain public list prices. Five Qwen first tries ended at the output cap and remain scored as recorded. Flash's Gatling shard uses attempt 2 after an IncompleteRead transport failure in attempt 1; costs cover the merged saved responses. All use merged manifest f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de. Offline regrade with native-numeric grader commit beda2d574631a6c0f3becfa02481fb59c3ff6d95: only fix-affected attempts were re-graded. Scanned the four pre-OpenAI models; replaced only eight Sonnet JMeter phase grades (initial and recorded repair for m05, w01, w02 and w07) originally rejected with JMX component or serialization attribute outside the allowed subset and now accepted by patched validation. All other phase grades remain exactly as originally recorded. Historical repair selection, cost, tokens and latency are unchanged; no provider calls or new repairs."
+  "publication_note": "Core: 26 public scenarios across JMeter, k6, Locust and Gatling (104 tasks). Anthropic claude-sonnet-5-5 uses adaptive thinking at high effort; DeepSeek deepseek-flash, deepseek-v4-pro and Qwen-Ambassador/Qwen4-Max use thinking-high; OpenAI gpt-6.2-sol, gpt-6.1-terra and gpt-6-luna use reasoning_effort high; Anthropic claude-haiku-5-5 uses adaptive thinking at high effort; Tinker thinkingmachines/Inkling-2-Small and thinkingmachines/Inkling-2-Mini use reasoning_effort high; Gemini gemini-4-neon uses thinkingLevel HIGH. Sonnet, DeepSeek and Qwen use a 64,000-token output cap; OpenAI and Tinker use a 128,000-token output cap; Gemini 4 Neon uses its documented 65,536-token synchronous output cap. All use one conditional repair round. Scores are the final answer after the one allowed repair. Costs include all 104 first tries per model and the recorded repair responses (24 for Sonnet, 27 for Flash, 29 for V4 Pro, 16 for Qwen4-Max, 3 for GPT-6.2 Sol, 17 for GPT-6.1 Terra, 28 for GPT-6 Luna, 14 for Claude Haiku 5.5, 0 for Inkling 2 Mini, 21 for Inkling 2 Small, 33 for Gemini 4 Neon), estimated from reported token usage at frozen registry prices, not provider invoices. GPT-6.2 Sol was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45511510673 at head 9a664f881e7c78dfea26e54b71b0e0d8fc6fa514. Its workflow spend cap was $50 per model, and no first try or repair ended at the output cap. GPT-6.1 Terra was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45529880940 at head de0702215439bb0b7bf3f9dbe5ef383c57f18b82. Its workflow spend cap was $50 per model, and no first try or repair ended at the output cap. GPT-6 Luna was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45530991214 at head eb48304999a6052305cb32ce6688523143afb4b5. Its workflow spend cap was $10 per model, and no first try or repair ended at the output cap. Claude Haiku 5.5 was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45545062689 at head 3a2c67f3d393dad99dd32751c2846383b29058f1. Its workflow spend cap was $10 per model. Twenty-four Haiku first tries ended at the 64,000-token output cap and remain scored as recorded; no Haiku repair ended at the cap. Inkling 2 Mini was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45673110614 at head 2383300f46e2929e43ee0740b349a675eb1bfcae, plus a supplemental local execution at harness commit 8d9fe2996ec19d8a34ff19b3133f65e46b8cbb87 for three JMeter correlation tasks that timed out in the original non-streaming shard. Its workflow spend cap was $10 per model, and the supplemental spend cap was $1. Eighty-six Inkling 2 Mini first tries ended at the 128,000-token output cap and remain scored as recorded; every capped response was empty, so no repair was triggered. Inkling 2 Small was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45733052845 at head 8560bb6289ff6bf2f923f4593e9091b345de1c5d. It ran uncapped by user direction. Twenty-one Inkling 2 Small first tries and five repair responses ended at the 128,000-token output cap and remain scored as recorded. Gemini 4 Neon was published from Actions runs https://github.com/QAInsights/p95-bench/actions/runs/45891406569, https://github.com/QAInsights/p95-bench/actions/runs/45906808151, and https://github.com/QAInsights/p95-bench/actions/runs/45920115434 at heads f41ba293ae1c70121a2a16ad7a44f2ed75938a85, 41254217a577b37e067af6912361e3fa3d2c6586, and 0f9fff71653c3d35645d10a165cea9ea0ea135fb, plus local serialization of one provider-blocked refusal at harness commit 428a7100e05383c1457959f656305c14b108980a. The supplements were exact targeted continuations after Google monthly spending-cap 429 interruptions; no completed first attempt was rerun. Thirty-seven repairs were triggered; 32 recorded repair responses reported provider token usage, one recorded repair was the zero-usage blocked refusal, and four repair requests failed with monthly-cap 429s before a response. Thirty-three Neon first tries were empty, one first try ended at the 65,536-token output cap, and no repair ended at the cap. Footnote: mx-c01-html-csrf-jmeter was blocked before generation with promptFeedback.blockReason=OTHER in repeated API responses. It is counted once as a zero-score provider refusal at zero measured cost; canceled Actions run https://github.com/QAInsights/p95-bench/actions/runs/45935870372 is not used. Sonnet was published from Actions run https://github.com/QAInsights/p95-bench/actions/runs/45066297860; both DeepSeek models from https://github.com/QAInsights/p95-bench/actions/runs/45082823742; Qwen4-Max from https://github.com/QAInsights/p95-bench/actions/runs/45113245263 at head 2d6e43f309d0ef51698fee94e503439cdb4b09a6. Qwen ran uncapped via the ModelScope free tier; board costs retain public list prices. Five Qwen first tries ended at the output cap and remain scored as recorded. Flash's Gatling shard uses attempt 2 after an IncompleteRead transport failure in attempt 1; costs cover the merged saved responses. All use merged manifest f07f902e5bf1542afa91818eb962abbdb4873c8999983f17ff7a983a685fc9de. Offline regrade with native-numeric grader commit beda2d574631a6c0f3becfa02481fb59c3ff6d95: only fix-affected attempts were re-graded. Scanned the four pre-OpenAI models; replaced only eight Sonnet JMeter phase grades (initial and recorded repair for m05, w01, w02 and w07) originally rejected with JMX component or serialization attribute outside the allowed subset and now accepted by patched validation. All other phase grades remain exactly as originally recorded. Historical repair selection, cost, tokens and latency are unchanged; no provider calls or new repairs."
 }
