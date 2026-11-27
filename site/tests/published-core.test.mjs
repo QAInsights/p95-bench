@@ -291,7 +291,7 @@ test('Gemini 4 Neon Core discloses mixed-wave provenance, blocked refusal and co
     '0f9fff71653c3d35645d10a165cea9ea0ea135fb': 3,
     '428a7100e05383c1457959f656305c14b108980a': 1,
   });
-  assert.match(model.cost_note, /33 returned usage-bearing responses/);
+  assert.match(model.cost_note, /32 recorded repair responses reported provider token usage/);
   assert.match(model.cost_note, /zero-score provider refusal/);
   assert.match(model.cost_note, /45920115434/);
   assert.match(data.publication_note, /33 for Gemini 4 Neon/);
