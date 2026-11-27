@@ -29,6 +29,7 @@ const repo = "https://github.com/QAInsights/p95-bench";
 const tools = TOOLS;
 const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === tool).map(a => attemptFraction(a, "repair")).filter(x => x !== null)); return v === null ? null : 100 * v; };
+const toolBest = Object.fromEntries(tools.map(tool => [tool, Math.max(...models.map(model => toolScore(model, tool)).filter(value => value !== null))]));
 ---
 
 <!doctype html>
@@ -91,17 +92,23 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
             </div>
           </div>
         </div>
-        <div class="table-wrap">
-          <table class="rankings">
-            <thead><tr><th>#</th><th>Model</th><th class="n">Score</th>{tools.map(t => <th class="n">{toolLabel(t)}</th>)}<th class="n">Cost</th></tr></thead>
+        <search class="table-filter" aria-label="Filter rankings">
+          <label for="model-filter">Filter models</label>
+          <input id="model-filter" name="model-filter" type="search" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" />
+        </search>
+        <p id="rankings-status" role="status" class="visually-hidden"></p>
+        <div class="table-wrap" role="region" aria-labelledby="rankings-title" tabindex="0">
+          <table class="rankings" id="rankings-table">
+            <caption class="visually-hidden">Model rankings by score, tool and cost</caption>
+            <thead><tr><th scope="col">#</th><th scope="col" data-type="text"><button type="button" commandfor="rankings-table" command="--sort">Model</button></th><th scope="col" class="n" data-type="number" aria-sort="descending"><button type="button" commandfor="rankings-table" command="--sort">Score</button></th>{tools.map(t => <th scope="col" class="n" data-type="number"><button type="button" commandfor="rankings-table" command="--sort">{toolLabel(t)}</button></th>)}<th scope="col" class="n" data-type="number"><button type="button" commandfor="rankings-table" command="--sort">Cost</button></th></tr></thead>
             <tbody>
               {models.map((m, i) => (
-                <tr>
-                  <td class="rank">{i + 1}</td>
-                  <td><span class="swatch" style={`background:${m.color}`}></span>{m.name} <span class="provider">{m.providerLabel}</span></td>
-                  <td class="n strong">{m.score.toFixed(1)}</td>
-                  {tools.map(t => { const v = toolScore(m, t); return <td class="n">{v === null ? "—" : v.toFixed(1)} <span class="provider">{formatCost(m.toolCosts[t])}</span></td>; })}
-                  <td class="n">{formatCost(m.cost)}</td>
+                <tr data-search={`${m.name} ${m.providerLabel}`}>
+                  <td class="rank" data-value={i + 1}>{i + 1}</td>
+                  <td data-value={m.name}><span class="swatch" style={`background:${m.color}`}></span>{m.name} <span class="provider">{m.providerLabel}</span></td>
+                  <td class="n strong" data-value={m.score}>{m.score.toFixed(1)}</td>
+                  {tools.map(t => { const v = toolScore(m, t); return <td class="n" data-value={v ?? -1}>{v === null ? "—" : <span class={v === toolBest[t] ? "tool-best" : undefined}>{v === toolBest[t] && <span class="visually-hidden">best </span>}{v.toFixed(1)}</span>} <span class="provider">{formatCost(m.toolCosts[t])}</span></td>; })}
+                  <td class="n" data-value={m.cost}>{formatCost(m.cost)}</td>
                 </tr>
               ))}
             </tbody>
@@ -146,5 +153,58 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
       <span>Pack {data.pack_id}</span>
       <a href={repo}>Source and raw runs on GitHub ↗</a>
     </footer>
+
+    <script>
+      const table = document.querySelector('#rankings-table');
+      if (table) {
+        const tbody = table.tBodies[0];
+        const filter = document.querySelector('#model-filter');
+        const status = document.querySelector('#rankings-status');
+        const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+        const rows = () => [...tbody.rows];
+        const moveRow = Object.hasOwn(Element.prototype, 'moveBefore')
+          ? row => tbody.moveBefore(row, null)
+          : row => tbody.append(row);
+        const value = (row, index) => row.cells[index]?.dataset.value ?? row.cells[index]?.textContent.trim() ?? '';
+        const visibleCount = () => rows().filter(row => !row.hidden).length;
+
+        function sortBy(button) {
+          const th = button.closest('th');
+          const direction = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+          for (const header of table.tHead.rows[0].cells) header.removeAttribute('aria-sort');
+          th.setAttribute('aria-sort', direction);
+          const factor = direction === 'ascending' ? 1 : -1;
+          const type = th.dataset.type;
+          const sorted = rows().sort((a, b) => {
+            const first = value(a, th.cellIndex);
+            const second = value(b, th.cellIndex);
+            return factor * (type === 'number' ? first - second : collator.compare(first, second));
+          });
+          for (const row of sorted) moveRow(row);
+          status.textContent = `Sorted by ${button.textContent.trim()}, ${direction}, ${visibleCount()} rows shown`;
+        }
+
+        table.addEventListener('command', event => {
+          if (event.command === '--sort') sortBy(event.source);
+        });
+        if (!('commandForElement' in HTMLButtonElement.prototype)) {
+          for (const button of table.tHead.querySelectorAll('button[command="--sort"]')) {
+            button.addEventListener('click', () => sortBy(button));
+          }
+        }
+
+        let filterTimer;
+        filter?.addEventListener('input', () => {
+          const query = filter.value.trim().toLowerCase();
+          for (const row of rows()) {
+            row.hidden = query.length > 0 && !row.dataset.search.toLowerCase().includes(query);
+          }
+          clearTimeout(filterTimer);
+          filterTimer = setTimeout(() => {
+            status.textContent = query ? `${visibleCount()} models match ${filter.value.trim()}` : `${visibleCount()} models shown`;
+          }, 150);
+        });
+      }
+    </script>
   </body>
 </html>

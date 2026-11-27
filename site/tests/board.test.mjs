@@ -212,8 +212,18 @@ test('pages use the Core leaderboard and task pack without Matrix-only copy', as
   assert.match(page, /Slot available/);
   assert.match(page, /Reserved for a benchmark partner/);
   assert.match(page, /<tfoot>/);
+  assert.match(page, /<search class="table-filter"/);
+  assert.match(page, /<input id="model-filter"/);
+  assert.match(page, /data-type="number" aria-sort="descending"/);
+  assert.match(page, /commandfor="rankings-table" command="--sort"/);
+  assert.match(page, /table\.addEventListener\('command'/);
+  assert.match(page, /row\.hidden = query\.length > 0/);
+  assert.match(page, /toolBest/);
+  assert.match(page, /tool-best/);
   const styles = await readFile(new URL('../src/styles/board.css', import.meta.url), 'utf8');
   assert.match(styles, /\.support-action:focus-visible \{ outline-offset: -3px; \}/);
+  assert.match(styles, /th\[aria-sort="descending"\] button::after/);
+  assert.match(styles, /\.tool-best/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
   assert.doesNotMatch(page, /First try|After 1 repair|score-toggle|data-score/);
   assert.doesNotMatch(page, />Every task <span|class="grid"|Output tokens/);
