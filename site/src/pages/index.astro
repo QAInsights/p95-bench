@@ -22,12 +22,14 @@ const tasks = boardTasks(data);
 const categories = Object.keys(data.weights);
 const plot = scatter(models);
 const sharedReasoning = sharedReasoningLabel(plot.points);
+const totalCost = models.reduce((sum, model) => sum + (Number.isFinite(model.cost) ? model.cost : 0), 0);
 const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
 const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";
 const tools = TOOLS;
 const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === tool).map(a => attemptFraction(a, "repair")).filter(x => x !== null)); return v === null ? null : 100 * v; };
+const toolBest = Object.fromEntries(tools.map(tool => [tool, Math.max(...models.map(model => toolScore(model, tool)).filter(value => value !== null))]));
 ---
 
 <!doctype html>
@@ -53,7 +55,7 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
     <main>
       <section class="intro">
         <h1><span class="lime">P95 Bench</span> measures how well language models write, fix and analyse performance tests in JMeter, k6, Locust and Gatling.</h1>
-        <p class="meta">Core · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
+        <p class="meta">{sharedReasoning && <span class="reasoning-pill">{sharedReasoning}</span>}Core · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
       </section>
 
       <section aria-labelledby="score-title">
@@ -71,20 +73,52 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
 
       <section id="rankings" aria-labelledby="rankings-title">
         <h2 id="rankings-title" class="label">Rankings <span>score / 100 · per-tool average task score and cost</span></h2>
-        <div class="table-wrap">
-          <table class="rankings">
-            <thead><tr><th>#</th><th>Model</th><th class="n">Score</th>{tools.map(t => <th class="n">{toolLabel(t)}</th>)}<th class="n">Cost</th></tr></thead>
+        <div class="support-wrap">
+          <div class="support-panel" role="group" aria-label="Benchmark cost and support options">
+            <div class="support-cell support-total">
+              <span>Total published cost</span>
+              <strong>{formatCost(totalCost)}</strong>
+              <small>list-price usage across {models.length} models</small>
+            </div>
+            <a class="support-cell support-action" href="https://buymeacoffee.com/qainsights" target="_blank" rel="noreferrer">
+              <span>Support P95 Bench</span>
+              <strong>Buy me a coffee ↗</strong>
+              <small>Help fund future model runs</small>
+            </a>
+            <div class="support-cell sponsor-slot">
+              <span>Sponsor</span>
+              <strong>Slot available</strong>
+              <small>Reserved for a benchmark partner</small>
+            </div>
+          </div>
+        </div>
+        <search class="table-filter" aria-label="Filter rankings">
+          <label for="model-filter">Filter models</label>
+          <input id="model-filter" name="model-filter" type="search" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" />
+        </search>
+        <p id="rankings-status" role="status" class="visually-hidden"></p>
+        <div class="table-wrap" role="region" aria-labelledby="rankings-title" tabindex="0">
+          <table class="rankings" id="rankings-table">
+            <caption class="visually-hidden">Model rankings by score, tool and cost</caption>
+            <thead><tr><th scope="col">#</th><th scope="col" data-type="text"><button type="button" commandfor="rankings-table" command="--sort">Model</button></th><th scope="col" class="n" data-type="number" aria-sort="descending"><button type="button" commandfor="rankings-table" command="--sort">Score</button></th>{tools.map(t => <th scope="col" class="n" data-type="number"><button type="button" commandfor="rankings-table" command="--sort">{toolLabel(t)}</button></th>)}<th scope="col" class="n" data-type="number"><button type="button" commandfor="rankings-table" command="--sort">Cost</button></th></tr></thead>
             <tbody>
               {models.map((m, i) => (
-                <tr>
-                  <td class="rank">{i + 1}</td>
-                  <td><span class="swatch" style={`background:${m.color}`}></span>{m.name} <span class="provider">{m.providerLabel}</span></td>
-                  <td class="n strong">{m.score.toFixed(1)}</td>
-                  {tools.map(t => { const v = toolScore(m, t); return <td class="n">{v === null ? "—" : v.toFixed(1)} <span class="provider">{formatCost(m.toolCosts[t])}</span></td>; })}
-                  <td class="n">{formatCost(m.cost)}</td>
+                <tr data-search={`${m.name} ${m.providerLabel}`}>
+                  <td class="rank" data-value={i + 1}>{i + 1}</td>
+                  <td data-value={m.name}><span class="swatch" style={`background:${m.color}`}></span>{m.name} <span class="provider">{m.providerLabel}</span></td>
+                  <td class="n strong" data-value={m.score}>{m.score.toFixed(1)}</td>
+                  {tools.map(t => { const v = toolScore(m, t); return <td class="n" data-value={v ?? -1}>{v === null ? "—" : <span class={v === toolBest[t] ? "tool-best" : undefined}>{v === toolBest[t] && <span class="visually-hidden">best </span>}{v.toFixed(1)}</span>} <span class="provider">{formatCost(m.toolCosts[t])}</span></td>; })}
+                  <td class="n" data-value={m.cost}>{formatCost(m.cost)}</td>
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td></td>
+                <td colspan={2 + tools.length}>Total published cost <span class="provider">list-price usage</span></td>
+                <td class="n strong">{formatCost(totalCost)}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </section>
@@ -93,7 +127,7 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
         <section aria-labelledby="value-title">
           <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length * tools.length} tasks, log scale</span></h2>
           <div class="table-wrap scatter-wrap">
-          {sharedReasoning && <p class="reasoning-context" id="reasoning-context"><span>{sharedReasoning}</span> used for every model in this chart</p>}<svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost" aria-describedby={sharedReasoning ? "reasoning-context chart-note" : "chart-note"}>
+          {sharedReasoning && <p class="reasoning-context" id="reasoning-context"><span class="reasoning-pill">{sharedReasoning}</span> used for every model in this chart</p>}<svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost" aria-describedby={sharedReasoning ? "reasoning-context chart-note" : "chart-note"}>
             {plot.yTicks.map(t => <g><line x1={plot.left} x2={plot.width - plot.right} y1={t.y} y2={t.y} /><text x={plot.left - 10} y={t.y + 4} text-anchor="end">{t.value}</text></g>)}
             {plot.xTicks.map(t => <text x={t.x} y={plot.height - 10} text-anchor="middle">{t.label}</text>)}
             {plot.points.map(p => <g class="point"><circle cx={p.x} cy={p.y} r="12" fill="transparent" /><circle cx={p.x} cy={p.y} r="6" fill={p.color} />{<path class="best-value-star" transform={`translate(${p.x} ${p.y})`} d="M0 -10 L2.4 -2.4 L10 0 L2.4 2.4 L0 10 L-2.4 2.4 L-10 0 L-2.4 -2.4 Z" />}{Math.abs(p.labelDy) > 1 && <line class="label-leader" x1={p.x + 7} y1={p.y} x2={p.labelX - 4} y2={p.labelY - 4} />}<text class="point-label" x={p.labelX} y={p.labelY}>{p.name}</text><title>{`${p.name}: ${p.score.toFixed(1)} · $${p.cost.toFixed(2)} · ${reasoningLabel(p.reasoningMode) ?? "reasoning not recorded"}`}</title></g>)}
@@ -119,5 +153,58 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
       <span>Pack {data.pack_id}</span>
       <a href={repo}>Source and raw runs on GitHub ↗</a>
     </footer>
+
+    <script>
+      const table = document.querySelector('#rankings-table');
+      if (table) {
+        const tbody = table.tBodies[0];
+        const filter = document.querySelector('#model-filter');
+        const status = document.querySelector('#rankings-status');
+        const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+        const rows = () => [...tbody.rows];
+        const moveRow = Object.hasOwn(Element.prototype, 'moveBefore')
+          ? row => tbody.moveBefore(row, null)
+          : row => tbody.append(row);
+        const value = (row, index) => row.cells[index]?.dataset.value ?? row.cells[index]?.textContent.trim() ?? '';
+        const visibleCount = () => rows().filter(row => !row.hidden).length;
+
+        function sortBy(button) {
+          const th = button.closest('th');
+          const direction = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+          for (const header of table.tHead.rows[0].cells) header.removeAttribute('aria-sort');
+          th.setAttribute('aria-sort', direction);
+          const factor = direction === 'ascending' ? 1 : -1;
+          const type = th.dataset.type;
+          const sorted = rows().sort((a, b) => {
+            const first = value(a, th.cellIndex);
+            const second = value(b, th.cellIndex);
+            return factor * (type === 'number' ? first - second : collator.compare(first, second));
+          });
+          for (const row of sorted) moveRow(row);
+          status.textContent = `Sorted by ${button.textContent.trim()}, ${direction}, ${visibleCount()} rows shown`;
+        }
+
+        table.addEventListener('command', event => {
+          if (event.command === '--sort') sortBy(event.source);
+        });
+        if (!('commandForElement' in HTMLButtonElement.prototype)) {
+          for (const button of table.tHead.querySelectorAll('button[command="--sort"]')) {
+            button.addEventListener('click', () => sortBy(button));
+          }
+        }
+
+        let filterTimer;
+        filter?.addEventListener('input', () => {
+          const query = filter.value.trim().toLowerCase();
+          for (const row of rows()) {
+            row.hidden = query.length > 0 && !row.dataset.search.toLowerCase().includes(query);
+          }
+          clearTimeout(filterTimer);
+          filterTimer = setTimeout(() => {
+            status.textContent = query ? `${visibleCount()} models match ${filter.value.trim()}` : `${visibleCount()} models shown`;
+          }, 150);
+        });
+      }
+    </script>
   </body>
 </html>
