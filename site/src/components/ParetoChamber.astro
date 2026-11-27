@@ -1,0 +1,98 @@
+---
+import "../styles/chamber.css";
+import { CHAMBER_CAMERAS, chamberModels } from "../lib/pareto3d-math.mjs";
+
+const { models, taskTotal } = Astro.props;
+const items = chamberModels(models);
+---
+
+{items.length > 0 && (
+  <section id="tradeoffs" aria-labelledby="tradeoffs-title">
+    <h2 id="tradeoffs-title" class="label">
+      Speed, cost and quality
+      <span>3D Pareto chamber · avg provider API time &amp; cost per task across {taskTotal} tasks · log axes</span>
+    </h2>
+
+    <div class="chamber-layout" data-chamber data-items={JSON.stringify(items)}>
+      <div class="chamber-stage" data-stage>
+        <canvas aria-label="Interactive 3D Speed, Cost and Quality Pareto chamber"></canvas>
+        <div class="chamber-summary" data-stage-summary></div>
+        <div class="chamber-hint">Drag to orbit · Scroll to zoom</div>
+        <div class="chamber-cams" role="group" aria-label="Camera views">
+          {CHAMBER_CAMERAS.map((c, idx) => (
+            <button type="button" data-cam={c.id} class={idx === 0 ? "active" : ""}>{c.label}</button>
+          ))}
+          <span class="cam-sep" aria-hidden="true"></span>
+          <button type="button" data-toggle-panel aria-expanded="false">Table</button>
+        </div>
+      </div>
+
+      <div class="chamber-drawer">
+        <aside class="chamber-panel" aria-label="Selected model telemetry">
+        <div>
+          <div class="chamber-head">
+            <div>
+              <div class="chamber-title-row">
+                <h3 class="chamber-name" data-m-name>{items[0].name}</h3>
+                <span class="chamber-badge" data-m-badge>PARETO</span>
+              </div>
+              <div class="chamber-prov" data-m-prov>{items[0].providerLabel}</div>
+            </div>
+            <div class="chamber-idx-wrap">
+              <div class="chamber-k">INDEX</div>
+              <div class="chamber-idx" data-m-idx>—</div>
+            </div>
+          </div>
+
+          <div class="chamber-stats">
+            <div>
+              <div class="chamber-k">QUALITY</div>
+              <div class="chamber-v" data-m-q>—</div>
+              <div class="chamber-track"><div class="chamber-fill is-lime" data-b-q></div></div>
+            </div>
+            <div>
+              <div class="chamber-k">SPEED / TASK</div>
+              <div class="chamber-v" data-m-s>—</div>
+              <div class="chamber-track"><div class="chamber-fill" data-b-s></div></div>
+            </div>
+            <div>
+              <div class="chamber-k">COST / TASK</div>
+              <div class="chamber-v" data-m-c>—</div>
+              <div class="chamber-track"><div class="chamber-fill" data-b-c></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="chamber-k" style="margin-bottom:6px">PRIORITY FOCUS</div>
+          <div class="chamber-focus" role="group" aria-label="Priority focus">
+            <button type="button" data-focus="balanced" class="active">Balanced</button>
+            <button type="button" data-focus="quality">Quality</button>
+            <button type="button" data-focus="speed">Speed</button>
+            <button type="button" data-focus="cost">Cost</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="chamber-rail-head">
+            <span>MODELS · ● PARETO</span>
+            {items.length > 5 && (
+              <button type="button" class="chamber-pareto-btn" data-pareto-only>Pareto only</button>
+            )}
+          </div>
+          <div class="chamber-rail" data-rail></div>
+        </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+)}
+
+<script>
+  import { mountParetoChamber } from "../lib/pareto3d-stage.mjs";
+
+  document.querySelectorAll("[data-chamber]").forEach((el) => {
+    const items = JSON.parse(el.getAttribute("data-items") || "[]");
+    mountParetoChamber(el, items);
+  });
+</script>

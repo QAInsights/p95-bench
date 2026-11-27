@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Explicitly welcome AI search and citation crawlers (AEO / GEO)
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://p95-bench.pages.dev/sitemap.xml

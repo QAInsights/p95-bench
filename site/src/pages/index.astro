@@ -8,6 +8,9 @@ import data from "../data/leaderboard-p95-core.json";
 import { boardModels, boardTasks, scatter, toolLabel, TOOLS, formatCost, reasoningLabel, sharedReasoningLabel } from "../lib/board.mjs";
 import { attemptFraction } from "../lib/scores.mjs";
 import AgentSystems from "../components/AgentSystems.astro";
+import ParetoChamber from "../components/ParetoChamber.astro";
+import SeoHead from "../components/SeoHead.astro";
+import { homeJsonLd } from "../lib/seo.mjs";
 import { parseAgentSystems, agentComparisons, agentDisplay } from "../lib/agent-systems.mjs";
 
 const agentSources = import.meta.glob("../../../results/agent-systems/p95-core/*/*.{json,jsonl}", { eager: true, query: "?raw", import: "default" });
@@ -30,6 +33,9 @@ const tools = TOOLS;
 const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === tool).map(a => attemptFraction(a, "repair")).filter(x => x !== null)); return v === null ? null : 100 * v; };
 const toolBest = Object.fromEntries(tools.map(tool => [tool, Math.max(...models.map(model => toolScore(model, tool)).filter(value => value !== null))]));
+const pageTitle = "P95 Bench · AI Performance Testing Benchmark";
+const pageDesc = `Open-source benchmark comparing ${models.length} AI models across ${tasks.length * tools.length} executable JMeter, k6, Locust, and Gatling tasks on quality, speed, and cost.`;
+const jsonLd = homeJsonLd({ models, taskTotal: tasks.length * tools.length, scenarioCount: tasks.length, runDate });
 ---
 
 <!doctype html>
@@ -37,8 +43,9 @@ const toolBest = Object.fromEntries(tools.map(tool => [tool, Math.max(...models.
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="P95 Bench measures how well language models write, fix and analyse performance tests in JMeter, k6, Locust and Gatling." />
+    <meta name="description" content={pageDesc} />
     <meta name="theme-color" content="#0c0b10" />
+    <SeoHead title={pageTitle} description={pageDesc} path="/" jsonLd={jsonLd} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
@@ -122,6 +129,8 @@ const toolBest = Object.fromEntries(tools.map(tool => [tool, Math.max(...models.
           </table>
         </div>
       </section>
+
+      <ParetoChamber models={models} taskTotal={tasks.length * tools.length} />
 
       {plot.points.length > 1 && (
         <section aria-labelledby="value-title">

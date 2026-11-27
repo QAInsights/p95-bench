@@ -22,6 +22,9 @@ export function boardModels(data) {
         key: `${m.provider}/${m.model}`, name: name(m.model), provider: m.provider,
         providerLabel: providerName(m.provider),
         score: final.overall_score, categories: final.category_scores,
+        quality: Number.isFinite(final.quality_score) ? final.quality_score : final.overall_score,
+        latency: Number.isFinite(m.latency) ? m.latency : null,
+        taskCount: Array.isArray(m.per_task_results) && m.per_task_results.length ? m.per_task_results.length : 1,
         reasoningMode: m.reasoning_mode ?? null, derivedFrom: m.derived_from ?? null,
         cost: m.cost, toolCosts, tasks: m.per_task_results,
       };

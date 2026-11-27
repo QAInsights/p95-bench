@@ -7,6 +7,8 @@ import "../styles/board.css";
 import { parse } from "yaml";
 import data from "../data/leaderboard-p95-core.json";
 import { boardTasks, categoryBlurbs, categoryLabels, taskCode, taskDetails, toolLabel, TOOLS } from "../lib/board.mjs";
+import SeoHead from "../components/SeoHead.astro";
+import { tasksJsonLd } from "../lib/seo.mjs";
 
 const sources = import.meta.glob("../../../packs/p95-core/tasks/**/*.yaml", { eager: true, query: "?raw", import: "default" });
 const tasks = taskDetails(Object.values(sources).map(source => parse(source)), boardTasks(data));
@@ -14,6 +16,9 @@ const categories = Object.keys(data.weights);
 const groups = categories.map(c => ({ category: c, tasks: tasks.filter(t => t.category === c) }));
 const tools = TOOLS.map(tool => ({ tool, count: tasks.length }));
 const repo = "https://github.com/QAInsights/p95-bench";
+const pageTitle = "Tasks · P95 Bench";
+const pageDesc = `The ${tasks.length} public P95 Bench scenarios, each written for JMeter, k6, Locust and Gatling (${tasks.length * tools.length} executable tasks).`;
+const jsonLd = tasksJsonLd({ scenarioCount: tasks.length, taskTotal: tasks.length * tools.length });
 ---
 
 <!doctype html>
@@ -21,8 +26,9 @@ const repo = "https://github.com/QAInsights/p95-bench";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={`The ${tasks.length} public P95 Bench scenarios, each written for JMeter, k6, Locust and Gatling.`} />
+    <meta name="description" content={pageDesc} />
     <meta name="theme-color" content="#0c0b10" />
+    <SeoHead title={pageTitle} description={pageDesc} path="/tasks" jsonLd={jsonLd} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
