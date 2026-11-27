@@ -64,6 +64,8 @@ test('rankings sorting and filtering work in a browser', async t => {
   const visibleModels = () => page.$$eval('#rankings-table tbody tr', rows =>
     rows.filter(row => !row.hidden).map(row => row.cells[1].textContent.trim()));
 
+  const totalRows = (await visibleModels()).length;
+
   await page.click('#rankings-table thead th:nth-child(8) button');
   assert.equal(await page.getAttribute('#rankings-table thead th:nth-child(8)', 'aria-sort'), 'ascending');
   assert.match((await visibleModels())[0], /^GPT-6 Luna/);
@@ -77,5 +79,5 @@ test('rankings sorting and filtering work in a browser', async t => {
   await page.fill('#model-filter', 'neon');
   assert.deepEqual(await visibleModels(), ['Gemini 4 Neon Google']);
   await page.fill('#model-filter', '');
-  assert.equal((await visibleModels()).length, 11);
+  assert.equal((await visibleModels()).length, totalRows);
 });
