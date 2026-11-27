@@ -54,7 +54,7 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
     <main>
       <section class="intro">
         <h1><span class="lime">P95 Bench</span> measures how well language models write, fix and analyse performance tests in JMeter, k6, Locust and Gatling.</h1>
-        <p class="meta">Core · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
+        <p class="meta">{sharedReasoning && <span class="reasoning-pill">{sharedReasoning}</span>}Core · {tasks.length} scenarios × {tools.length} tools = {tasks.length * tools.length} tasks · {models.length} models{updated && <> · updated {updated}</>}</p>
       </section>
 
       <section aria-labelledby="score-title">
@@ -120,7 +120,7 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
         <section aria-labelledby="value-title">
           <h2 id="value-title" class="label">Score versus cost <span>list price for all {tasks.length * tools.length} tasks, log scale</span></h2>
           <div class="table-wrap scatter-wrap">
-          {sharedReasoning && <p class="reasoning-context" id="reasoning-context"><span>{sharedReasoning}</span> used for every model in this chart</p>}<svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost" aria-describedby={sharedReasoning ? "reasoning-context chart-note" : "chart-note"}>
+          {sharedReasoning && <p class="reasoning-context" id="reasoning-context"><span class="reasoning-pill">{sharedReasoning}</span> used for every model in this chart</p>}<svg class="scatter" viewBox={`0 0 ${plot.width} ${plot.height}`} role="img" aria-label="Score versus cost" aria-describedby={sharedReasoning ? "reasoning-context chart-note" : "chart-note"}>
             {plot.yTicks.map(t => <g><line x1={plot.left} x2={plot.width - plot.right} y1={t.y} y2={t.y} /><text x={plot.left - 10} y={t.y + 4} text-anchor="end">{t.value}</text></g>)}
             {plot.xTicks.map(t => <text x={t.x} y={plot.height - 10} text-anchor="middle">{t.label}</text>)}
             {plot.points.map(p => <g class="point"><circle cx={p.x} cy={p.y} r="12" fill="transparent" /><circle cx={p.x} cy={p.y} r="6" fill={p.color} />{<path class="best-value-star" transform={`translate(${p.x} ${p.y})`} d="M0 -10 L2.4 -2.4 L10 0 L2.4 2.4 L0 10 L-2.4 2.4 L-10 0 L-2.4 -2.4 Z" />}{Math.abs(p.labelDy) > 1 && <line class="label-leader" x1={p.x + 7} y1={p.y} x2={p.labelX - 4} y2={p.labelY - 4} />}<text class="point-label" x={p.labelX} y={p.labelY}>{p.name}</text><title>{`${p.name}: ${p.score.toFixed(1)} · $${p.cost.toFixed(2)} · ${reasoningLabel(p.reasoningMode) ?? "reasoning not recorded"}`}</title></g>)}
