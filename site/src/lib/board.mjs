@@ -37,8 +37,11 @@ export function reasoningLabel(mode) {
 }
 
 export function sharedReasoningLabel(models) {
-  const labels = [...new Set(models.map(model => reasoningLabel(model.reasoningMode)).filter(Boolean))];
-  return labels.length === 1 ? labels[0] : null;
+  if (!models.length) return null;
+  const labels = models.map(model => reasoningLabel(model.reasoningMode));
+  if (labels.some(label => !label)) return null;
+  const unique = [...new Set(labels)];
+  return unique.length === 1 ? unique[0] : null;
 }
 
 export function boardTasks(data) {

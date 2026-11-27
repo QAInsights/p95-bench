@@ -145,6 +145,9 @@ test('reasoning labels normalize high mode and only summarize uniform charts', (
   assert.equal(sharedReasoningLabel([
     { reasoningMode: 'thinking-high' }, { reasoningMode: 'thinking-medium' },
   ]), null);
+  assert.equal(sharedReasoningLabel([
+    { reasoningMode: 'thinking-high' }, { reasoningMode: null },
+  ]), null);
 });
 
 test('cost formatter handles basic and non-finite values', () => {
