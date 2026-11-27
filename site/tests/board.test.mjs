@@ -202,6 +202,14 @@ test('pages use the Core leaderboard and task pack without Matrix-only copy', as
   assert.match(page, /aria-describedby=\{sharedReasoning \? "reasoning-context chart-note" : "chart-note"\}/);
   assert.match(page, /sharedReasoningLabel\(plot\.points\)/);
   assert.match(page, /reasoningLabel\(p\.reasoningMode\)/);
+  assert.match(page, /class="support-panel" role="group" aria-label="Benchmark cost and support options"/);
+  assert.match(page, /Total published cost/);
+  assert.match(page, /formatCost\(totalCost\)/);
+  assert.match(page, /href="https:\/\/buymeacoffee\.com\/qainsights"/);
+  assert.match(page, /Buy me a coffee ↗/);
+  assert.match(page, /Slot available/);
+  assert.match(page, /Reserved for a benchmark partner/);
+  assert.match(page, /<tfoot>/);
   assert.doesNotMatch(page, /model\.tasks\.find\(/);
   assert.doesNotMatch(page, /First try|After 1 repair|score-toggle|data-score/);
   assert.doesNotMatch(page, />Every task <span|class="grid"|Output tokens/);

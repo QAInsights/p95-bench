@@ -22,6 +22,7 @@ const tasks = boardTasks(data);
 const categories = Object.keys(data.weights);
 const plot = scatter(models);
 const sharedReasoning = sharedReasoningLabel(plot.points);
+const totalCost = models.reduce((sum, model) => sum + (Number.isFinite(model.cost) ? model.cost : 0), 0);
 const runDate = data.models.map(m => m.run_date).filter(Boolean).sort().at(-1);
 const updated = runDate ? new Date(runDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }) : null;
 const repo = "https://github.com/QAInsights/p95-bench";
@@ -71,6 +72,25 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
 
       <section id="rankings" aria-labelledby="rankings-title">
         <h2 id="rankings-title" class="label">Rankings <span>score / 100 · per-tool average task score and cost</span></h2>
+        <div class="support-wrap">
+          <div class="support-panel" role="group" aria-label="Benchmark cost and support options">
+            <div class="support-cell support-total">
+              <span>Total published cost</span>
+              <strong>{formatCost(totalCost)}</strong>
+              <small>list-price usage across {models.length} models</small>
+            </div>
+            <a class="support-cell support-action" href="https://buymeacoffee.com/qainsights" target="_blank" rel="noreferrer">
+              <span>Support P95 Bench</span>
+              <strong>Buy me a coffee ↗</strong>
+              <small>Help fund future model runs</small>
+            </a>
+            <div class="support-cell sponsor-slot">
+              <span>Sponsor</span>
+              <strong>Slot available</strong>
+              <small>Reserved for a benchmark partner</small>
+            </div>
+          </div>
+        </div>
         <div class="table-wrap">
           <table class="rankings">
             <thead><tr><th>#</th><th>Model</th><th class="n">Score</th>{tools.map(t => <th class="n">{toolLabel(t)}</th>)}<th class="n">Cost</th></tr></thead>
@@ -85,6 +105,13 @@ const toolScore = (m, tool) => { const v = mean(m.tasks.filter(a => a.tool === t
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td></td>
+                <td colspan={2 + tools.length}>Total published cost <span class="provider">list-price usage</span></td>
+                <td class="n strong">{formatCost(totalCost)}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </section>
